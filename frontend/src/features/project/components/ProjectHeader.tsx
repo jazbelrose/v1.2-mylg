@@ -113,7 +113,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   } = useData();
   const [saving, setSaving] = useState(false);
   const { ws } = useSocket() || {};
-  const { refreshUser } = useAuth();
+  const { refreshUser } = useData();
   const navigate = useNavigate();
   const { projectSlug = "" } = useParams();
 

@@ -13,14 +13,13 @@ import GlobalSearch from './GlobalSearch';
 import './GlobalSearch.css';
 
 const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string) => void }> = ({ userName: propUserName, setActiveView }) => {
-  const { user } = useAuth();
   const { userData } = useData();
   const { isOnline } = useOnlineStatus(); // <-- only need this now
   const navigate = useNavigate();
 
-  const userName = propUserName || userData?.firstName || user?.firstName || user?.email || 'User';
+  const userName = propUserName || userData?.firstName || userData?.email || 'User';
   const userThumbnail = userData?.thumbnail;
-  const userId = userData?.userId || user?.userId;
+  const userId = userData?.userId;
 
   // notifications drawer
   const [notificationsOpen, setNotificationsOpen] = useState(false);

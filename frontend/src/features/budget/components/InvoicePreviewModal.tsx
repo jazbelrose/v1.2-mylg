@@ -34,7 +34,7 @@ import { toast } from "react-toastify";
 import styles from "./invoice-preview-modal.module.css";
 import useModalStack from "@/shared/utils/useModalStack";
 import { useBudget } from "@/features/budget/context/BudgetContext";
-import { UserProfile } from "@/app/contexts/AuthContextValue";
+import { UserLite } from "@/app/contexts/DataProvider";
 
 // ---------- Types ----------
 interface RevisionLike {
@@ -767,7 +767,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         brandAddress,
         brandPhone,
         brandTagline,
-      } as UserProfile;
+      } as UserLite;
 
       await updateUserProfile(updated);
       setUserData(updated);

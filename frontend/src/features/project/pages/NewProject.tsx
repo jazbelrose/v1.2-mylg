@@ -98,10 +98,9 @@ const NewProject: React.FC = () => {
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
-  const { userId, setActiveProject, setProjects, setUserProjects } =
-    useData() as UseDataSlice;
+  const { userId, setActiveProject, setProjects, setUserProjects, setUser } =
+    useData() as UseDataSlice & { setUser: React.Dispatch<React.SetStateAction<any>> };
   const navigate = useNavigate();
-  const { setUser } = useAuth() as UseAuthSlice;
 
   const [validationMessage, setValidationMessage] = useState<string>("");
 

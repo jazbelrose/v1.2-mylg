@@ -22,7 +22,7 @@ const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
   onClose,
   setActiveView,
 }) => {
-  const { setIsAuthenticated, setUser } = useAuth();
+  const { setIsAuthenticated, setCognitoUser } = useAuth();
   const { dmThreads } = useData();
   const { notifications } = useNotifications() as { notifications: Array<{ read?: boolean }>; };
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
     try {
       await signOut();
       setIsAuthenticated(false);
-      setUser(null);
+      setCognitoUser(null);
       navigate("/login");
       Cookies.remove("myCookie");
       onClose();

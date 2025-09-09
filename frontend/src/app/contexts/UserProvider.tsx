@@ -91,12 +91,23 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const isVendor = role === "vendor";
   const isClient = role === "client";
 
+  // Backward compatibility
+  const userName = user?.firstName ? `${user.firstName} ` : "Guest";
+  const userData = user; // alias for backward compatibility
+  const setUserData = setUser; // alias for backward compatibility
+  const refreshUser = fetchUserProfile; // alias for backward compatibility
+
   const value = useMemo<UserContextValue>(
     () => ({
       user,
       allUsers,
+      userId,
+      userName,
+      userData,
+      setUserData,
       setUser,
       refreshUsers,
+      refreshUser,
       updateUserProfile,
       fetchUserProfile,
       isAdmin,
@@ -108,6 +119,9 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
     [
       user,
       allUsers,
+      userId,
+      userName,
+      userData,
       fetchUserProfile,
       isAdmin,
       isDesigner,

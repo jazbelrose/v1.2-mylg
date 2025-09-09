@@ -38,7 +38,7 @@ interface FormDataShape {
 
 const Settings: React.FC = () => {
   // Contexts (loosely typed to ease drop-in)
-  const { refreshUser } = useAuth() as { refreshUser: (force?: boolean) => Promise<void> };
+  const { refreshUser } = useData() as { refreshUser: (force?: boolean) => Promise<void> };
   const { userData, setUserData, toggleSettingsUpdated } = useData() as {
     userData: UserData;
     setUserData: (u: UserData) => void;

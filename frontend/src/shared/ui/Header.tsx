@@ -22,7 +22,7 @@ const Headermain: React.FC = () => {
     const scrollableDivRef = useRef<HTMLDivElement | null>(null);
     const [prevScrollPos, setPrevScrollPos] = useState<number>(0);
     const { isHeaderVisible, updateHeaderVisibility } = useScrollContext();
-    const { isAuthenticated, setIsAuthenticated, setUser } = useAuth();
+    const { isAuthenticated, setIsAuthenticated, setCognitoUser } = useAuth();
     const logoRef = useRef<HTMLAnchorElement | null>(null);
     const logoHoveredRef = useRef<boolean>(false);
     const [logoOriginalColor, setLogoOriginalColor] = useState<string | null>(null);
@@ -48,7 +48,7 @@ const Headermain: React.FC = () => {
         try {
             await signOut();
             setIsAuthenticated(false);
-            setUser(null);
+            setCognitoUser(null);
             navigate("/login");
             Cookies.remove("myCookie");
         } catch (error) {

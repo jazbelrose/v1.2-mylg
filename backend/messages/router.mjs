@@ -1,47 +1,331 @@
+// backend/messages/router.mjs
 import { corsHeadersFromEvent, preflightFromEvent, json } from "/opt/nodejs/utils/cors.mjs";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { v4 as uuidv4 } from "uuid";
 
+/* ------------ ENV ------------ */
+const REGION = process.env.AWS_REGION || "us-west-2";
+
+// Threads & membership
+const THREADS_TABLE         = process.env.THREADS_TABLE         || "MessagesThreads";
+const THREAD_MEMBERS_TABLE  = process.env.THREAD_MEMBERS_TABLE  || "MessagesThreadMembers";
+
+// Messages
+const MESSAGES_TABLE        = process.env.MESSAGES_TABLE        || "Messages";
+const MESSAGES_BY_ID_INDEX  = process.env.MESSAGES_BY_ID_INDEX  || ""; // e.g. "messageId-index" (HASH: messageId)
+
+// Project-scoped messages (optional)
+const PROJECT_MESSAGES_TABLE = process.env.PROJECT_MESSAGES_TABLE || "ProjectMessages";
+
+// Dev-only: allow scans when no userId provided
+const SCANS_ALLOWED = (process.env.SCANS_ALLOWED || "false").toLowerCase() === "true";
+
+/* ------------ DDB ------------ */
+const ddb = DynamoDBDocument.from(new DynamoDBClient({ region: REGION }), {
+  marshallOptions: { removeUndefinedValues: true },
+});
+
+/* ------------ utils ------------ */
 const M = (e) => e?.requestContext?.http?.method?.toUpperCase?.() || e?.httpMethod?.toUpperCase?.() || "GET";
 const P = (e) => (e?.rawPath || e?.path || "/");
 const Q = (e) => e?.queryStringParameters || {};
 const B = (e) => { try { return JSON.parse(e?.body || "{}"); } catch { return {}; } };
+const nowISO = () => new Date().toISOString();
+const makeMsgId = (ts = Date.now()) => `M#${String(ts).padStart(13, "0")}#${uuidv4()}`;
 
-// ---- Handlers (placeholders) ----
+/* small helpers */
+function buildUpdate(obj) {
+  const Names = {}, Values = {}, sets = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    Names["#" + k] = k;
+    Values[":" + k] = v;
+    sets.push(`#${k} = :${k}`);
+  }
+  if (!sets.length) return null;
+  return {
+    UpdateExpression: "SET " + sets.join(", "),
+    ExpressionAttributeNames: Names,
+    ExpressionAttributeValues: Values,
+  };
+}
+async function batchGetThreads(threadIds) {
+  const chunks = [];
+  for (let i = 0; i < threadIds.length; i += 100) chunks.push(threadIds.slice(i, i + 100));
+  const out = [];
+  for (const ch of chunks) {
+    const r = await ddb.batchGet({
+      RequestItems: { [THREADS_TABLE]: { Keys: ch.map((id) => ({ threadId: id })) } },
+    });
+    out.push(...(r.Responses?.[THREADS_TABLE] || []));
+  }
+  return out;
+}
+
+/* ------------ Handlers ------------ */
 const health = async (_e, C) => json(200, C, { ok: true, domain: "messages" });
 
-// Inbox / threads
-const getInbox      = async (_e, C) => json(200, C, { inbox: [] });
-const listThreads   = async (_e, C) => json(200, C, { threads: [] });
-const createThread  = async (e, C) => json(201, C, { thread: { id: "THREAD-PLACEHOLDER", ...B(e) } });
-const getThread     = async (_e, C, { threadId }) => json(200, C, { thread: { id: threadId } });
+/* Inbox: list threads for a userId using membership table
+   THREAD_MEMBERS_TABLE: PK=userId, SK=threadId, attrs: lastReadTs, joinedAt, state */
+const getInbox = async (e, C) => {
+  const q = Q(e);
+  const userId = q.userId;
+  if (!userId) return json(400, C, { error: "userId required" });
 
-// Thread messages
-const listThreadMessages = async (_e, C, { threadId }) => json(200, C, { threadId, messages: [] });
-const postThreadMessage  = async (e, C, { threadId }) => json(201, C, { threadId, message: { id: "MSG-PLACEHOLDER", ...B(e) } });
+  const r = await ddb.query({
+    TableName: THREAD_MEMBERS_TABLE,
+    KeyConditionExpression: "userId = :u",
+    ExpressionAttributeValues: { ":u": userId },
+    ScanIndexForward: false,
+  });
+  const threadIds = (r.Items || []).map((m) => m.threadId);
+  if (threadIds.length === 0) return json(200, C, { userId, inbox: [] });
 
-// Individual message ops
-const patchMessage  = async (e, C, { messageId }) => json(200, C, { message: { id: messageId, ...B(e) } });
-const deleteMessage = async (_e, C, { messageId }) => json(204, C, "");
+  const threads = await batchGetThreads(threadIds);
+  // sort by lastMsgTs desc if available
+  threads.sort((a, b) => String(b.lastMsgTs || "").localeCompare(String(a.lastMsgTs || "")));
+  return json(200, C, { userId, inbox: threads });
+};
 
-// Project-scoped messages (optional pattern)
-const listProjectMessages = async (_e, C, { projectId }) => json(200, C, { projectId, messages: [] });
-const postProjectMessage  = async (e, C, { projectId }) => json(201, C, { projectId, message: { id: "MSG-PLACEHOLDER", ...B(e) } });
+/* GET /messages/threads?userId=...  (alias of inbox)
+   If userId omitted and SCANS_ALLOWED=true → scan Threads (dev only) */
+const listThreads = async (e, C) => {
+  const userId = Q(e).userId;
+  if (userId) return getInbox(e, C);
+  if (!SCANS_ALLOWED) return json(400, C, { error: "userId required (set SCANS_ALLOWED=true to scan for dev)" });
 
-// ---- Route table ----
+  const r = await ddb.scan({ TableName: THREADS_TABLE, Limit: 100 });
+  r.Items?.sort((a, b) => String(b.lastMsgTs || "").localeCompare(String(a.lastMsgTs || "")));
+  return json(200, C, { threads: r.Items || [] });
+};
+
+/* Create a thread: body { participants: [userIds], projectId?, title? } */
+const createThread = async (e, C) => {
+  const b = B(e);
+  const participants = Array.isArray(b.participants) ? b.participants.filter(Boolean) : [];
+  if (participants.length < 2) return json(400, C, { error: "participants (>=2) required" });
+
+  const ts = nowISO();
+  const threadId = b.threadId || `T-${uuidv4()}`;
+  const thread = {
+    threadId,
+    participants,            // array of userIds
+    projectId: b.projectId,  // optional
+    title: b.title,
+    createdAt: ts,
+    updatedAt: ts,
+    lastMsgTs: null,
+    snippet: "",
+    meta: b.meta || {},
+  };
+
+  // Create thread
+  await ddb.put({
+    TableName: THREADS_TABLE,
+    Item: thread,
+    ConditionExpression: "attribute_not_exists(threadId)",
+  });
+
+  // Create membership rows
+  for (const uid of participants) {
+    await ddb.put({
+      TableName: THREAD_MEMBERS_TABLE,
+      Item: {
+        userId: uid,
+        threadId,
+        joinedAt: ts,
+        lastReadTs: null,
+        state: "active",
+      },
+      ConditionExpression: "attribute_not_exists(userId) AND attribute_not_exists(threadId)",
+    });
+  }
+
+  return json(201, C, { thread });
+};
+
+/* Get a thread by id */
+const getThread = async (_e, C, { threadId }) => {
+  const r = await ddb.get({ TableName: THREADS_TABLE, Key: { threadId } });
+  return json(200, C, { thread: r.Item || null });
+};
+
+/* Messages in a thread
+   MESSAGES_TABLE: PK=threadId, SK=messageId (M#<millis>#uuid) */
+const listThreadMessages = async (e, C, { threadId }) => {
+  const q = Q(e);
+  const limit = Math.min(parseInt(q.limit || "50", 10), 200);
+  const r = await ddb.query({
+    TableName: MESSAGES_TABLE,
+    KeyConditionExpression: "threadId = :t",
+    ExpressionAttributeValues: { ":t": threadId },
+    ScanIndexForward: true, // chronological ascending
+    Limit: limit,
+    ExclusiveStartKey: q.nextKey ? JSON.parse(q.nextKey) : undefined,
+  });
+  return json(200, C, {
+    threadId,
+    messages: r.Items || [],
+    nextKey: r.LastEvaluatedKey ? JSON.stringify(r.LastEvaluatedKey) : null,
+  });
+};
+
+const postThreadMessage = async (e, C, { threadId }) => {
+  const b = B(e);
+  if (!b.senderId) return json(400, C, { error: "senderId required" });
+  if (!b.text && !b.body && !b.content) return json(400, C, { error: "text/body/content required" });
+
+  const tsMillis = Date.now();
+  const messageId = b.messageId || makeMsgId(tsMillis);
+  const ts = b.timestamp || new Date(tsMillis).toISOString();
+
+  const msg = {
+    threadId,
+    messageId,
+    senderId: b.senderId,
+    text: b.text,
+    body: b.body,
+    content: b.content,
+    reactions: b.reactions || {},
+    timestamp: ts,
+    meta: b.meta || {},
+  };
+
+  // Put message
+  await ddb.put({
+    TableName: MESSAGES_TABLE,
+    Item: msg,
+    ConditionExpression: "attribute_not_exists(threadId) AND attribute_not_exists(messageId)",
+  });
+
+  // Update thread snippet + lastMsgTs
+  await ddb.update({
+    TableName: THREADS_TABLE,
+    Key: { threadId },
+    UpdateExpression: "SET #snippet = :s, #last = :ts, #updatedAt = :u",
+    ExpressionAttributeNames: { "#snippet": "snippet", "#last": "lastMsgTs", "#updatedAt": "updatedAt" },
+    ExpressionAttributeValues: {
+      ":s": (msg.text || msg.body || msg.content || "").toString().slice(0, 180),
+      ":ts": ts,
+      ":u": nowISO(),
+    },
+  });
+
+  return json(201, C, { threadId, message: msg });
+};
+
+/* Patch / Delete message by messageId
+   Needs a GSI to resolve threadId from messageId quickly (MESSAGES_BY_ID_INDEX) */
+const patchMessage = async (e, C, { messageId }) => {
+  const b = B(e);
+  // Find the message's keys
+  let threadId = b.threadId;
+  if (!threadId) {
+    if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "threadId required in body (no messageId index configured)" });
+    const qr = await ddb.query({
+      TableName: MESSAGES_TABLE,
+      IndexName: MESSAGES_BY_ID_INDEX,
+      KeyConditionExpression: "messageId = :m",
+      ExpressionAttributeValues: { ":m": messageId },
+      Limit: 1,
+    });
+    const found = qr.Items?.[0];
+    if (!found) return json(404, C, { error: "message not found" });
+    threadId = found.threadId;
+  }
+
+  const upd = buildUpdate({ ...b, updatedAt: nowISO() });
+  if (!upd) return json(400, C, { error: "No fields to update" });
+
+  const r = await ddb.update({
+    TableName: MESSAGES_TABLE,
+    Key: { threadId, messageId },
+    ...upd,
+    ReturnValues: "ALL_NEW",
+  });
+  return json(200, C, { message: r.Attributes });
+};
+
+const deleteMessage = async (e, C, { messageId }) => {
+  let threadId = Q(e).threadId;
+  if (!threadId) {
+    if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "threadId query param required (no messageId index configured)" });
+    const qr = await ddb.query({
+      TableName: MESSAGES_TABLE,
+      IndexName: MESSAGES_BY_ID_INDEX,
+      KeyConditionExpression: "messageId = :m",
+      ExpressionAttributeValues: { ":m": messageId },
+      Limit: 1,
+    });
+    const found = qr.Items?.[0];
+    if (!found) return json(404, C, { error: "message not found" });
+    threadId = found.threadId;
+  }
+  await ddb.delete({ TableName: MESSAGES_TABLE, Key: { threadId, messageId } });
+  return json(204, C, "");
+};
+
+/* Project-scoped messages: PROJECT_MESSAGES_TABLE (PK=projectId, SK=messageId) */
+const listProjectMessages = async (_e, C, { projectId }) => {
+  const r = await ddb.query({
+    TableName: PROJECT_MESSAGES_TABLE,
+    KeyConditionExpression: "projectId = :p",
+    ExpressionAttributeValues: { ":p": projectId },
+    ScanIndexForward: true,
+  });
+  return json(200, C, { projectId, messages: r.Items || [] });
+};
+
+const postProjectMessage = async (e, C, { projectId }) => {
+  const b = B(e);
+  if (!b.senderId) return json(400, C, { error: "senderId required" });
+  if (!b.text && !b.body && !b.content) return json(400, C, { error: "text/body/content required" });
+
+  const tsMillis = Date.now();
+  const messageId = b.messageId || makeMsgId(tsMillis);
+  const ts = b.timestamp || new Date(tsMillis).toISOString();
+
+  const item = {
+    projectId,
+    messageId,
+    senderId: b.senderId,
+    text: b.text,
+    body: b.body,
+    content: b.content,
+    reactions: b.reactions || {},
+    timestamp: ts,
+    meta: b.meta || {},
+  };
+
+  await ddb.put({
+    TableName: PROJECT_MESSAGES_TABLE,
+    Item: item,
+    ConditionExpression: "attribute_not_exists(projectId) AND attribute_not_exists(messageId)",
+  });
+
+  return json(201, C, { projectId, message: item });
+};
+
+/* ------------ Routes ------------ */
 const routes = [
   { m: "GET",   r: /^\/messages\/health$/i,                               h: health },
 
+  // inbox & threads
   { m: "GET",   r: /^\/messages\/inbox$/i,                                 h: getInbox },
   { m: "GET",   r: /^\/messages\/threads$/i,                               h: listThreads },
   { m: "POST",  r: /^\/messages\/threads$/i,                               h: createThread },
   { m: "GET",   r: /^\/messages\/threads\/(?<threadId>[^/]+)$/i,           h: getThread },
 
+  // thread messages
   { m: "GET",   r: /^\/messages\/threads\/(?<threadId>[^/]+)\/messages$/i, h: listThreadMessages },
   { m: "POST",  r: /^\/messages\/threads\/(?<threadId>[^/]+)\/messages$/i, h: postThreadMessage },
 
+  // individual message ops by id (GSI recommended)
   { m: "PATCH", r: /^\/messages\/messages\/(?<messageId>[^/]+)$/i,         h: patchMessage },
   { m: "DELETE",r: /^\/messages\/messages\/(?<messageId>[^/]+)$/i,         h: deleteMessage },
 
-  // Optional project-scoped routes under /messages
+  // project-scoped
   { m: "GET",   r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: listProjectMessages },
   { m: "POST",  r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: postProjectMessage },
 ];
@@ -52,10 +336,17 @@ export async function handler(event) {
   const method = M(event);
   const path = P(event);
 
-  for (const { m, r, h } of routes) {
-    if (m !== method) continue;
-    const match = r.exec(path);
-    if (match) return h(event, CORS, match.groups || {});
+  try {
+    for (const { m, r, h } of routes) {
+      if (m !== method) continue;
+      const match = r.exec(path);
+      if (match) return await h(event, CORS, match.groups || {});
+    }
+    return json(404, CORS, { error: "Not found", method, path });
+  } catch (err) {
+    console.error("messages_router_error", { method, path, err });
+    const msg = err?.message || "Server error";
+    const status = /ConditionalCheckFailed/i.test(msg) ? 409 : 500;
+    return json(status, CORS, { error: msg });
   }
-  return json(404, CORS, { error: "Not found", method, path });
 }

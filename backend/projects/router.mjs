@@ -380,6 +380,13 @@ const routes = [
   { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/team$/i,                                 h: addTeam },
   { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/team\/(?<userId>[^/]+)$/i,               h: removeTeam },
 
+  // Tasks
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/tasks$/i,                       h: listTasks },
+  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/tasks$/i,                       h: createTask },
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,     h: getTask },
+  { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,     h: patchTask },
+  { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,     h: deleteTask },
+
   // Events (unified timeline/schedule)
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/events$/i,                               h: listEvents },
   { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/events$/i,                               h: createEvent },
@@ -427,14 +434,4 @@ export async function handler(event) {
     for (const { m, r, h } of routes) {
       if (m !== method) continue;
       const match = r.exec(path);
-      if (match) return await h(event, CORS, match.groups || {});
-    }
-    return json(404, CORS, { error: "Not found", method, path });
-  } catch (err) {
-    console.error("projects_router_error", { method, path, err });
-    const msg = err?.message || "Server error";
-    // Surface conditional check failures as 409
-    const status = /ConditionalCheckFailed/i.test(msg) ? 409 : 500;
-    return json(status, CORS, { error: msg });
-  }
-}
+      if

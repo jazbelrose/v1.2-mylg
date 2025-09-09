@@ -1,81 +1,64 @@
-service: ws
+service: mylg-v2-websocket
 frameworkVersion: '3'
-
-custom:
-  stage: ${sls:stage}
-  region: ${opt:region, 'us-west-1'}
-  prefix: mylg-v12
 
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${self:custom.region}
-  stage: ${self:custom.stage}
+  region: us-west-2
+  stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
   environment:
-    CONNECTIONS_TABLE: ${self:custom.prefix}-ws-connections-${self:custom.stage}
-    CONNECTIONS_USER_GSI: userId-sessionId-index
-    WEBSOCKET_ENDPOINT: https://hly9zz2zci.execute-api.us-west-1.amazonaws.com/production
-  websocketsApiName: ${self:custom.prefix}-ws-api-${self:custom.stage}
-  websocketsApiRouteSelectionExpression: $request.body.action
-  tags:
-    App: MYLG
-    Version: v1.2
-    Domain: ws
-    Stage: ${self:custom.stage}
+    # DynamoDB
+    CONNECTIONS_TABLE: Connections                   # ← your table name
+    CONNECTIONS_USER_GSI: userId-sessionId-index     # ← GSI used in code
+    # WebSocket Management API endpoint (HTTPS domain + stage)
+    # Example: https://abc123.execute-api.us-west-2.amazonaws.com/dev
+    WEBSOCKET_ENDPOINT: ${env:WEBSOCKET_ENDPOINT}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/Connections
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/Connections/index/*
+        - Effect: Allow
+          Action:
+            - execute-api:ManageConnections
+          Resource: "arn:aws:execute-api:${aws:region}:${aws:accountId}:*/${sls:stage}/POST/@connections/*"
 
 functions:
-  connect:
-    name: ${self:custom.prefix}-ws-connect-${self:custom.stage}
-    handler: src/onConnect.handler
+  onConnect:
+    handler: websocket/onConnect.handler
     events:
       - websocket:
           route: $connect
-  disconnect:
-    name: ${self:custom.prefix}-ws-disconnect-${self:custom.stage}
-    handler: src/onDisconnect.handler
+  onDisconnect:
+    handler: websocket/onDisconnect.handler
     events:
       - websocket:
           route: $disconnect
-  default:
-    name: ${self:custom.prefix}-ws-default-${self:custom.stage}
-    handler: src/onDefault.handler
+  onDefault:
+    handler: websocket/default.handler
     events:
       - websocket:
           route: $default
+  sendMessage:        # optional custom route used by your default code paths
+    handler: websocket/default.handler
+    events:
+      - websocket:
+          route: sendMessage
 
-resources:
-  Resources:
-    ConnectionsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.prefix}-ws-connections-${self:custom.stage}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: connectionId
-            AttributeType: S
-          - AttributeName: userId
-            AttributeType: S
-          - AttributeName: sessionId
-            AttributeType: S
-        KeySchema:
-          - AttributeName: connectionId
-            KeyType: HASH
-        GlobalSecondaryIndexes:
-          - IndexName: userId-sessionId-index
-            Projection: { ProjectionType: ALL }
-            KeySchema:
-              - AttributeName: userId
-                KeyType: HASH
-              - AttributeName: sessionId
-                KeyType: RANGE
-        TimeToLiveSpecification:
-          AttributeName: expiresAt
-          Enabled: true
-
-outputs:
-  WebSocketUrl:
-    Value: { "Fn::Join": ["", ["wss://", { Ref: "WebsocketsApi" }, ".execute-api.", { Ref: "AWS::Region" }, ".amazonaws.com/", { Ref: "WebsocketsDeploymentStage" }]] }
-  WebSocketEndpoint:
-    Value: { "Fn::Join": ["", ["https://", { Ref: "WebsocketsApi" }, ".execute-api.", { Ref: "AWS::Region" }, ".amazonaws.com/", { Ref: "WebsocketsDeploymentStage" }]] }
+package:
+  patterns:
+    - websocket/**
+    - '!**/*.map'

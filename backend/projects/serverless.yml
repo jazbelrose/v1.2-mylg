@@ -38,20 +38,22 @@ provider:
   iam:
     role:
       statements:
-        - Effect: Allow
-          Action:
-            - dynamodb:DescribeTable
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:DeleteItem
-            - dynamodb:Query
-            - dynamodb:Scan
-          Resource:
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tables.PROJECTS_TABLE}
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tables.TASKS_TABLE}
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tables.EVENTS_TABLE}
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tables.EVENTS_TABLE}/index/*
+          - Effect: Allow
+            Action:
+              - dynamodb:DescribeTable
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:BatchGetItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource:
+              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:THREADS_TABLE}
+              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:THREAD_MEMBERS_TABLE}
+              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:MESSAGES_TABLE}
+              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:MESSAGES_TABLE}/index/*
+              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:PROJECT_MESSAGES_TABLE}
 
 functions:
   projectsRouter:

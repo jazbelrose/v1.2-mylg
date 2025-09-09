@@ -5,20 +5,46 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: us-west-2
+  stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
-  stage: ${opt:stage, 'dev'}
   httpApi:
-    cors: false    # dynamic CORS handled in Lambda
+    cors: false   # dynamic CORS handled in /opt/nodejs/utils/cors.mjs
   environment:
-    # tune as needed
+    # CORS (layer reads these)
     ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
     CORS_WILDCARD_HOSTS: mylg.studio
     CORS_ALLOW_CREDENTIALS: "false"
 
+    # Users domain DBs (defaults keep your “UserProfiles” table name)
+    USER_PROFILES_TABLE: ${env:USER_PROFILES_TABLE, 'UserProfiles'}
+    INVITES_TABLE:       ${env:INVITES_TABLE, 'UserInvites'}
+    INVITES_BY_SENDER_INDEX:    ${env:INVITES_BY_SENDER_INDEX, 'senderId-index'}
+    INVITES_BY_RECIPIENT_INDEX: ${env:INVITES_BY_RECIPIENT_INDEX, 'recipientId-index'}
+    SCANS_ALLOWED: ${env:SCANS_ALLOWED, 'true'}
+
+  iam:
+    role:
+      statements:
+        # Users domain – tight access to just these tables/indexes
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:BatchGetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_PROFILES_TABLE, 'UserProfiles'}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE, 'UserInvites'}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE, 'UserInvites'}/index/*
+
 layers:
   sharedUtilsLayer:
-    path: shared-layer         # contains nodejs/utils/cors.mjs
+    path: shared-layer            # must contain nodejs/utils/cors.mjs
     name: shared-utils
     compatibleRuntimes: [nodejs18.x]
 
@@ -29,11 +55,10 @@ custom:
 package:
   individually: false
   patterns:
-    - '!../**'           # exclude outside of backend
-    - '**'               # include all under backend
-    - '!frontend/**'     # just in case
+    - '**'
+    - '!frontend/**'
     - '!scripts/**'
 
 functions:
-  # ---- USERS (unified router) ----
-  ${file(./user/functions.yml)}
+  # Users domain (pulled from a separate file for readability)
+  ${file(./users/functions.yml)}

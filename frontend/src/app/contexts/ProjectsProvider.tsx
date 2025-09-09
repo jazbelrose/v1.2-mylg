@@ -10,6 +10,7 @@ import React, {
 import { v4 as uuid } from "uuid";
 import pLimit from "../../shared/utils/pLimit";
 import { useAuth } from "./useAuth";
+import { useUser } from "./useUser";
 import {
   fetchProjectsFromApi,
   fetchProjectById,
@@ -25,7 +26,8 @@ import type { ProjectsValue, DMReadStatusMap } from "./ProjectsContextValue";
 import type { Project, TimelineEvent, Message } from "./DataProvider";
 
 export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  const { userId, isAdmin } = useAuth();
+  const { userId } = useAuth();
+  const { isAdmin } = useUser();
 
   const [userProjects, setUserProjects] = useState<Project[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);

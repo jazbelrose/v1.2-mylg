@@ -12,43 +12,20 @@ import {
   updateUserAttributes,
   signOut,
 } from "aws-amplify/auth";
-import { fetchUserProfile as fetchUserProfileApi } from "../../shared/utils/api";
 import { secureWebSocketAuth } from "../../shared/utils/secureWebSocketAuth";
 import { csrfProtection, logSecurityEvent } from "../../shared/utils/securityUtils";
-import { AuthContext, AuthContextValue, AuthStatus, Role, UserProfile } from "./AuthContextValue";
+import { AuthContext, AuthContextValue, AuthStatus, Role, CognitoUser } from "./AuthContextValue";
 
 export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authStatus, setAuthStatus] = useState<AuthStatus>("signedOut");
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Debug (keep while migrating; remove later)
   useEffect(() => {
-     
-    console.log("[AuthContext]", { isAuthenticated, authStatus, user, loading });
-  }, [isAuthenticated, authStatus, user, loading]);
-
-  const refreshUser = useCallback(async () => {
-    try {
-      const cognitoUser = await amplifyGetCurrentUser();
-      if (!cognitoUser) throw new Error("No current user");
-
-      const session = await fetchAuthSession();
-      const role = (session.tokens?.idToken?.payload?.role as Role) ?? undefined;
-      const userId = (session.tokens?.idToken?.payload?.sub as string) ?? cognitoUser.username;
-
-      const userProfile = (await fetchUserProfileApi(userId)) as UserProfile | null;
-      setUser({
-        ...(userProfile ?? { userId }),
-        userId,
-        role,
-        // keep a cognito ref if you need it: cognitoUsername: cognitoUser.username
-      });
-    } catch (error) {
-      console.error("Error refreshing user profile:", error);
-    }
-  }, []);
+    console.log("[AuthContext]", { isAuthenticated, authStatus, cognitoUser, loading });
+  }, [isAuthenticated, authStatus, cognitoUser, loading]);
 
   const validateAndSetUserSession = useCallback(async (label = "default") => {
     try {
@@ -57,7 +34,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       if (!accessToken || !idToken) {
         setAuthStatus("signedOut");
         setIsAuthenticated(false);
-        setUser(null);
+        setCognitoUser(null);
         return;
       }
 
@@ -67,46 +44,23 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       if (accessExp <= now || idExp <= now) {
         setAuthStatus("signedOut");
         setIsAuthenticated(false);
-        setUser(null);
+        setCognitoUser(null);
         return;
       }
 
-      const cognitoUser = await amplifyGetCurrentUser();
+      const cognitoUserData = await amplifyGetCurrentUser();
       const role = (idToken.payload?.role as Role) ?? undefined;
-      const userId = (idToken.payload?.sub as string) ?? cognitoUser?.username;
+      const userId = (idToken.payload?.sub as string) ?? cognitoUserData?.username;
 
-      let userProfile: UserProfile | null = null;
-      try {
-        const res = await fetchUserProfileApi(userId);
-        // some backends return { Item: {...} }
-        userProfile = (res as { Item?: UserProfile })?.Item ?? (res as UserProfile) ?? null;
-      } catch (e) {
-        console.error(`[validateAndSetUserSession:${label}] profile fetch error:`, e);
-      }
-
-      if (!userProfile) {
-        // still treat as signed-in so app can prompt to complete profile
-        setAuthStatus("signedIn");
-        setIsAuthenticated(true);
-        setUser({ userId, role });
-        return;
-      }
-
-      if (!userProfile.firstName) {
-        setAuthStatus("incompleteProfile");
-        setIsAuthenticated(true);
-        setUser({ ...userProfile, userId, role });
-        return;
-      }
-
+      // For auth context, we only care about Cognito identity
       setIsAuthenticated(true);
       setAuthStatus("signedIn");
-      setUser({ ...userProfile, userId, role });
+      setCognitoUser({ userId, role });
     } catch (error) {
       console.error(`[validateAndSetUserSession:${label}] Error:`, error);
       setAuthStatus("signedOut");
       setIsAuthenticated(false);
-      setUser(null);
+      setCognitoUser(null);
     }
   }, []);
 
@@ -125,7 +79,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     try {
       await signOut({ global: true });
       setIsAuthenticated(false);
-      setUser(null);
+      setCognitoUser(null);
       secureWebSocketAuth.clearAllTokens();
       csrfProtection.clearToken();
       logSecurityEvent("user_logged_out");
@@ -154,39 +108,25 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   }, [validateAndSetUserSession]);
 
   // ---- derived values (memoized) ----
-  const userId = user?.userId;
-  const role = user?.role;
-  const userName = user?.firstName ? `${user.firstName} ` : "Guest";
-
-  const isAdmin = role === "admin";
-  const isDesigner = role === "designer";
-  const isBuilder = role === "builder";
-  const isVendor = role === "vendor";
-  const isClient = role === "client";
+  const userId = cognitoUser?.userId;
+  const role = cognitoUser?.role;
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      // state
+      // Authentication state (session/identity tokens)
       isAuthenticated,
       authStatus,
-      user,
+      cognitoUser,
       loading,
 
-      // derived
+      // derived from Cognito tokens
       userId,
-      userName,
       role,
-      isAdmin,
-      isDesigner,
-      isBuilder,
-      isVendor,
-      isClient,
 
       // actions
       setIsAuthenticated,
       setAuthStatus,
-      setUser,
-      refreshUser,
+      setCognitoUser,
       validateAndSetUserSession,
       getCurrentUser: amplifyGetCurrentUser,
       getAuthTokens,
@@ -199,17 +139,10 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     [
       isAuthenticated,
       authStatus,
-      user,
+      cognitoUser,
       loading,
       userId,
-      userName,
       role,
-      isAdmin,
-      isDesigner,
-      isBuilder,
-      isVendor,
-      isClient,
-      refreshUser,
       validateAndSetUserSession,
       getAuthTokens,
       globalSignOut,

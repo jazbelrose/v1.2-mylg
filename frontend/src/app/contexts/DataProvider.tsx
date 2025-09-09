@@ -1,6 +1,6 @@
 // src/app/contexts/DataProvider.tsx
 import React, { PropsWithChildren } from "react";
-import { AuthDataProvider } from "./AuthDataProvider";
+import { UserProvider } from "./UserProvider";
 import { ProjectsProvider } from "./ProjectsProvider";
 import { MessagesProvider } from "./MessagesProvider";
 
@@ -92,13 +92,13 @@ export interface Thread {
 // ---------- Provider ----------
 export const DataProvider: React.FC<PropsWithChildren> = ({ children }) => {
   return (
-    <AuthDataProvider>
+    <UserProvider>
       <ProjectsProvider>
         <MessagesProvider>
           {children}
         </MessagesProvider>
       </ProjectsProvider>
-    </AuthDataProvider>
+    </UserProvider>
   );
 };
 

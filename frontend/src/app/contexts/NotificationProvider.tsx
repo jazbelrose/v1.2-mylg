@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { useAuth } from "./useAuth";
+import { useUser } from './useUser';
 import { getNotifications, markNotificationRead as apiMarkNotificationRead, deleteNotification as apiDeleteNotification, NotificationItem } from '../../shared/utils/api';
 import { getWithTTL, setWithTTL, DEFAULT_TTL } from '../../shared/utils/storageWithTTL';
 import { mergeAndDedupeNotifications } from '../../shared/utils/notificationUtils';
@@ -19,7 +19,7 @@ interface NotificationProviderProps {
 // Instead, use a bridge component (NotificationSocketBridge) that lives
 // inside both providers to wire them together.
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
-    const { user } = useAuth();
+    const { user } = useUser();
     const userId = user?.userId;
     const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
         const stored = getWithTTL('notifications');

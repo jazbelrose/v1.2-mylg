@@ -5,19 +5,19 @@ import { useAuth } from './useAuth';
 
 const AuthEventHandler: React.FC = () => {
   const navigate = useNavigate();
-  const { setIsAuthenticated, setUser } = useAuth();
+  const { setIsAuthenticated, setCognitoUser } = useAuth();
 
   useEffect(() => {
     const listener = (data: { payload: { event: string } }) => {
       switch (data.payload.event) {
         case 'tokenRefresh_failure':
           setIsAuthenticated(false);
-          setUser(null);
+          setCognitoUser(null);
           navigate('/login');
           break;
         case 'signOut':
           setIsAuthenticated(false);
-          setUser(null);
+          setCognitoUser(null);
           navigate('/login');
           break;
         default:
@@ -29,7 +29,7 @@ const AuthEventHandler: React.FC = () => {
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
     };
-  }, [navigate, setIsAuthenticated, setUser]);
+  }, [navigate, setIsAuthenticated, setCognitoUser]);
 
   return null;
 };

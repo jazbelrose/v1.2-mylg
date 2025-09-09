@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
 
 const useInactivityLogout = (): void => {
-  const { isAuthenticated, setIsAuthenticated, setUser } = useAuth();
+  const { isAuthenticated, setIsAuthenticated, setCognitoUser } = useAuth();
   const navigate = useNavigate();
 
   const INACTIVITY_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -19,7 +19,7 @@ const useInactivityLogout = (): void => {
       try {
         await signOut();
         setIsAuthenticated(false);
-        setUser(null);
+        setCognitoUser(null);
         navigate('/login');
         Cookies.remove('myCookie'); // If using cookies
       } catch (error) {
@@ -47,7 +47,7 @@ const useInactivityLogout = (): void => {
       window.removeEventListener('mousemove', resetTimer);
       window.removeEventListener('keydown', resetTimer);
     };
-  }, [isAuthenticated, setIsAuthenticated, setUser, navigate, INACTIVITY_TIME]);
+  }, [isAuthenticated, setIsAuthenticated, setCognitoUser, navigate, INACTIVITY_TIME]);
 };
 
 export default useInactivityLogout;

@@ -1,43 +1,32 @@
 import { createContext } from "react";
 import { fetchAuthSession, getCurrentUser as amplifyGetCurrentUser } from "aws-amplify/auth";
 
-/** ---- Types (pragmatic; tighten as your models evolve) ---- */
+/** ---- Types for Authentication (Cognito session/identity tokens only) ---- */
 export type Role = "admin" | "designer" | "builder" | "vendor" | "client" | string;
 
-export interface UserProfile {
+export interface CognitoUser {
   userId: string;
-  firstName?: string;
-  lastName?: string;
   role?: Role;
-  occupation?: string;
-  // add any other fields you store in the user profile
-  [k: string]: unknown;
+  // Minimal user identity from Cognito tokens only
 }
 
 export type AuthStatus = "signedOut" | "signedIn" | "incompleteProfile";
 
 export interface AuthContextValue {
-  // state
+  // Authentication state (session/identity tokens)
   isAuthenticated: boolean;
   authStatus: AuthStatus;
-  user: UserProfile | null;
+  cognitoUser: CognitoUser | null;
   loading: boolean;
 
-  // derived
+  // derived from Cognito tokens
   userId?: string;
-  userName: string;
   role?: Role;
-  isAdmin: boolean;
-  isDesigner: boolean;
-  isBuilder: boolean;
-  isVendor: boolean;
-  isClient: boolean;
 
   // actions
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
   setAuthStatus: React.Dispatch<React.SetStateAction<AuthStatus>>;
-  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  refreshUser: (forceRefresh?: boolean) => Promise<void>;
+  setCognitoUser: React.Dispatch<React.SetStateAction<CognitoUser | null>>;
   validateAndSetUserSession: (label?: string) => Promise<void>;
   getCurrentUser: typeof amplifyGetCurrentUser;
   getAuthTokens: () => Promise<Awaited<ReturnType<typeof fetchAuthSession>>["tokens"] | null>;

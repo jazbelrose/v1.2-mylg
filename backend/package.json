@@ -1,0 +1,27 @@
+{
+  "name": "mylg-backend-v2",
+  "version": "1.0.0",
+  "description": "MYLG Backend API v2 with Serverless Framework",
+  "type": "module",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs",
+    "invoke": "serverless invoke",
+    "offline": "serverless offline"
+  },
+  "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.0.0",
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0"
+  },
+  "devDependencies": {
+    "serverless": "^3.0.0",
+    "serverless-offline": "^13.0.0"
+  },
+  "keywords": ["serverless", "aws", "lambda", "api", "websocket"],
+  "author": "MYLG Team",
+  "license": "MIT"
+}

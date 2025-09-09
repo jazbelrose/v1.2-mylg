@@ -8,6 +8,8 @@ provider:
   stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
+  httpApi:
+    cors: false  # dynamic CORS handled in Lambda
   environment:
     # Wire to your existing pool/client (set via shell/CI or .env)
     COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
@@ -29,6 +31,14 @@ provider:
             - dynamodb:DescribeTable
           Resource:
             - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.USER_PROFILES_TABLE}
+        - Effect: Allow
+          Action:
+            - cognito-idp:InitiateAuth
+            - cognito-idp:AdminListGroupsForUser
+            - cognito-idp:AdminAddUserToGroup
+            - cognito-idp:AdminRemoveUserFromGroup
+          Resource:
+            - arn:aws:cognito-idp:${self:provider.region}:${aws:accountId}:userpool/${self:provider.environment.COGNITO_USER_POOL_ID}
 
 functions:
   # 1) Cognito Pre-Token Generation (adds role/claims)
@@ -48,9 +58,28 @@ functions:
       COGNITO_POOL_ID: ${self:provider.environment.COGNITO_USER_POOL_ID}
       COGNITO_CLIENT_ID: ${self:provider.environment.COGNITO_USER_CLIENT_ID}
 
+  refreshToken:
+    handler: routes/refreshToken.handler
+    layers:
+      - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+    events:
+      - httpApi:
+          path: /auth/refresh-token
+          method: POST
+
+  updateRoles:
+    handler: routes/updateRoles.handler
+    layers:
+      - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+    events:
+      - httpApi:
+          path: /auth/update-roles
+          method: POST
+
 package:
   patterns:
     - triggers/**
+    - routes/**
     - '!**/*.map'
     - '!node_modules/.bin/**'
 

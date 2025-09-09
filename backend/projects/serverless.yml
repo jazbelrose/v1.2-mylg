@@ -44,6 +44,10 @@ provider:
     BUDGET_ID_INDEX:         budgetId-index
     BUDGET_ITEM_ID_INDEX:    budgetItemId-index
 
+    # Galleries (v1.1 table: PK=galleryId, GSI on projectId)
+    GALLERIES_TABLE: ${env:GALLERIES_TABLE, 'Galleries'}
+    GALLERIES_PROJECT_INDEX: ${env:GALLERIES_PROJECT_INDEX, 'projectId-index'}
+
     # safer default; flip to "true" if you want dev scans
     SCANS_ALLOWED: "false"
 
@@ -74,6 +78,10 @@ provider:
             # Budgets (+ GSIs for budgetId and budgetItemId)
             - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.BUDGETS_TABLE}
             - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.BUDGETS_TABLE}/index/*
+
+            # Galleries (+ projectId GSI)
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:GALLERIES_TABLE, 'Galleries'}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:GALLERIES_TABLE, 'Galleries'}/index/*
 
 functions:
   projectsRouter:

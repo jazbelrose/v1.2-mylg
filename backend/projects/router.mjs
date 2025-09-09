@@ -20,6 +20,10 @@ const BUDGETS_TABLE           = process.env.BUDGETS_TABLE           || "Budgets"
 const BUDGET_ID_INDEX         = process.env.BUDGET_ID_INDEX         || "budgetId-index";
 const BUDGET_ITEM_ID_INDEX    = process.env.BUDGET_ITEM_ID_INDEX    || "budgetItemId-index";
 
+// --- Galleries (v1.1 table: PK=galleryId, GSI on projectId) ---
+const GALLERIES_TABLE = process.env.GALLERIES_TABLE || "Galleries";
+const GALLERIES_PROJECT_INDEX = process.env.GALLERIES_PROJECT_INDEX || "projectId-index";
+
 // Dev-only: allow scans when not filtered
 const SCANS_ALLOWED = (process.env.SCANS_ALLOWED || "true").toLowerCase() === "true";
 
@@ -34,6 +38,7 @@ const P = (e) => (e?.rawPath || e?.path || "/");
 const Q = (e) => e?.queryStringParameters || {};
 const B = (e) => { try { return JSON.parse(e?.body || "{}"); } catch { return {}; } };
 const nowISO = () => new Date().toISOString();
+const epochNow = () => Math.floor(Date.now() / 1000);
 
 const makeEventId = (ts = Date.now()) => `E#${String(ts).padStart(13, "0")}#${uuidv4()}`;
 
@@ -366,6 +371,100 @@ const getThumbnails = async (_e, C, { projectId }) => {
   return json(200, C, { projectId, thumbnails: r.Item?.thumbnails || [] });
 };
 
+/* ---------- Galleries ---------- */
+// GET /projects/{projectId}/galleries
+const listProjectGalleries = async (_e, C, { projectId }) => {
+  const r = await ddb.query({
+    TableName: GALLERIES_TABLE,
+    IndexName: GALLERIES_PROJECT_INDEX,
+    KeyConditionExpression: "projectId = :pid",
+    ExpressionAttributeValues: { ":pid": projectId },
+  });
+  return json(200, C, r.Items || []);
+};
+
+// POST /projects/{projectId}/galleries
+// body: { name, ...customFields }
+const createGallery = async (e, C, { projectId }) => {
+  const b = B(e);
+  if (!b.name) return json(400, C, "name is required");
+  const galleryId = b.galleryId || uuidv4();
+  const now = epochNow();
+
+  const item = {
+    ...b,
+    projectId,
+    galleryId,           // PK
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await ddb.put({
+    TableName: GALLERIES_TABLE,
+    Item: item,
+    ConditionExpression: "attribute_not_exists(galleryId)",
+  });
+
+  return json(201, C, item);
+};
+
+// GET /projects/{projectId}/galleries/{galleryId}
+const getGallery = async (_e, C, { projectId, galleryId }) => {
+  const r = await ddb.get({ TableName: GALLERIES_TABLE, Key: { galleryId } });
+  const item = r.Item || null;
+  // optional guard: ensure the item belongs to this project
+  if (item && item.projectId && item.projectId !== projectId) {
+    return json(404, C, null);
+  }
+  return json(200, C, item);
+};
+
+// PUT /projects/{projectId}/galleries/{galleryId}  (merge/upsert)
+const putGallery = async (e, C, { projectId, galleryId }) => {
+  const b = B(e);
+  // fetch so we merge (v1.1 behavior)
+  const ex = await ddb.get({ TableName: GALLERIES_TABLE, Key: { galleryId } });
+  const merged = {
+    ...(ex.Item || {}),
+    ...b,
+    projectId,
+    galleryId,
+    updatedAt: epochNow(),
+    createdAt: ex.Item?.createdAt || epochNow(),
+  };
+  await ddb.put({ TableName: GALLERIES_TABLE, Item: merged });
+  return json(200, C, merged);
+};
+
+// PATCH /projects/{projectId}/galleries/{galleryId}
+const patchGallery = async (e, C, { projectId, galleryId }) => {
+  const b = B(e);
+  const upd = buildUpdate({ ...b, updatedAt: epochNow(), projectId }); // keep projectId aligned
+  if (!upd) return json(400, C, "No fields to update");
+  const r = await ddb.update({
+    TableName: GALLERIES_TABLE,
+    Key: { galleryId },
+    ...upd,
+    ReturnValues: "ALL_NEW",
+  });
+  // optional project guard
+  if (r.Attributes?.projectId && r.Attributes.projectId !== projectId) {
+    return json(404, C, null);
+  }
+  return json(200, C, r.Attributes);
+};
+
+// DELETE /projects/{projectId}/galleries/{galleryId}
+const deleteGallery = async (_e, C, { projectId, galleryId }) => {
+  // (optional) read first to validate projectId
+  const r0 = await ddb.get({ TableName: GALLERIES_TABLE, Key: { galleryId } });
+  if (!r0.Item || (r0.Item.projectId && r0.Item.projectId !== projectId)) {
+    return json(404, C, null);
+  }
+  await ddb.delete({ TableName: GALLERIES_TABLE, Key: { galleryId } });
+  return json(204, C, "");
+};
+
 /* ---------- Budgets (headers & line items) ---------- */
 // Helpers
 function enforcePrefix(id) {
@@ -558,6 +657,14 @@ const routes = [
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/quick-links$/i,                          h: getQuickLinks },
   { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/quick-links$/i,                          h: addQuickLink },
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/thumbnails$/i,                           h: getThumbnails },
+
+  // Galleries
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/galleries$/i,                          h: listProjectGalleries },
+  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/galleries$/i,                          h: createGallery },
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: getGallery },
+  { m: "PUT",    r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: putGallery },
+  { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: patchGallery },
+  { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: deleteGallery },
 
   // Budgets under project
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/budget$/i,                               h: listBudgetForProject },

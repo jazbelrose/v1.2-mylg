@@ -1,0 +1,46 @@
+service: newsletter
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-west-2
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 15
+  httpApi:
+    cors: false   # dynamic CORS handled in /opt/nodejs/utils/cors.mjs
+  environment:
+    ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
+    CORS_WILDCARD_HOSTS: mylg.studio
+    CORS_ALLOW_CREDENTIALS: "false"
+    NEWSLETTER_TOPIC_ARN: ${env:NEWSLETTER_TOPIC_ARN, ''}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sns:Subscribe
+            - sns:Publish
+          Resource:
+            - ${self:provider.environment.NEWSLETTER_TOPIC_ARN}
+
+functions:
+  newsletterRouter:
+    handler: newsletter/router.handler
+    layers:
+      - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+    events:
+      - httpApi:
+          path: /newsletter/subscribe
+          method: ANY
+      - httpApi:
+          path: /newsletter/notify
+          method: ANY
+
+package:
+  patterns:
+    - newsletter/**
+    - '!**/*.map'
+    - '!node_modules/.bin/**'

@@ -9,14 +9,57 @@ provider:
   memorySize: 256
   timeout: 15
   httpApi:
-    cors: false
+    cors: false  # dynamic CORS in Lambda
   environment:
+    # CORS (read by /opt layer)
     ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
     CORS_WILDCARD_HOSTS: mylg.studio
     CORS_ALLOW_CREDENTIALS: "false"
 
+    # Tables / indexes used by the router (MUST be inside environment)
+    THREADS_TABLE: MessagesThreads
+    THREAD_MEMBERS_TABLE: MessagesThreadMembers
+    MESSAGES_TABLE: Messages
+    MESSAGES_BY_ID_INDEX: messageId-index
+    PROJECT_MESSAGES_TABLE: ProjectMessages
+    NOTIFICATIONS_TABLE: Notifications
+    NOTIFICATIONS_BY_USER_INDEX: userId-index
+
+    # dev safety toggle (router expects a string)
+    SCANS_ALLOWED: "false"
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:BatchGetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            # Threads + membership
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:THREADS_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:THREAD_MEMBERS_TABLE}
+
+            # Messages + GSIs (messageId-index)
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:MESSAGES_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:MESSAGES_TABLE}/index/*
+
+            # Project-scoped messages
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:PROJECT_MESSAGES_TABLE}
+
+            # Notifications (+ optional index)
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:NOTIFICATIONS_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:NOTIFICATIONS_TABLE}/index/*
+
 functions:
   messagesRouter:
+    # adjust if your file is not under src/
     handler: src/router.handler
     layers:
       - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}

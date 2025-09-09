@@ -9,6 +9,7 @@ custom:
     PROJECTS_TABLE: ${self:custom.prefix}-projects-core-${self:custom.stage}
     TASKS_TABLE:    ${self:custom.prefix}-projects-tasks-${self:custom.stage}
     EVENTS_TABLE:   ${self:custom.prefix}-projects-events-${self:custom.stage}
+    BUDGETS_TABLE:  ${self:custom.prefix}-projects-budgets-${self:custom.stage}
 
 provider:
   name: aws
@@ -19,7 +20,7 @@ provider:
   timeout: 15
   stackName: ${self:custom.prefix}-${self:service}-${self:custom.stage}
   httpApi:
-    cors: false
+    cors: false  # dynamic CORS handled in Lambda
     name: ${self:custom.prefix}-${self:service}-api-${self:custom.stage}
   tags:
     App: MYLG
@@ -27,38 +28,60 @@ provider:
     Domain: projects
     Stage: ${self:custom.stage}
   environment:
+    # CORS (layer reads these)
     ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
     CORS_WILDCARD_HOSTS: mylg.studio
     CORS_ALLOW_CREDENTIALS: "false"
+
+    # Projects domain tables
     PROJECTS_TABLE: ${self:custom.tables.PROJECTS_TABLE}
     TASKS_TABLE:    ${self:custom.tables.TASKS_TABLE}
     EVENTS_TABLE:   ${self:custom.tables.EVENTS_TABLE}
     EVENTS_STARTAT_INDEX: projectId-startAt-index
-    SCANS_ALLOWED: "true"
+
+    # Budgets (v1.1 semantics under /projects/{id}/budget*)
+    BUDGETS_TABLE:           ${self:custom.tables.BUDGETS_TABLE}
+    BUDGET_ID_INDEX:         budgetId-index
+    BUDGET_ITEM_ID_INDEX:    budgetItemId-index
+
+    # safer default; flip to "true" if you want dev scans
+    SCANS_ALLOWED: "false"
+
   iam:
     role:
       statements:
-          - Effect: Allow
-            Action:
-              - dynamodb:DescribeTable
-              - dynamodb:GetItem
-              - dynamodb:PutItem
-              - dynamodb:UpdateItem
-              - dynamodb:DeleteItem
-              - dynamodb:BatchGetItem
-              - dynamodb:Query
-              - dynamodb:Scan
-            Resource:
-              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:THREADS_TABLE}
-              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:THREAD_MEMBERS_TABLE}
-              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:MESSAGES_TABLE}
-              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:MESSAGES_TABLE}/index/*
-              - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:PROJECT_MESSAGES_TABLE}
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:BatchGetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            # Projects core
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJECTS_TABLE}
+
+            # Tasks
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.TASKS_TABLE}
+
+            # Events (+ optional startAt GSI)
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.EVENTS_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.EVENTS_TABLE}/index/*
+
+            # Budgets (+ GSIs for budgetId and budgetItemId)
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.BUDGETS_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.BUDGETS_TABLE}/index/*
 
 functions:
   projectsRouter:
     name: ${self:custom.prefix}-projects-router-${self:custom.stage}
-    handler: src/router.handler
+    # NOTE: point this to where your file actually lives.
+    # If the file is backend/projects/router.mjs at the service root, use "router.handler".
+    # If it's in src/router.mjs, keep "src/router.handler".
+    handler: router.handler
     layers:
       - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
     events:
@@ -71,9 +94,14 @@ functions:
       - httpApi:
           path: /projects/health
           method: ANY
+      # include this only if you enabled the convenience routes /budgets/by*
+      - httpApi:
+          path: /budgets/{proxy+}
+          method: ANY
 
 package:
   patterns:
-    - src/**
-    - '!node_modules/.bin/**'
+    # include the router + anything it imports (node_modules auto-included)
+    - router.mjs
     - '!**/*.map'
+    - '!node_modules/.bin/**'

@@ -1,4 +1,4 @@
-service: mylg-v2
+service: users
 frameworkVersion: '3'
 
 provider:
@@ -11,22 +11,23 @@ provider:
   httpApi:
     cors: false   # dynamic CORS handled in /opt/nodejs/utils/cors.mjs
   environment:
-    # CORS (layer reads these)
+    # CORS (read by the shared layer)
     ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
     CORS_WILDCARD_HOSTS: mylg.studio
     CORS_ALLOW_CREDENTIALS: "false"
 
-    # Users domain DBs (defaults keep your “UserProfiles” table name)
+    # Users domain tables / indexes
     USER_PROFILES_TABLE: ${env:USER_PROFILES_TABLE, 'UserProfiles'}
     INVITES_TABLE:       ${env:INVITES_TABLE, 'UserInvites'}
     INVITES_BY_SENDER_INDEX:    ${env:INVITES_BY_SENDER_INDEX, 'senderId-index'}
     INVITES_BY_RECIPIENT_INDEX: ${env:INVITES_BY_RECIPIENT_INDEX, 'recipientId-index'}
-    SCANS_ALLOWED: ${env:SCANS_ALLOWED, 'true'}
+
+    # Dev toggle the router reads as a string
+    SCANS_ALLOWED: ${env:SCANS_ALLOWED, 'false'}
 
   iam:
     role:
       statements:
-        # Users domain – tight access to just these tables/indexes
         - Effect: Allow
           Action:
             - dynamodb:DescribeTable
@@ -38,27 +39,43 @@ provider:
             - dynamodb:Query
             - dynamodb:Scan
           Resource:
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_PROFILES_TABLE, 'UserProfiles'}
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE, 'UserInvites'}
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE, 'UserInvites'}/index/*
-
-layers:
-  sharedUtilsLayer:
-    path: shared-layer            # must contain nodejs/utils/cors.mjs
-    name: shared-utils
-    compatibleRuntimes: [nodejs18.x]
-
-custom:
-  defaultLayers:
-    - { Ref: SharedUtilsLayerLambdaLayer }
-
-package:
-  individually: false
-  patterns:
-    - '**'
-    - '!frontend/**'
-    - '!scripts/**'
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.USER_PROFILES_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.INVITES_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.INVITES_TABLE}/index/*
 
 functions:
-  # Users domain (pulled from a separate file for readability)
-  ${file(./users/functions.yml)}
+  usersRouter:
+    # adjust if your file path differs (e.g., router.mjs at the service root)
+    handler: users/router.handler
+    layers:
+      - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+    events:
+      # If this service has its own API endpoint, you can replace the block below
+      # with a single catch-all: path: /{proxy+}
+      - httpApi:
+          path: /userProfiles
+          method: ANY
+      - httpApi:
+          path: /userProfiles/{proxy+}
+          method: ANY
+      - httpApi:
+          path: /userProfilesPending/{proxy+}
+          method: ANY
+      - httpApi:
+          path: /invites/{proxy+}
+          method: ANY
+      - httpApi:
+          path: /sendProjectInvitation
+          method: ANY
+      - httpApi:
+          path: /postProjectToUserId
+          method: ANY
+      - httpApi:
+          path: /user/health
+          method: ANY
+
+package:
+  patterns:
+    - users/**        # include router + helpers under users/
+    - '!**/*.map'
+    - '!node_modules/.bin/**'

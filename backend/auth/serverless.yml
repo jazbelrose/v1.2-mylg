@@ -1,0 +1,69 @@
+service: auth
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-west-2
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 15
+  environment:
+    # Wire to your existing pool/client (set via shell/CI or .env)
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+    COGNITO_USER_POOL_NAME: ${env:COGNITO_USER_POOL_NAME}
+    COGNITO_USER_CLIENT_ID: ${env:COGNITO_USER_CLIENT_ID}
+
+    # Used by preTokenGeneration to look up role/profile
+    USER_PROFILES_TABLE: ${env:USER_PROFILES_TABLE, 'UserProfiles'}
+
+  iam:
+    role:
+      statements:
+        # preTokenGeneration only needs to read UserProfiles
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:BatchGetItem
+            - dynamodb:Query
+            - dynamodb:DescribeTable
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.USER_PROFILES_TABLE}
+
+functions:
+  # 1) Cognito Pre-Token Generation (adds role/claims)
+  preTokenGeneration:
+    handler: triggers/preTokenGeneration.handler
+    events:
+      - cognitoUserPool:
+          # Bind to EXISTING pool; provide the name via env var
+          pool: ${self:provider.environment.COGNITO_USER_POOL_NAME}
+          trigger: PreTokenGeneration
+          existing: true
+
+  # 2) Lambda authorizer used by the **WebSocket $connect** route (deployed here, *referenced* by ws stack)
+  cognitoAuthorizer:
+    handler: triggers/cognitoAuthorizer.handler
+    environment:
+      COGNITO_POOL_ID: ${self:provider.environment.COGNITO_USER_POOL_ID}
+      COGNITO_CLIENT_ID: ${self:provider.environment.COGNITO_USER_CLIENT_ID}
+
+package:
+  patterns:
+    - triggers/**
+    - '!**/*.map'
+    - '!node_modules/.bin/**'
+
+resources:
+  Outputs:
+    PreTokenGenerationArn:
+      Value:
+        Fn::GetAtt: [ PreTokenGenerationLambdaFunction, Arn ]
+      Export:
+        Name: auth-preTokenGeneration-arn-${sls:stage}
+
+    CognitoAuthorizerArn:
+      Value:
+        Fn::GetAtt: [ CognitoAuthorizerLambdaFunction, Arn ]
+      Export:
+        Name: auth-cognitoAuthorizer-arn-${sls:stage}

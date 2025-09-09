@@ -4,54 +4,48 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 
-// ----- ENV (configure in serverless.yml) -----
+/* ------------ ENV ------------ */
 const REGION = process.env.AWS_REGION || "us-west-2";
 
-// Core projects table (your "Projects DB")
+// Core projects table
 const PROJECTS_TABLE = process.env.PROJECTS_TABLE || "Projects";
 
-// Optional split tables (recommended)
+// Tasks & Events
 const TASKS_TABLE   = process.env.TASKS_TABLE   || "ProjectTasks";
 const EVENTS_TABLE  = process.env.EVENTS_TABLE  || "ProjectEvents";
+const EVENTS_STARTAT_INDEX = process.env.EVENTS_STARTAT_INDEX || ""; // e.g., "projectId-startAt-index"
 
-// Optional index to accelerate schedule queries by start time (partitioned by projectId)
-const EVENTS_STARTAT_INDEX = process.env.EVENTS_STARTAT_INDEX || ""; // e.g. "projectId-startAt-index"
+// Budgets (same schema as v1.1)
+const BUDGETS_TABLE           = process.env.BUDGETS_TABLE           || "Budgets";
+const BUDGET_ID_INDEX         = process.env.BUDGET_ID_INDEX         || "budgetId-index";
+const BUDGET_ITEM_ID_INDEX    = process.env.BUDGET_ITEM_ID_INDEX    || "budgetItemId-index";
 
-// Allow fallback scans when an index is not present (dev only)
+// Dev-only: allow scans when not filtered
 const SCANS_ALLOWED = (process.env.SCANS_ALLOWED || "true").toLowerCase() === "true";
 
-// ----- DDB client -----
+/* ------------ DDB ------------ */
 const ddb = DynamoDBDocument.from(new DynamoDBClient({ region: REGION }), {
   marshallOptions: { removeUndefinedValues: true },
 });
 
-// ----- helpers -----
+/* ------------ utils ------------ */
 const M = (e) => e?.requestContext?.http?.method?.toUpperCase?.() || e?.httpMethod?.toUpperCase?.() || "GET";
 const P = (e) => (e?.rawPath || e?.path || "/");
 const Q = (e) => e?.queryStringParameters || {};
 const B = (e) => { try { return JSON.parse(e?.body || "{}"); } catch { return {}; } };
+const nowISO = () => new Date().toISOString();
 
-function nowISO() { return new Date().toISOString(); }
+const makeEventId = (ts = Date.now()) => `E#${String(ts).padStart(13, "0")}#${uuidv4()}`;
 
-// Create an eventId that sorts by time descending with ScanIndexForward=false
-function makeEventId(ts = Date.now()) {
-  // zero-padded millis so lexical order = time order
-  const pad = String(ts).padStart(13, "0");
-  return `E#${pad}#${uuidv4()}`;
-}
-
-// build UPDATE expressions from a partial object
 function buildUpdate(obj) {
-  const Names = {};
-  const Values = {};
-  const sets = [];
+  const Names = {}, Values = {}, sets = [];
   for (const [k, v] of Object.entries(obj)) {
     if (v === undefined) continue;
     Names["#" + k] = k;
     Values[":" + k] = v;
     sets.push(`#${k} = :${k}`);
   }
-  if (sets.length === 0) return null;
+  if (!sets.length) return null;
   return {
     UpdateExpression: "SET " + sets.join(", "),
     ExpressionAttributeNames: Names,
@@ -59,18 +53,16 @@ function buildUpdate(obj) {
   };
 }
 
-// =================== Handlers ===================
+/* ============== Handlers ============== */
 
-// ---- Health
+// Health
 const health = async (_e, C) => json(200, C, { ok: true, domain: "projects" });
 
-// ---- Projects CRUD (PROJECTS_TABLE: PK = projectId)
+/* ---------- Projects CRUD ---------- */
 const listProjects = async (e, C) => {
   const q = Q(e);
   const limit = Math.min(parseInt(q.limit || "50", 10), 200);
 
-  // Prefer filtered scan unless you’ve created GSIs.
-  // Example filters supported: ownerId, status
   const filters = [];
   const names = {};
   const values = {};
@@ -89,7 +81,12 @@ const listProjects = async (e, C) => {
   }
 
   const r = await ddb.scan(params);
-  return json(200, C, { items: r.Items || [], count: r.Count ?? 0, scannedCount: r.ScannedCount ?? 0, lastKey: r.LastEvaluatedKey || null });
+  return json(200, C, {
+    items: r.Items || [],
+    count: r.Count ?? 0,
+    scannedCount: r.ScannedCount ?? 0,
+    lastKey: r.LastEvaluatedKey || null,
+  });
 };
 
 const createProject = async (e, C) => {
@@ -147,17 +144,15 @@ const deleteProject = async (_e, C, { projectId }) => {
   return json(204, C, "");
 };
 
-// ---- Team (team lives on PROJECTS_TABLE as an array)
+/* ---------- Team (array on project) ---------- */
 const getTeam = async (_e, C, { projectId }) => {
   const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId }, ProjectionExpression: "projectId, team" });
-  const team = r.Item?.team || [];
-  return json(200, C, { projectId, team });
+  return json(200, C, { projectId, team: r.Item?.team || [] });
 };
 
 const addTeam = async (e, C, { projectId }) => {
-  const body = B(e);
-  // body can be { userId, role, ... } or an array of members; we append
-  const members = Array.isArray(body) ? body : [body];
+  const b = B(e);
+  const members = Array.isArray(b) ? b : [b];
   const r = await ddb.update({
     TableName: PROJECTS_TABLE,
     Key: { projectId },
@@ -170,7 +165,6 @@ const addTeam = async (e, C, { projectId }) => {
 };
 
 const removeTeam = async (_e, C, { projectId, userId }) => {
-  // fetch → filter → write back (without scan)
   const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId }, ProjectionExpression: "team" });
   const team = (r.Item?.team || []).filter((m) => m?.userId !== userId);
   await ddb.update({
@@ -183,7 +177,7 @@ const removeTeam = async (_e, C, { projectId, userId }) => {
   return json(200, C, { projectId, removedUserId: userId, team });
 };
 
-// ---- Tasks (TASKS_TABLE: PK=projectId, SK=taskId)
+/* ---------- Tasks (PK=projectId, SK=taskId) ---------- */
 const listTasks = async (_e, C, { projectId }) => {
   const r = await ddb.query({
     TableName: TASKS_TABLE,
@@ -194,19 +188,19 @@ const listTasks = async (_e, C, { projectId }) => {
 };
 
 const createTask = async (e, C, { projectId }) => {
-  const body = B(e);
-  const taskId = body.taskId || `T-${uuidv4()}`;
+  const b = B(e);
+  const taskId = b.taskId || `T-${uuidv4()}`;
   const ts = nowISO();
   const item = {
     projectId,
     taskId,
-    title: body.title || "",
-    status: body.status || "todo",
-    assigneeId: body.assigneeId,
-    dueAt: body.dueAt,
+    title: b.title || "",
+    status: b.status || "todo",
+    assigneeId: b.assigneeId,
+    dueAt: b.dueAt,
     createdAt: ts,
     updatedAt: ts,
-    ...body,
+    ...b,
   };
   await ddb.put({
     TableName: TASKS_TABLE,
@@ -222,8 +216,8 @@ const getTask = async (_e, C, { projectId, taskId }) => {
 };
 
 const patchTask = async (e, C, { projectId, taskId }) => {
-  const body = B(e);
-  const upd = buildUpdate({ ...body, updatedAt: nowISO() });
+  const b = B(e);
+  const upd = buildUpdate({ ...b, updatedAt: nowISO() });
   if (!upd) return json(400, C, { error: "No fields to update" });
   const r = await ddb.update({
     TableName: TASKS_TABLE,
@@ -239,86 +233,69 @@ const deleteTask = async (_e, C, { projectId, taskId }) => {
   return json(204, C, "");
 };
 
-// ---- Events (EVENTS_TABLE: PK=projectId, SK=eventId; unified timeline/schedule)
+/* ---------- Events (unified timeline/schedule) ---------- */
 const listEvents = async (e, C, { projectId }) => {
   const q = Q(e);
   const view = (q.view || "timeline").toLowerCase();
   const fromISO = q.from || null;
   const toISO   = q.to || null;
-  const kinds = (q.kind || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const kinds = (q.kind || "").split(",").map((s) => s.trim()).filter(Boolean);
 
-  // base query by projectId
   let items = [];
   if (view === "schedule" && EVENTS_STARTAT_INDEX) {
-    // Query by startAt range using GSI if provided
     const values = { ":p": projectId };
     let cond = "projectId = :p";
-
-    // add between filter on startAt in KeyCondition when possible
     if (fromISO && toISO) {
       cond += " AND #startAt BETWEEN :from AND :to";
-      values[":from"] = fromISO;
-      values[":to"] = toISO;
+      values[":from"] = fromISO; values[":to"] = toISO;
     } else if (fromISO) {
       cond += " AND #startAt >= :from";
       values[":from"] = fromISO;
     } else if (toISO) {
       cond += " AND #startAt <= :to";
       values[":to"] = toISO;
-    } else {
-      // fall back to full partition scan on index
-      // (KeyCondition still requires projectId; startAt condition omitted)
     }
-
     const r = await ddb.query({
       TableName: EVENTS_TABLE,
       IndexName: EVENTS_STARTAT_INDEX,
       KeyConditionExpression: cond,
       ExpressionAttributeNames: { "#startAt": "startAt" },
       ExpressionAttributeValues: values,
-      ScanIndexForward: true, // chronological
+      ScanIndexForward: true,
     });
     items = r.Items || [];
   } else {
-    // timeline: query partition and sort descending by eventId (E#<millis>#uuid)
     const r = await ddb.query({
       TableName: EVENTS_TABLE,
       KeyConditionExpression: "projectId = :p",
       ExpressionAttributeValues: { ":p": projectId },
-      ScanIndexForward: false, // newest first (because eventId includes timestamp prefix)
+      ScanIndexForward: false, // eventId encoded with millis for DESC
     });
     items = r.Items || [];
   }
 
-  // optional kind filter (in-memory; add GSI if you need server-side)
-  if (kinds.length) {
-    items = items.filter((ev) => ev?.kind && kinds.includes(ev.kind));
-  }
-
+  if (kinds.length) items = items.filter((ev) => ev?.kind && kinds.includes(ev.kind));
   return json(200, C, { projectId, view, events: items });
 };
 
 const createEvent = async (e, C, { projectId }) => {
-  const body = B(e);
+  const b = B(e);
   const tsMillis = Date.now();
-  const eventId = body.eventId || makeEventId(tsMillis);
-  const ts = body.ts || new Date(tsMillis).toISOString();
+  const eventId = b.eventId || makeEventId(tsMillis);
+  const ts = b.ts || new Date(tsMillis).toISOString();
 
   const item = {
     projectId,
     eventId,
-    ts,                        // canonical timestamp for timeline views
-    kind: body.kind || "note", // status|milestone|meeting|audit|...
-    title: body.title || "",
-    description: body.description,
-    startAt: body.startAt,     // for schedule views (optional)
-    endAt: body.endAt,
-    actorId: body.actorId,
-    tags: body.tags || [],
-    meta: body.meta || {},
+    ts,
+    kind: b.kind || "note",
+    title: b.title || "",
+    description: b.description,
+    startAt: b.startAt,
+    endAt: b.endAt,
+    actorId: b.actorId,
+    tags: b.tags || [],
+    meta: b.meta || {},
     createdAt: nowISO(),
     updatedAt: nowISO(),
   };
@@ -338,8 +315,8 @@ const getEvent = async (_e, C, { projectId, eventId }) => {
 };
 
 const patchEvent = async (e, C, { projectId, eventId }) => {
-  const body = B(e);
-  const upd = buildUpdate({ ...body, updatedAt: nowISO() });
+  const b = B(e);
+  const upd = buildUpdate({ ...b, updatedAt: nowISO() });
   if (!upd) return json(400, C, { error: "No fields to update" });
   const r = await ddb.update({
     TableName: EVENTS_TABLE,
@@ -355,7 +332,7 @@ const deleteEvent = async (_e, C, { projectId, eventId }) => {
   return json(204, C, "");
 };
 
-// Back-compat: /timeline → events(view=timeline)
+// Back-compat timeline shims
 const getTimeline = (e, C, g) => {
   const e2 = { ...e, queryStringParameters: { ...(Q(e) || {}), view: "timeline" } };
   return listEvents(e2, C, g);
@@ -364,7 +341,184 @@ const addTimeline = createEvent;
 const patchTimeline = patchEvent;
 const deleteTimeline = deleteEvent;
 
-// =================== Routes ===================
+/* ---------- Quick Links & Thumbnails on Project ---------- */
+const getQuickLinks = async (_e, C, { projectId }) => {
+  const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId }, ProjectionExpression: "quickLinks" });
+  return json(200, C, { projectId, quickLinks: r.Item?.quickLinks || [] });
+};
+
+const addQuickLink = async (e, C, { projectId }) => {
+  const link = B(e);
+  link.id = link.id || `QL-${uuidv4()}`;
+  const r = await ddb.update({
+    TableName: PROJECTS_TABLE,
+    Key: { projectId },
+    UpdateExpression: "SET #ql = list_append(if_not_exists(#ql, :empty), :l), #updatedAt = :ts",
+    ExpressionAttributeNames: { "#ql": "quickLinks", "#updatedAt": "updatedAt" },
+    ExpressionAttributeValues: { ":l": [link], ":empty": [], ":ts": nowISO() },
+    ReturnValues: "ALL_NEW",
+  });
+  return json(201, C, { projectId, quickLinks: r.Attributes.quickLinks || [] });
+};
+
+const getThumbnails = async (_e, C, { projectId }) => {
+  const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId }, ProjectionExpression: "thumbnails" });
+  return json(200, C, { projectId, thumbnails: r.Item?.thumbnails || [] });
+};
+
+/* ---------- Budgets (headers & line items) ---------- */
+// Helpers
+function enforcePrefix(id) {
+  if (!id.startsWith("HEADER-") && !id.startsWith("LINE-")) {
+    throw new Error("budgetItemId must start with HEADER- or LINE-");
+  }
+}
+
+// POST /projects/{projectId}/budget  (create header OR line item)
+// Body: { isHeader?: boolean, budgetId?, budgetItemId?, ... }
+const createBudgetItem = async (e, C, { projectId }) => {
+  const data = B(e);
+  if (!projectId) return json(400, C, "projectId required");
+
+  const isHeader = data.isHeader === true || !data.budgetId;
+
+  // budgetId
+  if (isHeader && !data.budgetId) {
+    data.budgetId = uuidv4();
+  } else if (!isHeader && !data.budgetId) {
+    return json(400, C, "budgetId required for line item creation");
+  }
+
+  // budgetItemId
+  let budgetItemId = data.budgetItemId;
+  if (!budgetItemId) {
+    budgetItemId = (isHeader ? "HEADER-" : "LINE-") + uuidv4();
+  }
+  enforcePrefix(budgetItemId);
+
+  const ts = nowISO();
+  const item = {
+    projectId,
+    budgetId: data.budgetId,
+    budgetItemId,
+    createdAt: ts,
+    updatedAt: ts,
+    revision: data.revision ?? 1,
+    ...data,
+  };
+  delete item.isHeader;
+
+  await ddb.put({
+    TableName: BUDGETS_TABLE,
+    Item: item,
+    ConditionExpression: "attribute_not_exists(projectId) AND attribute_not_exists(budgetItemId)",
+  });
+
+  return json(201, C, item);
+};
+
+// PUT /projects/{projectId}/budget/items/{budgetItemId}  (full upsert; requires budgetId)
+const putBudgetItem = async (e, C, { projectId, budgetItemId }) => {
+  const data = B(e);
+  if (!projectId || !budgetItemId) return json(400, C, "projectId and budgetItemId required");
+  if (!data.budgetId) return json(400, C, "budgetId required");
+  enforcePrefix(budgetItemId);
+
+  const ts = nowISO();
+  const item = {
+    ...data,
+    projectId,
+    budgetItemId,
+    updatedAt: ts,
+    createdAt: data.createdAt || ts,
+    revision: data.revision ?? 1,
+  };
+  await ddb.put({ TableName: BUDGETS_TABLE, Item: item });
+  return json(200, C, item);
+};
+
+// PATCH /projects/{projectId}/budget/items/{budgetItemId}
+const patchBudgetItem = async (e, C, { projectId, budgetItemId }) => {
+  const data = B(e);
+  if (!projectId || !budgetItemId) return json(400, C, "projectId and budgetItemId required");
+  enforcePrefix(budgetItemId);
+  if (Object.keys(data).length === 0) return json(400, C, "No fields to update");
+
+  const expr = buildUpdate({ ...data, updatedAt: nowISO() });
+  const r = await ddb.update({
+    TableName: BUDGETS_TABLE,
+    Key: { projectId, budgetItemId },
+    ...expr,
+    ReturnValues: "ALL_NEW",
+  });
+  return json(200, C, r.Attributes);
+};
+
+// GET /projects/{projectId}/budget  (?headers=true supported)
+const listBudgetForProject = async (e, C, { projectId }) => {
+  const headersOnly = (Q(e).headers || "").toLowerCase() === "true";
+  if (headersOnly) {
+    const r = await ddb.query({
+      TableName: BUDGETS_TABLE,
+      KeyConditionExpression: "projectId = :p AND begins_with(budgetItemId, :h)",
+      ExpressionAttributeValues: { ":p": projectId, ":h": "HEADER-" },
+    });
+    return json(200, C, r.Items || []);
+  }
+  const r = await ddb.query({
+    TableName: BUDGETS_TABLE,
+    KeyConditionExpression: "projectId = :p",
+    ExpressionAttributeValues: { ":p": projectId },
+  });
+  return json(200, C, r.Items || []);
+};
+
+// GET /projects/{projectId}/budget/items/{budgetItemId}
+const getBudgetItem = async (_e, C, { projectId, budgetItemId }) => {
+  enforcePrefix(budgetItemId);
+  const r = await ddb.get({
+    TableName: BUDGETS_TABLE,
+    Key: { projectId, budgetItemId },
+  });
+  return json(200, C, r.Item || null);
+};
+
+// DELETE /projects/{projectId}/budget/items/{budgetItemId}
+const deleteBudgetItem = async (_e, C, { projectId, budgetItemId }) => {
+  enforcePrefix(budgetItemId);
+  await ddb.delete({
+    TableName: BUDGETS_TABLE,
+    Key: { projectId, budgetItemId },
+  });
+  return json(204, C, "");
+};
+
+// Extra convenience lookups (optional):
+// GET /budgets/byBudgetId/{budgetId}
+const listByBudgetId = async (_e, C, { budgetId }) => {
+  const r = await ddb.query({
+    TableName: BUDGETS_TABLE,
+    IndexName: BUDGET_ID_INDEX,
+    KeyConditionExpression: "budgetId = :b",
+    ExpressionAttributeValues: { ":b": budgetId },
+  });
+  return json(200, C, r.Items || []);
+};
+
+// GET /budgets/byItemId/{budgetItemId}
+const getByBudgetItemId = async (_e, C, { budgetItemId }) => {
+  enforcePrefix(budgetItemId);
+  const r = await ddb.query({
+    TableName: BUDGETS_TABLE,
+    IndexName: BUDGET_ITEM_ID_INDEX,
+    KeyConditionExpression: "budgetItemId = :bi",
+    ExpressionAttributeValues: { ":bi": budgetItemId },
+    Limit: 1,
+  });
+  return json(200, C, (r.Items && r.Items[0]) || null);
+};
+
+/* ============== Routes ============== */
 const routes = [
   { m: "GET",    r: /^\/projects\/health$/i,                                                    h: health },
 
@@ -381,13 +535,13 @@ const routes = [
   { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/team\/(?<userId>[^/]+)$/i,               h: removeTeam },
 
   // Tasks
-  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/tasks$/i,                       h: listTasks },
-  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/tasks$/i,                       h: createTask },
-  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,     h: getTask },
-  { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,     h: patchTask },
-  { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,     h: deleteTask },
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/tasks$/i,                                h: listTasks },
+  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/tasks$/i,                                h: createTask },
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,              h: getTask },
+  { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,              h: patchTask },
+  { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,              h: deleteTask },
 
-  // Events (unified timeline/schedule)
+  // Events (unified)
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/events$/i,                               h: listEvents },
   { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/events$/i,                               h: createEvent },
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/events\/(?<eventId>[^/]+)$/i,            h: getEvent },
@@ -400,30 +554,25 @@ const routes = [
   { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/timeline\/(?<eventId>[^/]+)$/i,          h: patchTimeline },
   { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/timeline\/(?<eventId>[^/]+)$/i,          h: deleteTimeline },
 
-  // Quick-links & thumbnails (stored on project item)
-  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/quick-links$/i,                          h: async (_e, C, { projectId }) => {
-    const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId }, ProjectionExpression: "quickLinks" });
-    return json(200, C, { projectId, quickLinks: r.Item?.quickLinks || [] });
-  }},
-  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/quick-links$/i,                          h: async (e, C, { projectId }) => {
-    const link = B(e);
-    link.id = link.id || `QL-${uuidv4()}`;
-    const r = await ddb.update({
-      TableName: PROJECTS_TABLE,
-      Key: { projectId },
-      UpdateExpression: "SET #ql = list_append(if_not_exists(#ql, :empty), :l), #updatedAt = :ts",
-      ExpressionAttributeNames: { "#ql": "quickLinks", "#updatedAt": "updatedAt" },
-      ExpressionAttributeValues: { ":l": [link], ":empty": [], ":ts": nowISO() },
-      ReturnValues: "ALL_NEW",
-    });
-    return json(201, C, { projectId, quickLinks: r.Attributes.quickLinks || [] });
-  }},
-  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/thumbnails$/i,                           h: async (_e, C, { projectId }) => {
-    const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId }, ProjectionExpression: "thumbnails" });
-    return json(200, C, { projectId, thumbnails: r.Item?.thumbnails || [] });
-  }},
+  // Quick-links & thumbnails
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/quick-links$/i,                          h: getQuickLinks },
+  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/quick-links$/i,                          h: addQuickLink },
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/thumbnails$/i,                           h: getThumbnails },
+
+  // Budgets under project
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/budget$/i,                               h: listBudgetForProject },
+  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/budget$/i,                               h: createBudgetItem },
+  { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/budget\/items\/(?<budgetItemId>[^/]+)$/i, h: getBudgetItem },
+  { m: "PUT",    r: /^\/projects\/(?<projectId>[^/]+)\/budget\/items\/(?<budgetItemId>[^/]+)$/i, h: putBudgetItem },
+  { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/budget\/items\/(?<budgetItemId>[^/]+)$/i, h: patchBudgetItem },
+  { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/budget\/items\/(?<budgetItemId>[^/]+)$/i, h: deleteBudgetItem },
+
+  // Optional convenience lookups (not under /projects)
+  { m: "GET",    r: /^\/budgets\/byBudgetId\/(?<budgetId>[^/]+)$/i,                             h: listByBudgetId },
+  { m: "GET",    r: /^\/budgets\/byItemId\/(?<budgetItemId>[^/]+)$/i,                           h: getByBudgetItem },
 ];
 
+/* ============== Entrypoint ============== */
 export async function handler(event) {
   if (M(event) === "OPTIONS") return preflightFromEvent(event);
   const CORS = corsHeadersFromEvent(event);
@@ -434,4 +583,13 @@ export async function handler(event) {
     for (const { m, r, h } of routes) {
       if (m !== method) continue;
       const match = r.exec(path);
-      if
+      if (match) return await h(event, CORS, match.groups || {});
+    }
+    return json(404, CORS, { error: "Not found", method, path });
+  } catch (err) {
+    console.error("projects_router_error", { method, path, err });
+    const msg = err?.message || "Server error";
+    const status = /ConditionalCheckFailed/i.test(msg) ? 409 : 500;
+    return json(status, CORS, { error: msg });
+  }
+}

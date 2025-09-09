@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { User, Bell, Menu } from "lucide-react";
 import { useData } from '@/app/contexts/useData';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from "@/app/contexts/useAuth";
 import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import NotificationsDrawer from '../../../shared/ui/NotificationsDrawer';
 import NavigationDrawer from '../../../shared/ui/NavigationDrawer';

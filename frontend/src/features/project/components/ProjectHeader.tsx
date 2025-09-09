@@ -31,7 +31,6 @@ import {
 import { uploadData } from "aws-amplify/storage";
 import { useData } from "@/app/contexts/useData";
 import { useSocket } from "@/app/contexts/useSocket";
-import { useAuth } from "@/app/contexts/useAuth";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { slugify, findProjectBySlug } from "@/shared/utils/slug";
 import { HexColorPicker, HexColorInput } from "react-colorful";

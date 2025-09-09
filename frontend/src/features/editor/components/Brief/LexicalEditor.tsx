@@ -6,7 +6,6 @@ import React, {
   useMemo,
 } from "react";
 import { useData } from "@/app/contexts/useData";
-import { useAuth } from "@/app/contexts/useAuth";
 import { Klass, LexicalNode } from "lexical";
 import {
   LexicalComposer,

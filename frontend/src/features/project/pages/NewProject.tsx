@@ -9,7 +9,6 @@ import NewProjectUploadFiles from "@/features/project/components/NewProjectUploa
 import NewProjectAddress from "@/features/project/components/NewProjectAddress";
 import NewProjectDescription from "@/features/project/components/NewProjectDescription";
 import { useData } from "@/app/contexts/useData";
-import { useAuth } from "@/app/contexts/useAuth";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { slugify } from "@/shared/utils/slug";
@@ -69,17 +68,6 @@ type UseDataSlice = {
   setUserProjects: React.Dispatch<React.SetStateAction<unknown[]>>;
 };
 
-type UseAuthSlice = {
-  setUser: React.Dispatch<
-    React.SetStateAction<
-      | (Record<string, unknown> & {
-          projects?: string[];
-        })
-      | null
-    >
-  >;
-};
-
 const NewProject: React.FC = () => {
   const [projectName, setProjectName] = useState<string>("");
   const [budget, setBudget] = useState<string>("");
@@ -99,7 +87,7 @@ const NewProject: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const { userId, setActiveProject, setProjects, setUserProjects, setUser } =
-    useData() as UseDataSlice & { setUser: React.Dispatch<React.SetStateAction<any>> };
+    useData() as UseDataSlice & { setUser: React.Dispatch<React.SetStateAction<(Record<string, unknown> & { projects?: string[] }) | null>> };
   const navigate = useNavigate();
 
   const [validationMessage, setValidationMessage] = useState<string>("");

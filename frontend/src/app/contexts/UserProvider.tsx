@@ -122,6 +122,8 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
       userId,
       userName,
       userData,
+      setUserData,
+      refreshUser,
       fetchUserProfile,
       isAdmin,
       isDesigner,

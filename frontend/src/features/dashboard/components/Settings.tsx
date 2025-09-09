@@ -1,6 +1,5 @@
 import React, { useEffect, useState, ChangeEvent } from "react";
 import { useData } from "@/app/contexts/useData";
-import { useAuth } from "@/app/contexts/useAuth";
 import { uploadData } from "aws-amplify/storage";
 import { updatePassword } from "aws-amplify/auth";
 

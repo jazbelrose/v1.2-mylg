@@ -1,0 +1,33 @@
+/* Design Tokens - Spacing */
+:root {
+  /* Spacing Scale */
+  --space-0: 0;
+  --space-1: 5px;
+  --space-2: 8px;
+  --space-3: 10px;
+  --space-4: 15px;
+  --space-5: 20px;
+  --space-6: 25px;
+  --space-7: 30px;
+  --space-8: 40px;
+  --space-9: 50px;
+  --space-10: 60px;
+  --space-12: 75px;
+  --space-16: 100px;
+  --space-20: 120px;
+  --space-24: 150px;
+  --space-32: 200px;
+  --space-40: 250px;
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 15px;
+  --radius-xl: 20px;
+  --radius-2xl: 40px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.10);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}

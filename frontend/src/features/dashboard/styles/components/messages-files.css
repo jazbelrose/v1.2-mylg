@@ -1,0 +1,111 @@
+/* Messages and Files Panel Styles */
+
+/* Container wrapping messages + files columns */
+.messages-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  border: 2px solid white;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.messages-files-container {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+  height: 100%;
+  border: 2px solid white;
+  border-radius: 20px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+  .messages-files-container {
+    flex-direction: column;
+  }
+}
+
+/* Project messages panel */
+.project-messages {
+  flex: 3;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-right: 5px;
+  border: 2px dashed white;
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
+  position: sticky;
+}
+
+.project-messages.closed {
+  border-radius: 10px;
+}
+
+.project-messages.dragging {
+  border-color: #FA3356;
+}
+
+.project-messages.floating {
+  min-width: 350px;
+}
+
+.project-messages .messages-inner {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Thread header and title */
+.project-thread-title {
+  color: #fff;
+  margin: 0 0 10px 0;
+  padding: 0;
+  font-size: min(1.5rem, 3vw);
+}
+
+.thread-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.thread-panel-header .icon-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+}
+
+.thread-panel-header .icon-btn:hover,
+.thread-panel-header .icon-btn:focus {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Files shared header */
+.files-shared-style {
+  font-size: min(1.5rem, 3vw);
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+}
+
+/* Mobile font sizes */
+@media (max-width: 576px) {
+  .project-thread-title {
+    font-size: 20px;
+  }
+  .files-shared-style {
+    font-size: 20px;
+  }
+}
+

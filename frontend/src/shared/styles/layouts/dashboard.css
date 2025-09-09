@@ -1,0 +1,138 @@
+/* Dashboard Layout Styles */
+
+.dashboard-content {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-5);
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Row layout wrapper used in DashboardHome */
+.row-layout {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  overflow: auto; /* allow scrolling on iOS */
+  overscroll-behavior-y: contain;
+}
+
+/* Main content area wrapper */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: auto; /* allow content to scroll; avoid clipping CTA */
+  min-height: 0;    /* Allow children to shrink when viewport is short */
+  justify-content: center; /* Center calendar vertically */
+  align-items: center;      /* Center calendar horizontally */
+}
+
+/* Full-width view adjustments (e.g., Notifications) */
+.dashboard-content.full-width .main-content {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.dashboard-wrapper {
+  position: relative;
+  flex-direction: column;
+  
+  justify-content: center;
+  align-items: center;
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  background-color: var(--bg-color);
+}
+
+.dashboard-wrapper.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+  background-color: var(--bg-color);
+  margin: 0 auto;
+  padding: 0;
+}
+
+.dashboard-wrapper.welcome-screen.no-vertical-center {
+  justify-content: flex-start;
+  align-items: flex-start;
+ 
+  
+  padding-bottom: calc(16px + env(safe-area-inset-bottom) + 56px);
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+  height: 100svh;
+  height: -webkit-fill-available;
+  margin: 0 auto;
+}
+
+.all-projects-container {
+  display: flex;
+  flex-wrap: wrap;
+  grid-gap: var(--space-3);
+  margin-top: var(--space-12);
+  overflow-y: auto;
+  flex-grow: 1;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.all-projects-container-welcome {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3);
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow-y: auto;
+}
+
+.projects-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-5);
+  width: 100%;
+}
+
+.projects-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-color);
+}
+
+
+
+/* Responsive Design */
+@media (max-width: var(--breakpoint-md)) {
+  /* Remove extra top spacing on mobile */
+  .dashboard-wrapper.welcome-screen.no-vertical-center {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .project-thumbnail,
+  .new-project-thumbnail,
+  .new-project-thumbnail svg {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+/* Fine-grained mobile adjustments */
+@media (max-width: 576px) {
+  .all-projects-container {
+    margin-top: 10px;
+  }
+}

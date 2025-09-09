@@ -1,0 +1,96 @@
+/* Marketing Pages Layout Components */
+
+.workpage-heading {
+  padding: 61px var(--space-1) 0;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+.works {
+  padding-top: var(--space-9);
+  margin: var(--space-5);
+  overscroll-behavior: none;
+}
+
+body.no-scroll {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+.rendering-layout {
+  background-color: var(--bg-color);
+  padding: 0 var(--space-1);
+  margin-bottom: min(100px, 10vw);
+  overflow: hidden;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.rendering-heading {
+  padding-top: var(--space-5);
+}
+
+.rendering-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: var(--space-5) 0;
+}
+
+.rendering-header {
+  color: var(--text-color);
+  font-weight: var(--font-weight-black);
+  padding: var(--space-5) 0;
+  font-size: min(var(--font-size-6xl), 10vw);
+  text-align: center;
+}
+
+.rendering-header h2 {
+  color: var(--text-color);
+  font-weight: var(--font-weight-black);
+  padding: var(--space-5) 0;
+  font-size: min(var(--font-size-6xl), 10vw);
+  text-align: center;
+}
+
+.arrow-down.works-arrow {
+  display: block;
+  text-align: center;
+  padding: var(--space-5) 0;
+}
+
+.rendering-subheader {
+  text-align: center;
+  margin: var(--space-8) 0;
+}
+
+.rendering-subheader h3 {
+  font-weight: var(--font-weight-black);
+  padding: var(--space-5) 0;
+  font-size: min(var(--font-size-4xl), 6vw);
+}
+
+.rendering-row {
+  margin: var(--space-3) 0;
+}
+
+.rendering-row-video {
+  padding: min(var(--space-3), 0.3vw);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rendering-row-img {
+  padding: min(var(--space-1), 0.25vw) 0;
+  display: flex;
+  margin: 0 auto;
+  align-items: stretch;
+  gap: min(7px, 0.3vw);
+}
+
+.rendering-row-svg {
+  margin: 3px 0;
+}

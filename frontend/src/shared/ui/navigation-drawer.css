@@ -1,0 +1,151 @@
+/* Navigation Drawer Styles */
+
+.navigation-drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.navigation-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 350px;
+  height: 100vh;
+  background-color: #0c0c0c;
+  
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.navigation-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navigation-drawer-header h2 {
+  color: white;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navigation-drawer-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+}
+
+.navigation-items {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.navigation-items-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
+}
+
+.nav-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-decoration: none;
+}
+
+.nav-drawer-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+.nav-drawer-action:hover {
+  background-color: rgba(250, 51, 86, 0.2);
+  border-color: var(--brand, #FA3356);
+}
+
+.nav-drawer-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.nav-drawer-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+}
+
+.nav-drawer-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  font-size: 10px;
+  line-height: 16px;
+  border-radius: 50%;
+  background: #E50017;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.nav-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .navigation-drawer {
+    width: 90vw;
+    max-width: 320px;
+  }
+}
+
+/* Small mobile adjustments */
+@media (max-width: 480px) {
+  .navigation-drawer {
+    width: 100vw;
+  }
+}

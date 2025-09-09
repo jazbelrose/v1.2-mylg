@@ -1,0 +1,52 @@
+/* ✅ One clean :root — no duplicates, no purple */
+:root {
+  /* Brand */
+  --brand: #FA3356;
+  --color-primary: var(--brand);
+  --color-accent: var(--brand);
+
+  /* Backgrounds */
+  --bg: #0c0c0c;
+  --bg2: #111111; /* your JAJ pref */
+  --bg3: #1a1a1a;
+  --bg-color: var(--bg);
+  --primary-color: #0d0d0d;
+  --bg-secondary: rgba(255, 255, 255, 0.02);
+
+  /* Text */
+  --text-color: #fff;
+  --text-color-2: #fff;
+  --text-color-3: var(--brand); /* emphasis */
+  --secondary-color: #fff;
+  --text-color-secondary: #666;
+  --text-color-muted: #777;
+
+  /* Overlay */
+  --overlay-color: rgb(12 12 12 / 63%);
+
+  /* Borders */
+  --border-color: #2a2a2a;
+  --border-color-light: #3a3a3a;
+  --border-color-dark: #1d1d1d;
+
+  /* Status (keep neutral) */
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-error: #ef5350;
+  --color-info: #888;
+
+  /* Interactive */
+  --color-hover: #ff4b70;    /* slightly brighter brand */
+  --color-active: #ffffff;
+  --color-focus: var(--brand);  /* 🔴 was purple; now brand */
+
+  /* Code/Editor */
+  --code-bg: #0f0f10;
+  --code-border: #222;
+  --code-text: #bbb;
+
+  /* Optional brand alphas */
+  --brand-08: rgba(250, 51, 86, 0.08);
+  --brand-12: rgba(250, 51, 86, 0.12);
+  --brand-20: rgba(250, 51, 86, 0.20);
+}

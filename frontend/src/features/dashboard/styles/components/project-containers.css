@@ -1,0 +1,112 @@
+/* Project Container and Card Styles */
+
+.project-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.project-container-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 0 1 calc(20% - 20px);
+}
+
+.project-container-welcome .project-title {
+  min-height: 40px;
+}
+
+.project-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* Thumbnail icon next to project title */
+.thumbnail-icon {
+  width: 22.5px;
+  height: 22.5px;
+  margin-right: 15px;
+  cursor: pointer;
+}
+
+.project-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  top: 6px;
+}
+
+.project-thumbnail,
+.new-project-thumbnail {
+  width: 100%;
+  border-radius: 12px; /* square with rounded corners */
+  cursor: pointer;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.project-thumbnail:hover {
+  transform: scale(1.01);
+  box-shadow: 0 3px 12px rgba(255, 255, 255, 0.1);
+}
+
+.all-projects-container-welcome.single-item .project-container-welcome {
+  flex: 0 0 auto;
+}
+
+.all-projects-container-welcome.single-item .project-thumbnail {
+  width: 250px;
+  height: 250px;
+}
+
+svg .project-title {
+  margin-top: 10px;
+  font-size: 50px;
+  font-weight: bold;
+}
+
+/* Responsive Styles */
+@media (max-width: var(--breakpoint-xl)) {
+  .project-container-welcome,
+  .new-project-thumbnail {
+    flex: 0 1 calc(25% - 20px);
+  }
+}
+
+@media (max-width: var(--breakpoint-sm)) {
+  .project-title {
+    font-size: 16px;
+    margin-top: 8px;
+  }
+  .thumbnail-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+  }
+  .project-container {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 10px;
+  }
+  .project-thumbnail,
+  .new-project-thumbnail,
+  .new-project-thumbnail svg {
+    border-radius: 10px;
+  }
+}
+
+/* Large screen multi-column layout */
+@media (min-width: var(--breakpoint-xl)) {
+  .project-container-welcome,
+  .new-project-thumbnail {
+    flex: 0 1 calc(16.66% - 20px);
+  }
+}

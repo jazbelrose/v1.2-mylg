@@ -1,0 +1,142 @@
+/* Form Components */
+
+/* Input Styles */
+.form-input {
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: var(--space-4);
+  width: 100%;
+  padding: var(--space-3);
+  color: var(--text-color);
+  background-color: rgb(37, 37, 37);
+  box-sizing: border-box;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-input::placeholder {
+  color: var(--text-color-secondary);
+}
+
+/* Button Styles */
+.btn {
+  padding: 12px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+  border-radius: 12px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  font-size: var(--font-size-base);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn:hover,
+.btn:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Label Styles */
+.form-label {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-light);
+  margin: 0 0 var(--space-7) 0;
+  font-family: "Helvetica Display", "Helvetica Neue", sans-serif;
+  color: var(--text-color);
+}
+
+/* Textarea Styles */
+.form-textarea {
+  color: var(--text-color);
+  background-color: rgb(17, 17, 17);
+  font-size: var(--font-size-base);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-height: 120px;
+  margin-bottom: var(--space-4);
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-family-primary);
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Input Wrapper with Prefix/Suffix */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-prefix {
+  position: absolute;
+  top: 0;
+  bottom: var(--space-4);
+  left: var(--space-3);
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.input-suffix {
+  position: absolute;
+  top: 0;
+  bottom: var(--space-4);
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.input-with-prefix {
+  padding-left: 28px;
+}
+
+.input-with-suffix {
+  padding-right: 28px;
+}
+
+/* Form Group */
+.form-group {
+  margin-bottom: var(--space-5);
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-5);
+}

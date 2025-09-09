@@ -1,0 +1,22 @@
+/* Overrides: staging for truly page-specific rules not yet modularized.
+   See CSS_ARCHITECTURE.md. Keep this file minimal and last in cascade. */
+
+/* All previous dashboard page rules have been modularized into:
+   - features/dashboard/styles/components/page-layouts.css
+   - features/dashboard/styles/components/dashboard-cards.css
+   - features/dashboard/styles/components/calendar.css
+   - features/dashboard/styles/components/projects-view.css
+   - features/dashboard/styles/components/project-containers.css
+   - features/dashboard/styles/components/project-header.css
+   - features/dashboard/styles/components/new-project.css
+   - features/dashboard/styles/components/tasks.css
+   - features/dashboard/styles/components/chat-panel.css
+   - features/dashboard/styles/components/preview-drawer.css
+   - features/dashboard/styles/components/editor-page.css
+   - features/dashboard/styles/components/settings.css
+   - features/dashboard/styles/components/team.css
+   - shared/styles/layouts/dashboard.css
+*/
+
+/* Leave empty unless temporarily staging a small set of page-specific rules. */
+

@@ -1,0 +1,39 @@
+service: mylg-v2
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-west-2
+  memorySize: 256
+  timeout: 15
+  stage: ${opt:stage, 'dev'}
+  httpApi:
+    cors: false    # dynamic CORS handled in Lambda
+  environment:
+    # tune as needed
+    ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
+    CORS_WILDCARD_HOSTS: mylg.studio
+    CORS_ALLOW_CREDENTIALS: "false"
+
+layers:
+  sharedUtilsLayer:
+    path: shared-layer         # contains nodejs/utils/cors.mjs
+    name: shared-utils
+    compatibleRuntimes: [nodejs18.x]
+
+custom:
+  defaultLayers:
+    - { Ref: SharedUtilsLayerLambdaLayer }
+
+package:
+  individually: false
+  patterns:
+    - '!../**'           # exclude outside of backend
+    - '**'               # include all under backend
+    - '!frontend/**'     # just in case
+    - '!scripts/**'
+
+functions:
+  # ---- USERS (unified router) ----
+  ${file(./user/functions.yml)}

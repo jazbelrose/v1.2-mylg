@@ -1,0 +1,19 @@
+service: shared-layer
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-west-2
+
+layers:
+  sharedUtilsLayer:
+    path: .
+    name: shared-utils
+    compatibleRuntimes: [nodejs18.x]
+
+# Export the Layer ARN so other services can import it with ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+outputs:
+  SharedUtilsLayerArn:
+    Value:
+      Ref: SharedUtilsLayerLambdaLayer

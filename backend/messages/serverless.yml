@@ -1,0 +1,38 @@
+service: messages
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-west-2
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 15
+  httpApi:
+    cors: false
+  environment:
+    ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
+    CORS_WILDCARD_HOSTS: mylg.studio
+    CORS_ALLOW_CREDENTIALS: "false"
+
+functions:
+  messagesRouter:
+    handler: src/router.handler
+    layers:
+      - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+    events:
+      - httpApi:
+          path: /messages
+          method: ANY
+      - httpApi:
+          path: /messages/{proxy+}
+          method: ANY
+      - httpApi:
+          path: /messages/health
+          method: ANY
+
+package:
+  patterns:
+    - src/**
+    - '!node_modules/.bin/**'
+    - '!**/*.map'

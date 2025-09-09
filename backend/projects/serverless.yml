@@ -1,0 +1,77 @@
+service: projects
+frameworkVersion: '3'
+
+custom:
+  prefix: mylg-v12
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-west-2'}
+  tables:
+    PROJECTS_TABLE: ${self:custom.prefix}-projects-core-${self:custom.stage}
+    TASKS_TABLE:    ${self:custom.prefix}-projects-tasks-${self:custom.stage}
+    EVENTS_TABLE:   ${self:custom.prefix}-projects-events-${self:custom.stage}
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${self:custom.region}
+  stage: ${self:custom.stage}
+  memorySize: 256
+  timeout: 15
+  stackName: ${self:custom.prefix}-${self:service}-${self:custom.stage}
+  httpApi:
+    cors: false
+    name: ${self:custom.prefix}-${self:service}-api-${self:custom.stage}
+  tags:
+    App: MYLG
+    Version: v1.2
+    Domain: projects
+    Stage: ${self:custom.stage}
+  environment:
+    ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
+    CORS_WILDCARD_HOSTS: mylg.studio
+    CORS_ALLOW_CREDENTIALS: "false"
+    PROJECTS_TABLE: ${self:custom.tables.PROJECTS_TABLE}
+    TASKS_TABLE:    ${self:custom.tables.TASKS_TABLE}
+    EVENTS_TABLE:   ${self:custom.tables.EVENTS_TABLE}
+    EVENTS_STARTAT_INDEX: projectId-startAt-index
+    SCANS_ALLOWED: "true"
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tables.PROJECTS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tables.TASKS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tables.EVENTS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tables.EVENTS_TABLE}/index/*
+
+functions:
+  projectsRouter:
+    name: ${self:custom.prefix}-projects-router-${self:custom.stage}
+    handler: src/router.handler
+    layers:
+      - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+    events:
+      - httpApi:
+          path: /projects
+          method: ANY
+      - httpApi:
+          path: /projects/{proxy+}
+          method: ANY
+      - httpApi:
+          path: /projects/health
+          method: ANY
+
+package:
+  patterns:
+    - src/**
+    - '!node_modules/.bin/**'
+    - '!**/*.map'

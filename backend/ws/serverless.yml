@@ -1,0 +1,81 @@
+service: ws
+frameworkVersion: '3'
+
+custom:
+  stage: ${sls:stage}
+  region: ${opt:region, 'us-west-1'}
+  prefix: mylg-v12
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${self:custom.region}
+  stage: ${self:custom.stage}
+  memorySize: 256
+  timeout: 15
+  environment:
+    CONNECTIONS_TABLE: ${self:custom.prefix}-ws-connections-${self:custom.stage}
+    CONNECTIONS_USER_GSI: userId-sessionId-index
+    WEBSOCKET_ENDPOINT: https://hly9zz2zci.execute-api.us-west-1.amazonaws.com/production
+  websocketsApiName: ${self:custom.prefix}-ws-api-${self:custom.stage}
+  websocketsApiRouteSelectionExpression: $request.body.action
+  tags:
+    App: MYLG
+    Version: v1.2
+    Domain: ws
+    Stage: ${self:custom.stage}
+
+functions:
+  connect:
+    name: ${self:custom.prefix}-ws-connect-${self:custom.stage}
+    handler: src/onConnect.handler
+    events:
+      - websocket:
+          route: $connect
+  disconnect:
+    name: ${self:custom.prefix}-ws-disconnect-${self:custom.stage}
+    handler: src/onDisconnect.handler
+    events:
+      - websocket:
+          route: $disconnect
+  default:
+    name: ${self:custom.prefix}-ws-default-${self:custom.stage}
+    handler: src/onDefault.handler
+    events:
+      - websocket:
+          route: $default
+
+resources:
+  Resources:
+    ConnectionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.prefix}-ws-connections-${self:custom.stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: connectionId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: sessionId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: connectionId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: userId-sessionId-index
+            Projection: { ProjectionType: ALL }
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: sessionId
+                KeyType: RANGE
+        TimeToLiveSpecification:
+          AttributeName: expiresAt
+          Enabled: true
+
+outputs:
+  WebSocketUrl:
+    Value: { "Fn::Join": ["", ["wss://", { Ref: "WebsocketsApi" }, ".execute-api.", { Ref: "AWS::Region" }, ".amazonaws.com/", { Ref: "WebsocketsDeploymentStage" }]] }
+  WebSocketEndpoint:
+    Value: { "Fn::Join": ["", ["https://", { Ref: "WebsocketsApi" }, ".execute-api.", { Ref: "AWS::Region" }, ".amazonaws.com/", { Ref: "WebsocketsDeploymentStage" }]] }

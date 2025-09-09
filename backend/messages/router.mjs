@@ -13,12 +13,16 @@ const THREAD_MEMBERS_TABLE  = process.env.THREAD_MEMBERS_TABLE  || "MessagesThre
 
 // Messages
 const MESSAGES_TABLE        = process.env.MESSAGES_TABLE        || "Messages";
-const MESSAGES_BY_ID_INDEX  = process.env.MESSAGES_BY_ID_INDEX  || ""; // e.g. "messageId-index" (HASH: messageId)
+const MESSAGES_BY_ID_INDEX  = process.env.MESSAGES_BY_ID_INDEX  || ""; // e.g., "messageId-index"
 
-// Project-scoped messages (optional)
+// Project-scoped messages
 const PROJECT_MESSAGES_TABLE = process.env.PROJECT_MESSAGES_TABLE || "ProjectMessages";
 
-// Dev-only: allow scans when no userId provided
+// Notifications
+const NOTIFICATIONS_TABLE          = process.env.NOTIFICATIONS_TABLE          || "Notifications";
+const NOTIFICATIONS_BY_USER_INDEX  = process.env.NOTIFICATIONS_BY_USER_INDEX  || "userId-index";
+
+// Dev-only: allow scans without userId
 const SCANS_ALLOWED = (process.env.SCANS_ALLOWED || "false").toLowerCase() === "true";
 
 /* ------------ DDB ------------ */
@@ -34,7 +38,6 @@ const B = (e) => { try { return JSON.parse(e?.body || "{}"); } catch { return {}
 const nowISO = () => new Date().toISOString();
 const makeMsgId = (ts = Date.now()) => `M#${String(ts).padStart(13, "0")}#${uuidv4()}`;
 
-/* small helpers */
 function buildUpdate(obj) {
   const Names = {}, Values = {}, sets = [];
   for (const [k, v] of Object.entries(obj)) {
@@ -50,6 +53,7 @@ function buildUpdate(obj) {
     ExpressionAttributeValues: Values,
   };
 }
+
 async function batchGetThreads(threadIds) {
   const chunks = [];
   for (let i = 0; i < threadIds.length; i += 100) chunks.push(threadIds.slice(i, i + 100));
@@ -66,11 +70,10 @@ async function batchGetThreads(threadIds) {
 /* ------------ Handlers ------------ */
 const health = async (_e, C) => json(200, C, { ok: true, domain: "messages" });
 
-/* Inbox: list threads for a userId using membership table
+/* Inbox: list threads for a userId via membership table
    THREAD_MEMBERS_TABLE: PK=userId, SK=threadId, attrs: lastReadTs, joinedAt, state */
 const getInbox = async (e, C) => {
-  const q = Q(e);
-  const userId = q.userId;
+  const userId = Q(e).userId;
   if (!userId) return json(400, C, { error: "userId required" });
 
   const r = await ddb.query({
@@ -83,12 +86,11 @@ const getInbox = async (e, C) => {
   if (threadIds.length === 0) return json(200, C, { userId, inbox: [] });
 
   const threads = await batchGetThreads(threadIds);
-  // sort by lastMsgTs desc if available
   threads.sort((a, b) => String(b.lastMsgTs || "").localeCompare(String(a.lastMsgTs || "")));
   return json(200, C, { userId, inbox: threads });
 };
 
-/* GET /messages/threads?userId=...  (alias of inbox)
+/* GET /messages/threads?userId=...  (alias to inbox)
    If userId omitted and SCANS_ALLOWED=true → scan Threads (dev only) */
 const listThreads = async (e, C) => {
   const userId = Q(e).userId;
@@ -110,8 +112,8 @@ const createThread = async (e, C) => {
   const threadId = b.threadId || `T-${uuidv4()}`;
   const thread = {
     threadId,
-    participants,            // array of userIds
-    projectId: b.projectId,  // optional
+    participants,
+    projectId: b.projectId,
     title: b.title,
     createdAt: ts,
     updatedAt: ts,
@@ -120,14 +122,12 @@ const createThread = async (e, C) => {
     meta: b.meta || {},
   };
 
-  // Create thread
   await ddb.put({
     TableName: THREADS_TABLE,
     Item: thread,
     ConditionExpression: "attribute_not_exists(threadId)",
   });
 
-  // Create membership rows
   for (const uid of participants) {
     await ddb.put({
       TableName: THREAD_MEMBERS_TABLE,
@@ -145,7 +145,6 @@ const createThread = async (e, C) => {
   return json(201, C, { thread });
 };
 
-/* Get a thread by id */
 const getThread = async (_e, C, { threadId }) => {
   const r = await ddb.get({ TableName: THREADS_TABLE, Key: { threadId } });
   return json(200, C, { thread: r.Item || null });
@@ -160,7 +159,7 @@ const listThreadMessages = async (e, C, { threadId }) => {
     TableName: MESSAGES_TABLE,
     KeyConditionExpression: "threadId = :t",
     ExpressionAttributeValues: { ":t": threadId },
-    ScanIndexForward: true, // chronological ascending
+    ScanIndexForward: true,
     Limit: limit,
     ExclusiveStartKey: q.nextKey ? JSON.parse(q.nextKey) : undefined,
   });
@@ -192,14 +191,12 @@ const postThreadMessage = async (e, C, { threadId }) => {
     meta: b.meta || {},
   };
 
-  // Put message
   await ddb.put({
     TableName: MESSAGES_TABLE,
     Item: msg,
     ConditionExpression: "attribute_not_exists(threadId) AND attribute_not_exists(messageId)",
   });
 
-  // Update thread snippet + lastMsgTs
   await ddb.update({
     TableName: THREADS_TABLE,
     Key: { threadId },
@@ -216,10 +213,9 @@ const postThreadMessage = async (e, C, { threadId }) => {
 };
 
 /* Patch / Delete message by messageId
-   Needs a GSI to resolve threadId from messageId quickly (MESSAGES_BY_ID_INDEX) */
+   If no GSI is configured, client must provide threadId (body or query). */
 const patchMessage = async (e, C, { messageId }) => {
   const b = B(e);
-  // Find the message's keys
   let threadId = b.threadId;
   if (!threadId) {
     if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "threadId required in body (no messageId index configured)" });
@@ -307,6 +303,93 @@ const postProjectMessage = async (e, C, { projectId }) => {
   return json(201, C, { projectId, message: item });
 };
 
+/* ----------------- Notifications -----------------
+   NOTIFICATIONS_TABLE:
+     PK: userId, SK: notificationId (e.g., N#<millis>#uuid)
+     attrs: title, body, type, projectId?, createdAt, readAt?, meta
+---------------------------------------------------*/
+
+const listNotifications = async (e, C) => {
+  const userId = Q(e).userId;
+  if (!userId) return json(400, C, { error: "userId required" });
+
+  // Prefer GSI if table shape differs; default is PK=userId
+  const r = await ddb.query({
+    TableName: NOTIFICATIONS_TABLE,
+    KeyConditionExpression: "userId = :u",
+    ExpressionAttributeValues: { ":u": userId },
+    ScanIndexForward: false,
+    Limit: Math.min(parseInt(Q(e).limit || "100", 10), 500),
+  });
+
+  return json(200, C, { userId, notifications: r.Items || [] });
+};
+
+const sendNotification = async (e, C) => {
+  const b = B(e);
+  const userId = b.userId || b.recipientId; // allow both names
+  if (!userId) return json(400, C, { error: "userId (recipient) required" });
+
+  const ts = Date.now();
+  const notificationId = b.notificationId || `N#${String(ts).padStart(13, "0")}#${uuidv4()}`;
+
+  const item = {
+    userId,
+    notificationId,
+    title: b.title || "",
+    body: b.body || "",
+    type: b.type || "project",
+    projectId: b.projectId,
+    createdAt: new Date(ts).toISOString(),
+    readAt: b.readAt || null,
+    meta: b.meta || {},
+  };
+
+  await ddb.put({
+    TableName: NOTIFICATIONS_TABLE,
+    Item: item,
+    ConditionExpression: "attribute_not_exists(userId) AND attribute_not_exists(notificationId)",
+  });
+
+  return json(201, C, { notification: item });
+};
+
+const patchNotification = async (e, C, { notificationId }) => {
+  const b = B(e);
+  const userId = b.userId || Q(e).userId;
+  if (!userId) return json(400, C, { error: "userId required (body or query)" });
+
+  const upd = buildUpdate({
+    ...(b.title !== undefined ? { title: b.title } : {}),
+    ...(b.body  !== undefined ? { body:  b.body }  : {}),
+    ...(b.type  !== undefined ? { type:  b.type }  : {}),
+    ...(b.projectId !== undefined ? { projectId: b.projectId } : {}),
+    ...(b.readAt !== undefined ? { readAt: b.readAt || nowISO() } : {}),
+    updatedAt: nowISO(),
+  });
+  if (!upd) return json(400, C, { error: "No fields to update" });
+
+  const r = await ddb.update({
+    TableName: NOTIFICATIONS_TABLE,
+    Key: { userId, notificationId },
+    ...upd,
+    ReturnValues: "ALL_NEW",
+  });
+
+  return json(200, C, { notification: r.Attributes });
+};
+
+const deleteNotification = async (e, C, { notificationId }) => {
+  const userId = Q(e).userId || B(e).userId;
+  if (!userId) return json(400, C, { error: "userId required (query or body)" });
+
+  await ddb.delete({
+    TableName: NOTIFICATIONS_TABLE,
+    Key: { userId, notificationId },
+  });
+  return json(204, C, "");
+};
+
 /* ------------ Routes ------------ */
 const routes = [
   { m: "GET",   r: /^\/messages\/health$/i,                               h: health },
@@ -321,13 +404,27 @@ const routes = [
   { m: "GET",   r: /^\/messages\/threads\/(?<threadId>[^/]+)\/messages$/i, h: listThreadMessages },
   { m: "POST",  r: /^\/messages\/threads\/(?<threadId>[^/]+)\/messages$/i, h: postThreadMessage },
 
-  // individual message ops by id (GSI recommended)
+  // individual message ops by id
+  // v1.2 path:
+  { m: "PATCH", r: /^\/messages\/(?<messageId>[^/]+)$/i,                   h: patchMessage },
+  { m: "DELETE",r: /^\/messages\/(?<messageId>[^/]+)$/i,                   h: deleteMessage },
+  // v1.1 compat alias:
   { m: "PATCH", r: /^\/messages\/messages\/(?<messageId>[^/]+)$/i,         h: patchMessage },
   { m: "DELETE",r: /^\/messages\/messages\/(?<messageId>[^/]+)$/i,         h: deleteMessage },
 
   // project-scoped
   { m: "GET",   r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: listProjectMessages },
   { m: "POST",  r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: postProjectMessage },
+
+  // notifications (v1.2)
+  { m: "GET",   r: /^\/messages\/notifications$/i,                         h: listNotifications },
+  { m: "POST",  r: /^\/messages\/notifications$/i,                         h: sendNotification },
+  { m: "PATCH", r: /^\/messages\/notifications\/(?<notificationId>[^/]+)$/i, h: patchNotification },
+  { m: "DELETE",r: /^\/messages\/notifications\/(?<notificationId>[^/]+)$/i, h: deleteNotification },
+
+  // v1.1 compat aliases
+  { m: "GET",   r: /^\/getNotifications$/i,                                h: listNotifications },
+  { m: "POST",  r: /^\/SendProjectNotification$/i,                         h: sendNotification },
 ];
 
 export async function handler(event) {

@@ -24,8 +24,8 @@ const Q = (e) => e?.queryStringParameters || {};
 const B = (e) => { try { return JSON.parse(e?.body || "{}"); } catch { return {}; } };
 const nowISO = () => new Date().toISOString();
 
-function lowerEmail(s) { return (s || "").toLowerCase().trim(); }
-function pendingKeyForEmail(email) { return `PENDING#${lowerEmail(email)}`; }
+const lowerEmail = (s) => (s || "").toLowerCase().trim();
+const pendingKeyForEmail = (email) => `PENDING#${lowerEmail(email)}`;
 
 function buildUpdate(obj) {
   const Names = {}, Values = {}, sets = [];
@@ -49,24 +49,20 @@ async function batchGetUsersByIds(ids) {
   const out = [];
   for (const ch of chunks) {
     const r = await ddb.batchGet({
-      RequestItems: {
-        [USER_PROFILES_TABLE]: { Keys: ch.map((userId) => ({ userId })) },
-      },
+      RequestItems: { [USER_PROFILES_TABLE]: { Keys: ch.map((userId) => ({ userId })) } },
     });
     out.push(...(r.Responses?.[USER_PROFILES_TABLE] || []));
   }
   return out;
 }
 
-function withFirstNameFallback(u) {
-  if (!u) return u;
-  return { ...u, firstName: u.firstName || u.cognitoAttributes?.given_name || "" };
-}
+const withFirstNameFallback = (u) =>
+  u ? { ...u, firstName: u.firstName || u.cognitoAttributes?.given_name || "" } : u;
 
 /* ---------- handlers ---------- */
 
-// Health
-async function health(_e, C) { return json(200, C, { ok: true, domain: "users" }); }
+// health
+const health = async (_e, C) => json(200, C, { ok: true, domain: "users" });
 
 /* ======== USER PROFILES ======== */
 
@@ -79,34 +75,21 @@ async function getUserProfile(_e, C, { userId }) {
 
 // GET /userProfiles?ids=a,b,c  (batch)  OR (dev) GET /userProfiles (scan)
 async function getUserProfiles(event, C) {
-  const ids = (Q(event).ids || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
+  const ids = (Q(event).ids || "").split(",").map((s) => s.trim()).filter(Boolean);
   if (ids.length) {
     const users = await batchGetUsersByIds(ids);
     return json(200, C, { Items: users.map(withFirstNameFallback) });
   }
-
   if (!SCANS_ALLOWED) return json(400, C, { error: "ids required (comma-separated)" });
-
   const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });
   return json(200, C, { Items: (r.Items || []).map(withFirstNameFallback) });
 }
 
-/* PUT /userProfiles  (v1.1 semantics)
-   Body may contain:
-     - userId or cognitoSub (required)
-     - email (lowercased); if present, merge from pending key PENDING#<email> in the SAME table.
-     - role default "user"
-     - preserve existing `pending` boolean if not explicitly provided.
-*/
+// PUT /userProfiles  (v1.1 semantics: upsert + merge pending PENDING#<email>)
 async function putUserProfile(event, C) {
   const input = B(event);
   const table = USER_PROFILES_TABLE;
-
-  let userId = input.userId || input.cognitoSub;
+  const userId = input.userId || input.cognitoSub;
   if (!userId) return json(400, C, { error: "userId or cognitoSub required" });
 
   const email = lowerEmail(input.email);
@@ -118,15 +101,13 @@ async function putUserProfile(event, C) {
     if (typeof existing.Item?.pending === "boolean") item.pending = existing.Item.pending;
   }
 
-  // merge from PENDING#<email> (same table) if present
+  // merge from same-table pending record
   if (email) {
     const pk = pendingKeyForEmail(email);
     const pending = await ddb.get({ TableName: table, Key: { userId: pk } });
     if (pending.Item) {
-      // merge, keep pending flag from the pending item
       item = { ...pending.Item, ...item, userId, pending: pending.Item.pending };
       delete item.ttl;
-      // delete the pending record
       await ddb.delete({ TableName: table, Key: { userId: pk } });
     }
   }
@@ -140,10 +121,8 @@ async function patchUserProfile(event, C, { userId }) {
   if (!userId) return json(400, C, { error: "userId required" });
   const b = B(event);
   delete b.userId;
-
   const upd = buildUpdate({ ...b, updatedAt: nowISO() });
   if (!upd) return json(400, C, { error: "No fields to update" });
-
   const r = await ddb.update({
     TableName: USER_PROFILES_TABLE,
     Key: { userId },
@@ -160,16 +139,13 @@ async function deleteUserProfile(_e, C, { userId }) {
   return json(204, C, "");
 }
 
-/* Optional: write a "pending profile" into the SAME table using PENDING#<email>.
-   PATCH /userProfilesPending/{email}
-   Body: any fields (e.g., onboarding info), plus optional { ttl: <epochSeconds> } for expiration.
-*/
+// PATCH /userProfilesPending/{email}  (write pending record in same table)
 async function patchUserProfilePending(event, C, { email }) {
   const e = lowerEmail(email);
   if (!e) return json(400, C, { error: "email required in path" });
   const pk = pendingKeyForEmail(e);
   const b = B(event);
-  delete b.userId; // key is the pending composite
+  delete b.userId;
 
   const ts = nowISO();
   const item = {
@@ -184,14 +160,13 @@ async function patchUserProfilePending(event, C, { email }) {
   return json(200, C, { pending: item });
 }
 
-/* ======== INVITES ======== */
+/* ======== INVITES & PROJECT LINK ======== */
 
 // POST /sendProjectInvitation  (specialized)
 async function sendProjectInvitation(event, C) {
   const b = B(event);
   const inviteId = b.inviteId || `INV-${uuidv4()}`;
   const ts = nowISO();
-
   const item = {
     inviteId,
     type: "project",
@@ -204,12 +179,10 @@ async function sendProjectInvitation(event, C) {
     updatedAt: ts,
     meta: b.meta || {},
   };
-
   if (!item.senderId) return json(400, C, { error: "senderId required" });
   if (!item.projectId) return json(400, C, { error: "projectId required" });
-  if (!item.recipientId && !item.recipientEmail) {
+  if (!item.recipientId && !item.recipientEmail)
     return json(400, C, { error: "recipientId or recipientEmail required" });
-  }
 
   await ddb.put({
     TableName: INVITES_TABLE,
@@ -218,6 +191,9 @@ async function sendProjectInvitation(event, C) {
   });
   return json(201, C, { invite: item });
 }
+
+// alias: POST /inviteUserToProject  → same as sendProjectInvitation
+const inviteUserToProject = sendProjectInvitation;
 
 // GET /invites/outgoing?userId=...
 async function listInvitesOutgoing(event, C) {
@@ -299,6 +275,16 @@ const acceptInvite  = (e, C) => setInviteStatus(e, C, "accepted");
 const declineInvite = (e, C) => setInviteStatus(e, C, "declined");
 const cancelInvite  = (e, C) => setInviteStatus(e, C, "canceled");
 
+// alias: POST /respondProjectInvitation  → decision -> accept/decline/cancel
+async function respondProjectInvitation(event, C) {
+  const { decision } = B(event);
+  if (!["accept", "decline", "cancel"].includes(decision))
+    return json(400, C, { error: "decision must be one of accept|decline|cancel" });
+  if (decision === "accept")  return acceptInvite(event, C);
+  if (decision === "decline") return declineInvite(event, C);
+  return cancelInvite(event, C);
+}
+
 /* ======== PROJECT -> USER LINK ======== */
 
 // POST /postProjectToUserId  (attach projectId to user.projects[])
@@ -335,15 +321,18 @@ const routes = [
   // user profiles
   { M: "GET",    R: /^\/userProfiles\/(?<userId>[^/]+)$/i,                      H: getUserProfile },
   { M: "GET",    R: /^\/userProfiles$/i,                                        H: getUserProfiles },
-  { M: "PUT",    R: /^\/userProfiles$/i,                                        H: putUserProfile },            // v1.1 upsert
+  { M: "PUT",    R: /^\/userProfiles$/i,                                        H: putUserProfile },
   { M: "PATCH",  R: /^\/userProfiles\/(?<userId>[^/]+)$/i,                      H: patchUserProfile },
   { M: "DELETE", R: /^\/userProfiles\/(?<userId>[^/]+)$/i,                      H: deleteUserProfile },
 
   // pending (same table; key=PENDING#<email>)
   { M: "PATCH",  R: /^\/userProfilesPending\/(?<email>[^/]+)$/i,                H: patchUserProfilePending },
 
-  // invites
+  // invites & aliases
   { M: "POST",   R: /^\/sendProjectInvitation$/i,                               H: sendProjectInvitation },
+  { M: "POST",   R: /^\/inviteUserToProject$/i,                                 H: inviteUserToProject },
+  { M: "POST",   R: /^\/respondProjectInvitation$/i,                            H: respondProjectInvitation },
+
   { M: "GET",    R: /^\/invites\/outgoing$/i,                                   H: listInvitesOutgoing },
   { M: "GET",    R: /^\/invites\/incoming$/i,                                   H: listInvitesIncoming },
   { M: "POST",   R: /^\/invites\/send$/i,                                       H: sendInvite },

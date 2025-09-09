@@ -423,6 +423,9 @@ const routes = [
   { m: "DELETE",r: /^\/messages\/notifications\/(?<notificationId>[^/]+)$/i, h: deleteNotification },
 
   // v1.1 compat aliases
+  { m: "GET",   r: /^\/getDirectMessages$/i,                                h: listThreadMessages },
+  { m: "GET",   r: /^\/getDmInbox$/i,                                       h: getInbox },
+  { m: "GET",   r: /^\/getProjectMessages$/i,                               h: listProjectMessages },
   { m: "GET",   r: /^\/getNotifications$/i,                                h: listNotifications },
   { m: "POST",  r: /^\/SendProjectNotification$/i,                         h: sendNotification },
 ];

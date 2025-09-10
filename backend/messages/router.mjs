@@ -34,7 +34,7 @@ const P = (e) => (e?.rawPath || e?.path || "/");
 const Q = (e) => e?.queryStringParameters || {};
 const B = (e) => { try { return JSON.parse(e?.body || "{}"); } catch { return {}; } };
 const nowISO = () => new Date().toISOString();
-const makeMsgId = (ts = Date.now()) => `M#${String(ts).padStart(13, "0")}#${uuidv4()}`;
+const makeMsgId = (ts = Date.now()) => `MESSAGE#${String(ts).padStart(13, "0")}#${uuidv4()}`;
 
 function buildUpdate(obj) {
   const Names = {}, Values = {}, sets = [];
@@ -122,7 +122,7 @@ const getConversation = async (e, C, { conversationId }) => {
 };
 
 /* Messages in a conversation
-   MESSAGES_TABLE: PK=conversationId, SK=messageId (M#<millis>#uuid) */
+   MESSAGES_TABLE: PK=conversationId, SK=messageId (MESSAGE#<millis>#uuid) */
 const listConversationMessages = async (e, C, { conversationId }) => {
   const q = Q(e);
   const limit = Math.min(parseInt(q.limit || "50", 10), 200);

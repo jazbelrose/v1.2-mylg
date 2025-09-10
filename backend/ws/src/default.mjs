@@ -366,7 +366,7 @@ const handleSendMessage = async (payload) => {
   const recipientId = senderId === uid1 ? uid2 : uid1;
 
   const messageItem = {
-    messageId: `MESSAGE#${timestamp}`,
+    messageId: `MESSAGE#${String(timestamp).padStart(13, "0")}#${uuid()}`,
     senderId,
     username,
     text,

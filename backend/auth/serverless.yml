@@ -23,10 +23,10 @@ provider:
     CORS_DEFAULT_ORIGIN: https://beta.mylg.studio
     # ---- Users & invites
     USER_PROFILES_TABLE: UserProfiles
-    # ---- Cognito (using CloudFormation references)
-    COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+    # ---- Cognito (using existing us-west-2 user pool)
+    COGNITO_USER_POOL_ID: us-west-2_NSmoNjhwq
     COGNITO_USER_POOL_NAME: mylg-dev-users-west2
-    COGNITO_USER_CLIENT_ID: !Ref CognitoUserPoolClient
+    COGNITO_USER_CLIENT_ID: 701bio0975m75tfr1mlv7oqrj8
 
   iam:
     role:
@@ -55,10 +55,10 @@ functions:
     handler: preTokenGeneration.handler
     events:
       - cognitoUserPool:
-          # Bind to the user pool created in this stack
-          pool: ${self:provider.environment.COGNITO_USER_POOL_NAME}
+          # Bind to existing user pool
+          pool: mylg-dev-users-west2
           trigger: PreTokenGeneration
-          existing: false  # Create new pool
+          existing: true  # Use existing pool
 
   # 2) Lambda authorizer used by the **WebSocket $connect** route (deployed here, *referenced* by ws stack)
   cognitoAuthorizer:
@@ -90,82 +90,3 @@ package:
     - '*.mjs'
     - '!**/*.map'
     - '!node_modules/.bin/**'
-
-resources:
-  Resources:
-    # Create new Cognito User Pool in us-west-2
-    CognitoUserPool:
-      Type: AWS::Cognito::UserPool
-      Properties:
-        UserPoolName: ${self:provider.environment.COGNITO_USER_POOL_NAME}
-        AliasAttributes:
-          - email
-        AutoVerifiedAttributes:
-          - email
-        UsernameConfiguration:
-          CaseSensitive: false
-        Policies:
-          PasswordPolicy:
-            MinimumLength: 8
-            RequireUppercase: true
-            RequireLowercase: true
-            RequireNumbers: true
-            RequireSymbols: false
-        Schema:
-          - Name: email
-            AttributeDataType: String
-            Required: true
-            Mutable: true
-
-    # Create User Pool Client
-    CognitoUserPoolClient:
-      Type: AWS::Cognito::UserPoolClient
-      Properties:
-        ClientName: ${self:service}-${self:provider.stage}-client
-        UserPoolId:
-          Ref: CognitoUserPool
-        GenerateSecret: false
-        ExplicitAuthFlows:
-          - ALLOW_ADMIN_USER_PASSWORD_AUTH
-          - ALLOW_USER_PASSWORD_AUTH
-          - ALLOW_REFRESH_TOKEN_AUTH
-        TokenValidityUnits:
-          AccessToken: hours
-          IdToken: hours
-          RefreshToken: days
-        AccessTokenValidity: 1
-        IdTokenValidity: 1
-        RefreshTokenValidity: 30
-
-  Outputs:
-    # Cognito User Pool outputs
-    CognitoUserPoolId:
-      Value:
-        Ref: CognitoUserPool
-      Export:
-        Name: auth-cognito-user-pool-id-${sls:stage}
-
-    CognitoUserPoolClientId:
-      Value:
-        Ref: CognitoUserPoolClient
-      Export:
-        Name: auth-cognito-user-pool-client-id-${sls:stage}
-
-    CognitoUserPoolArn:
-      Value:
-        Fn::GetAtt: [ CognitoUserPool, Arn ]
-      Export:
-        Name: auth-cognito-user-pool-arn-${sls:stage}
-
-    # Lambda function outputs
-    PreTokenGenerationArn:
-      Value:
-        Fn::GetAtt: [ PreTokenGenerationLambdaFunction, Arn ]
-      Export:
-        Name: auth-preTokenGeneration-arn-${sls:stage}
-
-    CognitoAuthorizerArn:
-      Value:
-        Fn::GetAtt: [ CognitoAuthorizerLambdaFunction, Arn ]
-      Export:
-        Name: auth-cognitoAuthorizer-arn-${sls:stage}

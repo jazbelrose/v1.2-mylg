@@ -10,19 +10,14 @@ const ENV_ALLOWED = (process.env.ALLOWED_ORIGINS || "")
   .map((s) => s.trim().replace(/\/$/, ""))
   .filter(Boolean);
 
-// Defaults you likely always want in dev/prod
-const DEFAULT_ALLOWED = [
-  "http://localhost:3000",
-  "http://192.168.1.200:3000",
-  "https://mylg.studio",
-  "https://www.mylg.studio",
-];
+// Minimal dev defaults; real origins should come via ALLOWED_ORIGINS
+const DEFAULT_ALLOWED = ["http://localhost:3000"];
 
-const EXPLICIT_ALLOW = new Set([...DEFAULT_ALLOWED, ...ENV_ALLOWED]);
+const EXPLICIT_ALLOW = new Set([...ENV_ALLOWED, ...DEFAULT_ALLOWED]);
 
 // Comma-separated base hosts allowed for wildcard subdomains
 // e.g. "mylg.studio,staging.mylg.studio" → allows *.mylg.studio and *.staging.mylg.studio
-const WILDCARD_HOSTS = (process.env.CORS_WILDCARD_HOSTS || "mylg.studio")
+const WILDCARD_HOSTS = (process.env.CORS_WILDCARD_HOSTS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);

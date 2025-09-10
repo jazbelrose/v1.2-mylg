@@ -167,16 +167,20 @@ Resources:
           AttributeType: S
         - AttributeName: timestamp#uuid
           AttributeType: S
+        - AttributeName: dedupeId
+          AttributeType: S
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
         - AttributeName: timestamp#uuid
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: userId-index
+        - IndexName: dedupeId-index
           KeySchema:
-            - AttributeName: userId
+            - AttributeName: dedupeId
               KeyType: HASH
+            - AttributeName: timestamp#uuid
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
 

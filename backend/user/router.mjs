@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 /* ---------- ENV ---------- */
 const REGION = process.env.AWS_REGION || "us-west-2";
 const USER_PROFILES_TABLE = process.env.USER_PROFILES_TABLE || "UserProfiles";
-const INVITES_TABLE = process.env.INVITES_TABLE || "UserInvites";
+const INVITES_TABLE = process.env.INVITES_TABLE || "ProjectInvitations";
 const INVITES_BY_SENDER_INDEX = process.env.INVITES_BY_SENDER_INDEX || "senderId-index";
 const INVITES_BY_RECIPIENT_INDEX = process.env.INVITES_BY_RECIPIENT_INDEX || "recipientId-index";
 const SCANS_ALLOWED = (process.env.SCANS_ALLOWED || "true").toLowerCase() === "true";

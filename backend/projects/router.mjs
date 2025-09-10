@@ -11,8 +11,8 @@ const REGION = process.env.AWS_REGION || "us-west-2";
 const PROJECTS_TABLE = process.env.PROJECTS_TABLE || "Projects";
 
 // Tasks & Events
-const TASKS_TABLE   = process.env.TASKS_TABLE   || "ProjectTasks";
-const EVENTS_TABLE  = process.env.EVENTS_TABLE  || "ProjectEvents";
+const TASKS_TABLE   = process.env.TASKS_TABLE   || "Tasks";
+const EVENTS_TABLE  = process.env.EVENTS_TABLE  || "Events";
 const EVENTS_STARTAT_INDEX = process.env.EVENTS_STARTAT_INDEX || ""; // e.g., "projectId-startAt-index"
 
 // Budgets (same schema as v1.1)
@@ -207,6 +207,8 @@ const createTask = async (e, C, { projectId }) => {
     updatedAt: ts,
     ...b,
   };
+  const dueDate = item.dueAt ? String(item.dueAt).slice(0, 10) : "";
+  item.statusDueDateTaskId = `${item.status}#${dueDate}#${taskId}`;
   await ddb.put({
     TableName: TASKS_TABLE,
     Item: item,
@@ -222,6 +224,17 @@ const getTask = async (_e, C, { projectId, taskId }) => {
 
 const patchTask = async (e, C, { projectId, taskId }) => {
   const b = B(e);
+  if (b.status !== undefined || b.dueAt !== undefined) {
+    const curr = await ddb.get({
+      TableName: TASKS_TABLE,
+      Key: { projectId, taskId },
+      ProjectionExpression: "status, dueAt",
+    });
+    const newStatus = b.status ?? curr.Item?.status ?? "todo";
+    const newDueAt = b.dueAt ?? curr.Item?.dueAt;
+    const dueDate = newDueAt ? String(newDueAt).slice(0, 10) : "";
+    b.statusDueDateTaskId = `${newStatus}#${dueDate}#${taskId}`;
+  }
   const upd = buildUpdate({ ...b, updatedAt: nowISO() });
   if (!upd) return json(400, C, { error: "No fields to update" });
   const r = await ddb.update({

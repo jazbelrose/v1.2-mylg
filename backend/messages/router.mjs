@@ -150,6 +150,13 @@ const postConversationMessage = async (e, C, { conversationId }) => {
   const messageId = b.messageId || makeMsgId(tsMillis);
   const ts = b.timestamp || new Date(tsMillis).toISOString();
 
+  let participants = b.participants;
+  if (!participants) {
+    const pr = await ddb.get({ TableName: INBOX_TABLE, Key: { userId: b.senderId, conversationId } });
+    participants = pr.Item?.participants || [];
+  }
+  const recipientId = participants.find((p) => p !== b.senderId);
+
   const msg = {
     conversationId,
     messageId,
@@ -160,6 +167,8 @@ const postConversationMessage = async (e, C, { conversationId }) => {
     reactions: b.reactions || {},
     timestamp: ts,
     meta: b.meta || {},
+    GSI1PK: recipientId ? `USER#${recipientId}` : undefined,
+    GSI1SK: ts,
   };
 
   await ddb.put({
@@ -168,22 +177,32 @@ const postConversationMessage = async (e, C, { conversationId }) => {
     ConditionExpression: "attribute_not_exists(conversationId) AND attribute_not_exists(messageId)",
   });
 
-  let participants = b.participants;
-  if (!participants) {
-    const pr = await ddb.get({ TableName: INBOX_TABLE, Key: { userId: b.senderId, conversationId } });
-    participants = pr.Item?.participants || [];
-  }
   const snippet = (msg.text || msg.body || msg.content || "").toString().slice(0, 180);
   await Promise.all(
-    (participants || []).map((uid) =>
-      ddb.update({
+    (participants || []).map((uid) => {
+      const otherUserId = participants.find((p) => p !== uid);
+      const read = uid === b.senderId;
+      return ddb.update({
         TableName: INBOX_TABLE,
         Key: { userId: uid, conversationId },
-        UpdateExpression: "SET #snippet = :s, #lastMsgTs = :ts, #updatedAt = :u",
-        ExpressionAttributeNames: { "#snippet": "snippet", "#lastMsgTs": "lastMsgTs", "#updatedAt": "updatedAt" },
-        ExpressionAttributeValues: { ":s": snippet, ":ts": ts, ":u": nowISO() },
-      })
-    )
+        UpdateExpression:
+          "SET #snippet = :s, #lastMsgTs = :ts, #updatedAt = :u, #otherUserId = :ou, #read = :r",
+        ExpressionAttributeNames: {
+          "#snippet": "snippet",
+          "#lastMsgTs": "lastMsgTs",
+          "#updatedAt": "updatedAt",
+          "#otherUserId": "otherUserId",
+          "#read": "read",
+        },
+        ExpressionAttributeValues: {
+          ":s": snippet,
+          ":ts": ts,
+          ":u": nowISO(),
+          ":ou": otherUserId,
+          ":r": read,
+        },
+      });
+    })
   );
 
   return json(201, C, { conversationId, message: msg });

@@ -14,8 +14,6 @@ const ENV_ALLOWED = (process.env.ALLOWED_ORIGINS || "")
 const DEFAULT_ALLOWED = [
   "http://localhost:3000",
   "http://192.168.1.200:3000",
-  "https://mylg.studio",
-  "https://www.mylg.studio",
 ];
 
 const EXPLICIT_ALLOW = new Set([...DEFAULT_ALLOWED, ...ENV_ALLOWED]);

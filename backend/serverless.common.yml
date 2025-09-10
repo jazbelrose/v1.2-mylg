@@ -1,3 +1,6 @@
+cors:
+  CORS_DEFAULT_ORIGIN: https://beta.mylg.studio
+
 env:
   # ---- Users & invites
   USER_PROFILES_TABLE: UserProfiles

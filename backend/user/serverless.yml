@@ -14,7 +14,22 @@ provider:
   memorySize: 256
   timeout: 15
   httpApi:
-    cors: true
+    cors:
+      allowedOrigins:
+        - http://localhost:5173
+        - https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com
+      allowedHeaders:
+        - Content-Type
+        - X-Amz-Date
+        - Authorization
+        - X-Api-Key
+        - X-Amz-Security-Token
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
   environment:
     # Tables & shared config (CORS, etc.)
     ${self:custom.env}

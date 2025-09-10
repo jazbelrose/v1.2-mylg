@@ -5,6 +5,7 @@ custom:
   app: mylg
   ver: v12
   env: ${file(../serverless.common.yml):env}
+  cors: ${file(../serverless.common.yml):cors}
 
 provider:
   name: aws
@@ -23,7 +24,13 @@ provider:
     Domain: projects
     Stage: ${sls:stage}
   environment:
-    # Tables & shared config (CORS, etc.)
+    # CORS (layer reads these)
+    ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
+    CORS_WILDCARD_HOSTS: mylg.studio
+    CORS_ALLOW_CREDENTIALS: "false"
+    CORS_DEFAULT_ORIGIN: ${self:custom.cors.CORS_DEFAULT_ORIGIN}
+
+    # Tables: pull from the shared file
     ${self:custom.env}
 
   iam:

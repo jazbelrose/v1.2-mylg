@@ -10,8 +10,11 @@ const ENV_ALLOWED = (process.env.ALLOWED_ORIGINS || "")
   .map((s) => s.trim().replace(/\/$/, ""))
   .filter(Boolean);
 
-// Minimal dev defaults; real origins should come via ALLOWED_ORIGINS
-const DEFAULT_ALLOWED = ["http://localhost:3000"];
+// Defaults you likely always want in dev/prod
+const DEFAULT_ALLOWED = [
+  "http://localhost:3000",
+  "http://192.168.1.200:3000",
+];
 
 const EXPLICIT_ALLOW = new Set([...ENV_ALLOWED, ...DEFAULT_ALLOWED]);
 

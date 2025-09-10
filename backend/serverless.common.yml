@@ -1,3 +1,6 @@
+cors:
+  CORS_DEFAULT_ORIGIN: https://beta.mylg.studio
+
 env:
   # ---- CORS
   ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000

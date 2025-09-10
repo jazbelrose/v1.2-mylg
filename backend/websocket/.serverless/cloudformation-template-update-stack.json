@@ -89,12 +89,6 @@
         "LogGroupName": "/aws/lambda/mylg-v2-websocket-dev-onDefault"
       }
     },
-    "SendMessageLogGroup": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "LogGroupName": "/aws/lambda/mylg-v2-websocket-dev-sendMessage"
-      }
-    },
     "IamRoleLambdaExecution": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -214,9 +208,9 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/mylg-v2-websocket/dev/1757537367534-2025-09-10T20:49:27.534Z/mylg-v2-websocket.zip"
+          "S3Key": "serverless/mylg-v2-websocket/dev/1757539336356-2025-09-10T21:22:16.356Z/mylg-v2-websocket.zip"
         },
-        "Handler": "websocket/onConnect.handler",
+        "Handler": "onConnect.handler",
         "Runtime": "nodejs18.x",
         "FunctionName": "mylg-v2-websocket-dev-onConnect",
         "MemorySize": 256,
@@ -230,6 +224,7 @@
             "CONNECTIONS_TABLE": "Connections",
             "CONNECTIONS_USER_GSI": "userId-sessionId-index",
             "USER_PROFILES_TABLE": "UserProfiles",
+            "INBOX_TABLE": "Inbox",
             "NOTIFICATIONS_TABLE": "Notifications",
             "WEBSOCKET_ENDPOINT": "wss://placeholder.execute-api.us-west-2.amazonaws.com/dev"
           }
@@ -252,9 +247,9 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/mylg-v2-websocket/dev/1757537367534-2025-09-10T20:49:27.534Z/mylg-v2-websocket.zip"
+          "S3Key": "serverless/mylg-v2-websocket/dev/1757539336356-2025-09-10T21:22:16.356Z/mylg-v2-websocket.zip"
         },
-        "Handler": "websocket/onDisconnect.handler",
+        "Handler": "onDisconnect.handler",
         "Runtime": "nodejs18.x",
         "FunctionName": "mylg-v2-websocket-dev-onDisconnect",
         "MemorySize": 256,
@@ -268,6 +263,7 @@
             "CONNECTIONS_TABLE": "Connections",
             "CONNECTIONS_USER_GSI": "userId-sessionId-index",
             "USER_PROFILES_TABLE": "UserProfiles",
+            "INBOX_TABLE": "Inbox",
             "NOTIFICATIONS_TABLE": "Notifications",
             "WEBSOCKET_ENDPOINT": "wss://placeholder.execute-api.us-west-2.amazonaws.com/dev"
           }
@@ -290,9 +286,9 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/mylg-v2-websocket/dev/1757537367534-2025-09-10T20:49:27.534Z/mylg-v2-websocket.zip"
+          "S3Key": "serverless/mylg-v2-websocket/dev/1757539336356-2025-09-10T21:22:16.356Z/mylg-v2-websocket.zip"
         },
-        "Handler": "websocket/default.handler",
+        "Handler": "default.handler",
         "Runtime": "nodejs18.x",
         "FunctionName": "mylg-v2-websocket-dev-onDefault",
         "MemorySize": 256,
@@ -306,6 +302,7 @@
             "CONNECTIONS_TABLE": "Connections",
             "CONNECTIONS_USER_GSI": "userId-sessionId-index",
             "USER_PROFILES_TABLE": "UserProfiles",
+            "INBOX_TABLE": "Inbox",
             "NOTIFICATIONS_TABLE": "Notifications",
             "WEBSOCKET_ENDPOINT": "wss://placeholder.execute-api.us-west-2.amazonaws.com/dev"
           }
@@ -321,82 +318,34 @@
         "OnDefaultLogGroup"
       ]
     },
-    "SendMessageLambdaFunction": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Ref": "ServerlessDeploymentBucket"
-          },
-          "S3Key": "serverless/mylg-v2-websocket/dev/1757537367534-2025-09-10T20:49:27.534Z/mylg-v2-websocket.zip"
-        },
-        "Handler": "websocket/default.handler",
-        "Runtime": "nodejs18.x",
-        "FunctionName": "mylg-v2-websocket-dev-sendMessage",
-        "MemorySize": 256,
-        "Timeout": 15,
-        "Environment": {
-          "Variables": {
-            "ALLOWED_ORIGINS": "https://beta.mylg.studio,https://mylg.studio,http://localhost:3000",
-            "CORS_WILDCARD_HOSTS": "mylg.studio",
-            "CORS_ALLOW_CREDENTIALS": "false",
-            "CORS_DEFAULT_ORIGIN": "https://beta.mylg.studio",
-            "CONNECTIONS_TABLE": "Connections",
-            "CONNECTIONS_USER_GSI": "userId-sessionId-index",
-            "USER_PROFILES_TABLE": "UserProfiles",
-            "NOTIFICATIONS_TABLE": "Notifications",
-            "WEBSOCKET_ENDPOINT": "wss://placeholder.execute-api.us-west-2.amazonaws.com/dev"
-          }
-        },
-        "Role": {
-          "Fn::GetAtt": [
-            "IamRoleLambdaExecution",
-            "Arn"
-          ]
-        }
-      },
-      "DependsOn": [
-        "SendMessageLogGroup"
-      ]
-    },
-    "OnConnectLambdaVersionyPCO5Lzr8rr4IwAB7fDTflmCxWXWaSvX7w7mLac8dE": {
+    "OnConnectLambdaVersion7zCWUZfKOGPjNs7yiNTz0muut30N042YBrNCZiBRaEY": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "OnConnectLambdaFunction"
         },
-        "CodeSha256": "lUQ5TH1hhn/rnQVeLaSCIIB9C5ItZWcWgWQAEg90wi0="
+        "CodeSha256": "jVePe63PhGp7/3MNU5aG8hDpqYh7qE9lY/n+F+UMiz0="
       }
     },
-    "OnDisconnectLambdaVersionCeBwBfOdd6d17RZH94MQRXXOszIlAHrxnKgrzJt0J4": {
+    "OnDisconnectLambdaVersionGqfc2ZWrklXNH1VLDnEa6GNSRjkzV5V06kuYH9bO8": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "OnDisconnectLambdaFunction"
         },
-        "CodeSha256": "lUQ5TH1hhn/rnQVeLaSCIIB9C5ItZWcWgWQAEg90wi0="
+        "CodeSha256": "jVePe63PhGp7/3MNU5aG8hDpqYh7qE9lY/n+F+UMiz0="
       }
     },
-    "OnDefaultLambdaVersionNnH5vs0lOTjRbVz7aqkhu7faqIoysNCnaG3yP9cNo": {
+    "OnDefaultLambdaVersionR7TaD9G5O1hE29i2cCH2HNRiAjjR6inQGqGDXtM": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "OnDefaultLambdaFunction"
         },
-        "CodeSha256": "lUQ5TH1hhn/rnQVeLaSCIIB9C5ItZWcWgWQAEg90wi0="
-      }
-    },
-    "SendMessageLambdaVersionx9iKsuhHY6VbvrfZ1FCgxjLlK48MBD8UcpksLrIp0": {
-      "Type": "AWS::Lambda::Version",
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "FunctionName": {
-          "Ref": "SendMessageLambdaFunction"
-        },
-        "CodeSha256": "lUQ5TH1hhn/rnQVeLaSCIIB9C5ItZWcWgWQAEg90wi0="
+        "CodeSha256": "jVePe63PhGp7/3MNU5aG8hDpqYh7qE9lY/n+F+UMiz0="
       }
     },
     "WebsocketsApi": {
@@ -504,38 +453,6 @@
         }
       }
     },
-    "SendMessageWebsocketsIntegration": {
-      "Type": "AWS::ApiGatewayV2::Integration",
-      "Properties": {
-        "ApiId": {
-          "Ref": "WebsocketsApi"
-        },
-        "IntegrationType": "AWS_PROXY",
-        "IntegrationUri": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition"
-              },
-              ":apigateway:",
-              {
-                "Ref": "AWS::Region"
-              },
-              ":lambda:path/2015-03-31/functions/",
-              {
-                "Fn::GetAtt": [
-                  "SendMessageLambdaFunction",
-                  "Arn"
-                ]
-              },
-              "/invocations"
-            ]
-          ]
-        }
-      }
-    },
     "OnConnectLambdaPermissionWebsockets": {
       "Type": "AWS::Lambda::Permission",
       "DependsOn": [
@@ -580,23 +497,6 @@
         "FunctionName": {
           "Fn::GetAtt": [
             "OnDefaultLambdaFunction",
-            "Arn"
-          ]
-        },
-        "Action": "lambda:InvokeFunction",
-        "Principal": "apigateway.amazonaws.com"
-      }
-    },
-    "SendMessageLambdaPermissionWebsockets": {
-      "Type": "AWS::Lambda::Permission",
-      "DependsOn": [
-        "WebsocketsApi",
-        "SendMessageLambdaFunction"
-      ],
-      "Properties": {
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "SendMessageLambdaFunction",
             "Arn"
           ]
         },
@@ -667,27 +567,6 @@
         }
       }
     },
-    "sendMessageWebsocketsRoute": {
-      "Type": "AWS::ApiGatewayV2::Route",
-      "Properties": {
-        "ApiId": {
-          "Ref": "WebsocketsApi"
-        },
-        "RouteKey": "sendMessage",
-        "AuthorizationType": "NONE",
-        "Target": {
-          "Fn::Join": [
-            "/",
-            [
-              "integrations",
-              {
-                "Ref": "SendMessageWebsocketsIntegration"
-              }
-            ]
-          ]
-        }
-      }
-    },
     "WebsocketsDeploymentStage": {
       "Type": "AWS::ApiGatewayV2::Stage",
       "Properties": {
@@ -697,17 +576,16 @@
         "StageName": "dev",
         "Description": "Serverless Websockets",
         "DeploymentId": {
-          "Ref": "WebsocketsDeployment9pQ20bWYbJAg3mkaSuXo5mEDvmnrmupzita7VCddIY"
+          "Ref": "WebsocketsDeployment2JgXr7egHvxIDu6UaiPV6YqAQlWHHSenbmuB1rhCSE"
         }
       }
     },
-    "WebsocketsDeployment9pQ20bWYbJAg3mkaSuXo5mEDvmnrmupzita7VCddIY": {
+    "WebsocketsDeployment2JgXr7egHvxIDu6UaiPV6YqAQlWHHSenbmuB1rhCSE": {
       "Type": "AWS::ApiGatewayV2::Deployment",
       "DependsOn": [
         "SconnectWebsocketsRoute",
         "SdisconnectWebsocketsRoute",
-        "SdefaultWebsocketsRoute",
-        "sendMessageWebsocketsRoute"
+        "SdefaultWebsocketsRoute"
       ],
       "Properties": {
         "ApiId": {
@@ -729,7 +607,7 @@
     "OnConnectLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "OnConnectLambdaVersionyPCO5Lzr8rr4IwAB7fDTflmCxWXWaSvX7w7mLac8dE"
+        "Ref": "OnConnectLambdaVersion7zCWUZfKOGPjNs7yiNTz0muut30N042YBrNCZiBRaEY"
       },
       "Export": {
         "Name": "sls-mylg-v2-websocket-dev-OnConnectLambdaFunctionQualifiedArn"
@@ -738,7 +616,7 @@
     "OnDisconnectLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "OnDisconnectLambdaVersionCeBwBfOdd6d17RZH94MQRXXOszIlAHrxnKgrzJt0J4"
+        "Ref": "OnDisconnectLambdaVersionGqfc2ZWrklXNH1VLDnEa6GNSRjkzV5V06kuYH9bO8"
       },
       "Export": {
         "Name": "sls-mylg-v2-websocket-dev-OnDisconnectLambdaFunctionQualifiedArn"
@@ -747,19 +625,10 @@
     "OnDefaultLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "OnDefaultLambdaVersionNnH5vs0lOTjRbVz7aqkhu7faqIoysNCnaG3yP9cNo"
+        "Ref": "OnDefaultLambdaVersionR7TaD9G5O1hE29i2cCH2HNRiAjjR6inQGqGDXtM"
       },
       "Export": {
         "Name": "sls-mylg-v2-websocket-dev-OnDefaultLambdaFunctionQualifiedArn"
-      }
-    },
-    "SendMessageLambdaFunctionQualifiedArn": {
-      "Description": "Current Lambda function version",
-      "Value": {
-        "Ref": "SendMessageLambdaVersionx9iKsuhHY6VbvrfZ1FCgxjLlK48MBD8UcpksLrIp0"
-      },
-      "Export": {
-        "Name": "sls-mylg-v2-websocket-dev-SendMessageLambdaFunctionQualifiedArn"
       }
     },
     "ServiceEndpointWebsocket": {

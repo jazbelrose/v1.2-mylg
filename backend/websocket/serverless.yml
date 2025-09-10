@@ -50,22 +50,22 @@ provider:
 
 functions:
   onConnect:
-    handler: websocket/onConnect.handler
+    handler: onConnect.handler
     events:
       - websocket:
           route: $connect
   onDisconnect:
-    handler: websocket/onDisconnect.handler
+    handler: onDisconnect.handler
     events:
       - websocket:
           route: $disconnect
   onDefault:
-    handler: websocket/default.handler
+    handler: default.handler
     events:
       - websocket:
           route: $default
 
 package:
   patterns:
-    - websocket/**
+    - '*.mjs'
     - '!**/*.map'

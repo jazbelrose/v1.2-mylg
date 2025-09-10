@@ -12,17 +12,45 @@ Serverless backend using AWS Lambda, API Gateway (HTTP API v2), and WebSocket AP
   - `ANY /user{,/...}` → users service
 
 ### WebSocket API
-- Single `ws` service handling:
+- Single `websocket` service handling:
   - `$connect` - Connection establishment
   - `$disconnect` - Connection cleanup
-  - `$default` - Default message handler
-  - `sendMessage` - Custom message routing
+  - `$default` - Default message handler for all WebSocket messages
 
 ### Shared Layer
 - Lambda Layer (exported) mounted at `/opt/nodejs/utils/` with:
   - CORS helpers for dynamic origin handling
   - Authentication utilities
   - Response formatting helpers
+
+## Deployed Endpoints (Dev Stage)
+
+### HTTP REST APIs
+- **Projects Service**: `https://bevnkraeqa.execute-api.us-west-2.amazonaws.com`
+  - `/projects` - Projects endpoints
+  - `/projects/{proxy+}` - Projects proxy routes
+  - `/projects/health` - Health check
+  - `/budgets/{proxy+}` - Budget endpoints
+
+- **User Service**: `https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com`
+  - `/userProfiles` - User profiles endpoints
+  - `/userProfiles/{proxy+}` - User profiles proxy routes
+  - `/userProfilesPending/{proxy+}` - Pending user profiles
+  - `/invites/{proxy+}` - Invitation endpoints
+  - `/sendProjectInvitation` - Send project invitations
+  - `/postProjectToUserId` - Post project to user
+  - `/user/health` - Health check
+
+- **Messages Service**: `https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com`
+  - `/messages` - Messages endpoints
+  - `/messages/{proxy+}` - Messages proxy routes
+  - `/messages/health` - Health check
+
+### WebSocket API
+- **WebSocket Service**: `wss://hhgvsv3ey7.execute-api.us-west-2.amazonaws.com/dev`
+  - Single endpoint for all WebSocket operations
+  - Routes: `$connect`, `$disconnect`, `$default`
+  - Functions: `onConnect`, `onDisconnect`, `onDefault`
 
 ## Key Benefits
 
@@ -47,7 +75,10 @@ backend/
 │   └── serverless.yml
 ├── user/                        # Users domain router + handlers
 │   └── serverless.yml
-└── ws/                          # WebSocket provider (connect/default/etc.)
+└── websocket/                   # WebSocket service (connect/disconnect/default handlers)
+    ├── onConnect.mjs            # WebSocket connection handler
+    ├── onDisconnect.mjs         # WebSocket disconnection handler
+    ├── default.mjs              # Default WebSocket message handler
     └── serverless.yml
 ```
 

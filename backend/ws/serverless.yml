@@ -64,11 +64,6 @@ functions:
     events:
       - websocket:
           route: $default
-  sendMessage:        # optional custom route used by your default code paths
-    handler: websocket/default.handler
-    events:
-      - websocket:
-          route: sendMessage
 
 package:
   patterns:

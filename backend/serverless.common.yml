@@ -41,5 +41,10 @@ env:
   CONNECTIONS_TABLE: Connections
   CONNECTIONS_USER_GSI: userId-sessionId-index
 
+  # ---- Cognito
+  COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+  COGNITO_USER_POOL_NAME: ${env:COGNITO_USER_POOL_NAME}
+  COGNITO_USER_CLIENT_ID: ${env:COGNITO_USER_CLIENT_ID}
+
   # ---- Misc
   SCANS_ALLOWED: "false"                     # flip to "true" only for dev scans

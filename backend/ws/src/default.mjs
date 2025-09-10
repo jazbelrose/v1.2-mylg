@@ -15,10 +15,7 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const apigwManagementApi = new AWS.ApiGatewayManagementApi({
   endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
-const inboxTable =
-  process.env.INBOX_TABLE_NAME ||
-  process.env.INBOX_TABLE ||
-  process.env.THREADS_TABLE;
+const inboxTable = process.env.INBOX_TABLE;
 const notificationsTable = process.env.NOTIFICATIONS_TABLE;
 
 export const handler = async (event) => {

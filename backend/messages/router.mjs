@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 const REGION = process.env.AWS_REGION || "us-west-2";
 
 // Inbox entries
-const INBOX_TABLE           = process.env.INBOX_TABLE || process.env.THREADS_TABLE || "Inbox";
+const INBOX_TABLE           = process.env.INBOX_TABLE;
 
 // Messages
 const MESSAGES_TABLE        = process.env.MESSAGES_TABLE        || "Messages";

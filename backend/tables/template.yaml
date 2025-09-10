@@ -74,13 +74,10 @@ Resources:
       AttributeDefinitions:
         - AttributeName: userId
           AttributeType: S
-          # PK
         - AttributeName: conversationId
           AttributeType: S
-          # SK
         - AttributeName: threadId
           AttributeType: S
-          # for GSI
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
@@ -238,18 +235,18 @@ Resources:
           AttributeType: S
         - AttributeName: startAt
           AttributeType: S
+        - AttributeName: budgetItemId
+          AttributeType: S
       KeySchema:
         - AttributeName: projectId
           KeyType: HASH
         - AttributeName: eventId
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: projectId-startAt-index
+        - IndexName: budgetItemId-index
           KeySchema:
-            - AttributeName: projectId
+            - AttributeName: budgetItemId
               KeyType: HASH
-            - AttributeName: startAt
-              KeyType: RANGE
           Projection:
             ProjectionType: ALL
 

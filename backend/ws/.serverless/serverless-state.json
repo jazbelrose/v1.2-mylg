@@ -1,6 +1,6 @@
 {
   "service": {
-    "service": "mylg-v2-websocket",
+    "service": "mylg-v12-websocket",
     "serviceObject": {
       "name": "mylg-v2-websocket"
     },

@@ -14,7 +14,7 @@ provider:
   memorySize: 256
   timeout: 15
   httpApi:
-    cors: false  # dynamic CORS handled in Lambda
+    cors: true
   environment:
     # ---- CORS
     ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000

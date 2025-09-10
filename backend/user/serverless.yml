@@ -14,7 +14,7 @@ provider:
   memorySize: 256
   timeout: 15
   httpApi:
-    cors: false   # dynamic CORS handled in /opt/nodejs/utils/cors.mjs
+    cors: true
   environment:
     # Tables & shared config (CORS, etc.)
     ${self:custom.env}
@@ -39,8 +39,8 @@ provider:
 
 functions:
   usersRouter:
-    # adjust if your file path differs (e.g., router.mjs at the service root)
-    handler: users/router.handler
+    # router.mjs is at the service root
+    handler: router.handler
     layers:
       - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
     events:

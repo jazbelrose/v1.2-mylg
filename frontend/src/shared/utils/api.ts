@@ -380,12 +380,18 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
 // ───────────────────────────────────────────────────────────────────────────────
 
 export async function fetchAllUsers(): Promise<UserProfile[]> {
-  const data = await apiFetch<MaybeItems<UserProfile>>(USER_PROFILES_API_URL);
-  return extractItems<UserProfile>(data);
+  try {
+    const data = await apiFetch<MaybeItems<UserProfile>>(USER_PROFILES_API_URL);
+    return extractItems<UserProfile>(data);
+  } catch (error) {
+    // If scanning is not allowed, return empty array to prevent CORS errors
+    console.warn("fetchAllUsers failed (scanning may be disabled):", error);
+    return [];
+  }
 }
 
 export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
-  const endpoint = `${USER_PROFILES_API_URL}?userId=${encodeURIComponent(userId)}`;
+  const endpoint = `${USER_PROFILES_API_URL}/${encodeURIComponent(userId)}`;
   const data = await apiFetch<MaybeItem<UserProfile>>(endpoint);
   return extractItem<UserProfile>(data);
 }
@@ -408,7 +414,7 @@ export async function fetchUserProfilesBatch(userIds: string[] = []): Promise<Us
 
   if (idsToFetch.length > 0) {
     const ids = encodeURIComponent(idsToFetch.join(','));
-    const endpoint = `${USER_PROFILES_API_URL}?userIds=${ids}`;
+    const endpoint = `${USER_PROFILES_API_URL}?ids=${ids}`;
     const data = await apiFetch<MaybeItems<UserProfile>>(endpoint);
     const fetched = extractItems<UserProfile>(data);
     for (const profile of fetched) {

@@ -1,24 +1,25 @@
-# MYLG Backend v2
+# MYLG Backend v1.2
 
-A serverless backend architecture using AWS Lambda, API Gateway (HTTP API v2), and WebSocket API.
+Serverless backend using AWS Lambda, API Gateway (HTTP API v2), and WebSocket API. Each domain is its own Serverless service for clean isolation and fast iteration.
 
 ## Architecture Overview
 
-### HTTP API (v2) with Domain-Based Routing
-- **3 router Lambdas** with proxy prefixes for domain isolation:
-  - `ANY /auth/{proxy+}` → `auth-router`
-  - `ANY /projects/{proxy+}` → `projects-router` 
-  - `ANY /messages/{proxy+}` → `messages-router`
+### HTTP API (v2) with Domain-Based Services
+- Router Lambdas per domain with proxy prefixes:
+  - `ANY /auth/{proxy+}` → auth service
+  - `ANY /projects/{proxy+}` → projects service
+  - `ANY /messages/{proxy+}` → messages service
+  - `ANY /user{,/...}` → users service
 
 ### WebSocket API
-- **Single `ws-provider` Lambda** handling:
+- Single `ws` service handling:
   - `$connect` - Connection establishment
   - `$disconnect` - Connection cleanup
   - `$default` - Default message handler
   - `sendMessage` - Custom message routing
 
 ### Shared Layer
-- **Lambda Layer** at `/opt/nodejs/utils/` containing:
+- Lambda Layer (exported) mounted at `/opt/nodejs/utils/` with:
   - CORS helpers for dynamic origin handling
   - Authentication utilities
   - Response formatting helpers
@@ -34,46 +35,53 @@ A serverless backend architecture using AWS Lambda, API Gateway (HTTP API v2), a
 
 ```
 backend/
-├── serverless.yml              # Serverless Framework configuration
-├── package.json                # Dependencies and scripts
-├── shared-layer/               # Lambda Layer
-│   └── nodejs/utils/
-│       └── cors.mjs           # CORS utilities
-├── auth/
-│   └── index.mjs              # Authentication router
-├── projects/
-│   └── index.mjs              # Projects router
-├── messages/
-│   └── index.mjs              # Messages router
-└── ws/
-    └── index.mjs              # WebSocket provider
+├── package.json                 # Dev dependencies and convenience scripts
+├── serverless.common.yml        # Shared env/config across services
+├── shared-layer/                # Lambda Layer (exported ARN)
+│   └── serverless.yml
+├── auth/                        # Auth service (Cognito triggers, authorizer, routes)
+│   └── serverless.yml
+├── projects/                    # Projects domain router + handlers
+│   └── serverless.yml
+├── messages/                    # Messages domain router + handlers
+│   └── serverless.yml
+├── user/                        # Users domain router + handlers
+│   └── serverless.yml
+└── ws/                          # WebSocket provider (connect/default/etc.)
+    └── serverless.yml
 ```
 
 ## Environment Variables
 
-- `ALLOWED_ORIGINS` - Comma-separated list of allowed origins for CORS
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed origins for CORS
+- Others are centrally defined in `backend/serverless.common.yml` and imported per service.
 
 ## Deployment
 
+Deploy services independently for faster, smaller stacks.
+
 ```bash
-# Install dependencies
-npm install
+# Install once at repo root (optional)
+npm install -g serverless
 
-# Deploy to dev
-npm run deploy:dev
+# Then deploy each service from its folder, e.g.:
+cd backend/shared-layer && sls deploy --stage dev
+cd ../auth && sls deploy --stage dev
+cd ../projects && sls deploy --stage dev
+cd ../messages && sls deploy --stage dev
+cd ../user && sls deploy --stage dev
+cd ../ws && sls deploy --stage dev
 
-# Deploy to production
-npm run deploy:prod
-
-# Remove stack
-npm run remove
+# Remove a service stack when needed
+sls remove --stage dev
 ```
 
 ## Local Development
 
+Run `serverless-offline` from the specific service you’re working on.
+
 ```bash
-# Run locally with serverless-offline
-npm install -g serverless
+cd backend/projects
 npm install
 serverless offline
 ```
@@ -108,3 +116,29 @@ serverless offline
 - Connection with auth token via query string
 - Real-time message delivery
 - Connection management
+
+## Templates & DBS (White‑Label)
+
+- Minimal by design: this repo intentionally avoids checking in large CloudFormation templates to keep the core codebase uncluttered.
+- Serverless Framework synthesizes CloudFormation under the hood, so an explicit `AWSTemplateFormatVersion` is not required for current services.
+- Optional DBS (Database Stack) will be introduced later, primarily for white‑label deployments. It will live in its own service or template to preserve separation of concerns.
+
+Suggested layout when DBS is needed (example only, not yet included):
+
+```
+backend/
+└── dbs/
+    ├── template.yml   # CloudFormation/SAM template for DB resources
+    └── README.md      # Usage and rollout notes per tenant/brand
+```
+
+Template header example for DBS (when added):
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: MYLG Database Stack (optional, white‑label)
+# Resources:
+#   ... DynamoDB tables, indexes, streams, etc.
+```
+
+This keeps DBS fully optional: only teams enabling white‑label flows pull in the DBS stack; everyone else avoids extra resources and config noise.

@@ -457,8 +457,27 @@ const handleSendMessage = async (payload) => {
   return { statusCode: 200, body: "Message sent successfully" };
 };
 
-const handleMarkRead = async ({ conversationType, conversationId, userId, read }) => {
+const handleMarkRead = async ({ conversationType, conversationId, userId, read, lastMsgTs }) => {
   if (conversationType !== "dm") return { statusCode: 400, body: "Invalid conversationType" };
+
+  // Persist read status before notifying clients
+  if (inboxTable) {
+    try {
+      const params = {
+        TableName: inboxTable,
+        Key: { userId, conversationId },
+        UpdateExpression: `SET #r = :read${lastMsgTs ? ", lastMsgTs = :ts" : ""}`,
+        ExpressionAttributeNames: { "#r": "read" },
+        ExpressionAttributeValues: {
+          ":read": read,
+          ...(lastMsgTs ? { ":ts": lastMsgTs } : {}),
+        },
+      };
+      await dynamoDb.update(params).promise();
+    } catch (err) {
+      console.error("❌ Failed to update read status:", err);
+    }
+  }
 
   const [uid1, uid2] = conversationId.replace("dm#", "").split("___");
 

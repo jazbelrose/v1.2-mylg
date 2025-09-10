@@ -7,9 +7,8 @@ import { v4 as uuidv4 } from "uuid";
 /* ------------ ENV ------------ */
 const REGION = process.env.AWS_REGION || "us-west-2";
 
-// Threads & membership
-const THREADS_TABLE         = process.env.THREADS_TABLE         || "MessagesThreads";
-const THREAD_MEMBERS_TABLE  = process.env.THREAD_MEMBERS_TABLE  || "MessagesThreadMembers";
+// Inbox entries
+const INBOX_TABLE           = process.env.INBOX_TABLE || process.env.THREADS_TABLE || "Inbox";
 
 // Messages
 const MESSAGES_TABLE        = process.env.MESSAGES_TABLE        || "Messages";
@@ -54,123 +53,96 @@ function buildUpdate(obj) {
   };
 }
 
-async function batchGetThreads(threadIds) {
-  const chunks = [];
-  for (let i = 0; i < threadIds.length; i += 100) chunks.push(threadIds.slice(i, i + 100));
-  const out = [];
-  for (const ch of chunks) {
-    const r = await ddb.batchGet({
-      RequestItems: { [THREADS_TABLE]: { Keys: ch.map((id) => ({ threadId: id })) } },
-    });
-    out.push(...(r.Responses?.[THREADS_TABLE] || []));
-  }
-  return out;
-}
-
 /* ------------ Handlers ------------ */
 const health = async (_e, C) => json(200, C, { ok: true, domain: "messages" });
 
-/* Inbox: list threads for a userId via membership table
-   THREAD_MEMBERS_TABLE: PK=userId, SK=threadId, attrs: lastReadTs, joinedAt, state */
+/* Inbox: list conversations for a userId */
 const getInbox = async (e, C) => {
   const userId = Q(e).userId;
   if (!userId) return json(400, C, { error: "userId required" });
 
   const r = await ddb.query({
-    TableName: THREAD_MEMBERS_TABLE,
+    TableName: INBOX_TABLE,
     KeyConditionExpression: "userId = :u",
     ExpressionAttributeValues: { ":u": userId },
     ScanIndexForward: false,
   });
-  const threadIds = (r.Items || []).map((m) => m.threadId);
-  if (threadIds.length === 0) return json(200, C, { userId, inbox: [] });
 
-  const threads = await batchGetThreads(threadIds);
-  threads.sort((a, b) => String(b.lastMsgTs || "").localeCompare(String(a.lastMsgTs || "")));
-  return json(200, C, { userId, inbox: threads });
+  r.Items?.sort((a, b) => String(b.lastMsgTs || "").localeCompare(String(a.lastMsgTs || "")));
+  return json(200, C, { userId, inbox: r.Items || [] });
 };
 
 /* GET /messages/threads?userId=...  (alias to inbox)
-   If userId omitted and SCANS_ALLOWED=true → scan Threads (dev only) */
+   If userId omitted and SCANS_ALLOWED=true → scan Inbox (dev only) */
 const listThreads = async (e, C) => {
   const userId = Q(e).userId;
   if (userId) return getInbox(e, C);
   if (!SCANS_ALLOWED) return json(400, C, { error: "userId required (set SCANS_ALLOWED=true to scan for dev)" });
 
-  const r = await ddb.scan({ TableName: THREADS_TABLE, Limit: 100 });
+  const r = await ddb.scan({ TableName: INBOX_TABLE, Limit: 100 });
   r.Items?.sort((a, b) => String(b.lastMsgTs || "").localeCompare(String(a.lastMsgTs || "")));
-  return json(200, C, { threads: r.Items || [] });
+  return json(200, C, { inbox: r.Items || [] });
 };
 
-/* Create a thread: body { participants: [userIds], projectId?, title? } */
-const createThread = async (e, C) => {
+/* Create a conversation: body { participants: [userIds], projectId?, title? } */
+const createConversation = async (e, C) => {
   const b = B(e);
   const participants = Array.isArray(b.participants) ? b.participants.filter(Boolean) : [];
   if (participants.length < 2) return json(400, C, { error: "participants (>=2) required" });
 
   const ts = nowISO();
-  const threadId = b.threadId || `T-${uuidv4()}`;
-  const thread = {
-    threadId,
-    participants,
-    projectId: b.projectId,
-    title: b.title,
-    createdAt: ts,
-    updatedAt: ts,
-    lastMsgTs: null,
-    snippet: "",
-    meta: b.meta || {},
-  };
-
-  await ddb.put({
-    TableName: THREADS_TABLE,
-    Item: thread,
-    ConditionExpression: "attribute_not_exists(threadId)",
-  });
+  const conversationId = b.conversationId || `C-${uuidv4()}`;
 
   for (const uid of participants) {
     await ddb.put({
-      TableName: THREAD_MEMBERS_TABLE,
+      TableName: INBOX_TABLE,
       Item: {
         userId: uid,
-        threadId,
-        joinedAt: ts,
-        lastReadTs: null,
-        state: "active",
+        conversationId,
+        participants,
+        projectId: b.projectId,
+        title: b.title,
+        createdAt: ts,
+        updatedAt: ts,
+        lastMsgTs: null,
+        snippet: "",
+        meta: b.meta || {},
       },
-      ConditionExpression: "attribute_not_exists(userId) AND attribute_not_exists(threadId)",
+      ConditionExpression: "attribute_not_exists(userId) AND attribute_not_exists(conversationId)",
     });
   }
 
-  return json(201, C, { thread });
+  return json(201, C, { conversation: { conversationId, participants, projectId: b.projectId, title: b.title, createdAt: ts, updatedAt: ts } });
 };
 
-const getThread = async (_e, C, { threadId }) => {
-  const r = await ddb.get({ TableName: THREADS_TABLE, Key: { threadId } });
-  return json(200, C, { thread: r.Item || null });
+const getConversation = async (e, C, { conversationId }) => {
+  const userId = Q(e).userId;
+  if (!userId) return json(400, C, { error: "userId required" });
+  const r = await ddb.get({ TableName: INBOX_TABLE, Key: { userId, conversationId } });
+  return json(200, C, { conversation: r.Item || null });
 };
 
-/* Messages in a thread
-   MESSAGES_TABLE: PK=threadId, SK=messageId (M#<millis>#uuid) */
-const listThreadMessages = async (e, C, { threadId }) => {
+/* Messages in a conversation
+   MESSAGES_TABLE: PK=conversationId, SK=messageId (M#<millis>#uuid) */
+const listConversationMessages = async (e, C, { conversationId }) => {
   const q = Q(e);
   const limit = Math.min(parseInt(q.limit || "50", 10), 200);
   const r = await ddb.query({
     TableName: MESSAGES_TABLE,
-    KeyConditionExpression: "threadId = :t",
-    ExpressionAttributeValues: { ":t": threadId },
+    KeyConditionExpression: "conversationId = :c",
+    ExpressionAttributeValues: { ":c": conversationId },
     ScanIndexForward: true,
     Limit: limit,
     ExclusiveStartKey: q.nextKey ? JSON.parse(q.nextKey) : undefined,
   });
   return json(200, C, {
-    threadId,
+    conversationId,
     messages: r.Items || [],
     nextKey: r.LastEvaluatedKey ? JSON.stringify(r.LastEvaluatedKey) : null,
   });
 };
 
-const postThreadMessage = async (e, C, { threadId }) => {
+const postConversationMessage = async (e, C, { conversationId }) => {
   const b = B(e);
   if (!b.senderId) return json(400, C, { error: "senderId required" });
   if (!b.text && !b.body && !b.content) return json(400, C, { error: "text/body/content required" });
@@ -180,7 +152,7 @@ const postThreadMessage = async (e, C, { threadId }) => {
   const ts = b.timestamp || new Date(tsMillis).toISOString();
 
   const msg = {
-    threadId,
+    conversationId,
     messageId,
     senderId: b.senderId,
     text: b.text,
@@ -194,31 +166,37 @@ const postThreadMessage = async (e, C, { threadId }) => {
   await ddb.put({
     TableName: MESSAGES_TABLE,
     Item: msg,
-    ConditionExpression: "attribute_not_exists(threadId) AND attribute_not_exists(messageId)",
+    ConditionExpression: "attribute_not_exists(conversationId) AND attribute_not_exists(messageId)",
   });
 
-  await ddb.update({
-    TableName: THREADS_TABLE,
-    Key: { threadId },
-    UpdateExpression: "SET #snippet = :s, #last = :ts, #updatedAt = :u",
-    ExpressionAttributeNames: { "#snippet": "snippet", "#last": "lastMsgTs", "#updatedAt": "updatedAt" },
-    ExpressionAttributeValues: {
-      ":s": (msg.text || msg.body || msg.content || "").toString().slice(0, 180),
-      ":ts": ts,
-      ":u": nowISO(),
-    },
-  });
+  let participants = b.participants;
+  if (!participants) {
+    const pr = await ddb.get({ TableName: INBOX_TABLE, Key: { userId: b.senderId, conversationId } });
+    participants = pr.Item?.participants || [];
+  }
+  const snippet = (msg.text || msg.body || msg.content || "").toString().slice(0, 180);
+  await Promise.all(
+    (participants || []).map((uid) =>
+      ddb.update({
+        TableName: INBOX_TABLE,
+        Key: { userId: uid, conversationId },
+        UpdateExpression: "SET #snippet = :s, #lastMsgTs = :ts, #updatedAt = :u",
+        ExpressionAttributeNames: { "#snippet": "snippet", "#lastMsgTs": "lastMsgTs", "#updatedAt": "updatedAt" },
+        ExpressionAttributeValues: { ":s": snippet, ":ts": ts, ":u": nowISO() },
+      })
+    )
+  );
 
-  return json(201, C, { threadId, message: msg });
+  return json(201, C, { conversationId, message: msg });
 };
 
 /* Patch / Delete message by messageId
-   If no GSI is configured, client must provide threadId (body or query). */
+   If no GSI is configured, client must provide conversationId (body or query). */
 const patchMessage = async (e, C, { messageId }) => {
   const b = B(e);
-  let threadId = b.threadId;
-  if (!threadId) {
-    if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "threadId required in body (no messageId index configured)" });
+  let conversationId = b.conversationId;
+  if (!conversationId) {
+    if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "conversationId required in body (no messageId index configured)" });
     const qr = await ddb.query({
       TableName: MESSAGES_TABLE,
       IndexName: MESSAGES_BY_ID_INDEX,
@@ -228,7 +206,7 @@ const patchMessage = async (e, C, { messageId }) => {
     });
     const found = qr.Items?.[0];
     if (!found) return json(404, C, { error: "message not found" });
-    threadId = found.threadId;
+    conversationId = found.conversationId;
   }
 
   const upd = buildUpdate({ ...b, updatedAt: nowISO() });
@@ -236,7 +214,7 @@ const patchMessage = async (e, C, { messageId }) => {
 
   const r = await ddb.update({
     TableName: MESSAGES_TABLE,
-    Key: { threadId, messageId },
+    Key: { conversationId, messageId },
     ...upd,
     ReturnValues: "ALL_NEW",
   });
@@ -244,9 +222,9 @@ const patchMessage = async (e, C, { messageId }) => {
 };
 
 const deleteMessage = async (e, C, { messageId }) => {
-  let threadId = Q(e).threadId;
-  if (!threadId) {
-    if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "threadId query param required (no messageId index configured)" });
+  let conversationId = Q(e).conversationId;
+  if (!conversationId) {
+    if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "conversationId query param required (no messageId index configured)" });
     const qr = await ddb.query({
       TableName: MESSAGES_TABLE,
       IndexName: MESSAGES_BY_ID_INDEX,
@@ -256,9 +234,9 @@ const deleteMessage = async (e, C, { messageId }) => {
     });
     const found = qr.Items?.[0];
     if (!found) return json(404, C, { error: "message not found" });
-    threadId = found.threadId;
+    conversationId = found.conversationId;
   }
-  await ddb.delete({ TableName: MESSAGES_TABLE, Key: { threadId, messageId } });
+  await ddb.delete({ TableName: MESSAGES_TABLE, Key: { conversationId, messageId } });
   return json(204, C, "");
 };
 
@@ -394,15 +372,15 @@ const deleteNotification = async (e, C, { notificationId }) => {
 const routes = [
   { m: "GET",   r: /^\/messages\/health$/i,                               h: health },
 
-  // inbox & threads
+  // inbox & conversations
   { m: "GET",   r: /^\/messages\/inbox$/i,                                 h: getInbox },
   { m: "GET",   r: /^\/messages\/threads$/i,                               h: listThreads },
-  { m: "POST",  r: /^\/messages\/threads$/i,                               h: createThread },
-  { m: "GET",   r: /^\/messages\/threads\/(?<threadId>[^/]+)$/i,           h: getThread },
+  { m: "POST",  r: /^\/messages\/threads$/i,                               h: createConversation },
+  { m: "GET",   r: /^\/messages\/threads\/(?<conversationId>[^/]+)$/i,     h: getConversation },
 
-  // thread messages
-  { m: "GET",   r: /^\/messages\/threads\/(?<threadId>[^/]+)\/messages$/i, h: listThreadMessages },
-  { m: "POST",  r: /^\/messages\/threads\/(?<threadId>[^/]+)\/messages$/i, h: postThreadMessage },
+  // conversation messages
+  { m: "GET",   r: /^\/messages\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: listConversationMessages },
+  { m: "POST",  r: /^\/messages\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: postConversationMessage },
 
   // individual message ops by id
   // v1.2 path:
@@ -423,7 +401,7 @@ const routes = [
   { m: "DELETE",r: /^\/messages\/notifications\/(?<notificationId>[^/]+)$/i, h: deleteNotification },
 
   // v1.1 compat aliases
-  { m: "GET",   r: /^\/getDirectMessages$/i,                                h: listThreadMessages },
+  { m: "GET",   r: /^\/getDirectMessages$/i,                                h: listConversationMessages },
   { m: "GET",   r: /^\/getDmInbox$/i,                                       h: getInbox },
   { m: "GET",   r: /^\/getProjectMessages$/i,                               h: listProjectMessages },
   { m: "GET",   r: /^\/getNotifications$/i,                                h: listNotifications },

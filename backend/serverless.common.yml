@@ -6,8 +6,7 @@ env:
   INVITES_BY_RECIPIENT_INDEX: recipientId-index
 
   # ---- Messaging & notifications (v1.1 compat)
-  THREADS_TABLE: Inbox                  # used only if we ever read per-thread info
-  THREAD_MEMBERS_TABLE: Inbox           # membership lives here (PK userId, SK conversationId)
+  INBOX_TABLE: Inbox                    # PK userId, SK conversationId
   MESSAGES_TABLE: Messages
   MESSAGES_BY_ID_INDEX: messageId-index
   PROJECT_MESSAGES_TABLE: ProjectMessages

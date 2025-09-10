@@ -36,8 +36,8 @@ provider:
             - dynamodb:Query
             - dynamodb:Scan
           Resource:
-            # Threads
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:THREADS_TABLE}
+            # Inbox entries
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INBOX_TABLE}
 
             # Messages + GSIs (messageId-index)
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:MESSAGES_TABLE}

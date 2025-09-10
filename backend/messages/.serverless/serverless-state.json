@@ -239,7 +239,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/messages/dev/1757537363215-2025-09-10T20:49:23.215Z/messages.zip"
+                "S3Key": "serverless/messages/dev/1757542629598-2025-09-10T22:17:09.598Z/messages.zip"
               },
               "Handler": "src/router.handler",
               "Runtime": "nodejs18.x",
@@ -285,14 +285,14 @@
                 ]
               },
               "Layers": [
-                "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:1"
+                "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:2"
               ]
             },
             "DependsOn": [
               "MessagesRouterLogGroup"
             ]
           },
-          "MessagesRouterLambdaVersionJqk3QJPmLeDzD4bDx5TRmMvz7LUlfKEnlxjhpYDrnqU": {
+          "MessagesRouterLambdaVersioneXQI7Y62lWzchjZ23cAWIY3t7ERYLa0ULKSj5fh6RiE": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
@@ -449,7 +449,7 @@
           "MessagesRouterLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "MessagesRouterLambdaVersionJqk3QJPmLeDzD4bDx5TRmMvz7LUlfKEnlxjhpYDrnqU"
+              "Ref": "MessagesRouterLambdaVersioneXQI7Y62lWzchjZ23cAWIY3t7ERYLa0ULKSj5fh6RiE"
             },
             "Export": {
               "Name": "sls-messages-dev-MessagesRouterLambdaFunctionQualifiedArn"
@@ -646,7 +646,7 @@
         "timeout": 15,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "MessagesRouterLambdaVersionJqk3QJPmLeDzD4bDx5TRmMvz7LUlfKEnlxjhpYDrnqU"
+        "versionLogicalId": "MessagesRouterLambdaVersioneXQI7Y62lWzchjZ23cAWIY3t7ERYLa0ULKSj5fh6RiE"
       }
     },
     "configValidationMode": "warn",
@@ -672,7 +672,7 @@
         ],
         "artifactsS3KeyDirname": "serverless/messages/dev/code-artifacts",
         "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\messages\\.serverless\\messages.zip",
-        "artifactDirectoryName": "serverless/messages/dev/1757537363215-2025-09-10T20:49:23.215Z"
+        "artifactDirectoryName": "serverless/messages/dev/1757542629598-2025-09-10T22:17:09.598Z"
       }
     },
     "layers": {},
@@ -680,7 +680,7 @@
     "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\messages\\.serverless\\messages.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/messages/dev/1757537363215-2025-09-10T20:49:23.215Z",
+    "artifactDirectoryName": "serverless/messages/dev/1757542629598-2025-09-10T22:17:09.598Z",
     "artifact": "messages.zip"
   }
 }

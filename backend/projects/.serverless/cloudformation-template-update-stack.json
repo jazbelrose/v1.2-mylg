@@ -185,7 +185,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/projects/dev/1757537358727-2025-09-10T20:49:18.727Z/projects.zip"
+          "S3Key": "serverless/projects/dev/1757542589822-2025-09-10T22:16:29.822Z/projects.zip"
         },
         "Handler": "router.handler",
         "Runtime": "nodejs18.x",
@@ -249,14 +249,14 @@
           ]
         },
         "Layers": [
-          "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:1"
+          "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:2"
         ]
       },
       "DependsOn": [
         "ProjectsRouterLogGroup"
       ]
     },
-    "ProjectsRouterLambdaVersionsxqntelnacAMUf0ZcqYeFzGSkweCXycgU8ksNbT5Hj8": {
+    "ProjectsRouterLambdaVersionEXIUYJ6oKX7cVbdW3OXoJsBtTTBpovhCdnD3AFQI": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -449,7 +449,7 @@
     "ProjectsRouterLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ProjectsRouterLambdaVersionsxqntelnacAMUf0ZcqYeFzGSkweCXycgU8ksNbT5Hj8"
+        "Ref": "ProjectsRouterLambdaVersionEXIUYJ6oKX7cVbdW3OXoJsBtTTBpovhCdnD3AFQI"
       },
       "Export": {
         "Name": "sls-projects-dev-ProjectsRouterLambdaFunctionQualifiedArn"

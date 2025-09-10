@@ -90,7 +90,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/shared-layer/dev/1757535146662-2025-09-10T20:12:26.662Z/sharedUtilsLayer.zip"
+                "S3Key": "serverless/shared-layer/dev/1757542474740-2025-09-10T22:14:34.740Z/sharedUtilsLayer.zip"
               },
               "LayerName": "shared-utils",
               "CompatibleRuntimes": [
@@ -119,14 +119,14 @@
           },
           "SharedUtilsLayerLambdaLayerHash": {
             "Description": "Current Lambda layer hash",
-            "Value": "b7ac117d44203959c791b66e9ab711c0595d41c9",
+            "Value": "fb6f99cecf903a7fddc1292f476ce0442a6d44b5",
             "Export": {
               "Name": "sls-shared-layer-dev-SharedUtilsLayerLambdaLayerHash"
             }
           },
           "SharedUtilsLayerLambdaLayerS3Key": {
             "Description": "Current Lambda layer S3Key",
-            "Value": "serverless/shared-layer/dev/1757535146662-2025-09-10T20:12:26.662Z/sharedUtilsLayer.zip",
+            "Value": "serverless/shared-layer/dev/1757542474740-2025-09-10T22:14:34.740Z/sharedUtilsLayer.zip",
             "Export": {
               "Name": "sls-shared-layer-dev-SharedUtilsLayerLambdaLayerS3Key"
             }
@@ -256,8 +256,7 @@
           },
           "package": {
             "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\shared-layer\\.serverless\\sharedUtilsLayer.zip"
-          },
-          "artifactAlreadyUploaded": true
+          }
         }
       },
       "resources": {
@@ -270,7 +269,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/shared-layer/dev/1757537342003-2025-09-10T20:49:02.003Z",
+    "artifactDirectoryName": "serverless/shared-layer/dev/1757542474740-2025-09-10T22:14:34.740Z",
     "artifact": ""
   }
 }

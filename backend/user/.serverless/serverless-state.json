@@ -236,7 +236,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/users/dev/1757537354322-2025-09-10T20:49:14.322Z/users.zip"
+                "S3Key": "serverless/users/dev/1757542549851-2025-09-10T22:15:49.851Z/users.zip"
               },
               "Handler": "users/router.handler",
               "Runtime": "nodejs18.x",
@@ -282,14 +282,14 @@
                 ]
               },
               "Layers": [
-                "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:1"
+                "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:2"
               ]
             },
             "DependsOn": [
               "UsersRouterLogGroup"
             ]
           },
-          "UsersRouterLambdaVersiongbGY5teQDmS3YDoAuxYLwIc3rvUKgJcEwE5uyaEgo4": {
+          "UsersRouterLambdaVersionCUhJd4X5XceyeZffZpq8C5fQOTeUdUdovdsloA5IQ": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
@@ -530,7 +530,7 @@
           "UsersRouterLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "UsersRouterLambdaVersiongbGY5teQDmS3YDoAuxYLwIc3rvUKgJcEwE5uyaEgo4"
+              "Ref": "UsersRouterLambdaVersionCUhJd4X5XceyeZffZpq8C5fQOTeUdUdovdsloA5IQ"
             },
             "Export": {
               "Name": "sls-users-dev-UsersRouterLambdaFunctionQualifiedArn"
@@ -759,7 +759,7 @@
         "timeout": 15,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "UsersRouterLambdaVersiongbGY5teQDmS3YDoAuxYLwIc3rvUKgJcEwE5uyaEgo4"
+        "versionLogicalId": "UsersRouterLambdaVersionCUhJd4X5XceyeZffZpq8C5fQOTeUdUdovdsloA5IQ"
       }
     },
     "configValidationMode": "warn",
@@ -785,7 +785,7 @@
         ],
         "artifactsS3KeyDirname": "serverless/users/dev/code-artifacts",
         "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\user\\.serverless\\users.zip",
-        "artifactDirectoryName": "serverless/users/dev/1757537354322-2025-09-10T20:49:14.322Z"
+        "artifactDirectoryName": "serverless/users/dev/1757542549851-2025-09-10T22:15:49.851Z"
       }
     },
     "layers": {},
@@ -793,7 +793,7 @@
     "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\user\\.serverless\\users.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/users/dev/1757537354322-2025-09-10T20:49:14.322Z",
+    "artifactDirectoryName": "serverless/users/dev/1757542549851-2025-09-10T22:15:49.851Z",
     "artifact": "users.zip"
   }
 }

@@ -247,7 +247,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z/auth.zip"
+                "S3Key": "serverless/auth/dev/1757542503298-2025-09-10T22:15:03.298Z/auth.zip"
               },
               "Handler": "preTokenGeneration.handler",
               "Runtime": "nodejs18.x",
@@ -288,7 +288,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z/auth.zip"
+                "S3Key": "serverless/auth/dev/1757542503298-2025-09-10T22:15:03.298Z/auth.zip"
               },
               "Handler": "cognitoAuthorizer.handler",
               "Runtime": "nodejs18.x",
@@ -335,7 +335,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z/auth.zip"
+                "S3Key": "serverless/auth/dev/1757542503298-2025-09-10T22:15:03.298Z/auth.zip"
               },
               "Handler": "refreshToken.handler",
               "Runtime": "nodejs18.x",
@@ -365,7 +365,7 @@
                 ]
               },
               "Layers": [
-                "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:1"
+                "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:2"
               ]
             },
             "DependsOn": [
@@ -379,7 +379,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z/auth.zip"
+                "S3Key": "serverless/auth/dev/1757542503298-2025-09-10T22:15:03.298Z/auth.zip"
               },
               "Handler": "updateRoles.handler",
               "Runtime": "nodejs18.x",
@@ -409,7 +409,7 @@
                 ]
               },
               "Layers": [
-                "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:1"
+                "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:2"
               ]
             },
             "DependsOn": [
@@ -436,7 +436,7 @@
               "CodeSha256": "b14qWSNvnEEoHm9yIp1gylCRswX8fhXtj0kUxGmyIXQ="
             }
           },
-          "RefreshTokenLambdaVersion8FkHJxekT5gOiGmolXADmSBxjUOvX7ScgF6ieGZl5SQ": {
+          "RefreshTokenLambdaVersionRKyf0TA0tSz1QqmDBDrFuKhgaRBxpDowhMypkk6vww": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
@@ -446,7 +446,7 @@
               "CodeSha256": "b14qWSNvnEEoHm9yIp1gylCRswX8fhXtj0kUxGmyIXQ="
             }
           },
-          "UpdateRolesLambdaVersioniPzGUxOoQG7y2us14UWsd8Vb2xmPRMN4dzc5FmGSus": {
+          "UpdateRolesLambdaVersionX7IbPRxwbx07knfKvoHWCB3Tu7h8qqinIUyeegsw": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
@@ -742,7 +742,7 @@
           "RefreshTokenLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "RefreshTokenLambdaVersion8FkHJxekT5gOiGmolXADmSBxjUOvX7ScgF6ieGZl5SQ"
+              "Ref": "RefreshTokenLambdaVersionRKyf0TA0tSz1QqmDBDrFuKhgaRBxpDowhMypkk6vww"
             },
             "Export": {
               "Name": "sls-auth-dev-RefreshTokenLambdaFunctionQualifiedArn"
@@ -751,7 +751,7 @@
           "UpdateRolesLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "UpdateRolesLambdaVersioniPzGUxOoQG7y2us14UWsd8Vb2xmPRMN4dzc5FmGSus"
+              "Ref": "UpdateRolesLambdaVersionX7IbPRxwbx07knfKvoHWCB3Tu7h8qqinIUyeegsw"
             },
             "Export": {
               "Name": "sls-auth-dev-UpdateRolesLambdaFunctionQualifiedArn"
@@ -1019,7 +1019,7 @@
         "timeout": 15,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "RefreshTokenLambdaVersion8FkHJxekT5gOiGmolXADmSBxjUOvX7ScgF6ieGZl5SQ"
+        "versionLogicalId": "RefreshTokenLambdaVersionRKyf0TA0tSz1QqmDBDrFuKhgaRBxpDowhMypkk6vww"
       },
       "updateRoles": {
         "handler": "updateRoles.handler",
@@ -1042,7 +1042,7 @@
         "timeout": 15,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "UpdateRolesLambdaVersioniPzGUxOoQG7y2us14UWsd8Vb2xmPRMN4dzc5FmGSus"
+        "versionLogicalId": "UpdateRolesLambdaVersionX7IbPRxwbx07knfKvoHWCB3Tu7h8qqinIUyeegsw"
       }
     },
     "resources": {
@@ -1178,7 +1178,7 @@
         ],
         "artifactsS3KeyDirname": "serverless/auth/dev/code-artifacts",
         "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\auth\\.serverless\\auth.zip",
-        "artifactDirectoryName": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z"
+        "artifactDirectoryName": "serverless/auth/dev/1757542503298-2025-09-10T22:15:03.298Z"
       },
       "resources": {
         "$ref": "$[\"service\"][\"resources\"]"
@@ -1189,7 +1189,7 @@
     "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\auth\\.serverless\\auth.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z",
+    "artifactDirectoryName": "serverless/auth/dev/1757542503298-2025-09-10T22:15:03.298Z",
     "artifact": "auth.zip"
   }
 }

@@ -26,6 +26,10 @@ Serverless backend using AWS Lambda, API Gateway (HTTP API v2), and WebSocket AP
 ## Deployed Endpoints (Dev Stage)
 
 ### HTTP REST APIs
+- **Auth Service**: `https://ictxcba2wf.execute-api.us-west-2.amazonaws.com`
+  - `/auth/{proxy+}` - Authentication endpoints (login, refresh, logout, etc.)
+  - Cognito triggers: preTokenGeneration, cognitoAuthorizer
+
 - **Projects Service**: `https://bevnkraeqa.execute-api.us-west-2.amazonaws.com`
   - `/projects` - Projects endpoints
   - `/projects/{proxy+}` - Projects proxy routes
@@ -51,6 +55,11 @@ Serverless backend using AWS Lambda, API Gateway (HTTP API v2), and WebSocket AP
   - Single endpoint for all WebSocket operations
   - Routes: `$connect`, `$disconnect`, `$default`
   - Functions: `onConnect`, `onDisconnect`, `onDefault`
+
+### Cognito User Pool
+- **User Pool ID**: `us-west-2_HnSYpFGkd`
+- **User Pool Name**: `mylg-dev-users-west2`
+- **Client ID**: `3327sdro74vci7hbqsn5g74fvh`
 
 ## Key Benefits
 

@@ -142,39 +142,50 @@ const ENV = import.meta.env.VITE_APP_ENV || 'development';
 
 const BASE_ENDPOINTS = {
   development: {
-    API_BASE_URL: 'https://didaoiqxl5.execute-api.us-west-1.amazonaws.com/default',
-    EDIT_PROJECT_URL: 'https://didaoiqxl5.execute-api.us-west-1.amazonaws.com/default/editProject',
-    USER_PROFILES_API_URL: 'https://rvnpu2j92m.execute-api.us-west-1.amazonaws.com/default/userProfiles',
-    USER_PROFILES_PENDING_API_URL: 'https://r1a9h607of.execute-api.us-west-1.amazonaws.com/default/userProfilesPending',
+    // Core v1.2 Services (us-west-2)
+    AUTH_SERVICE_URL: 'https://ictxcba2wf.execute-api.us-west-2.amazonaws.com',
+    PROJECTS_SERVICE_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com',
+    USER_SERVICE_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com',
+    MESSAGES_SERVICE_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com',
+    WEBSOCKET_URL: 'wss://hhgvsv3ey7.execute-api.us-west-2.amazonaws.com/dev',
+    
+    // Mapped endpoints using v1.2 services with correct routes
+    API_BASE_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com',
+    EDIT_PROJECT_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects',
+    USER_PROFILES_API_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/userProfiles',
+    USER_PROFILES_PENDING_API_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/userProfilesPending',
     USER_PROFILES_PENDING_API_KEY: '',
-    REGISTERED_USER_TEAM_NOTIFICATION_API_URL: 'https://9aatm4ib0k.execute-api.us-west-1.amazonaws.com/default/RegisteredUserTeamNotification',
-    WEBSOCKET_URL: 'wss://hly9zz2zci.execute-api.us-west-1.amazonaws.com/production/',
-    NEWSLETTER_SUBSCRIBE_URL: 'https://jmmn5p5yhe.execute-api.us-west-1.amazonaws.com/default/notifyNewSubscriber',
-    MESSAGES_INBOX_URL: 'https://2h8m2hyu0e.execute-api.us-west-1.amazonaws.com/default/messages/inbox',
-    MESSAGES_THREADS_URL: 'https://2h8m2hyu0e.execute-api.us-west-1.amazonaws.com/default/messages/threads',
-    DELETE_FILE_FROM_S3_URL: 'https://k6utve4soj.execute-api.us-west-1.amazonaws.com/default/DeleteFilesFromS3',
-    ZIP_FILES_URL: 'https://o01t8q8mjk.execute-api.us-west-1.amazonaws.com/default/zipFiles',
-    DELETE_PROJECT_MESSAGE_URL: 'https://4iokdw2tb0.execute-api.us-west-1.amazonaws.com/default/deleteProjectMessage',
-    GET_PROJECT_MESSAGES_URL: 'https://njt9junfh8.execute-api.us-west-1.amazonaws.com/default/getProjectMessages',
-    EDIT_PROJECT_MESSAGE_URL: 'https://fvtiz6xsr5.execute-api.us-west-1.amazonaws.com/prod/editMessage',
-    EDIT_MESSAGE_URL: 'https://fvtiz6xsr5.execute-api.us-west-1.amazonaws.com/prod/editMessage',
-    GALLERY_UPLOAD_URL: 'https://h6hfj178j1.execute-api.us-west-1.amazonaws.com/default/generatePresignedUrl',
-    CREATE_GALLERY_FUNCTION_URL: 'https://2rv2kcbsf0.execute-api.us-west-1.amazonaws.com/default/CreateGalleryFunction',
-    DELETE_GALLERY_FUNCTION_URL: 'https://xcneg1e558.execute-api.us-west-1.amazonaws.com/default/DeleteGalleryFunction',
-    GALLERIES_API_URL: 'https://l6ltrk2jv6.execute-api.us-west-1.amazonaws.com/dev/galleries',
-    POST_PROJECTS_URL: 'https://any6qedkud.execute-api.us-west-1.amazonaws.com/default/PostProjects',
-    POST_PROJECT_TO_USER_URL: 'https://drgq4taueb.execute-api.us-west-1.amazonaws.com/default/postProjectToUserId',
-    SEND_PROJECT_NOTIFICATION_URL: 'https://4hdwrz1ecb.execute-api.us-west-1.amazonaws.com/default/SendProjectNotification',
-    PROJECTS_URL: 'https://gui4kdsekj.execute-api.us-west-1.amazonaws.com/default/Projects',
-    EVENTS_URL: 'https://tqars05mcb.execute-api.us-west-1.amazonaws.com/dev/events',
-    NOTIFICATIONS_URL: 'https://zwtzv1gx5m.execute-api.us-west-1.amazonaws.com/default/getNotifications',
+    REGISTERED_USER_TEAM_NOTIFICATION_API_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/user/notifications',
+    MESSAGES_INBOX_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com/messages/inbox',
+    MESSAGES_THREADS_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com/messages/threads',
+    DELETE_PROJECT_MESSAGE_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com/messages',
+    GET_PROJECT_MESSAGES_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com/messages',
+    EDIT_PROJECT_MESSAGE_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com/messages',
+    EDIT_MESSAGE_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com/messages',
+    GALLERY_UPLOAD_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/galleries/upload',
+    CREATE_GALLERY_FUNCTION_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/galleries',
+    DELETE_GALLERY_FUNCTION_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/galleries',
+    GALLERIES_API_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/galleries',
+    POST_PROJECTS_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects',
+    POST_PROJECT_TO_USER_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/postProjectToUserId',
+    SEND_PROJECT_NOTIFICATION_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com/messages/notifications',
+    PROJECTS_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects',
+    EVENTS_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/events',
+    NOTIFICATIONS_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/user/notifications',
+    BUDGETS_API_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/budgets',
+    PROJECT_INVITES_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/sendProjectInvitation',
+    COLLAB_INVITES_BASE_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/invites',
+    USER_INVITES_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/invites/users',
+    TASKS_API_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/tasks',
+    
+    // External services (unchanged)
     NOMINATIM_SEARCH_URL: 'https://nominatim.openstreetmap.org/search?format=json&q=',
     S3_PUBLIC_BASE: 'https://mylguserdata194416-dev.s3.us-west-1.amazonaws.com/public',
-    BUDGETS_API_URL: 'https://ft892tjssf.execute-api.us-west-1.amazonaws.com/dev/budgets',
-    PROJECT_INVITES_URL: 'https://nbucic0zgl.execute-api.us-west-1.amazonaws.com/Stage/sendProjectInvitation',
-    COLLAB_INVITES_BASE_URL: 'https://mbl7rtpyr8.execute-api.us-west-1.amazonaws.com/invites',
-    USER_INVITES_URL: 'https://example.com/user-invites',
-    TASKS_API_URL: 'https://7kxhm2sgo8.execute-api.us-west-1.amazonaws.com/dev/tasks',
+    
+    // Legacy endpoints that may need special handling or removal
+    NEWSLETTER_SUBSCRIBE_URL: 'https://jmmn5p5yhe.execute-api.us-west-1.amazonaws.com/default/notifyNewSubscriber',
+    DELETE_FILE_FROM_S3_URL: 'https://k6utve4soj.execute-api.us-west-1.amazonaws.com/default/DeleteFilesFromS3',
+    ZIP_FILES_URL: 'https://o01t8q8mjk.execute-api.us-west-1.amazonaws.com/default/zipFiles',
   },
   staging: {},
   production: {},
@@ -192,6 +203,12 @@ export const API_ENDPOINTS: ApiEndpoints = Object.keys(BASE_ENDPOINTS.developmen
 );
 
 export const {
+  // v1.2 Service Base URLs
+  AUTH_SERVICE_URL,
+  PROJECTS_SERVICE_URL,
+  USER_SERVICE_URL,
+  MESSAGES_SERVICE_URL,
+  // Core endpoints
   API_BASE_URL,
   USER_PROFILES_API_URL,
   USER_PROFILES_PENDING_API_URL,
@@ -450,27 +467,22 @@ export async function updateUserRole(userId: string, role: string): Promise<User
 // ───────────────────────────────────────────────────────────────────────────────
 
 export async function fetchProjectsFromApi(): Promise<Project[]> {
-  const data = await apiFetch<MaybeItems<Project>>(PROJECTS_URL);
+  const data = await apiFetch<MaybeItems<Project>>(`${PROJECTS_SERVICE_URL}/projects`);
   return extractItems<Project>(data);
 }
 
 export async function fetchProjectById(projectId: string): Promise<Project | null> {
-  const url = `${PROJECTS_URL}?projectId=${encodeURIComponent(projectId)}`;
-  const raw = await apiFetch<MaybeItems<Project> | MaybeItem<Project>>(url);
-
-  if (Array.isArray(raw)) {
-    return raw[0] ?? null;
-  }
-  if ('Items' in (raw as Record<string, unknown>) && Array.isArray((raw as Record<string, unknown>).Items)) {
-    return ((raw as Record<string, unknown>).Items[0] ?? null) as Project | null;
-  }
-  return extractItem<Project>(raw as MaybeItem<Project>);
+  if (!projectId) return null;
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}`;
+  const raw = await apiFetch<Project>(url);
+  return raw || null;
 }
 
 export async function updateProjectFields(projectId: string, fields: Partial<Project> & JsonRecord): Promise<Project> {
-  const url = `${EDIT_PROJECT_URL}?projectId=${encodeURIComponent(projectId)}`;
+  if (!projectId) throw new Error('projectId is required for updateProjectFields');
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}`;
   return apiFetch<Project>(url, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(fields),
   });
@@ -481,15 +493,22 @@ export async function updateProjectFields(projectId: string, fields: Partial<Pro
 // ───────────────────────────────────────────────────────────────────────────────
 
 export async function fetchTasks(projectId?: string): Promise<Task[]> {
-  const url = projectId ? `${TASKS_API_URL}?projectId=${encodeURIComponent(projectId)}` : TASKS_API_URL;
+  if (!projectId) {
+    // If no projectId provided, we need to decide how to handle this
+    // For now, let's return empty array as we need projectId for the new route structure
+    return [];
+  }
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/tasks`;
   const data = await apiFetch<MaybeItems<Task>>(url);
   return extractItems<Task>(data);
 }
 
 export async function createTask(task: Task): Promise<Task> {
-  const payload = { ...task };
+  const { projectId, ...payload } = task;
+  if (!projectId) throw new Error('projectId is required for createTask');
   if (payload.budgetItemId === '' || payload.budgetItemId == null) delete payload.budgetItemId;
-  return apiFetch<Task>(TASKS_API_URL, {
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/tasks`;
+  return apiFetch<Task>(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -497,17 +516,20 @@ export async function createTask(task: Task): Promise<Task> {
 }
 
 export async function updateTask(task: Task): Promise<Task> {
-  const payload = { ...task };
+  const { projectId, taskId, ...payload } = task;
+  if (!projectId || !taskId) throw new Error('projectId and taskId are required for updateTask');
   if (payload.budgetItemId === '' || payload.budgetItemId == null) delete payload.budgetItemId;
-  return apiFetch<Task>(TASKS_API_URL, {
-    method: 'PUT',
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`;
+  return apiFetch<Task>(url, {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 }
 
 export async function deleteTask({ projectId, taskId }: { projectId: string; taskId: string }): Promise<{ ok: true }> {
-  const url = `${TASKS_API_URL}?projectId=${encodeURIComponent(projectId)}&taskId=${encodeURIComponent(taskId)}`;
+  if (!projectId || !taskId) throw new Error('projectId and taskId are required for deleteTask');
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`;
   await apiFetch<JsonRecord>(url, { method: 'DELETE' });
   return { ok: true };
 }
@@ -517,7 +539,8 @@ export async function deleteTask({ projectId, taskId }: { projectId: string; tas
 // ───────────────────────────────────────────────────────────────────────────────
 
 export async function fetchEvents(projectId: string): Promise<TimelineEvent[]> {
-  const url = `${EVENTS_URL}?projectId=${encodeURIComponent(projectId)}`;
+  if (!projectId) return [];
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/events`;
   const data = await apiFetch<MaybeItems<TimelineEvent> | { events?: TimelineEvent[] }>(url);
 
   const items = Array.isArray(data) ? data
@@ -540,7 +563,8 @@ export async function fetchEvents(projectId: string): Promise<TimelineEvent[]> {
 }
 
 export async function createEvent(projectId: string, event: TimelineEvent): Promise<TimelineEvent> {
-  const url = `${EVENTS_URL}?projectId=${encodeURIComponent(projectId)}`;
+  if (!projectId) throw new Error('projectId is required for createEvent');
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/events`;
   return apiFetch<TimelineEvent>(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -550,7 +574,8 @@ export async function createEvent(projectId: string, event: TimelineEvent): Prom
 
 export async function updateEvent(event: TimelineEvent & { projectId: string; eventId: string }): Promise<TimelineEvent> {
   const { projectId, eventId, ...rest } = event;
-  const url = `${EVENTS_URL}?projectId=${encodeURIComponent(projectId)}&eventId=${encodeURIComponent(eventId)}`;
+  if (!projectId || !eventId) throw new Error('projectId and eventId are required for updateEvent');
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/events/${encodeURIComponent(eventId)}`;
   return apiFetch<TimelineEvent>(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -559,13 +584,15 @@ export async function updateEvent(event: TimelineEvent & { projectId: string; ev
 }
 
 export async function deleteEvent(projectId: string, eventId: string): Promise<{ ok: true }> {
-  const url = `${EVENTS_URL}?projectId=${encodeURIComponent(projectId)}&eventId=${encodeURIComponent(eventId)}`;
+  if (!projectId || !eventId) throw new Error('projectId and eventId are required for deleteEvent');
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/events/${encodeURIComponent(eventId)}`;
   await apiFetch<JsonRecord>(url, { method: 'DELETE' });
   return { ok: true };
 }
 
 export async function updateTimelineEvents(projectId: string, events: TimelineEvent[]): Promise<{ ok: true } & JsonRecord> {
-  const url = `${EVENTS_URL}?projectId=${encodeURIComponent(projectId)}`;
+  if (!projectId) throw new Error('projectId is required for updateTimelineEvents');
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/events`;
   return apiFetch(url, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -575,7 +602,7 @@ export async function updateTimelineEvents(projectId: string, events: TimelineEv
 
 // Optional bulk assignment
 export async function assignEventIdsBatch(projectIds: string[] = []): Promise<{ ok?: boolean } & JsonRecord> {
-  const url = `${API_BASE_URL}/assignEventIdsBatch`;
+  const url = `${PROJECTS_SERVICE_URL}/assignEventIdsBatch`;
   return apiFetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -589,31 +616,33 @@ export async function assignEventIdsBatch(projectIds: string[] = []): Promise<{ 
 
 export async function fetchGalleries(projectId: string): Promise<Gallery[]> {
   if (!projectId) return [];
-  const url = `${GALLERIES_API_URL}?projectId=${encodeURIComponent(projectId)}`;
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/galleries`;
   const data = await apiFetch<MaybeItems<Gallery>>(url);
   return extractItems<Gallery>(data);
 }
 
 export async function createGallery(projectId: string, gallery: Partial<Gallery>): Promise<Gallery> {
-  return apiFetch<Gallery>(GALLERIES_API_URL, {
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/galleries`;
+  return apiFetch<Gallery>(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ projectId, ...gallery }),
+    body: JSON.stringify(gallery),
   });
 }
 
-export async function updateGallery(galleryId: string, fields: Partial<Gallery>): Promise<Gallery> {
-  return apiFetch<Gallery>(GALLERIES_API_URL, {
+export async function updateGallery(galleryId: string, fields: Partial<Gallery> & { projectId: string }): Promise<Gallery> {
+  const { projectId, ...updateFields } = fields;
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/galleries/${encodeURIComponent(galleryId)}`;
+  return apiFetch<Gallery>(url, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ galleryId, ...fields }),
+    body: JSON.stringify(updateFields),
   });
 }
 
-export async function deleteGallery(galleryId: string, projectId?: string): Promise<{ ok: true }> {
-  const params = new URLSearchParams({ galleryId });
-  if (projectId) params.append('projectId', projectId);
-  const url = `${GALLERIES_API_URL}?${params.toString()}`;
+export async function deleteGallery(galleryId: string, projectId: string): Promise<{ ok: true }> {
+  if (!projectId) throw new Error('projectId is required for deleteGallery');
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/galleries/${encodeURIComponent(galleryId)}`;
   await apiFetch<JsonRecord>(url, { method: 'DELETE' });
   return { ok: true };
 }

@@ -175,7 +175,7 @@ export const createWebSocketWithSecProtocol = (baseUrl: string, accessToken: str
 };
 
 export const initializeWebSocketWithJWT = (jwtToken: string): WebSocket => {
-  const baseUrl = 'wss://hly9zz2zci.execute-api.us-west-1.amazonaws.com/production/';
+  const baseUrl = 'wss://hhgvsv3ey7.execute-api.us-west-2.amazonaws.com/dev';
   return new WebSocket(baseUrl, jwtToken);
 };
 

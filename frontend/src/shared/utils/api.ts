@@ -694,7 +694,7 @@ export async function deleteNotification(userId: string, timestampUuid: string):
 
 export async function fetchBudgetHeader(projectId: string): Promise<BudgetHeader | null> {
   if (!projectId) return null;
-  const url = `${BUDGETS_API_URL}?projectId=${encodeURIComponent(projectId)}&headers=true`;
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/budget?headers=true`;
   const data = await apiFetch<MaybeItems<BudgetItem>>(url);
   const items = extractItems<BudgetItem>(data);
 
@@ -717,7 +717,7 @@ export async function fetchBudgetHeader(projectId: string): Promise<BudgetHeader
 
 export async function fetchBudgetHeaders(projectId: string): Promise<BudgetHeader[]> {
   if (!projectId) return [];
-  const url = `${BUDGETS_API_URL}?projectId=${encodeURIComponent(projectId)}&headers=true`;
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/budget?headers=true`;
   const data = await apiFetch<MaybeItems<BudgetItem>>(url);
   const items = extractItems<BudgetItem>(data);
 
@@ -738,7 +738,8 @@ export async function fetchBudgetHeaders(projectId: string): Promise<BudgetHeade
 }
 
 export async function fetchBudgetItems(budgetId: string, revision?: number): Promise<BudgetLine[]> {
-  const url = `${BUDGETS_API_URL}?budgetId=${encodeURIComponent(budgetId)}`;
+  if (!budgetId) return [];
+  const url = `${PROJECTS_SERVICE_URL}/budgets/byBudgetId/${encodeURIComponent(budgetId)}`;
   const data = await apiFetch<MaybeItems<BudgetItem>>(url);
   const items = extractItems<BudgetItem>(data);
 
@@ -755,10 +756,12 @@ export async function createBudgetItem(
   budgetId: string,
   payload: Partial<BudgetLine | BudgetHeader>
 ): Promise<BudgetItem> {
-  const body: Record<string, unknown> = { projectId, budgetId, ...payload };
+  if (!projectId) throw new Error('projectId is required for createBudgetItem');
+  const body: Record<string, unknown> = { budgetId, ...payload };
   if (body.revision === undefined) body.revision = 1;
 
-  return apiFetch<BudgetItem>(BUDGETS_API_URL, {
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/budget`;
+  return apiFetch<BudgetItem>(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -770,10 +773,12 @@ export async function updateBudgetItem(
   budgetItemId: string,
   fields: Partial<BudgetItem>
 ): Promise<BudgetItem> {
-  const body: Record<string, unknown> = { projectId, budgetItemId, ...fields };
+  if (!projectId || !budgetItemId) throw new Error('projectId and budgetItemId are required for updateBudgetItem');
+  const body: Record<string, unknown> = { ...fields };
   if (body.revision === undefined) body.revision = 1;
 
-  return apiFetch<BudgetItem>(BUDGETS_API_URL, {
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/budget/items/${encodeURIComponent(budgetItemId)}`;
+  return apiFetch<BudgetItem>(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -781,9 +786,8 @@ export async function updateBudgetItem(
 }
 
 export async function deleteBudgetItem(projectId: string, budgetItemId: string): Promise<{ ok: true }> {
-  if (!projectId || !budgetItemId) return { ok: true };
-  const params = new URLSearchParams({ projectId, budgetItemId });
-  const url = `${BUDGETS_API_URL}?${params.toString()}`;
+  if (!projectId || !budgetItemId) throw new Error('projectId and budgetItemId are required for deleteBudgetItem');
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/budget/items/${encodeURIComponent(budgetItemId)}`;
   await apiFetch<JsonRecord>(url, { method: 'DELETE' });
   return { ok: true };
 }

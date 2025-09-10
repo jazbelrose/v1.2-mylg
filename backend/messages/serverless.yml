@@ -3,7 +3,6 @@ frameworkVersion: '3'
 
 custom:
   env: ${file(../serverless.common.yml):env}
-  cors: ${file(../serverless.common.yml):cors}
 
 provider:
   name: aws
@@ -15,13 +14,7 @@ provider:
   httpApi:
     cors: false  # dynamic CORS in Lambda
   environment:
-    # CORS (read by /opt layer)
-    ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
-    CORS_WILDCARD_HOSTS: mylg.studio
-    CORS_ALLOW_CREDENTIALS: "false"
-    CORS_DEFAULT_ORIGIN: ${self:custom.cors.CORS_DEFAULT_ORIGIN}
-
-    # Tables: pull from the shared file
+    # Tables & shared config (CORS, etc.)
     ${self:custom.env}
 
   iam:

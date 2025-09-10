@@ -12,7 +12,6 @@ const INBOX_TABLE           = process.env.INBOX_TABLE;
 
 // Messages
 const MESSAGES_TABLE        = process.env.MESSAGES_TABLE        || "Messages";
-const MESSAGES_BY_ID_INDEX  = process.env.MESSAGES_BY_ID_INDEX  || ""; // e.g., "messageId-index"
 
 // Project-scoped messages
 const PROJECT_MESSAGES_TABLE = process.env.PROJECT_MESSAGES_TABLE || "ProjectMessages";
@@ -191,23 +190,11 @@ const postConversationMessage = async (e, C, { conversationId }) => {
 };
 
 /* Patch / Delete message by messageId
-   If no GSI is configured, client must provide conversationId (body or query). */
+   Requires conversationId (body for patch, query param for delete). */
 const patchMessage = async (e, C, { messageId }) => {
   const b = B(e);
-  let conversationId = b.conversationId;
-  if (!conversationId) {
-    if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "conversationId required in body (no messageId index configured)" });
-    const qr = await ddb.query({
-      TableName: MESSAGES_TABLE,
-      IndexName: MESSAGES_BY_ID_INDEX,
-      KeyConditionExpression: "messageId = :m",
-      ExpressionAttributeValues: { ":m": messageId },
-      Limit: 1,
-    });
-    const found = qr.Items?.[0];
-    if (!found) return json(404, C, { error: "message not found" });
-    conversationId = found.conversationId;
-  }
+  const conversationId = b.conversationId;
+  if (!conversationId) return json(400, C, { error: "conversationId required in body" });
 
   const upd = buildUpdate({ ...b, updatedAt: nowISO() });
   if (!upd) return json(400, C, { error: "No fields to update" });
@@ -222,20 +209,8 @@ const patchMessage = async (e, C, { messageId }) => {
 };
 
 const deleteMessage = async (e, C, { messageId }) => {
-  let conversationId = Q(e).conversationId;
-  if (!conversationId) {
-    if (!MESSAGES_BY_ID_INDEX) return json(400, C, { error: "conversationId query param required (no messageId index configured)" });
-    const qr = await ddb.query({
-      TableName: MESSAGES_TABLE,
-      IndexName: MESSAGES_BY_ID_INDEX,
-      KeyConditionExpression: "messageId = :m",
-      ExpressionAttributeValues: { ":m": messageId },
-      Limit: 1,
-    });
-    const found = qr.Items?.[0];
-    if (!found) return json(404, C, { error: "message not found" });
-    conversationId = found.conversationId;
-  }
+  const conversationId = Q(e).conversationId;
+  if (!conversationId) return json(400, C, { error: "conversationId query param required" });
   await ddb.delete({ TableName: MESSAGES_TABLE, Key: { conversationId, messageId } });
   return json(204, C, "");
 };

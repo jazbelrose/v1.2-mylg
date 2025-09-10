@@ -3,7 +3,6 @@ frameworkVersion: '3'
 
 custom:
   env: ${file(../serverless.common.yml):env}
-  cors: ${file(../serverless.common.yml):cors}
 
 provider:
   name: aws
@@ -14,8 +13,8 @@ provider:
   timeout: 15
   environment:
     WEBSOCKET_ENDPOINT: ${env:WEBSOCKET_ENDPOINT}
-    CORS_DEFAULT_ORIGIN: ${self:custom.cors.CORS_DEFAULT_ORIGIN}
 
+    # Shared config (tables, CORS, etc.)
     ${self:custom.env}
 
   iam:

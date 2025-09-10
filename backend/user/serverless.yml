@@ -1,13 +1,14 @@
 service: users
 frameworkVersion: '3'
 
-custom: ${file(../serverless.common.yml):custom}
+custom:
+  env: ${file(../serverless.common.yml):env}
 
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-west-2
-  stage: ${self:custom.stage}
+  stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
   httpApi:
@@ -18,14 +19,8 @@ provider:
     CORS_WILDCARD_HOSTS: mylg.studio
     CORS_ALLOW_CREDENTIALS: "false"
 
-    # Users domain tables / indexes
-    USER_PROFILES_TABLE:        ${self:custom.tables.USERS_PROFILES}
-    INVITES_TABLE:              ${self:custom.tables.USERS_INVITES}
-    INVITES_BY_SENDER_INDEX:    senderId-index
-    INVITES_BY_RECIPIENT_INDEX: recipientId-index
-
-    # Dev toggle the router reads as a string
-    SCANS_ALLOWED: ${env:SCANS_ALLOWED, 'false'}
+    # Tables: pull from the shared file
+    ${self:custom.env}
 
   iam:
     role:
@@ -41,9 +36,9 @@ provider:
             - dynamodb:Query
             - dynamodb:Scan
           Resource:
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.USER_PROFILES_TABLE}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.INVITES_TABLE}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.INVITES_TABLE}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_PROFILES_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE}/index/*
 
 functions:
   usersRouter:

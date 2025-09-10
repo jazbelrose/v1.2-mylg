@@ -1,13 +1,14 @@
 service: messages
 frameworkVersion: '3'
 
-custom: ${file(../serverless.common.yml):custom}
+custom:
+  env: ${file(../serverless.common.yml):env}
 
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-west-2
-  stage: ${self:custom.stage}
+  stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
   httpApi:
@@ -18,16 +19,8 @@ provider:
     CORS_WILDCARD_HOSTS: mylg.studio
     CORS_ALLOW_CREDENTIALS: "false"
 
-    # Tables / indexes used by the router (MUST be inside environment)
-    THREADS_TABLE:           ${self:custom.tables.MSG_THREADS}
-    MESSAGES_TABLE:          ${self:custom.tables.MSG_ITEMS}
-    MESSAGES_BY_ID_INDEX:    messageId-index
-    PROJECT_MESSAGES_TABLE:  ${self:custom.tables.MSG_PROJECT}
-    NOTIFICATIONS_TABLE:     ${self:custom.tables.NOTIFICATIONS}
-    NOTIFICATIONS_BY_USER_INDEX:  userId-index
-
-    # dev safety toggle (router expects a string)
-    SCANS_ALLOWED: "false"
+    # Tables: pull from the shared file
+    ${self:custom.env}
 
   iam:
     role:
@@ -44,18 +37,18 @@ provider:
             - dynamodb:Scan
           Resource:
             # Threads
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:THREADS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:THREADS_TABLE}
 
             # Messages + GSIs (messageId-index)
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:MESSAGES_TABLE}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:MESSAGES_TABLE}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:MESSAGES_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:MESSAGES_TABLE}/index/*
 
             # Project-scoped messages
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:PROJECT_MESSAGES_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:PROJECT_MESSAGES_TABLE}
 
             # Notifications (+ optional index)
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:NOTIFICATIONS_TABLE}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:NOTIFICATIONS_TABLE}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:NOTIFICATIONS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:NOTIFICATIONS_TABLE}/index/*
 
 functions:
   messagesRouter:

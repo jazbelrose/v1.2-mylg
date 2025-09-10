@@ -1,25 +1,30 @@
 service: auth
 frameworkVersion: '3'
 
-custom: ${file(../serverless.common.yml):custom}
+custom:
+  env: ${file(../serverless.common.yml):env}
 
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-west-2
-  stage: ${self:custom.stage}
+  stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
   httpApi:
     cors: false  # dynamic CORS handled in Lambda
   environment:
-    # Wire to your existing pool/client (set via shell/CI or .env)
+    # CORS (unchanged)
+    ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
+    CORS_WILDCARD_HOSTS: mylg.studio
+    CORS_ALLOW_CREDENTIALS: "false"
+
     COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
     COGNITO_USER_POOL_NAME: ${env:COGNITO_USER_POOL_NAME}
     COGNITO_USER_CLIENT_ID: ${env:COGNITO_USER_CLIENT_ID}
 
-    # Used by preTokenGeneration to look up role/profile
-    USER_PROFILES_TABLE: ${self:custom.tables.USERS_PROFILES}
+    # Tables: pull from the shared file
+    ${self:custom.env}
 
   iam:
     role:
@@ -32,7 +37,7 @@ provider:
             - dynamodb:Query
             - dynamodb:DescribeTable
           Resource:
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.USER_PROFILES_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_PROFILES_TABLE}
         - Effect: Allow
           Action:
             - cognito-idp:InitiateAuth
@@ -40,7 +45,7 @@ provider:
             - cognito-idp:AdminAddUserToGroup
             - cognito-idp:AdminRemoveUserFromGroup
           Resource:
-            - arn:aws:cognito-idp:${self:provider.region}:${aws:accountId}:userpool/${self:provider.environment.COGNITO_USER_POOL_ID}
+            - arn:aws:cognito-idp:${aws:region}:${aws:accountId}:userpool/${self:provider.environment.COGNITO_USER_POOL_ID}
 
 functions:
   # 1) Cognito Pre-Token Generation (adds role/claims)

@@ -1,47 +1,35 @@
 service: projects
 frameworkVersion: '3'
 
-custom: ${file(../serverless.common.yml):custom}
+custom:
+  app: mylg
+  ver: v12
+  env: ${file(../serverless.common.yml):env}
 
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-west-2
-  stage: ${self:custom.stage}
+  stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
-  stackName: ${self:custom.app}-${self:custom.ver}-${self:service}-${self:custom.stage}
+  stackName: ${self:custom.app}-${self:custom.ver}-${self:service}-${sls:stage}
   httpApi:
     cors: false  # dynamic CORS handled in Lambda
-    name: ${self:custom.app}-${self:custom.ver}-${self:service}-api-${self:custom.stage}
+    name: ${self:custom.app}-${self:custom.ver}-${self:service}-api-${sls:stage}
   tags:
     App: MYLG
     Version: v1.2
     Domain: projects
-    Stage: ${self:custom.stage}
+    Stage: ${sls:stage}
   environment:
     # CORS (layer reads these)
     ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
     CORS_WILDCARD_HOSTS: mylg.studio
     CORS_ALLOW_CREDENTIALS: "false"
 
-    # Projects domain tables
-    PROJECTS_TABLE:           ${self:custom.tables.PROJ_CORE}
-    TASKS_TABLE:              ${self:custom.tables.PROJ_TASKS}
-    EVENTS_TABLE:             ${self:custom.tables.PROJ_EVENTS}
-    EVENTS_STARTAT_INDEX:     projectId-startAt-index
-
-    # Budgets (v1.1 semantics under /projects/{id}/budget*)
-    BUDGETS_TABLE:            ${self:custom.tables.PROJ_BUDGETS}
-    BUDGET_ID_INDEX:          budgetId-index
-    BUDGET_ITEM_ID_INDEX:     budgetItemId-index
-
-    # Galleries (v1.1 table: PK=galleryId, GSI on projectId)
-    GALLERIES_TABLE:          ${self:custom.tables.GALLERIES}
-    GALLERIES_BY_PROJECT_INDEX: projectId-index
-
-    # safer default; flip to "true" if you want dev scans
-    SCANS_ALLOWED: "false"
+    # Tables: pull from the shared file
+    ${self:custom.env}
 
   iam:
     role:
@@ -58,26 +46,26 @@ provider:
             - dynamodb:Scan
           Resource:
             # Projects core
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_CORE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:PROJECTS_TABLE}
 
             # Tasks
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_TASKS}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:TASKS_TABLE}
 
             # Events (+ optional startAt GSI)
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_EVENTS}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_EVENTS}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:EVENTS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:EVENTS_TABLE}/index/*
 
             # Budgets (+ GSIs for budgetId and budgetItemId)
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_BUDGETS}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_BUDGETS}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:BUDGETS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:BUDGETS_TABLE}/index/*
 
             # Galleries (+ projectId GSI)
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.GALLERIES_TABLE}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.GALLERIES_TABLE}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:GALLERIES_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:GALLERIES_TABLE}/index/*
 
 functions:
   projectsRouter:
-    name: ${self:custom.app}-${self:custom.ver}-projects-router-${self:custom.stage}
+    name: ${self:custom.app}-${self:custom.ver}-projects-router-${sls:stage}
     # NOTE: point this to where your file actually lives.
     # If the file is backend/projects/router.mjs at the service root, use "router.handler".
     # If it's in src/router.mjs, keep "src/router.handler".

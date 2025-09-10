@@ -1,21 +1,38 @@
-custom:
-  app: mylg
-  ver: v12
-  stage: ${opt:stage, 'dev'}
+env:
+  # ---- Users & invites
+  USER_PROFILES_TABLE: UserProfiles
+  INVITES_TABLE: ProjectInvitations          # or CollabInvites if that’s the one live
+  INVITES_BY_SENDER_INDEX: senderId-index
+  INVITES_BY_RECIPIENT_INDEX: recipientId-index
 
-  tables:
-    USERS_PROFILES:           ${self:custom.app}-${self:custom.ver}-users-profiles-${self:custom.stage}
-    USERS_INVITES:            ${self:custom.app}-${self:custom.ver}-users-invites-${self:custom.stage}
+  # ---- Messaging & notifications (v1.1 compat)
+  THREADS_TABLE: DM_THREADS                  # used only if we ever read per-thread info
+  THREAD_MEMBERS_TABLE: DM_THREADS           # membership lives here (PK userId, SK conversationId)
+  MESSAGES_TABLE: DMs
+  MESSAGES_BY_ID_INDEX: messageId-index
+  PROJECT_MESSAGES_TABLE: ProjectMessages
 
-    MSG_THREADS:              ${self:custom.app}-${self:custom.ver}-messages-threads-${self:custom.stage}
-    MSG_ITEMS:                ${self:custom.app}-${self:custom.ver}-messages-items-${self:custom.stage}
-    MSG_PROJECT:              ${self:custom.app}-${self:custom.ver}-projects-messages-${self:custom.stage}
-    NOTIFICATIONS:            ${self:custom.app}-${self:custom.ver}-notifications-${self:custom.stage}
+  NOTIFICATIONS_TABLE: Notifications
+  NOTIFICATIONS_BY_USER_INDEX: userId-index
 
-    PROJ_CORE:                ${self:custom.app}-${self:custom.ver}-projects-core-${self:custom.stage}
-    PROJ_TASKS:               ${self:custom.app}-${self:custom.ver}-projects-tasks-${self:custom.stage}
-    PROJ_EVENTS:              ${self:custom.app}-${self:custom.ver}-projects-events-${self:custom.stage}
-    PROJ_BUDGETS:             ${self:custom.app}-${self:custom.ver}-projects-budgets-${self:custom.stage}
-    GALLERIES:                ${self:custom.app}-${self:custom.ver}-galleries-${self:custom.stage}
+  # ---- Projects / workflow
+  PROJECTS_TABLE: Projects
+  TASKS_TABLE: Tasks
+  EVENTS_TABLE: Events
+  EVENTS_STARTAT_INDEX: ""                   # leave blank if you don’t have projectId-startAt-index
 
-    WS_CONNECTIONS:           Connections
+  # ---- Budgets
+  BUDGETS_TABLE: Budgets
+  BUDGET_ID_INDEX: budgetId-index
+  BUDGET_ITEM_ID_INDEX: budgetItemId-index
+
+  # ---- Galleries / uploads
+  GALLERIES_TABLE: Galleries
+  GALLERIES_PROJECT_GSI: projectId-index
+
+  # ---- WebSocket
+  CONNECTIONS_TABLE: Connections
+  CONNECTIONS_USER_GSI: userId-sessionId-index
+
+  # ---- Misc
+  SCANS_ALLOWED: "false"                     # flip to "true" only for dev scans

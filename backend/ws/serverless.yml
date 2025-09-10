@@ -1,22 +1,20 @@
 service: mylg-v2-websocket
 frameworkVersion: '3'
 
-custom: ${file(../serverless.common.yml):custom}
+custom:
+  env: ${file(../serverless.common.yml):env}
 
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-west-2
-  stage: ${self:custom.stage}
+  stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
   environment:
-    # DynamoDB
-    CONNECTIONS_TABLE: ${self:custom.tables.WS_CONNECTIONS}  # ← your table name
-    CONNECTIONS_USER_GSI: userId-sessionId-index     # ← GSI used in code
-    # WebSocket Management API endpoint (HTTPS domain + stage)
-    # Example: https://abc123.execute-api.us-west-2.amazonaws.com/dev
     WEBSOCKET_ENDPOINT: ${env:WEBSOCKET_ENDPOINT}
+
+    ${self:custom.env}
 
   iam:
     role:
@@ -31,8 +29,8 @@ provider:
             - dynamodb:Scan
             - dynamodb:BatchWriteItem
           Resource:
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.CONNECTIONS_TABLE}
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.CONNECTIONS_TABLE}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:CONNECTIONS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:CONNECTIONS_TABLE}/index/*
         - Effect: Allow
           Action:
             - execute-api:ManageConnections

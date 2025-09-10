@@ -1,6 +1,8 @@
 service: mylg-v2-websocket
 frameworkVersion: '3'
 
+useDotenv: true
+
 custom:
   env: ${file(../serverless.common.yml):env}
 
@@ -12,10 +14,18 @@ provider:
   memorySize: 256
   timeout: 15
   environment:
+    # ---- CORS
+    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS}
+    CORS_WILDCARD_HOSTS: ${env:CORS_WILDCARD_HOSTS}
+    CORS_ALLOW_CREDENTIALS: ${env:CORS_ALLOW_CREDENTIALS}
+    CORS_DEFAULT_ORIGIN: ${env:CORS_DEFAULT_ORIGIN}
+    # ---- Tables
+    CONNECTIONS_TABLE: ${env:CONNECTIONS_TABLE}
+    CONNECTIONS_USER_GSI: ${env:CONNECTIONS_USER_GSI}
+    USER_PROFILES_TABLE: ${env:USER_PROFILES_TABLE}
+    NOTIFICATIONS_TABLE: ${env:NOTIFICATIONS_TABLE}
+    # ---- WebSocket
     WEBSOCKET_ENDPOINT: ${env:WEBSOCKET_ENDPOINT}
-
-    # Shared config (tables, CORS, etc.)
-    ${self:custom.env}
 
   iam:
     role:

@@ -1,0 +1,493 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      }
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ProjectsRouterLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/mylg-v12-projects-router-dev"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "projects",
+                  "dev",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup",
+                    "logs:TagResource"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/mylg-v12-projects-router-dev:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/mylg-v12-projects-router-dev:*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeTable",
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan"
+                  ],
+                  "Resource": [
+                    "arn:aws:dynamodb:us-west-2:221025630675:table/Projects",
+                    "arn:aws:dynamodb:us-west-2:221025630675:table/Tasks",
+                    "arn:aws:dynamodb:us-west-2:221025630675:table/Events",
+                    "arn:aws:dynamodb:us-west-2:221025630675:table/Events/index/*",
+                    "arn:aws:dynamodb:us-west-2:221025630675:table/Budgets",
+                    "arn:aws:dynamodb:us-west-2:221025630675:table/Budgets/index/*",
+                    "arn:aws:dynamodb:us-west-2:221025630675:table/Galleries",
+                    "arn:aws:dynamodb:us-west-2:221025630675:table/Galleries/index/*"
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "projects",
+              "dev",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "ProjectsRouterLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/projects/dev/1757537058596-2025-09-10T20:44:18.596Z/projects.zip"
+        },
+        "Handler": "router.handler",
+        "Runtime": "nodejs18.x",
+        "FunctionName": "mylg-v12-projects-router-dev",
+        "MemorySize": 256,
+        "Timeout": 15,
+        "Tags": [
+          {
+            "Key": "App",
+            "Value": "MYLG"
+          },
+          {
+            "Key": "Version",
+            "Value": "v1.2"
+          },
+          {
+            "Key": "Domain",
+            "Value": "projects"
+          },
+          {
+            "Key": "Stage",
+            "Value": "dev"
+          }
+        ],
+        "Environment": {
+          "Variables": {
+            "ALLOWED_ORIGINS": "https://beta.mylg.studio,https://mylg.studio,http://localhost:3000",
+            "CORS_WILDCARD_HOSTS": "mylg.studio",
+            "CORS_ALLOW_CREDENTIALS": "false",
+            "CORS_DEFAULT_ORIGIN": "https://beta.mylg.studio",
+            "USER_PROFILES_TABLE": "UserProfiles",
+            "INVITES_TABLE": "ProjectInvitations",
+            "INVITES_BY_SENDER_INDEX": "senderId-index",
+            "INVITES_BY_RECIPIENT_INDEX": "recipientId-index",
+            "INBOX_TABLE": "Inbox",
+            "MESSAGES_TABLE": "Messages",
+            "PROJECT_MESSAGES_TABLE": "ProjectMessages",
+            "NOTIFICATIONS_TABLE": "Notifications",
+            "NOTIFICATIONS_BY_USER_INDEX": "userId-index",
+            "PROJECTS_TABLE": "Projects",
+            "TASKS_TABLE": "Tasks",
+            "EVENTS_TABLE": "Events",
+            "EVENTS_STARTAT_INDEX": "",
+            "BUDGETS_TABLE": "Budgets",
+            "BUDGET_ID_INDEX": "budgetId-index",
+            "BUDGET_ITEM_ID_INDEX": "budgetItemId-index",
+            "GALLERIES_TABLE": "Galleries",
+            "GALLERIES_PROJECT_GSI": "projectId-index",
+            "CONNECTIONS_TABLE": "Connections",
+            "CONNECTIONS_USER_GSI": "userId-sessionId-index",
+            "COGNITO_USER_POOL_ID": "placeholder",
+            "COGNITO_USER_POOL_NAME": "mylg-dev-users-west2",
+            "COGNITO_USER_CLIENT_ID": "placeholder",
+            "SCANS_ALLOWED": "false"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Layers": [
+          "arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:1"
+        ]
+      },
+      "DependsOn": [
+        "ProjectsRouterLogGroup"
+      ]
+    },
+    "ProjectsRouterLambdaVersionsxqntelnacAMUf0ZcqYeFzGSkweCXycgU8ksNbT5Hj8": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "ProjectsRouterLambdaFunction"
+        },
+        "CodeSha256": "WhNPR6RZZKZA7BAX3hsEZV6Og7dhQZxep5vpd4e6fCg="
+      }
+    },
+    "HttpApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "mylg-v12-projects-api-dev",
+        "ProtocolType": "HTTP",
+        "Tags": {
+          "App": "MYLG",
+          "Version": "v1.2",
+          "Domain": "projects",
+          "Stage": "dev"
+        }
+      }
+    },
+    "HttpApiStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "StageName": "$default",
+        "AutoDeploy": true,
+        "DefaultRouteSettings": {
+          "DetailedMetricsEnabled": false
+        },
+        "Tags": {
+          "App": "MYLG",
+          "Version": "v1.2",
+          "Domain": "projects",
+          "Stage": "dev"
+        }
+      }
+    },
+    "ProjectsRouterLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "ProjectsRouterLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationProjectsRouter": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "ProjectsRouterLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteAnyProjects": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /projects",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationProjectsRouter"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationProjectsRouter"
+    },
+    "HttpApiRouteAnyProjectsProxyVar": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /projects/{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationProjectsRouter"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationProjectsRouter"
+    },
+    "HttpApiRouteAnyProjectsHealth": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /projects/health",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationProjectsRouter"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationProjectsRouter"
+    },
+    "HttpApiRouteAnyBudgetsProxyVar": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /budgets/{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationProjectsRouter"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationProjectsRouter"
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      },
+      "Export": {
+        "Name": "sls-projects-dev-ServerlessDeploymentBucketName"
+      }
+    },
+    "ProjectsRouterLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "ProjectsRouterLambdaVersionsxqntelnacAMUf0ZcqYeFzGSkweCXycgU8ksNbT5Hj8"
+      },
+      "Export": {
+        "Name": "sls-projects-dev-ProjectsRouterLambdaFunctionQualifiedArn"
+      }
+    },
+    "HttpApiId": {
+      "Description": "Id of the HTTP API",
+      "Value": {
+        "Ref": "HttpApi"
+      },
+      "Export": {
+        "Name": "sls-projects-dev-HttpApiId"
+      }
+    },
+    "HttpApiUrl": {
+      "Description": "URL of the HTTP API",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "HttpApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            }
+          ]
+        ]
+      },
+      "Export": {
+        "Name": "sls-projects-dev-HttpApiUrl"
+      }
+    }
+  }
+}

@@ -211,11 +211,24 @@ Resources:
           AttributeType: S
         - AttributeName: taskId
           AttributeType: S
+        - AttributeName: budgetItemId
+          AttributeType: S
+        - AttributeName: status#dueDate#taskId
+          AttributeType: S
       KeySchema:
         - AttributeName: projectId
           KeyType: HASH
         - AttributeName: taskId
           KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: budgetItemId-index
+          KeySchema:
+            - AttributeName: budgetItemId
+              KeyType: HASH
+            - AttributeName: status#dueDate#taskId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
 
   # ---------- Events ----------
   Events:

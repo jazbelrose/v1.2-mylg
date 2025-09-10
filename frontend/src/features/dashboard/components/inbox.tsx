@@ -5,7 +5,7 @@ import { useData } from "@/app/contexts/useData";
 import { Thread } from "@/app/contexts/DataProvider";
 import { useSocket } from "../../../app/contexts/useSocket";
 import { User as UserIcon, Mail, Check } from "lucide-react";
-import { THREADS_URL, READ_STATUS_URL, apiFetch } from "../../../shared/utils/api";
+import { MESSAGES_INBOX_URL, MESSAGES_THREADS_URL, apiFetch } from "../../../shared/utils/api";
 import { slugify } from "../../../shared/utils/slug";
 
 type InboxProps = {
@@ -25,7 +25,7 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
     try {
       // ✅ apiFetch already returns parsed JSON — no res.json()
       const data = await apiFetch(
-        `${THREADS_URL}?userId=${encodeURIComponent(userId)}`
+        `${MESSAGES_INBOX_URL}?userId=${encodeURIComponent(userId)}`
       );
       // Optional: sanity check in dev
       console.debug("[Inbox] fetched threads:", data);
@@ -79,7 +79,7 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
 
       // 2) persist read flag
       try {
-        await apiFetch(READ_STATUS_URL, {
+        await apiFetch(MESSAGES_THREADS_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId, conversationId: convId, read: true }),

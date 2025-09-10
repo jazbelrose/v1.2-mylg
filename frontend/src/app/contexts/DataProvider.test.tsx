@@ -10,7 +10,7 @@ const apiMocks = vi.hoisted(() => ({
   updateTimelineEvents: vi.fn(),
   updateProjectFields: vi.fn(),
   apiFetch: vi.fn(), // safety net if provider uses lower-level helper
-  THREADS_URL: 'mock-threads-url',
+  MESSAGES_INBOX_URL: 'mock-inbox-url',
   GET_PROJECT_MESSAGES_URL: 'mock-messages-url',
 }));
 
@@ -31,7 +31,7 @@ vi.mock('../../shared/utils/api', async (importOriginal) => {
     updateTimelineEvents: apiMocks.updateTimelineEvents,
     updateProjectFields: apiMocks.updateProjectFields,
     apiFetch: apiMocks.apiFetch,
-    THREADS_URL: apiMocks.THREADS_URL,
+    MESSAGES_INBOX_URL: apiMocks.MESSAGES_INBOX_URL,
     GET_PROJECT_MESSAGES_URL: apiMocks.GET_PROJECT_MESSAGES_URL,
   };
 });

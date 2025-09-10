@@ -46,11 +46,8 @@ import ConfirmModal from "@/shared/ui/ConfirmModal";
 import PromptModal from "@/shared/ui/PromptModal";
 import { slugify, findUserBySlug } from "@/shared/utils/slug";
 import {
-  GET_DM_MESSAGES_URL,
-  THREADS_URL,
-  DELETE_DM_MESSAGE_URL,
+  MESSAGES_THREADS_URL,
   DELETE_FILE_FROM_S3_URL,
-  READ_STATUS_URL,
   EDIT_MESSAGE_URL,
   S3_PUBLIC_BASE,
   apiFetch,
@@ -297,7 +294,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
 
   const persistReadStatus = useCallback(async (conversationId: string) => {
     try {
-      await apiFetch(READ_STATUS_URL, {
+      await apiFetch(MESSAGES_THREADS_URL, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -450,7 +447,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
       setErrorMessage("");
       try {
         const data = await apiFetch<DMMessage[]>(
-          `${GET_DM_MESSAGES_URL}?conversationId=${encodeURIComponent(selectedConversation)}`
+          `${MESSAGES_THREADS_URL}/${encodeURIComponent(selectedConversation)}`
         );
 
         if (Array.isArray(data)) {
@@ -578,8 +575,8 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
         const [a, b] = selectedConversation.replace("dm#", "").split("___");
         const recipientId = a === userData.userId ? b : a;
 
-        if (THREADS_URL) {
-          apiFetch(THREADS_URL, {
+        if (MESSAGES_THREADS_URL) {
+          apiFetch(MESSAGES_THREADS_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -728,8 +725,8 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
         const [a, b] = selectedConversation.replace("dm#", "").split("___");
         const recipientId = a === userData.userId ? b : a;
 
-        if (THREADS_URL) {
-          apiFetch(THREADS_URL, {
+        if (MESSAGES_THREADS_URL) {
+          apiFetch(MESSAGES_THREADS_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -829,9 +826,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
       // delete from store/server (defensive for Response vs JSON)
       if (message.messageId) {
         const url =
-          `${DELETE_DM_MESSAGE_URL}?` +
-          `conversationId=${encodeURIComponent(selectedConversation)}` +
-          `&messageId=${encodeURIComponent(message.messageId)}`;
+          `${MESSAGES_THREADS_URL}/${encodeURIComponent(selectedConversation)}/${encodeURIComponent(message.messageId)}`;
         const res = await apiFetch<{ success?: boolean }>(url, { method: "DELETE" });
         // Since apiFetch parses JSON and throws on error, res should be the success data
         console.log("Delete successful:", res);
@@ -863,8 +858,8 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
       if (message.messageId) {
         const [a, b] = selectedConversation.replace("dm#", "").split("___");
         const recipientId = a === userData.userId ? b : a;
-        if (THREADS_URL) {
-          await apiFetch(THREADS_URL, {
+        if (MESSAGES_THREADS_URL) {
+          await apiFetch(MESSAGES_THREADS_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

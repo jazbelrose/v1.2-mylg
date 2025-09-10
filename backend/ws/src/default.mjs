@@ -18,7 +18,7 @@ const apigwManagementApi = new AWS.ApiGatewayManagementApi({
 const inboxTable =
   process.env.INBOX_TABLE_NAME ||
   process.env.INBOX_TABLE ||
-  process.env.THREADS_TABLE_NAME;
+  process.env.THREADS_TABLE;
 const notificationsTable = process.env.NOTIFICATIONS_TABLE;
 
 export const handler = async (event) => {
@@ -354,8 +354,8 @@ const handleSendMessage = async (payload) => {
   }
 
   let tableName;
-  if (conversationType === "dm") tableName = process.env.DM_TABLE_NAME;
-  else if (conversationType === "project") tableName = process.env.PROJECT_MESSAGES_TABLE_NAME;
+  if (conversationType === "dm") tableName = process.env.MESSAGES_TABLE;
+  else if (conversationType === "project") tableName = process.env.PROJECT_MESSAGES_TABLE;
   else return { statusCode: 400, body: "Invalid conversation type" };
 
   // For DM: sort pair for stable conversationId
@@ -542,10 +542,10 @@ const handleToggleReaction = async (payload) => {
   let tableName;
   let key;
   if (conversationType === "dm") {
-    tableName = process.env.DM_TABLE_NAME;
+    tableName = process.env.MESSAGES_TABLE;
     key = { conversationId, messageId };
   } else if (conversationType === "project") {
-    tableName = process.env.PROJECT_MESSAGES_TABLE_NAME;
+    tableName = process.env.PROJECT_MESSAGES_TABLE;
     const projectId = String(conversationId).replace("project#", "");
     key = { projectId, messageId };
   } else {

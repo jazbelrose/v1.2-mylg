@@ -27,7 +27,7 @@ provider:
             - dynamodb:Query
             - dynamodb:DescribeTable
           Resource:
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_PROFILES_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.env.USER_PROFILES_TABLE}
         - Effect: Allow
           Action:
             - cognito-idp:InitiateAuth
@@ -58,7 +58,7 @@ functions:
   refreshToken:
     handler: routes/refreshToken.handler
     layers:
-      - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+      - arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:1
     events:
       - httpApi:
           path: /auth/refresh-token
@@ -67,7 +67,7 @@ functions:
   updateRoles:
     handler: routes/updateRoles.handler
     layers:
-      - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
+      - arn:aws:lambda:us-west-2:221025630675:layer:shared-utils:1
     events:
       - httpApi:
           path: /auth/update-roles

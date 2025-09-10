@@ -214,7 +214,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/mylg-v2-websocket/dev/1757537252044-2025-09-10T20:47:32.044Z/mylg-v2-websocket.zip"
+          "S3Key": "serverless/mylg-v2-websocket/dev/1757537367534-2025-09-10T20:49:27.534Z/mylg-v2-websocket.zip"
         },
         "Handler": "websocket/onConnect.handler",
         "Runtime": "nodejs18.x",
@@ -252,7 +252,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/mylg-v2-websocket/dev/1757537252044-2025-09-10T20:47:32.044Z/mylg-v2-websocket.zip"
+          "S3Key": "serverless/mylg-v2-websocket/dev/1757537367534-2025-09-10T20:49:27.534Z/mylg-v2-websocket.zip"
         },
         "Handler": "websocket/onDisconnect.handler",
         "Runtime": "nodejs18.x",
@@ -290,7 +290,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/mylg-v2-websocket/dev/1757537252044-2025-09-10T20:47:32.044Z/mylg-v2-websocket.zip"
+          "S3Key": "serverless/mylg-v2-websocket/dev/1757537367534-2025-09-10T20:49:27.534Z/mylg-v2-websocket.zip"
         },
         "Handler": "websocket/default.handler",
         "Runtime": "nodejs18.x",
@@ -328,7 +328,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/mylg-v2-websocket/dev/1757537252044-2025-09-10T20:47:32.044Z/mylg-v2-websocket.zip"
+          "S3Key": "serverless/mylg-v2-websocket/dev/1757537367534-2025-09-10T20:49:27.534Z/mylg-v2-websocket.zip"
         },
         "Handler": "websocket/default.handler",
         "Runtime": "nodejs18.x",

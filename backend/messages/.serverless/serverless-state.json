@@ -239,7 +239,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/messages/dev/1757537141336-2025-09-10T20:45:41.336Z/messages.zip"
+                "S3Key": "serverless/messages/dev/1757537363215-2025-09-10T20:49:23.215Z/messages.zip"
               },
               "Handler": "src/router.handler",
               "Runtime": "nodejs18.x",
@@ -672,7 +672,7 @@
         ],
         "artifactsS3KeyDirname": "serverless/messages/dev/code-artifacts",
         "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\messages\\.serverless\\messages.zip",
-        "artifactDirectoryName": "serverless/messages/dev/1757537141336-2025-09-10T20:45:41.336Z"
+        "artifactDirectoryName": "serverless/messages/dev/1757537363215-2025-09-10T20:49:23.215Z"
       }
     },
     "layers": {},
@@ -680,7 +680,7 @@
     "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\messages\\.serverless\\messages.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/messages/dev/1757537141336-2025-09-10T20:45:41.336Z",
+    "artifactDirectoryName": "serverless/messages/dev/1757537363215-2025-09-10T20:49:23.215Z",
     "artifact": "messages.zip"
   }
 }

@@ -249,7 +249,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/projects/dev/1757537058596-2025-09-10T20:44:18.596Z/projects.zip"
+                "S3Key": "serverless/projects/dev/1757537358727-2025-09-10T20:49:18.727Z/projects.zip"
               },
               "Handler": "router.handler",
               "Runtime": "nodejs18.x",
@@ -743,7 +743,7 @@
         ],
         "artifactsS3KeyDirname": "serverless/projects/dev/code-artifacts",
         "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\projects\\.serverless\\projects.zip",
-        "artifactDirectoryName": "serverless/projects/dev/1757537058596-2025-09-10T20:44:18.596Z"
+        "artifactDirectoryName": "serverless/projects/dev/1757537358727-2025-09-10T20:49:18.727Z"
       }
     },
     "layers": {},
@@ -751,7 +751,7 @@
     "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\projects\\.serverless\\projects.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/projects/dev/1757537058596-2025-09-10T20:44:18.596Z",
+    "artifactDirectoryName": "serverless/projects/dev/1757537358727-2025-09-10T20:49:18.727Z",
     "artifact": "projects.zip"
   }
 }

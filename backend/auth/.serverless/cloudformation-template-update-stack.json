@@ -200,7 +200,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/auth/dev/1757537049639-2025-09-10T20:44:09.639Z/auth.zip"
+          "S3Key": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z/auth.zip"
         },
         "Handler": "triggers/preTokenGeneration.handler",
         "Runtime": "nodejs18.x",
@@ -241,7 +241,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/auth/dev/1757537049639-2025-09-10T20:44:09.639Z/auth.zip"
+          "S3Key": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z/auth.zip"
         },
         "Handler": "triggers/cognitoAuthorizer.handler",
         "Runtime": "nodejs18.x",
@@ -288,7 +288,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/auth/dev/1757537049639-2025-09-10T20:44:09.639Z/auth.zip"
+          "S3Key": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z/auth.zip"
         },
         "Handler": "routes/refreshToken.handler",
         "Runtime": "nodejs18.x",
@@ -332,7 +332,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/auth/dev/1757537049639-2025-09-10T20:44:09.639Z/auth.zip"
+          "S3Key": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z/auth.zip"
         },
         "Handler": "routes/updateRoles.handler",
         "Runtime": "nodejs18.x",

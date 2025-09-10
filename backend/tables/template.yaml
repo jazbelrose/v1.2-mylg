@@ -76,20 +76,11 @@ Resources:
           AttributeType: S
         - AttributeName: conversationId
           AttributeType: S
-        - AttributeName: threadId
-          AttributeType: S
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
         - AttributeName: conversationId
           KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: threadId-index
-          KeySchema:
-            - AttributeName: threadId
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
 
   # ---------- Messages ----------
   Messages:

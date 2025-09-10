@@ -49,7 +49,11 @@
                 "cognito-idp:AdminAddUserToGroup",
                 "cognito-idp:AdminRemoveUserFromGroup"
               ],
-              "Resource": "arn:aws:cognito-idp:us-west-2:221025630675:userpool/placeholder"
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}"
+                }
+              ]
             }
           ]
         }
@@ -243,9 +247,9 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z/auth.zip"
+                "S3Key": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z/auth.zip"
               },
-              "Handler": "triggers/preTokenGeneration.handler",
+              "Handler": "preTokenGeneration.handler",
               "Runtime": "nodejs18.x",
               "FunctionName": "auth-dev-preTokenGeneration",
               "MemorySize": 256,
@@ -284,9 +288,9 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z/auth.zip"
+                "S3Key": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z/auth.zip"
               },
-              "Handler": "triggers/cognitoAuthorizer.handler",
+              "Handler": "cognitoAuthorizer.handler",
               "Runtime": "nodejs18.x",
               "FunctionName": "auth-dev-cognitoAuthorizer",
               "MemorySize": 256,
@@ -331,9 +335,9 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z/auth.zip"
+                "S3Key": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z/auth.zip"
               },
-              "Handler": "routes/refreshToken.handler",
+              "Handler": "refreshToken.handler",
               "Runtime": "nodejs18.x",
               "FunctionName": "auth-dev-refreshToken",
               "MemorySize": 256,
@@ -375,9 +379,9 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z/auth.zip"
+                "S3Key": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z/auth.zip"
               },
-              "Handler": "routes/updateRoles.handler",
+              "Handler": "updateRoles.handler",
               "Runtime": "nodejs18.x",
               "FunctionName": "auth-dev-updateRoles",
               "MemorySize": 256,
@@ -412,44 +416,44 @@
               "UpdateRolesLogGroup"
             ]
           },
-          "PreTokenGenerationLambdaVersionSv9AefADifdHRrTubEjJY34ZljXJXybOwKDJfuoZ04": {
+          "PreTokenGenerationLambdaVersion06wBqIgBT4hhmTJIfFRtXfNAHCbc2KGPSbGT3oyNkbs": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "PreTokenGenerationLambdaFunction"
               },
-              "CodeSha256": "e1ux22HxTpRIsvPzOHPuchnFXLR2i3BWtqKm59UvEBk="
+              "CodeSha256": "b14qWSNvnEEoHm9yIp1gylCRswX8fhXtj0kUxGmyIXQ="
             }
           },
-          "CognitoAuthorizerLambdaVersionOoATUWsFMqnxhbwL7V2zL7vI5Vn0jVr6I7N6OVVVVTY": {
+          "CognitoAuthorizerLambdaVersionpl8RoboVKqDDbPePIRM3ZtEsUYiKruMQ1wNfbf0Gss": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "CognitoAuthorizerLambdaFunction"
               },
-              "CodeSha256": "e1ux22HxTpRIsvPzOHPuchnFXLR2i3BWtqKm59UvEBk="
+              "CodeSha256": "b14qWSNvnEEoHm9yIp1gylCRswX8fhXtj0kUxGmyIXQ="
             }
           },
-          "RefreshTokenLambdaVersionHbcS4Q6IZUs0XgNBMUVAL9w1BQbUZbXiHuc8XHXIYI": {
+          "RefreshTokenLambdaVersion8FkHJxekT5gOiGmolXADmSBxjUOvX7ScgF6ieGZl5SQ": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "RefreshTokenLambdaFunction"
               },
-              "CodeSha256": "e1ux22HxTpRIsvPzOHPuchnFXLR2i3BWtqKm59UvEBk="
+              "CodeSha256": "b14qWSNvnEEoHm9yIp1gylCRswX8fhXtj0kUxGmyIXQ="
             }
           },
-          "UpdateRolesLambdaVersionDPczGOGVAi6b9wtcFC8IWJGrQAXf3HZQKUjKck8hb4": {
+          "UpdateRolesLambdaVersioniPzGUxOoQG7y2us14UWsd8Vb2xmPRMN4dzc5FmGSus": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "UpdateRolesLambdaFunction"
               },
-              "CodeSha256": "e1ux22HxTpRIsvPzOHPuchnFXLR2i3BWtqKm59UvEBk="
+              "CodeSha256": "b14qWSNvnEEoHm9yIp1gylCRswX8fhXtj0kUxGmyIXQ="
             }
           },
           "CognitoUserPoolMylgdevuserswest2": {
@@ -720,7 +724,7 @@
           "PreTokenGenerationLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "PreTokenGenerationLambdaVersionSv9AefADifdHRrTubEjJY34ZljXJXybOwKDJfuoZ04"
+              "Ref": "PreTokenGenerationLambdaVersion06wBqIgBT4hhmTJIfFRtXfNAHCbc2KGPSbGT3oyNkbs"
             },
             "Export": {
               "Name": "sls-auth-dev-PreTokenGenerationLambdaFunctionQualifiedArn"
@@ -729,7 +733,7 @@
           "CognitoAuthorizerLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "CognitoAuthorizerLambdaVersionOoATUWsFMqnxhbwL7V2zL7vI5Vn0jVr6I7N6OVVVVTY"
+              "Ref": "CognitoAuthorizerLambdaVersionpl8RoboVKqDDbPePIRM3ZtEsUYiKruMQ1wNfbf0Gss"
             },
             "Export": {
               "Name": "sls-auth-dev-CognitoAuthorizerLambdaFunctionQualifiedArn"
@@ -738,7 +742,7 @@
           "RefreshTokenLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "RefreshTokenLambdaVersionHbcS4Q6IZUs0XgNBMUVAL9w1BQbUZbXiHuc8XHXIYI"
+              "Ref": "RefreshTokenLambdaVersion8FkHJxekT5gOiGmolXADmSBxjUOvX7ScgF6ieGZl5SQ"
             },
             "Export": {
               "Name": "sls-auth-dev-RefreshTokenLambdaFunctionQualifiedArn"
@@ -747,7 +751,7 @@
           "UpdateRolesLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "UpdateRolesLambdaVersionDPczGOGVAi6b9wtcFC8IWJGrQAXf3HZQKUjKck8hb4"
+              "Ref": "UpdateRolesLambdaVersioniPzGUxOoQG7y2us14UWsd8Vb2xmPRMN4dzc5FmGSus"
             },
             "Export": {
               "Name": "sls-auth-dev-UpdateRolesLambdaFunctionQualifiedArn"
@@ -948,16 +952,16 @@
         "GALLERIES_PROJECT_GSI": "projectId-index",
         "CONNECTIONS_TABLE": "Connections",
         "CONNECTIONS_USER_GSI": "userId-sessionId-index",
-        "COGNITO_USER_POOL_ID": "placeholder",
+        "COGNITO_USER_POOL_ID": "us-west-2_HnSYpFGkd",
         "COGNITO_USER_POOL_NAME": "mylg-dev-users-west2",
-        "COGNITO_USER_CLIENT_ID": "placeholder",
+        "COGNITO_USER_CLIENT_ID": "3327sdro74vci7hbqsn5g74fvh",
         "SCANS_ALLOWED": "false"
       }
     },
     "pluginsData": {},
     "functions": {
       "preTokenGeneration": {
-        "handler": "triggers/preTokenGeneration.handler",
+        "handler": "preTokenGeneration.handler",
         "events": [
           {
             "cognitoUserPool": {
@@ -973,10 +977,10 @@
         "timeout": 15,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "PreTokenGenerationLambdaVersionSv9AefADifdHRrTubEjJY34ZljXJXybOwKDJfuoZ04"
+        "versionLogicalId": "PreTokenGenerationLambdaVersion06wBqIgBT4hhmTJIfFRtXfNAHCbc2KGPSbGT3oyNkbs"
       },
       "cognitoAuthorizer": {
-        "handler": "triggers/cognitoAuthorizer.handler",
+        "handler": "cognitoAuthorizer.handler",
         "environment": {
           "COGNITO_POOL_ID": {
             "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"CognitoAuthorizerLambdaFunction\"][\"Properties\"][\"Environment\"][\"Variables\"][\"COGNITO_POOL_ID\"]"
@@ -992,10 +996,10 @@
         "timeout": 15,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "CognitoAuthorizerLambdaVersionOoATUWsFMqnxhbwL7V2zL7vI5Vn0jVr6I7N6OVVVVTY"
+        "versionLogicalId": "CognitoAuthorizerLambdaVersionpl8RoboVKqDDbPePIRM3ZtEsUYiKruMQ1wNfbf0Gss"
       },
       "refreshToken": {
-        "handler": "routes/refreshToken.handler",
+        "handler": "refreshToken.handler",
         "layers": {
           "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"RefreshTokenLambdaFunction\"][\"Properties\"][\"Layers\"]"
         },
@@ -1015,10 +1019,10 @@
         "timeout": 15,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "RefreshTokenLambdaVersionHbcS4Q6IZUs0XgNBMUVAL9w1BQbUZbXiHuc8XHXIYI"
+        "versionLogicalId": "RefreshTokenLambdaVersion8FkHJxekT5gOiGmolXADmSBxjUOvX7ScgF6ieGZl5SQ"
       },
       "updateRoles": {
-        "handler": "routes/updateRoles.handler",
+        "handler": "updateRoles.handler",
         "layers": {
           "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"UpdateRolesLambdaFunction\"][\"Properties\"][\"Layers\"]"
         },
@@ -1038,7 +1042,7 @@
         "timeout": 15,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "UpdateRolesLambdaVersionDPczGOGVAi6b9wtcFC8IWJGrQAXf3HZQKUjKck8hb4"
+        "versionLogicalId": "UpdateRolesLambdaVersioniPzGUxOoQG7y2us14UWsd8Vb2xmPRMN4dzc5FmGSus"
       }
     },
     "resources": {
@@ -1168,14 +1172,13 @@
       },
       "package": {
         "patterns": [
-          "triggers/**",
-          "routes/**",
+          "*.mjs",
           "!**/*.map",
           "!node_modules/.bin/**"
         ],
         "artifactsS3KeyDirname": "serverless/auth/dev/code-artifacts",
         "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\auth\\.serverless\\auth.zip",
-        "artifactDirectoryName": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z"
+        "artifactDirectoryName": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z"
       },
       "resources": {
         "$ref": "$[\"service\"][\"resources\"]"
@@ -1186,7 +1189,7 @@
     "artifact": "D:\\MYLG\\App\\v1.2-mylg\\backend\\auth\\.serverless\\auth.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/auth/dev/1757537349465-2025-09-10T20:49:09.465Z",
+    "artifactDirectoryName": "serverless/auth/dev/1757540656944-2025-09-10T21:44:16.944Z",
     "artifact": "auth.zip"
   }
 }

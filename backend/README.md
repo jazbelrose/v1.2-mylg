@@ -30,6 +30,11 @@ Serverless backend using AWS Lambda, API Gateway (HTTP API v2), and WebSocket AP
   - `/auth/{proxy+}` - Authentication endpoints (login, refresh, logout, etc.)
   - Cognito triggers: preTokenGeneration, cognitoAuthorizer
 
+### HTTP REST APIs
+- **Auth Service**: `https://kbsvyidz7f.execute-api.us-west-2.amazonaws.com`
+  - `/auth/refresh-token` - Token refresh
+  - `/auth/update-roles` - Update user roles
+
 - **Projects Service**: `https://bevnkraeqa.execute-api.us-west-2.amazonaws.com`
   - `/projects` - Projects endpoints
   - `/projects/{proxy+}` - Projects proxy routes

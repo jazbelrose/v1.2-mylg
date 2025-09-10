@@ -47,12 +47,12 @@ provider:
             - cognito-idp:AdminAddUserToGroup
             - cognito-idp:AdminRemoveUserFromGroup
           Resource:
-            - arn:aws:cognito-idp:${aws:region}:${aws:accountId}:userpool/${env:COGNITO_USER_POOL_ID}
+            - !Sub "arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPool}"
 
 functions:
   # 1) Cognito Pre-Token Generation (adds role/claims)
   preTokenGeneration:
-    handler: triggers/preTokenGeneration.handler
+    handler: preTokenGeneration.handler
     events:
       - cognitoUserPool:
           # Bind to the user pool created in this stack
@@ -62,13 +62,13 @@ functions:
 
   # 2) Lambda authorizer used by the **WebSocket $connect** route (deployed here, *referenced* by ws stack)
   cognitoAuthorizer:
-    handler: triggers/cognitoAuthorizer.handler
+    handler: cognitoAuthorizer.handler
     environment:
       COGNITO_POOL_ID: ${self:provider.environment.COGNITO_USER_POOL_ID}
       COGNITO_CLIENT_ID: ${self:provider.environment.COGNITO_USER_CLIENT_ID}
 
   refreshToken:
-    handler: routes/refreshToken.handler
+    handler: refreshToken.handler
     layers:
       - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
     events:
@@ -77,7 +77,7 @@ functions:
           method: POST
 
   updateRoles:
-    handler: routes/updateRoles.handler
+    handler: updateRoles.handler
     layers:
       - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
     events:
@@ -87,8 +87,7 @@ functions:
 
 package:
   patterns:
-    - triggers/**
-    - routes/**
+    - '*.mjs'
     - '!**/*.map'
     - '!node_modules/.bin/**'
 

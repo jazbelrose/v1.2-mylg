@@ -15,7 +15,10 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const apigwManagementApi = new AWS.ApiGatewayManagementApi({
   endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
-const threadsTable = process.env.THREADS_TABLE_NAME || process.env.DM_THREADS_TABLE;
+const inboxTable =
+  process.env.INBOX_TABLE_NAME ||
+  process.env.INBOX_TABLE ||
+  process.env.THREADS_TABLE_NAME;
 const notificationsTable = process.env.NOTIFICATIONS_TABLE;
 
 export const handler = async (event) => {
@@ -386,9 +389,9 @@ const handleSendMessage = async (payload) => {
     await dynamoDb.put({ TableName: tableName, Item: messageItem }).promise();
     console.log("✅ Message saved to DB with GSI:", messageItem);
 
-    if (conversationType === "dm" && threadsTable) {
+    if (conversationType === "dm" && inboxTable) {
       const threadUpdateSender = {
-        TableName: threadsTable,
+        TableName: inboxTable,
         Key: { userId: senderId, conversationId: finalConversationId },
         UpdateExpression: `SET lastMsgTs = :ts, snippet = :snip, otherUserId = :other, #r = :true`,
         ExpressionAttributeNames: { "#r": "read" },
@@ -401,7 +404,7 @@ const handleSendMessage = async (payload) => {
       };
 
       const threadUpdateRecipient = {
-        TableName: threadsTable,
+        TableName: inboxTable,
         Key: { userId: recipientId, conversationId: finalConversationId },
         UpdateExpression: `SET lastMsgTs = :ts, snippet = :snip, otherUserId = :other, #r = :false`,
         ExpressionAttributeNames: { "#r": "read" },

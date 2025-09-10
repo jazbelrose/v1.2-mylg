@@ -7,10 +7,7 @@ import React, {
   PropsWithChildren,
 } from "react";
 import { useAuth } from "./useAuth";
-import {
-  THREADS_URL,
-  apiFetch,
-} from "../../shared/utils/api";
+import { MESSAGES_INBOX_URL, apiFetch } from "../../shared/utils/api";
 import { getWithTTL, setWithTTL, DEFAULT_TTL } from "../../shared/utils/storageWithTTL";
 import { MessagesContext } from "./MessagesContext";
 import type { MessagesValue, ProjectMessagesMap } from "./MessagesContextValue";
@@ -94,7 +91,7 @@ export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
     const fetchThreads = async () => {
       try {
         const data = await apiFetch<Thread[] | unknown>(
-          `${THREADS_URL}?userId=${encodeURIComponent(userId)}`
+          `${MESSAGES_INBOX_URL}?userId=${encodeURIComponent(userId)}`
         );
         setDmThreads(Array.isArray(data) ? (data as Thread[]) : []);
       } catch (err) {

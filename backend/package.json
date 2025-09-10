@@ -4,10 +4,10 @@
   "description": "MYLG Backend API v2 with Serverless Framework",
   "type": "module",
   "scripts": {
-    "deploy": "serverless deploy",
-    "deploy:dev": "serverless deploy --stage dev",
-    "deploy:prod": "serverless deploy --stage prod",
-    "remove": "serverless remove",
+    "deploy:dev": "node scripts/orchestrate.mjs deploy dev",
+    "deploy:prod": "node scripts/orchestrate.mjs deploy prod",
+    "remove:dev": "node scripts/orchestrate.mjs remove dev",
+    "remove:prod": "node scripts/orchestrate.mjs remove prod",
     "logs": "serverless logs",
     "invoke": "serverless invoke",
     "offline": "serverless offline"

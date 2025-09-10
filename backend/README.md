@@ -26,7 +26,7 @@ Serverless backend using AWS Lambda, API Gateway (HTTP API v2), and WebSocket AP
 
 ## Key Benefits
 
-- **Blast radius containment** - Each domain (auth/projects/messages) is isolated
+- **Blast radius containment** - Each domain (auth/projects/messages/users) is isolated
 - **WebSocket isolation** - WS logic separated from HTTP APIs
 - **Shared CORS handling** - Consistent CORS across all endpoints
 - **Fast cold starts** - Minimal dependencies per function
@@ -51,6 +51,12 @@ backend/
     └── serverless.yml
 ```
 
+## Prerequisites
+
+- Node.js 18+
+- Serverless Framework v3 (`npm i -g serverless`)
+- AWS credentials configured for your target account
+
 ## Environment Variables
 
 - `ALLOWED_ORIGINS`: Comma-separated list of allowed origins for CORS
@@ -58,22 +64,24 @@ backend/
 
 ## Deployment
 
-Deploy services independently for faster, smaller stacks.
+Recommended: orchestrated deploy from `backend/` (deploys in the correct order).
 
 ```bash
-# Install once at repo root (optional)
-npm install -g serverless
+cd backend
+# dev
+npm run deploy:dev
+# prod
+npm run deploy:prod
 
-# Then deploy each service from its folder, e.g.:
+# remove dev stacks
+npm run remove:dev
+```
+
+Alternative: manual per‑service deploy when iterating on a single domain.
+
+```bash
 cd backend/shared-layer && sls deploy --stage dev
-cd ../auth && sls deploy --stage dev
 cd ../projects && sls deploy --stage dev
-cd ../messages && sls deploy --stage dev
-cd ../user && sls deploy --stage dev
-cd ../ws && sls deploy --stage dev
-
-# Remove a service stack when needed
-sls remove --stage dev
 ```
 
 ## Local Development

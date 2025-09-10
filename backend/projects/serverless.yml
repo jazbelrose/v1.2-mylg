@@ -2,26 +2,38 @@ service: projects
 frameworkVersion: '3'
 
 custom:
-  prefix: mylg-v12
+  app: mylg
+  ver: v12
   stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-west-2'}
+
   tables:
-    PROJECTS_TABLE: ${self:custom.prefix}-projects-core-${self:custom.stage}
-    TASKS_TABLE:    ${self:custom.prefix}-projects-tasks-${self:custom.stage}
-    EVENTS_TABLE:   ${self:custom.prefix}-projects-events-${self:custom.stage}
-    BUDGETS_TABLE:  ${self:custom.prefix}-projects-budgets-${self:custom.stage}
+    USERS_PROFILES:           ${self:custom.app}-${self:custom.ver}-users-profiles-${self:custom.stage}
+    USERS_INVITES:            ${self:custom.app}-${self:custom.ver}-users-invites-${self:custom.stage}
+
+    MSG_THREADS:              ${self:custom.app}-${self:custom.ver}-messages-threads-${self:custom.stage}
+    MSG_ITEMS:                ${self:custom.app}-${self:custom.ver}-messages-items-${self:custom.stage}
+    MSG_PROJECT:              ${self:custom.app}-${self:custom.ver}-projects-messages-${self:custom.stage}
+    NOTIFICATIONS:            ${self:custom.app}-${self:custom.ver}-notifications-${self:custom.stage}
+
+    PROJ_CORE:                ${self:custom.app}-${self:custom.ver}-projects-core-${self:custom.stage}
+    PROJ_TASKS:               ${self:custom.app}-${self:custom.ver}-projects-tasks-${self:custom.stage}
+    PROJ_EVENTS:              ${self:custom.app}-${self:custom.ver}-projects-events-${self:custom.stage}
+    PROJ_BUDGETS:             ${self:custom.app}-${self:custom.ver}-projects-budgets-${self:custom.stage}
+    GALLERIES:                ${self:custom.app}-${self:custom.ver}-galleries-${self:custom.stage}
+
+    WS_CONNECTIONS:           Connections
 
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${self:custom.region}
+  region: us-west-2
   stage: ${self:custom.stage}
   memorySize: 256
   timeout: 15
-  stackName: ${self:custom.prefix}-${self:service}-${self:custom.stage}
+  stackName: ${self:custom.app}-${self:custom.ver}-${self:service}-${self:custom.stage}
   httpApi:
     cors: false  # dynamic CORS handled in Lambda
-    name: ${self:custom.prefix}-${self:service}-api-${self:custom.stage}
+    name: ${self:custom.app}-${self:custom.ver}-${self:service}-api-${self:custom.stage}
   tags:
     App: MYLG
     Version: v1.2
@@ -34,19 +46,19 @@ provider:
     CORS_ALLOW_CREDENTIALS: "false"
 
     # Projects domain tables
-    PROJECTS_TABLE: ${self:custom.tables.PROJECTS_TABLE}
-    TASKS_TABLE:    ${self:custom.tables.TASKS_TABLE}
-    EVENTS_TABLE:   ${self:custom.tables.EVENTS_TABLE}
-    EVENTS_STARTAT_INDEX: projectId-startAt-index
+    PROJECTS_TABLE:           ${self:custom.tables.PROJ_CORE}
+    TASKS_TABLE:              ${self:custom.tables.PROJ_TASKS}
+    EVENTS_TABLE:             ${self:custom.tables.PROJ_EVENTS}
+    EVENTS_STARTAT_INDEX:     projectId-startAt-index
 
     # Budgets (v1.1 semantics under /projects/{id}/budget*)
-    BUDGETS_TABLE:           ${self:custom.tables.BUDGETS_TABLE}
-    BUDGET_ID_INDEX:         budgetId-index
-    BUDGET_ITEM_ID_INDEX:    budgetItemId-index
+    BUDGETS_TABLE:            ${self:custom.tables.PROJ_BUDGETS}
+    BUDGET_ID_INDEX:          budgetId-index
+    BUDGET_ITEM_ID_INDEX:     budgetItemId-index
 
     # Galleries (v1.1 table: PK=galleryId, GSI on projectId)
-    GALLERIES_TABLE: ${env:GALLERIES_TABLE, 'Galleries'}
-    GALLERIES_PROJECT_INDEX: ${env:GALLERIES_PROJECT_INDEX, 'projectId-index'}
+    GALLERIES_TABLE:          ${self:custom.tables.GALLERIES}
+    GALLERIES_BY_PROJECT_INDEX: projectId-index
 
     # safer default; flip to "true" if you want dev scans
     SCANS_ALLOWED: "false"
@@ -66,26 +78,26 @@ provider:
             - dynamodb:Scan
           Resource:
             # Projects core
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJECTS_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_CORE}
 
             # Tasks
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.TASKS_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_TASKS}
 
             # Events (+ optional startAt GSI)
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.EVENTS_TABLE}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.EVENTS_TABLE}/index/*
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_EVENTS}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_EVENTS}/index/*
 
             # Budgets (+ GSIs for budgetId and budgetItemId)
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.BUDGETS_TABLE}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.BUDGETS_TABLE}/index/*
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_BUDGETS}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.tables.PROJ_BUDGETS}/index/*
 
             # Galleries (+ projectId GSI)
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:GALLERIES_TABLE, 'Galleries'}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:GALLERIES_TABLE, 'Galleries'}/index/*
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.GALLERIES_TABLE}
+            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:provider.environment.GALLERIES_TABLE}/index/*
 
 functions:
   projectsRouter:
-    name: ${self:custom.prefix}-projects-router-${self:custom.stage}
+    name: ${self:custom.app}-${self:custom.ver}-projects-router-${self:custom.stage}
     # NOTE: point this to where your file actually lives.
     # If the file is backend/projects/router.mjs at the service root, use "router.handler".
     # If it's in src/router.mjs, keep "src/router.handler".

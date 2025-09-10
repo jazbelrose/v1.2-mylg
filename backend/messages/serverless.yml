@@ -1,11 +1,33 @@
 service: messages
 frameworkVersion: '3'
 
+custom:
+  app: mylg
+  ver: v12
+  stage: ${opt:stage, 'dev'}
+
+  tables:
+    USERS_PROFILES:           ${self:custom.app}-${self:custom.ver}-users-profiles-${self:custom.stage}
+    USERS_INVITES:            ${self:custom.app}-${self:custom.ver}-users-invites-${self:custom.stage}
+
+    MSG_THREADS:              ${self:custom.app}-${self:custom.ver}-messages-threads-${self:custom.stage}
+    MSG_ITEMS:                ${self:custom.app}-${self:custom.ver}-messages-items-${self:custom.stage}
+    MSG_PROJECT:              ${self:custom.app}-${self:custom.ver}-projects-messages-${self:custom.stage}
+    NOTIFICATIONS:            ${self:custom.app}-${self:custom.ver}-notifications-${self:custom.stage}
+
+    PROJ_CORE:                ${self:custom.app}-${self:custom.ver}-projects-core-${self:custom.stage}
+    PROJ_TASKS:               ${self:custom.app}-${self:custom.ver}-projects-tasks-${self:custom.stage}
+    PROJ_EVENTS:              ${self:custom.app}-${self:custom.ver}-projects-events-${self:custom.stage}
+    PROJ_BUDGETS:             ${self:custom.app}-${self:custom.ver}-projects-budgets-${self:custom.stage}
+    GALLERIES:                ${self:custom.app}-${self:custom.ver}-galleries-${self:custom.stage}
+
+    WS_CONNECTIONS:           Connections
+
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-west-2
-  stage: ${opt:stage, 'dev'}
+  stage: ${self:custom.stage}
   memorySize: 256
   timeout: 15
   httpApi:
@@ -17,13 +39,12 @@ provider:
     CORS_ALLOW_CREDENTIALS: "false"
 
     # Tables / indexes used by the router (MUST be inside environment)
-    THREADS_TABLE: MessagesThreads
-    THREAD_MEMBERS_TABLE: MessagesThreadMembers
-    MESSAGES_TABLE: Messages
-    MESSAGES_BY_ID_INDEX: messageId-index
-    PROJECT_MESSAGES_TABLE: ProjectMessages
-    NOTIFICATIONS_TABLE: Notifications
-    NOTIFICATIONS_BY_USER_INDEX: userId-index
+    THREADS_TABLE:           ${self:custom.tables.MSG_THREADS}
+    MESSAGES_TABLE:          ${self:custom.tables.MSG_ITEMS}
+    MESSAGES_BY_ID_INDEX:    messageId-index
+    PROJECT_MESSAGES_TABLE:  ${self:custom.tables.MSG_PROJECT}
+    NOTIFICATIONS_TABLE:     ${self:custom.tables.NOTIFICATIONS}
+    NOTIFICATIONS_BY_USER_INDEX:  userId-index
 
     # dev safety toggle (router expects a string)
     SCANS_ALLOWED: "false"
@@ -42,9 +63,8 @@ provider:
             - dynamodb:Query
             - dynamodb:Scan
           Resource:
-            # Threads + membership
+            # Threads
             - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:THREADS_TABLE}
-            - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:THREAD_MEMBERS_TABLE}
 
             # Messages + GSIs (messageId-index)
             - arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${env:MESSAGES_TABLE}

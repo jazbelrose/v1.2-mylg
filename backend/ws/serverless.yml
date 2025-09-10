@@ -1,16 +1,38 @@
 service: mylg-v2-websocket
 frameworkVersion: '3'
 
+custom:
+  app: mylg
+  ver: v12
+  stage: ${opt:stage, 'dev'}
+
+  tables:
+    USERS_PROFILES:           ${self:custom.app}-${self:custom.ver}-users-profiles-${self:custom.stage}
+    USERS_INVITES:            ${self:custom.app}-${self:custom.ver}-users-invites-${self:custom.stage}
+
+    MSG_THREADS:              ${self:custom.app}-${self:custom.ver}-messages-threads-${self:custom.stage}
+    MSG_ITEMS:                ${self:custom.app}-${self:custom.ver}-messages-items-${self:custom.stage}
+    MSG_PROJECT:              ${self:custom.app}-${self:custom.ver}-projects-messages-${self:custom.stage}
+    NOTIFICATIONS:            ${self:custom.app}-${self:custom.ver}-notifications-${self:custom.stage}
+
+    PROJ_CORE:                ${self:custom.app}-${self:custom.ver}-projects-core-${self:custom.stage}
+    PROJ_TASKS:               ${self:custom.app}-${self:custom.ver}-projects-tasks-${self:custom.stage}
+    PROJ_EVENTS:              ${self:custom.app}-${self:custom.ver}-projects-events-${self:custom.stage}
+    PROJ_BUDGETS:             ${self:custom.app}-${self:custom.ver}-projects-budgets-${self:custom.stage}
+    GALLERIES:                ${self:custom.app}-${self:custom.ver}-galleries-${self:custom.stage}
+
+    WS_CONNECTIONS:           Connections
+
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-west-2
-  stage: ${opt:stage, 'dev'}
+  stage: ${self:custom.stage}
   memorySize: 256
   timeout: 15
   environment:
     # DynamoDB
-    CONNECTIONS_TABLE: Connections                   # ← your table name
+    CONNECTIONS_TABLE: ${self:custom.tables.WS_CONNECTIONS}  # ← your table name
     CONNECTIONS_USER_GSI: userId-sessionId-index     # ← GSI used in code
     # WebSocket Management API endpoint (HTTPS domain + stage)
     # Example: https://abc123.execute-api.us-west-2.amazonaws.com/dev
@@ -29,8 +51,8 @@ provider:
             - dynamodb:Scan
             - dynamodb:BatchWriteItem
           Resource:
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/Connections
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/Connections/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.CONNECTIONS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.CONNECTIONS_TABLE}/index/*
         - Effect: Allow
           Action:
             - execute-api:ManageConnections

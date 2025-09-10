@@ -1,6 +1,8 @@
 service: messages
 frameworkVersion: '3'
 
+useDotenv: true
+
 custom:
   env: ${file(../serverless.common.yml):env}
 

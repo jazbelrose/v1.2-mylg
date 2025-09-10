@@ -13,7 +13,10 @@ layers:
     compatibleRuntimes: [nodejs18.x]
 
 # Export the Layer ARN so other services can import it with ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
-outputs:
-  SharedUtilsLayerArn:
-    Value:
-      Ref: SharedUtilsLayerLambdaLayer
+resources:
+  Outputs:
+    SharedUtilsLayerArn:
+      Value:
+        Ref: SharedUtilsLayerLambdaLayer
+      Export:
+        Name: shared-layer-arn-${sls:stage}

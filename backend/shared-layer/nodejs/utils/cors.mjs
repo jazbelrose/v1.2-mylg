@@ -2,7 +2,7 @@
 
 // ---- Config via env (with sensible defaults) ----
 const DEFAULT_ORIGIN =
-  process.env.CORS_DEFAULT_ORIGIN?.replace(/\/$/, "") || "http://localhost:3000";
+  process.env.CORS_DEFAULT_ORIGIN?.replace(/\/$/, "") || "http://localhost:5173";
 
 // Comma-separated list of exact origins to allow (no trailing slashes)
 const ENV_ALLOWED = (process.env.ALLOWED_ORIGINS || "")
@@ -13,6 +13,7 @@ const ENV_ALLOWED = (process.env.ALLOWED_ORIGINS || "")
 // Defaults you likely always want in dev/prod
 const DEFAULT_ALLOWED = [
   "http://localhost:3000",
+  "http://localhost:5173",
   "http://192.168.1.200:3000",
 ];
 

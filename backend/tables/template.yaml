@@ -108,16 +108,22 @@ Resources:
           AttributeType: S
         - AttributeName: messageId
           AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
       KeySchema:
         - AttributeName: conversationId
           KeyType: HASH
         - AttributeName: messageId
           KeyType: RANGE
       GlobalSecondaryIndexes:
-        - IndexName: messageId-index
+        - IndexName: InboxIndex
           KeySchema:
-            - AttributeName: messageId
+            - AttributeName: GSI1PK
               KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
 

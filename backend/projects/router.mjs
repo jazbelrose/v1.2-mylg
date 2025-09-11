@@ -115,14 +115,43 @@ const listProjects = async (e, C) => {
     };
   } else {
     if (!userId) return json(400, C, { error: "Missing userId" });
-    params = {
-      TableName: PROJECTS_TABLE,
-      IndexName: PROJECTS_TEAMUSERIDS_INDEX,
-      KeyConditionExpression: "#teamUserIds = :uid",
-      ExpressionAttributeNames: { "#teamUserIds": "teamUserIds" },
-      ExpressionAttributeValues: { ":uid": userId },
-      Limit: limit,
-    };
+    
+    // Fetch user's project IDs from their profile
+    const u = await ddb.get({
+      TableName: USER_PROFILES_TABLE,
+      Key: { userId },
+      ProjectionExpression: "projects",
+    });
+    const projectIds = Array.isArray(u.Item?.projects) ? u.Item.projects.slice(0, limit) : [];
+    
+    if (!projectIds.length) {
+      return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
+    }
+    
+    // Batch get the projects
+    const chunks = [];
+    for (let i = 0; i < projectIds.length; i += 100) {
+      chunks.push(projectIds.slice(i, i + 100));
+    }
+    
+    const items = [];
+    for (const chunk of chunks) {
+      const r = await ddb.batchGet({
+        RequestItems: {
+          [PROJECTS_TABLE]: { 
+            Keys: chunk.map((projectId) => ({ projectId })) 
+          },
+        },
+      });
+      items.push(...(r.Responses?.[PROJECTS_TABLE] || []));
+    }
+    
+    return json(200, C, { 
+      items, 
+      count: items.length, 
+      scannedCount: items.length, 
+      lastKey: null 
+    });
   }
 
   const r = await ddb.query(params);

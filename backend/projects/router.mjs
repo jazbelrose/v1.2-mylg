@@ -689,7 +689,7 @@ const routes = [
 
   // Optional convenience lookups (not under /projects)
   { m: "GET",    r: /^\/budgets\/byBudgetId\/(?<budgetId>[^/]+)$/i,                             h: listByBudgetId },
-  { m: "GET",    r: /^\/budgets\/byItemId\/(?<budgetItemId>[^/]+)$/i,                           h: getByBudgetItem },
+  { m: "GET",    r: /^\/budgets\/byItemId\/(?<budgetItemId>[^/]+)$/i,                           h: getByBudgetItemId },
 ];
 
 /* ============== Entrypoint ============== */

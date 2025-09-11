@@ -1,6 +1,8 @@
 service: shared-layer
 frameworkVersion: '3'
 
+# Force redeploy for CORS updates - updated 2025-09-10
+
 provider:
   name: aws
   runtime: nodejs18.x

@@ -17,19 +17,24 @@ provider:
     cors:
       allowedOrigins:
         - http://localhost:5173
-        - https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com
+        - https://beta.mylg.studio
+        - https://mylg.studio
       allowedHeaders:
         - Content-Type
-        - X-Amz-Date
         - Authorization
-        - X-Api-Key
+        - X-Requested-With
+        - X-CSRF-Token
+        - X-Amz-Date
         - X-Amz-Security-Token
+        - X-Amz-User-Agent
       allowedMethods:
         - GET
         - POST
         - PUT
+        - PATCH
         - DELETE
         - OPTIONS
+      allowCredentials: false
   environment:
     # Tables & shared config (CORS, etc.)
     ${self:custom.env}

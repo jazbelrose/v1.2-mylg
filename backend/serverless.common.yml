@@ -5,8 +5,11 @@ cors:
 useDotenv: true
 
 env:
-  # ---- CORS
-  ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
+  # ---- CORS - CENTRAL CONFIGURATION FOR ALL SERVICES ----
+  # This is the SINGLE PLACE to configure CORS for the entire backend.
+  # All services inherit these CORS settings via the shared-layer.
+  # To add new origins: add them to ALLOWED_ORIGINS below, then redeploy shared-layer + services
+  ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000,http://localhost:5173
   CORS_WILDCARD_HOSTS: mylg.studio
   CORS_ALLOW_CREDENTIALS: "false"
   CORS_DEFAULT_ORIGIN: https://beta.mylg.studio

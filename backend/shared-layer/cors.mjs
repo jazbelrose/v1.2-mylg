@@ -1,30 +1,6 @@
 // /opt/nodejs/utils/cors.mjs
 // Force redeploy for CORS updates - updated 2025-09-10
 
-// =============================================================================
-// CORS CONFIGURATION - CENTRALIZED SETTINGS
-// =============================================================================
-// This file contains all CORS configuration for the entire backend.
-// To add new allowed origins, modify the environment variables in serverless.common.yml
-//
-// Environment Variables (set in serverless.common.yml):
-// - ALLOWED_ORIGINS: Comma-separated list of allowed origins
-// - CORS_WILDCARD_HOSTS: Comma-separated list of wildcard domains (e.g., "mylg.studio")
-// - CORS_DEFAULT_ORIGIN: Default origin to use when none specified
-// - CORS_ALLOW_CREDENTIALS: Whether to allow credentials (true/false)
-//
-// Current Configuration:
-// ALLOWED_ORIGINS = https://beta.mylg.studio,https://mylg.studio,http://localhost:3000,http://localhost:5173
-// CORS_WILDCARD_HOSTS = mylg.studio
-// CORS_DEFAULT_ORIGIN = https://beta.mylg.studio
-// CORS_ALLOW_CREDENTIALS = false
-//
-// To fix CORS issues:
-// 1. Add your origin to ALLOWED_ORIGINS in serverless.common.yml
-// 2. Redeploy the shared-layer: cd shared-layer && serverless deploy --stage dev
-// 3. Redeploy affected services: cd <service> && serverless deploy --stage dev
-// =============================================================================
-
 // ---- Config via env (with sensible defaults) ----
 const DEFAULT_ORIGIN =
   process.env.CORS_DEFAULT_ORIGIN?.replace(/\/$/, "") || "http://localhost:5173";

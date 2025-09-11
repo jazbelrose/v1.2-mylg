@@ -44,6 +44,7 @@ provider:
           Resource:
             # Projects core
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:PROJECTS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:PROJECTS_TABLE}/index/*
 
             # Tasks
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:TASKS_TABLE}

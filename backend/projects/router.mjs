@@ -9,6 +9,9 @@ const REGION = process.env.AWS_REGION || "us-west-2";
 
 // Core projects table
 const PROJECTS_TABLE = process.env.PROJECTS_TABLE || "Projects";
+// GSIs for project visibility and team membership
+const PROJECTS_VISIBILITY_INDEX = process.env.PROJECTS_VISIBILITY_INDEX || "visibility-index";
+const PROJECTS_TEAMUSERIDS_INDEX = process.env.PROJECTS_TEAMUSERIDS_INDEX || "teamUserIds-index";
 
 // Tasks & Events
 const TASKS_TABLE   = process.env.TASKS_TABLE   || "Tasks";
@@ -68,24 +71,33 @@ const listProjects = async (e, C) => {
   const q = Q(e);
   const limit = Math.min(parseInt(q.limit || "50", 10), 200);
 
-  const filters = [];
-  const names = {};
-  const values = {};
-  if (q.ownerId) { names["#ownerId"] = "ownerId"; values[":ownerId"] = q.ownerId; filters.push("#ownerId = :ownerId"); }
-  if (q.status)  { names["#status"]  = "status";  values[":status"]  = q.status;  filters.push("#status = :status"); }
+  const authorizer = e?.requestContext?.authorizer || {};
+  const userId = authorizer.userId;
+  const role = authorizer.role;
 
-  if (filters.length === 0 && !SCANS_ALLOWED) {
-    return json(400, C, { error: "Provide a filter (ownerId/status) or enable SCANS_ALLOWED=true" });
+  let params;
+  if (role === "admin") {
+    params = {
+      TableName: PROJECTS_TABLE,
+      IndexName: PROJECTS_VISIBILITY_INDEX,
+      KeyConditionExpression: "#visibility = :v",
+      ExpressionAttributeNames: { "#visibility": "visibility" },
+      ExpressionAttributeValues: { ":v": "admin" },
+      Limit: limit,
+    };
+  } else {
+    if (!userId) return json(400, C, { error: "Missing userId" });
+    params = {
+      TableName: PROJECTS_TABLE,
+      IndexName: PROJECTS_TEAMUSERIDS_INDEX,
+      KeyConditionExpression: "#teamUserIds = :uid",
+      ExpressionAttributeNames: { "#teamUserIds": "teamUserIds" },
+      ExpressionAttributeValues: { ":uid": userId },
+      Limit: limit,
+    };
   }
 
-  const params = { TableName: PROJECTS_TABLE, Limit: limit };
-  if (filters.length) {
-    params.FilterExpression = filters.join(" AND ");
-    params.ExpressionAttributeNames = names;
-    params.ExpressionAttributeValues = values;
-  }
-
-  const r = await ddb.scan(params);
+  const r = await ddb.query(params);
   return json(200, C, {
     items: r.Items || [],
     count: r.Count ?? 0,
@@ -99,11 +111,15 @@ const createProject = async (e, C) => {
   const projectId = body.projectId || `P-${uuidv4()}`;
   const ts = nowISO();
 
+  const team = body.team || [];
+  const teamUserIds = body.teamUserIds || team.map((m) => m.userId).filter(Boolean);
   const item = {
     projectId,
     title: body.title || "",
     status: body.status || "new",
-    team: body.team || [],
+    team,
+    teamUserIds,
+    visibility: body.visibility || "admin",
     color: body.color,
     description: body.description,
     clientName: body.clientName,
@@ -151,35 +167,73 @@ const deleteProject = async (_e, C, { projectId }) => {
 
 /* ---------- Team (array on project) ---------- */
 const getTeam = async (_e, C, { projectId }) => {
-  const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId }, ProjectionExpression: "projectId, team" });
-  return json(200, C, { projectId, team: r.Item?.team || [] });
+  const r = await ddb.get({
+    TableName: PROJECTS_TABLE,
+    Key: { projectId },
+    ProjectionExpression: "projectId, team, teamUserIds",
+  });
+  return json(200, C, {
+    projectId,
+    team: r.Item?.team || [],
+    teamUserIds: r.Item?.teamUserIds || [],
+  });
 };
 
 const addTeam = async (e, C, { projectId }) => {
   const b = B(e);
   const members = Array.isArray(b) ? b : [b];
+  const current = await ddb.get({
+    TableName: PROJECTS_TABLE,
+    Key: { projectId },
+    ProjectionExpression: "team, teamUserIds",
+  });
+  const currTeam = current.Item?.team || [];
+  const currIds = current.Item?.teamUserIds || [];
+  const newTeam = currTeam.concat(members);
+  const newIds = Array.from(new Set(currIds.concat(members.map((m) => m.userId).filter(Boolean))));
   const r = await ddb.update({
     TableName: PROJECTS_TABLE,
     Key: { projectId },
-    UpdateExpression: "SET #team = list_append(if_not_exists(#team, :empty), :m), #updatedAt = :ts",
-    ExpressionAttributeNames: { "#team": "team", "#updatedAt": "updatedAt" },
-    ExpressionAttributeValues: { ":m": members, ":empty": [], ":ts": nowISO() },
+    UpdateExpression: "SET #team = :team, #teamUserIds = :ids, #updatedAt = :ts",
+    ExpressionAttributeNames: {
+      "#team": "team",
+      "#teamUserIds": "teamUserIds",
+      "#updatedAt": "updatedAt",
+    },
+    ExpressionAttributeValues: {
+      ":team": newTeam,
+      ":ids": newIds,
+      ":ts": nowISO(),
+    },
     ReturnValues: "ALL_NEW",
   });
-  return json(201, C, { projectId, team: r.Attributes.team || [] });
+  return json(201, C, {
+    projectId,
+    team: r.Attributes.team || [],
+    teamUserIds: r.Attributes.teamUserIds || [],
+  });
 };
 
 const removeTeam = async (_e, C, { projectId, userId }) => {
-  const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId }, ProjectionExpression: "team" });
+  const r = await ddb.get({
+    TableName: PROJECTS_TABLE,
+    Key: { projectId },
+    ProjectionExpression: "team, teamUserIds",
+  });
   const team = (r.Item?.team || []).filter((m) => m?.userId !== userId);
+  const teamUserIds = (r.Item?.teamUserIds || []).filter((id) => id !== userId);
   await ddb.update({
     TableName: PROJECTS_TABLE,
     Key: { projectId },
-    UpdateExpression: "SET #team = :team, #updatedAt = :ts",
-    ExpressionAttributeNames: { "#team": "team", "#updatedAt": "updatedAt" },
-    ExpressionAttributeValues: { ":team": team, ":ts": nowISO() },
+    UpdateExpression: "SET #team = :team, #teamUserIds = :ids, #updatedAt = :ts",
+    ExpressionAttributeNames: {
+      "#team": "team",
+      "#teamUserIds": "teamUserIds",
+      "#updatedAt": "updatedAt",
+    },
+    ExpressionAttributeValues: { ":team": team, ":ids": teamUserIds, ":ts": nowISO() },
   });
-  return json(200, C, { projectId, removedUserId: userId, team });
+  return json(200, C, { projectId, removedUserId: userId, team, teamUserIds });
 };
 
 /* ---------- Tasks (PK=projectId, SK=taskId) ---------- */

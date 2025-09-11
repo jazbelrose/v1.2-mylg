@@ -14,7 +14,7 @@ const PROJECTS_TABLE = process.env.PROJECTS_TABLE || "Projects";
 const USER_PROFILES_TABLE = process.env.USER_PROFILES_TABLE || "UserProfiles";
 // GSIs for project visibility and team membership
 const PROJECTS_VISIBILITY_INDEX = process.env.PROJECTS_VISIBILITY_INDEX || "visibility-index";
-const PROJECTS_TEAMUSERIDS_INDEX = process.env.PROJECTS_TEAMUSERIDS_INDEX || "teamUserIds-index";
+
 
 // Tasks & Events
 const TASKS_TABLE   = process.env.TASKS_TABLE   || "Tasks";

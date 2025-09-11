@@ -49,7 +49,7 @@ provider:
 functions:
   messagesRouter:
     # adjust if your file is not under src/
-    handler: src/router.handler
+    handler: router.handler
     layers:
       - ${cf:shared-layer-${sls:stage}.SharedUtilsLayerArn}
     events:

@@ -10,6 +10,9 @@ const REGION = process.env.AWS_REGION || "us-west-2";
 // Core projects table
 const PROJECTS_TABLE = process.env.PROJECTS_TABLE || "Projects";
 
+// User profiles table (for project lookup by userId)
+const USER_PROFILES_TABLE = process.env.USER_PROFILES_TABLE || "UserProfiles";
+
 // Tasks & Events
 const TASKS_TABLE   = process.env.TASKS_TABLE   || "Tasks";
 const EVENTS_TABLE  = process.env.EVENTS_TABLE  || "Events";
@@ -67,6 +70,31 @@ const health = async (_e, C) => json(200, C, { ok: true, domain: "projects" });
 const listProjects = async (e, C) => {
   const q = Q(e);
   const limit = Math.min(parseInt(q.limit || "50", 10), 200);
+
+  // If a userId is provided, fetch the user's project list and batch-get projects
+  if (q.userId) {
+    const u = await ddb.get({
+      TableName: USER_PROFILES_TABLE,
+      Key: { userId: q.userId },
+      ProjectionExpression: "projects",
+    });
+    const ids = Array.isArray(u.Item?.projects) ? u.Item.projects.slice(0, limit) : [];
+    if (!ids.length) {
+      return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
+    }
+    const chunks = [];
+    for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
+    const items = [];
+    for (const ch of chunks) {
+      const r = await ddb.batchGet({
+        RequestItems: {
+          [PROJECTS_TABLE]: { Keys: ch.map((projectId) => ({ projectId })) },
+        },
+      });
+      items.push(...(r.Responses?.[PROJECTS_TABLE] || []));
+    }
+    return json(200, C, { items, count: items.length, scannedCount: items.length, lastKey: null });
+  }
 
   const filters = [];
   const names = {};

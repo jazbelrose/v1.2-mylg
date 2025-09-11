@@ -27,6 +27,33 @@ const nowISO = () => new Date().toISOString();
 const lowerEmail = (s) => (s || "").toLowerCase().trim();
 const pendingKeyForEmail = (email) => `PENDING#${lowerEmail(email)}`;
 
+// Handle /user/{proxy} routes
+async function handleUserProxy(event, CORS, { proxy }) {
+  if (proxy === 'notifications') {
+    return await getUserNotifications(event, CORS);
+  }
+  // For other unknown user endpoints
+  return json(404, CORS, { error: `Unknown user endpoint: /user/${proxy}` });
+}
+
+// Get user notifications (proxy to messages service or implement locally)
+async function getUserNotifications(event, CORS) {
+  const q = Q(event);
+  const userId = q.userId;
+  
+  if (!userId) {
+    return json(400, CORS, { error: "userId query parameter required" });
+  }
+
+  // For now, return empty notifications array
+  // This can be implemented to fetch from NOTIFICATIONS_TABLE or proxy to messages service
+  return json(200, CORS, { 
+    userId, 
+    notifications: [],
+    message: "Notifications endpoint available - implement data fetching as needed"
+  });
+}
+
 function buildUpdate(obj) {
   const Names = {}, Values = {}, sets = [];
   for (const [k, v] of Object.entries(obj)) {
@@ -317,6 +344,7 @@ async function postProjectToUserId(event, C) {
 /* ---------- routes ---------- */
 const routes = [
   { M: "GET",    R: /^\/user\/health$/i,                                        H: health },
+  { M: "GET",    R: /^\/user\/(?<proxy>[^/]+)$/i,                               H: handleUserProxy },
 
   // user profiles
   { M: "GET",    R: /^\/userProfiles\/(?<userId>[^/]+)$/i,                      H: getUserProfile },

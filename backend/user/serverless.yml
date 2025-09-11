@@ -66,6 +66,9 @@ functions:
       - httpApi:
           path: /user/health
           method: ANY
+      - httpApi:
+          path: /user/{proxy+}
+          method: ANY
 
 package:
   patterns:

@@ -10,7 +10,6 @@ import React, {
 import { v4 as uuid } from "uuid";
 import pLimit from "../../shared/utils/pLimit";
 import { useAuth } from "./useAuth";
-import { useUser } from "./useUser";
 import {
   fetchProjectsFromApi,
   fetchProjectById,
@@ -27,7 +26,6 @@ import type { Project, TimelineEvent, Message } from "./DataProvider";
 
 export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
-  const { isAdmin } = useUser();
 
   const [userProjects, setUserProjects] = useState<Project[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -152,7 +150,7 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
       setIsLoading(true);
       try {
-        const dataItems = await fetchProjectsFromApi();
+        const dataItems = await fetchProjectsFromApi(userId);
         const limit = pLimit(3) as <T>(fn: () => Promise<T>) => Promise<T>;
 
         const withEvents = await Promise.all(
@@ -178,16 +176,7 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
         }
 
         setProjects(withIds);
-
-        if (isAdmin) {
-          setUserProjects(withIds);
-        } else {
-          const filtered = withIds.filter(
-            (project) =>
-              Array.isArray(project.team) && project.team.some((m) => m.userId === userId)
-          );
-          setUserProjects(filtered);
-        }
+        setUserProjects(withIds);
       } catch (error) {
         console.error("Error fetching projects:", error);
         setProjectsError(true);
@@ -195,7 +184,7 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
         setIsLoading(false);
       }
     },
-    [isAdmin, userId, ensureProjectsHaveEventIds]
+    [userId, ensureProjectsHaveEventIds]
   );
 
   useEffect(() => {

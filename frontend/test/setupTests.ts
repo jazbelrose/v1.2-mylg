@@ -108,6 +108,17 @@ vi.mock('@/app/contexts/DataProvider', () => ({
   DataProvider: ({ children }: { children: any }) => children,
 }));
 
+vi.mock('@/app/contexts/useUser', () => ({
+  useUser: vi.fn(() => ({
+    isAdmin: false,
+    isBuilder: false,
+    isDesigner: false,
+    isVendor: false,
+    isClient: false,
+    userId: 'test-user-id',
+  })),
+}));
+
 vi.mock('@/app/contexts/AuthContext', () => ({
   useAuth: vi.fn(() => ({
     user: { firstName: 'Test User', email: 'test@example.com' },

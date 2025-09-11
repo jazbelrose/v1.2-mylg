@@ -472,8 +472,10 @@ export async function updateUserRole(userId: string, role: string): Promise<User
 // Projects
 // ───────────────────────────────────────────────────────────────────────────────
 
-export async function fetchProjectsFromApi(): Promise<Project[]> {
-  const data = await apiFetch<MaybeItems<Project>>(`${PROJECTS_SERVICE_URL}/projects`);
+export async function fetchProjectsFromApi(userId: string): Promise<Project[]> {
+  if (!userId) return [];
+  const url = `${PROJECTS_SERVICE_URL}/projects?userId=${encodeURIComponent(userId)}`;
+  const data = await apiFetch<MaybeItems<Project>>(url);
   return extractItems<Project>(data);
 }
 

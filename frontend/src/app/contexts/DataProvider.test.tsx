@@ -66,7 +66,8 @@ import type { AuthContextValue } from './AuthContext';
 import React from 'react';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { DataProvider, useData } from './DataProvider';
+import DataProvider from './DataProvider';
+import { useData } from './useData';
 import type { TimelineEvent } from './DataProvider';
 
 const ErrProbe: React.FC = () => {

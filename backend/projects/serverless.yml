@@ -17,7 +17,6 @@ provider:
   timeout: 15
   stackName: ${self:custom.app}-${self:custom.ver}-${self:service}-${sls:stage}
   httpApi:
-    cors: true
     name: ${self:custom.app}-${self:custom.ver}-${self:service}-api-${sls:stage}
   tags:
     App: MYLG

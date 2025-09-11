@@ -1,6 +1,3 @@
-cors:
-  CORS_DEFAULT_ORIGIN: https://beta.mylg.studio
-
 # Load environment variables from .env.dev file
 useDotenv: true
 

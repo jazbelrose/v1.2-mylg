@@ -14,27 +14,6 @@ provider:
   memorySize: 256
   timeout: 15
   httpApi:
-    cors:
-      allowedOrigins:
-        - http://localhost:5173
-        - https://beta.mylg.studio
-        - https://mylg.studio
-      allowedHeaders:
-        - Content-Type
-        - Authorization
-        - X-Requested-With
-        - X-CSRF-Token
-        - X-Amz-Date
-        - X-Amz-Security-Token
-        - X-Amz-User-Agent
-      allowedMethods:
-        - GET
-        - POST
-        - PUT
-        - PATCH
-        - DELETE
-        - OPTIONS
-      allowCredentials: false
   environment:
     # Tables & shared config (CORS, etc.)
     ${self:custom.env}

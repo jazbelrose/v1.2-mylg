@@ -14,15 +14,9 @@ provider:
   memorySize: 256
   timeout: 15
   httpApi:
-    cors: true
   environment:
-    # ---- CORS
-    ALLOWED_ORIGINS: https://beta.mylg.studio,https://mylg.studio,http://localhost:3000
-    CORS_WILDCARD_HOSTS: mylg.studio
-    CORS_ALLOW_CREDENTIALS: "false"
-    CORS_DEFAULT_ORIGIN: https://beta.mylg.studio
-    # ---- Users & invites
-    USER_PROFILES_TABLE: UserProfiles
+    # Tables & shared config (CORS, etc.)
+    ${self:custom.env}
     # ---- Cognito (using existing us-west-2 user pool)
     COGNITO_USER_POOL_ID: us-west-2_EmStQTtG1
     COGNITO_USER_POOL_NAME: mylg-dev-users-west2

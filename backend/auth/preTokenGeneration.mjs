@@ -6,7 +6,9 @@ const tableName = process.env.USER_PROFILES_TABLE || 'UserProfiles';
 
 export const handler = async (event) => {
   console.log('PreTokenGeneration event:', JSON.stringify(event, null, 2));
-  const userId = event.request.userAttributes?.sub;
+  const userId =
+    event.request.userAttributes?.['custom:userId'] ||
+    event.request.userAttributes?.sub;
   let role = 'user';
 
   if (userId) {
@@ -19,7 +21,7 @@ export const handler = async (event) => {
       console.error('Error fetching user role:', err);
     }
   } else {
-    console.warn('No user sub in event.request.userAttributes');
+    console.warn('No user identifier in event.request.userAttributes');
   }
 
   event.response = event.response || {};

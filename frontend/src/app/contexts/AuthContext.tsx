@@ -50,7 +50,10 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
       const cognitoUserData = await amplifyGetCurrentUser();
       const role = (idToken.payload?.role as Role) ?? undefined;
-      const userId = (idToken.payload?.sub as string) ?? cognitoUserData?.username;
+      const userId =
+        (idToken.payload?.['custom:userId'] as string) ||
+        (idToken.payload?.sub as string) ||
+        cognitoUserData?.username;
 
       // For auth context, we only care about Cognito identity
       setIsAuthenticated(true);

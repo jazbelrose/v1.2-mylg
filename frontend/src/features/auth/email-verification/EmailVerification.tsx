@@ -82,8 +82,11 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({ registrationData,
           await signIn({ username: derivedEmail, password: registrationData.password });
           const session = await fetchAuthSession();
           const sub = session.tokens?.idToken?.payload?.sub as string | undefined;
+          const userId =
+            (session.tokens?.idToken?.payload?.['custom:userId'] as string | undefined) ||
+            sub;
           const { password: _unusedPassword, ...pendingData } = registrationData; // eslint-disable-line @typescript-eslint/no-unused-vars
-          const profileData = { ...pendingData, userId: sub, cognitoSub: sub };
+          const profileData = { ...pendingData, userId, cognitoSub: sub };
           await updateUserProfile(profileData);
           await validateAndSetUserSession();
         }
@@ -103,8 +106,11 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({ registrationData,
               await signIn({ username: derivedEmail, password: registrationData.password });
               const session = await fetchAuthSession();
               const sub = session.tokens?.idToken?.payload?.sub as string | undefined;
+              const userId =
+                (session.tokens?.idToken?.payload?.['custom:userId'] as string | undefined) ||
+                sub;
               const { password: _unusedPassword, ...pendingData } = registrationData; // eslint-disable-line @typescript-eslint/no-unused-vars
-              const profileData = { ...pendingData, userId: sub, cognitoSub: sub };
+              const profileData = { ...pendingData, userId, cognitoSub: sub };
               await updateUserProfile(profileData);
               await validateAndSetUserSession();
             } catch {

@@ -15,7 +15,7 @@ vi.mock('aws-amplify/auth', () => ({
   resendSignUpCode: vi.fn(),
   signIn: vi.fn(),
   fetchAuthSession: vi.fn().mockResolvedValue({
-    tokens: { idToken: { payload: { sub: 'sub123' } } },
+    tokens: { idToken: { payload: { sub: 'sub123', 'custom:userId': 'user123' } } },
   }),
 }));
 
@@ -47,7 +47,9 @@ describe('EmailVerification', () => {
   beforeEach(() => {
     mockedConfirmSignUp.mockResolvedValue({ isSignUpComplete: true });
     mockedFetchAuthSession.mockResolvedValue({
-      tokens: { idToken: { payload: { sub: 'sub123' } } },
+      tokens: {
+        idToken: { payload: { sub: 'sub123', 'custom:userId': 'user123' } },
+      },
     } as Awaited<ReturnType<typeof fetchAuthSession>>);
     mockedSignIn.mockResolvedValue({} as Awaited<ReturnType<typeof signIn>>);
   });

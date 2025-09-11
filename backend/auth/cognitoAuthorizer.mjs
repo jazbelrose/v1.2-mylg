@@ -85,7 +85,7 @@ export const handler = async (event) => {
         ],
       },
       context: {
-        userId: String(verified.sub),
+        userId: String(verified['custom:userId'] || verified.sub),
         email: String(verified.email),
         role: String(verified.role),
       },

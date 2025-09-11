@@ -35,6 +35,7 @@ provider:
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_PROFILES_TABLE}
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE}
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:NOTIFICATIONS_TABLE}
 
 functions:
   usersRouter:
@@ -72,6 +73,6 @@ functions:
 
 package:
   patterns:
-    - users/**        # include router + helpers under users/
+    - router.mjs      # include the main router file
     - '!**/*.map'
     - '!node_modules/.bin/**'

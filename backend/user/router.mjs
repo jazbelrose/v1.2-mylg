@@ -10,6 +10,7 @@ const USER_PROFILES_TABLE = process.env.USER_PROFILES_TABLE || "UserProfiles";
 const INVITES_TABLE = process.env.INVITES_TABLE || "ProjectInvitations";
 const INVITES_BY_SENDER_INDEX = process.env.INVITES_BY_SENDER_INDEX || "senderId-index";
 const INVITES_BY_RECIPIENT_INDEX = process.env.INVITES_BY_RECIPIENT_INDEX || "recipientId-index";
+const NOTIFICATIONS_TABLE = process.env.NOTIFICATIONS_TABLE || "Notifications";
 const SCANS_ALLOWED = (process.env.SCANS_ALLOWED || "true").toLowerCase() === "true";
 
 /* ---------- DDB ---------- */
@@ -41,17 +42,35 @@ async function getUserNotifications(event, CORS) {
   const q = Q(event);
   const userId = q.userId;
   
+  console.log("getUserNotifications called with userId:", userId);
+  console.log("NOTIFICATIONS_TABLE:", NOTIFICATIONS_TABLE);
+  
   if (!userId) {
     return json(400, CORS, { error: "userId query parameter required" });
   }
 
-  // For now, return empty notifications array
-  // This can be implemented to fetch from NOTIFICATIONS_TABLE or proxy to messages service
-  return json(200, CORS, { 
-    userId, 
-    notifications: [],
-    message: "Notifications endpoint available - implement data fetching as needed"
-  });
+  try {
+    // Query notifications for the user
+    const r = await ddb.query({
+      TableName: NOTIFICATIONS_TABLE,
+      KeyConditionExpression: "userId = :u",
+      ExpressionAttributeValues: { ":u": userId },
+      ScanIndexForward: false, // Most recent first
+      Limit: Math.min(parseInt(q.limit || "100", 10), 500),
+    });
+
+    console.log("Query result:", r);
+    
+    return json(200, CORS, { 
+      userId, 
+      notifications: r.Items || [],
+      count: r.Items?.length || 0,
+      version: "updated"
+    });
+  } catch (error) {
+    console.error("Error fetching user notifications:", error);
+    return json(500, CORS, { error: "Failed to fetch notifications", details: error.message });
+  }
 }
 
 function buildUpdate(obj) {

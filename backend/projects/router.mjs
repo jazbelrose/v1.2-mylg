@@ -75,8 +75,9 @@ const listProjects = async (e, C) => {
   const limit = Math.min(parseInt(q.limit || "50", 10), 200);
   
   const authorizer = e?.requestContext?.authorizer || {};
-  const userId = authorizer.userId;
-  const role = authorizer.role;
+  const jwtClaims = authorizer?.jwt?.claims || {};
+  const userId = jwtClaims['custom:userId'] || jwtClaims.sub;
+  const role = jwtClaims.role;
 
   // If a userId is provided in query AND user is not admin, fetch the user's project list
   if (q.userId && role !== "admin") {

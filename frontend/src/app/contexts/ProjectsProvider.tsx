@@ -204,7 +204,11 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
       }
       let project = projects.find((p) => p.projectId === projectId);
 
-      if (!project || !Array.isArray(project.team)) {
+      if (
+        !project ||
+        !Array.isArray(project.team) ||
+        project.description === undefined
+      ) {
         try {
           const fetched = (await fetchProjectById(projectId)) as Project | undefined;
           if (fetched) {
@@ -255,6 +259,11 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
           }
         }
         setActiveProject(patched);
+        try {
+          localStorage.setItem(`project-${projectId}`, JSON.stringify(patched));
+        } catch {
+          /* ignore */
+        }
       } else {
         console.error(`Project with projectId: ${projectId} not found`);
         setActiveProject(null);

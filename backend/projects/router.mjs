@@ -2,6 +2,7 @@
 import { corsHeadersFromEvent, preflightFromEvent, json } from "/opt/nodejs/utils/cors.mjs";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 
 /* ------------ ENV ------------ */
@@ -344,7 +345,11 @@ const createProject = async (e, C) => {
 
 const getProject = async (_e, C, { projectId }) => {
   const r = await ddb.get({ TableName: PROJECTS_TABLE, Key: { projectId } });
-  return json(200, C, r.Item || null);
+  if (!r.Item) return json(200, C, null);
+  
+  // Explicitly unmarshall to ensure plain JSON format
+  const unmarshalledItem = unmarshall(r.Item);
+  return json(200, C, unmarshalledItem);
 };
 
 const patchProject = async (e, C, { projectId }) => {

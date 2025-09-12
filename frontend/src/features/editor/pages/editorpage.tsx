@@ -76,6 +76,12 @@ const EditorPage: React.FC = () => {
   }, [projectSlug, projects, initialActiveProject, navigate, fetchProjectDetails]);
 
   useEffect(() => {
+    if (activeProject?.projectId && activeProject.description === undefined) {
+      fetchProjectDetails(activeProject.projectId);
+    }
+  }, [activeProject?.projectId, activeProject?.description, fetchProjectDetails]);
+
+  useEffect(() => {
     if (!ws || !activeProject?.projectId) return;
     const payload = JSON.stringify({
       action: "setActiveConversation",
@@ -206,12 +212,16 @@ const EditorPage: React.FC = () => {
                       transition={{ duration: 0.3 }}
                     >
                       <div className="dashboard-layout" style={{ paddingBottom: "5px" }}>
-                        <LexicalEditor
-                          key={activeProject?.projectId}
-                          initialContent={activeProject.description || undefined}
-                          onChange={debouncedSaveDescription}
-                          registerToolbar={setBriefToolbarActions}
-                        />
+                        {activeProject?.description ? (
+                          <LexicalEditor
+                            key={activeProject.projectId}
+                            initialContent={activeProject.description}
+                            onChange={debouncedSaveDescription}
+                            registerToolbar={setBriefToolbarActions}
+                          />
+                        ) : (
+                          <div>Loading...</div>
+                        )}
                       </div>
                     </motion.div>
                   )}

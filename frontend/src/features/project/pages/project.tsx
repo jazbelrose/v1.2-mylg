@@ -115,10 +115,16 @@ const SingleProject: React.FC = () => {
   useEffect(() => {
     if (!activeProject?.projectId) return;
     const hasTeamArray = Array.isArray(activeProject.team);
-    if (!hasTeamArray) {
+    const hasDescription = typeof activeProject.description === "string";
+    if (!hasTeamArray || !hasDescription) {
       fetchProjectDetails(activeProject.projectId);
     }
-  }, [activeProject?.projectId, activeProject?.team, fetchProjectDetails]);
+  }, [
+    activeProject?.projectId,
+    activeProject?.team,
+    activeProject?.description,
+    fetchProjectDetails,
+  ]);
 
   // Subscribe this client to live updates for the active project's "conversation".
   useEffect(() => {

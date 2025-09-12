@@ -119,12 +119,21 @@ async function getUserProfile(_e, C, { userId }) {
   return json(200, C, withFirstNameFallback(r.Item) || null);
 }
 
-// GET /userProfiles?ids=a,b,c  (batch)  OR (dev) GET /userProfiles (scan)
+// GET /userProfiles?ids=a,b,c  (batch)  OR (dev/admin) GET /userProfiles (scan)
 async function getUserProfiles(event, C) {
+  const authorizer = event?.requestContext?.authorizer || {};
+  const jwtClaims = authorizer?.jwt?.claims || {};
+  const role = jwtClaims.role;
+  
   const ids = (Q(event).ids || "").split(",").map((s) => s.trim()).filter(Boolean);
   if (ids.length) {
     const users = await batchGetUsersByIds(ids);
     return json(200, C, { Items: users.map(withFirstNameFallback) });
+  }
+  // Allow admins to scan all users
+  if (role === "admin") {
+    const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });
+    return json(200, C, { Items: (r.Items || []).map(withFirstNameFallback) });
   }
   if (!SCANS_ALLOWED) return json(400, C, { error: "ids required (comma-separated)" });
   const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });

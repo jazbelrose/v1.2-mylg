@@ -402,43 +402,54 @@ const DesignerComponent = forwardRef<DesignerRef, DesignerComponentProps>(
 
       const loadCanvas = async () => {
         setLoadingCanvas(true);
+        const fabricCanvas = fabricCanvasRef.current;
         try {
-          let jsonString: string | null = null;
+          // Start with any canvas JSON already on the active project as a fallback
+          let jsonString: string | null = activeProject?.canvasJson ?? null;
 
           if (activeProject?.projectId) {
             const apiUrl = `${EDIT_PROJECT_URL}?projectId=${activeProject.projectId}`;
             console.debug('Loading canvas from:', apiUrl);
-            // apiFetch returns parsed JSON; will throw for non-2xx
-            const data: { canvasJson?: string } = await apiFetch(apiUrl);
-            jsonString = data?.canvasJson ?? null;
-            setActiveProject((prev: Project | null) =>
-              prev ? { ...prev, canvasJson: jsonString } : prev
-            );
+            try {
+              // apiFetch returns parsed JSON; will throw for non-2xx
+              const data: { canvasJson?: string } = await apiFetch(apiUrl);
+              jsonString = data?.canvasJson ?? jsonString;
+              setActiveProject((prev: Project | null) =>
+                prev ? { ...prev, canvasJson: jsonString ?? undefined } : prev
+              );
+            } catch (e) {
+              // Network or server errors shouldn't wipe existing canvas data
+              console.error('Canvas fetch failed:', e);
+              notify(
+                'error',
+                'Failed to load canvas from server. Using local copy if available.'
+              );
+            }
           }
 
           if (jsonString) {
             let jsonObj: Record<string, unknown>;
             try {
               jsonObj =
-                typeof jsonString === "string" ? JSON.parse(jsonString) : jsonString;
+                typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
             } catch (e) {
-              console.error("Failed to parse canvas JSON:", e);
-              fabricCanvas.clear();
-              fabricCanvas.renderAll();
+              console.error('Failed to parse canvas JSON:', e);
+              fabricCanvas?.clear();
+              fabricCanvas?.renderAll();
               saveHistory();
               return;
             }
 
             if (
               jsonObj &&
-              Array.isArray(jsonObj.objects) &&
-              jsonObj.objects.length > 0
+              Array.isArray((jsonObj as { objects?: unknown[] }).objects) &&
+              (jsonObj as { objects: unknown[] }).objects.length > 0
             ) {
               isRestoringHistory.current = true;
               await new Promise<void>((resolve) => {
-                fabricCanvas.loadFromJSON(jsonObj, () => {
-                  fabricCanvas.renderAll();
-                  fabricCanvas.requestRenderAll();
+                fabricCanvas?.loadFromJSON(jsonObj, () => {
+                  fabricCanvas?.renderAll();
+                  fabricCanvas?.requestRenderAll();
                   resolve();
                 });
               });
@@ -447,36 +458,15 @@ const DesignerComponent = forwardRef<DesignerRef, DesignerComponentProps>(
               saveHistory();
             } else {
               // When there's no canvas data, just clear and render without waiting
-              fabricCanvas.clear();
-              fabricCanvas.renderAll();
+              fabricCanvas?.clear();
+              fabricCanvas?.renderAll();
               saveHistory();
             }
           } else {
-            fabricCanvas.clear();
-            fabricCanvas.renderAll();
+            fabricCanvas?.clear();
+            fabricCanvas?.renderAll();
             saveHistory();
           }
-        } catch (err: unknown) {
-          const error = err as { message?: string };
-          
-          // Provide more descriptive error messages based on error type
-          let errorMessage = "Failed to load canvas";
-          
-          if (error.message) {
-            if (error.message.includes('fetch')) {
-              errorMessage = "Failed to load canvas: Network connection error";
-            } else if (error.message.includes('SSL') || error.message.includes('certificate')) {
-              errorMessage = "Failed to load canvas: SSL/Certificate error";
-            } else if (error.message.includes('timeout')) {
-              errorMessage = "Failed to load canvas: Request timeout";
-            } else {
-              errorMessage = `Failed to load canvas: ${error.message}`;
-            }
-          }
-          
-          notify("error", errorMessage);
-          fabricCanvas.clear();
-          fabricCanvas.renderAll();
         } finally {
           setLoadingCanvas(false);
           isInitialLoad.current = false;

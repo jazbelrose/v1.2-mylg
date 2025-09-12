@@ -1,9 +1,48 @@
 import AWS from "aws-sdk";
+import jwt from "jsonwebtoken";
+import jwksClient from "jwks-rsa";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true });
 const apigw = new AWS.ApiGatewayManagementApi({
   endpoint: (process.env.WEBSOCKET_ENDPOINT || "").trim(),
 });
+
+// JWT validation setup
+const client = jwksClient({
+  jwksUri: "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_EmStQTtG1/.well-known/jwks.json",
+});
+
+async function getSigningKey(kid) {
+  return new Promise((resolve, reject) => {
+    client.getSigningKey(kid, (err, key) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(key.getPublicKey());
+      }
+    });
+  });
+}
+
+async function validateJWT(token) {
+  try {
+    const decoded = jwt.decode(token, { complete: true });
+    if (!decoded || !decoded.header.kid) {
+      throw new Error("Invalid JWT token");
+    }
+
+    const signingKey = await getSigningKey(decoded.header.kid);
+    const verified = jwt.verify(token, signingKey, {
+      issuer: "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_EmStQTtG1",
+      audience: "6f5f1vsm5bejjaffihc3e0n95k",
+    });
+
+    return verified;
+  } catch (error) {
+    console.error("JWT validation failed:", error.message);
+    throw error;
+  }
+}
 
 async function broadcastPresence(userId, online, excludeConnectionId) {
   if (!process.env.CONNECTIONS_TABLE) return;
@@ -90,16 +129,53 @@ async function sendPresenceSnapshot(connectionId) {
 
 
 export const handler = async (event) => {
-console.log("🚀 onConnect triggered");
+  console.log("🚀 onConnect triggered");
 
   const connectionId = event?.requestContext?.connectionId;
-  const auth = event?.requestContext?.authorizer || {};
-  const userId = auth.userId;
 
   // Normalize headers to lowercase
   const H = Object.fromEntries(
-    Object.entries(event.headers || {}).map(([k, v]) => [k.toLowerCase(), v])
+    Object.entries(event?.headers || {}).map(([k, v]) => [k.toLowerCase(), v])
   );
+
+  let userId = null;
+  let role = null;
+
+  // Validate JWT token
+  try {
+    // For WebSocket, token comes from Sec-WebSocket-Protocol header
+    const rawProto =
+      H["sec-websocket-protocol"] ||
+      (Array.isArray(MV["sec-websocket-protocol"])
+        ? MV["sec-websocket-protocol"][0]
+        : "") ||
+      "";
+    
+    const parts = rawProto
+      .split(",")
+      .map((s) => s && s.trim())
+      .filter(Boolean);
+    const token = parts[0] || ""; // first subprotocol is JWT token
+    
+    if (!token) {
+      throw new Error("No JWT token in subprotocol");
+    }
+
+    const decoded = await validateJWT(token);
+
+    userId = decoded["custom:userId"] || decoded.sub;
+    role = decoded.role || "user";
+
+    console.log("✅ JWT validated for user:", userId, "role:", role);
+  } catch (error) {
+    console.error("❌ JWT validation failed:", error.message);
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ error: "Unauthorized" }),
+    };
+  }
+
+  // Continue with the rest of the connection logic
   const MV = Object.fromEntries(
     Object.entries(event.multiValueHeaders || {}).map(([k, v]) => [
       k.toLowerCase(),
@@ -119,14 +195,13 @@ console.log("🚀 onConnect triggered");
     .split(",")
     .map((s) => s && s.trim())
     .filter(Boolean);
-  const token = parts[0] || ""; // first subprotocol offered
   const sessionId = parts[1] || ""; // second subprotocol offered
-  const selected = token || undefined; // echo EXACTLY ONE back
+  const selected = parts[0] || undefined; // echo EXACTLY ONE back (the token)
 
   const safeLog = {
     connectionId,
     userId,
-    role: auth.role,
+    role: role,
     stage: event?.requestContext?.stage,
     sourceIp: event?.requestContext?.identity?.sourceIp,
     userAgent: event?.requestContext?.identity?.userAgent,

@@ -807,9 +807,9 @@ export async function deleteBudgetItem(projectId: string, budgetItemId: string):
 
 export async function fetchPendingInvites(userId: string): Promise<Invite[]> {
   if (!userId) return [];
-  const url = `${PROJECT_INVITES_URL}?userId=${encodeURIComponent(userId)}`;
-  const data = await apiFetch<MaybeItems<Invite>>(url);
-  return extractItems<Invite>(data);
+  const url = `${COLLAB_INVITES_BASE_URL}/incoming?userId=${encodeURIComponent(userId)}`;
+  const data = await apiFetch<{ userId: string; invites: Invite[] }>(url);
+  return data.invites || [];
 }
 
 export async function sendProjectInvite(projectId: string, recipientUsername: string): Promise<Invite> {

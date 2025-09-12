@@ -7,12 +7,15 @@
  * Side effects: manages real-time messaging, notifications, connection state
  */
 
-import AWS from "aws-sdk";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, PutCommand, UpdateCommand, DeleteCommand, QueryCommand, GetCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 import { randomUUID } from "crypto";
 import { v4 as uuid } from "uuid";
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
-const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+const dynamoClient = new DynamoDBClient({});
+const dynamoDb = DynamoDBDocumentClient.from(dynamoClient);
+const apigwManagementApi = new ApiGatewayManagementApiClient({
   endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
 const inboxTable = process.env.INBOX_TABLE;
@@ -126,7 +129,7 @@ const handleSetActiveConversation = async (event, payload) => {
 
 const broadcastToConversation = async (conversationId, payload) => {
   try {
-    const data = await dynamoDb.scan({ TableName: process.env.CONNECTIONS_TABLE }).promise();
+    const data = await dynamoDb.send(new ScanCommand({ TableName: process.env.CONNECTIONS_TABLE }));
     const connections = data.Items || [];
 
     const convIdTrim = String(conversationId || "").trim();
@@ -173,10 +176,10 @@ async function handlePresenceLookup(event) {
   const connectionId = event?.requestContext?.connectionId;
   if (!connectionId) return;
 
-  const r = await dynamoDb.scan({
+  const r = await dynamoDb.send(new ScanCommand({
     TableName: process.env.CONNECTIONS_TABLE,
     ProjectionExpression: "userId",
-  }).promise();
+  }));
 
   const users = Array.from(
     new Set((r.Items || []).map(i => i.userId).filter(Boolean))
@@ -190,16 +193,16 @@ async function handlePresenceLookup(event) {
 
   console.log("📤 Sending snapshot via presenceLookup to", connectionId, "with users:", users);
 
-  await apigwManagementApi.postToConnection({
+  await apigwManagementApi.send(new PostToConnectionCommand({
     ConnectionId: connectionId,
     Data: JSON.stringify(payload),
-  }).promise();
+  }));
 }
 
 
 async function broadcastToUser(userId, payload) {
   try {
-    const data = await dynamoDb.scan({ TableName: process.env.CONNECTIONS_TABLE }).promise();
+    const data = await dynamoDb.send(new ScanCommand({ TableName: process.env.CONNECTIONS_TABLE }));
     const userConns = (data.Items || [])
       .filter((c) => c.userId === userId)
       .map((c) => c.connectionId);
@@ -263,7 +266,7 @@ async function saveNotification(userId, message, dedupeId, timestamp, senderId, 
       projectId,
     };
 
-    await dynamoDb.put({ TableName: notificationsTable, Item: item }).promise();
+    await dynamoDb.send(new PutCommand({ TableName: notificationsTable, Item: item }));
 
     console.log("📨 [saveNotification] About to broadcast:", {
       userId,
@@ -333,7 +336,7 @@ async function deleteNotificationsByDedupeId(dedupeId) {
 
     while (deleteRequests.length) {
       const batch = deleteRequests.splice(0, 25);
-      await dynamoDb.batchWrite({ RequestItems: { [notificationsTable]: batch } }).promise();
+      await dynamoDb.send(new BatchWriteCommand({ RequestItems: { [notificationsTable]: batch } }));
     }
 
     console.log(`✅ Deleted ${Items.length} notifications for dedupeId=${dedupeId}`);
@@ -383,7 +386,7 @@ const handleSendMessage = async (payload) => {
   }
 
   try {
-    await dynamoDb.put({ TableName: tableName, Item: messageItem }).promise();
+    await dynamoDb.send(new PutCommand({ TableName: tableName, Item: messageItem }));
     console.log("✅ Message saved to DB with GSI:", messageItem);
 
     if (conversationType === "dm" && inboxTable) {
@@ -414,8 +417,8 @@ const handleSendMessage = async (payload) => {
       };
 
       await Promise.all([
-        dynamoDb.update(threadUpdateSender).promise(),
-        dynamoDb.update(threadUpdateRecipient).promise(),
+        dynamoDb.send(new UpdateCommand(threadUpdateSender)),
+        dynamoDb.send(new UpdateCommand(threadUpdateRecipient)),
       ]);
       console.log("✅ Threads updated");
     }
@@ -473,7 +476,7 @@ const handleMarkRead = async ({ conversationType, conversationId, userId, read, 
           ...(lastMsgTs ? { ":ts": lastMsgTs } : {}),
         },
       };
-      await dynamoDb.update(params).promise();
+      await dynamoDb.send(new UpdateCommand(params));
     } catch (err) {
       console.error("❌ Failed to update read status:", err);
     }
@@ -570,7 +573,7 @@ const handleToggleReaction = async (payload) => {
 
   let item;
   try {
-    const res = await dynamoDb.get({ TableName: tableName, Key: key }).promise();
+    const res = await dynamoDb.send(new GetCommand({ TableName: tableName, Key: key }));
     item = res.Item;
     if (!item) return { statusCode: 404, body: "Message not found" };
   } catch (err) {

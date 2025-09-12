@@ -1,7 +1,10 @@
-import AWS from "aws-sdk";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, QueryCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true });
-const apigw = new AWS.ApiGatewayManagementApi({
+const dynamoClient = new DynamoDBClient({});
+const dynamoDb = DynamoDBDocumentClient.from(dynamoClient);
+const apigw = new ApiGatewayManagementApiClient({
   endpoint: (process.env.WEBSOCKET_ENDPOINT || "").trim(),
 });
 
@@ -14,11 +17,11 @@ const USER_GSI = (process.env.CONNECTIONS_USER_GSI || "userId-sessionId-index").
 async function listAllConnectionIds() {
   let lastKey, ids = [];
   do {
-    const r = await dynamoDb.scan({
+    const r = await dynamoDb.send(new ScanCommand({
       TableName: CONNECTIONS_TABLE,
       ProjectionExpression: "connectionId",
       ExclusiveStartKey: lastKey,
-    }).promise();
+    }));
     ids.push(...(r.Items || []).map(i => i.connectionId));
     lastKey = r.LastEvaluatedKey;
   } while (lastKey);
@@ -32,11 +35,10 @@ async function fanoutPresence(userId, online) {
 
   await Promise.allSettled(
     ids.map((cid) =>
-      apigw.postToConnection({ ConnectionId: cid, Data: JSON.stringify(payload) })
-        .promise()
+      apigw.send(new PostToConnectionCommand({ ConnectionId: cid, Data: JSON.stringify(payload) }))
         .catch(async (e) => {
           if (e?.statusCode === 410) {
-            try { await dynamoDb.delete({ TableName: CONNECTIONS_TABLE, Key: { connectionId: cid } }).promise(); } catch {}
+            try { await dynamoDb.send(new DeleteCommand({ TableName: CONNECTIONS_TABLE, Key: { connectionId: cid } })); } catch {}
           } else {
             console.error("postToConnection error", { cid, msg: e?.message });
           }
@@ -49,14 +51,14 @@ async function fanoutPresence(userId, online) {
 async function userHasAnotherSession(userId) {
   // NOTE: GSIs are eventually consistent. For your “de-complexified” plan we accept that.
   // We only fetch up to 2 to decide “only” vs “multiple”.
-  const r = await dynamoDb.query({
+  const r = await dynamoDb.send(new QueryCommand({
     TableName: CONNECTIONS_TABLE,
     IndexName: USER_GSI,                  // PK: userId (SK: sessionId or connectionId)
     KeyConditionExpression: "userId = :u",
     ExpressionAttributeValues: { ":u": userId },
     ProjectionExpression: "connectionId",
     Limit: 2,
-  }).promise();
+  }));
 
   const n = (r.Items || []).length;
   if (n >= 2) return true;   // multiple
@@ -79,11 +81,11 @@ export const handler = async (event) => {
   // 1) Strongly-consistent Get on the base table (learn userId even if item vanishes later)
   let userId;
   try {
-    const got = await dynamoDb.get({
+    const got = await dynamoDb.send(new GetCommand({
       TableName: CONNECTIONS_TABLE,
       Key: { connectionId },
       ConsistentRead: true,
-    }).promise();
+    }));
     userId = got?.Item?.userId;
   } catch (e) {
     console.warn("⚠️ GetItem failed:", e?.message);
@@ -91,7 +93,7 @@ export const handler = async (event) => {
 
   if (!userId) {
     // Nothing to broadcast without a user; just ensure the row is gone and exit.
-    try { await dynamoDb.delete({ TableName: CONNECTIONS_TABLE, Key: { connectionId } }).promise(); } catch {}
+    try { await dynamoDb.send(new DeleteCommand({ TableName: CONNECTIONS_TABLE, Key: { connectionId } })); } catch {}
     console.log("ℹ️ No userId resolved; deleted row if present; skipping broadcast.");
     return { statusCode: 200, body: "Disconnected (no user resolved)." };
   }
@@ -109,7 +111,7 @@ export const handler = async (event) => {
   if (hasAnother) {
     // 3A) Multiple sessions: delete this connection row, skip broadcast
     try {
-      await dynamoDb.delete({ TableName: CONNECTIONS_TABLE, Key: { connectionId } }).promise();
+      await dynamoDb.send(new DeleteCommand({ TableName: CONNECTIONS_TABLE, Key: { connectionId } }));
       console.log(`✅ Deleted ${connectionId}; other sessions remain for user ${userId}.`);
     } catch (e) {
       console.error("❌ Delete failed (multiple sessions case):", e?.message);
@@ -126,7 +128,7 @@ export const handler = async (event) => {
     }
 
     try {
-      await dynamoDb.delete({ TableName: CONNECTIONS_TABLE, Key: { connectionId } }).promise();
+      await dynamoDb.send(new DeleteCommand({ TableName: CONNECTIONS_TABLE, Key: { connectionId } }));
       console.log(`✅ Deleted ${connectionId}; user ${userId} now offline.`);
     } catch (e) {
       console.error("❌ Delete failed after broadcast:", e?.message);

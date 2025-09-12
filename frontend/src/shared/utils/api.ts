@@ -180,7 +180,7 @@ const BASE_ENDPOINTS = {
     
     // External services (unchanged)
     NOMINATIM_SEARCH_URL: 'https://nominatim.openstreetmap.org/search?format=json&q=',
-    S3_PUBLIC_BASE: 'https://mylguserdata194416-dev.s3.us-west-1.amazonaws.com/public',
+    S3_PUBLIC_BASE: 'https://mylg-files-v12.s3.us-west-2.amazonaws.com/',
     
     // Legacy endpoints that may need special handling or removal
     NEWSLETTER_SUBSCRIBE_URL: 'https://jmmn5p5yhe.execute-api.us-west-1.amazonaws.com/default/notifyNewSubscriber',

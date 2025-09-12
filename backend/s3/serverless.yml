@@ -1,0 +1,74 @@
+service: s3
+frameworkVersion: '3'
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-west-2
+  stage: ${opt:stage, 'dev'}
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: mylg-files-v12
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - HEAD
+              AllowedOrigins:
+                - "https://beta.mylg.studio"
+                - "https://mylg.studio"
+                - "http://localhost:3000"
+                - "http://localhost:5173"
+              MaxAge: 3000
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: ObjectWriter
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+
+    S3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref S3Bucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource: !Sub "arn:aws:s3:::mylg-files-v12/*"
+            - Sid: PublicListBucket
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:ListBucket
+              Resource: !Sub "arn:aws:s3:::mylg-files-v12"
+
+  Outputs:
+    S3BucketName:
+      Value: !Ref S3Bucket
+      Export:
+        Name: s3-bucket-name-${self:provider.stage}
+    S3BucketArn:
+      Value: !GetAtt S3Bucket.Arn
+      Export:
+        Name: s3-bucket-arn-${self:provider.stage}

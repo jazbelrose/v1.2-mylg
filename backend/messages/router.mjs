@@ -235,7 +235,10 @@ const deleteMessage = async (e, C, { messageId }) => {
 };
 
 /* Project-scoped messages: PROJECT_MESSAGES_TABLE (PK=projectId, SK=messageId) */
-const listProjectMessages = async (_e, C, { projectId }) => {
+const listProjectMessages = async (e, C, { projectId }) => {
+  projectId = projectId || Q(e).projectId;
+  if (!projectId) return json(400, C, { error: "projectId required" });
+
   const r = await ddb.query({
     TableName: PROJECT_MESSAGES_TABLE,
     KeyConditionExpression: "projectId = :p",
@@ -383,6 +386,9 @@ const routes = [
   // v1.1 compat alias:
   { m: "PATCH", r: /^\/messages\/messages\/(?<messageId>[^/]+)$/i,         h: patchMessage },
   { m: "DELETE",r: /^\/messages\/messages\/(?<messageId>[^/]+)$/i,         h: deleteMessage },
+
+  // project messages (query param)
+  { m: "GET",   r: /^\/messages$/i,                                        h: listProjectMessages },
 
   // project-scoped
   { m: "GET",   r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: listProjectMessages },

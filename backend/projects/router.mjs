@@ -81,6 +81,16 @@ const listProjects = async (e, C) => {
   const jwtClaims = authorizer?.jwt?.claims || {};
   const userId = jwtClaims['custom:userId'] || jwtClaims.sub;
   
+  console.log('JWT Claims Debug:', {
+    authorizerKeys: Object.keys(authorizer),
+    jwtKeys: authorizer?.jwt ? Object.keys(authorizer.jwt) : null,
+    claimsKeys: Object.keys(jwtClaims),
+    fullClaims: jwtClaims,
+    userId,
+    customUserId: jwtClaims['custom:userId'],
+    sub: jwtClaims.sub
+  });
+  
   // Check for admin role in various possible locations
   const role = jwtClaims.role || 
                jwtClaims['custom:role'] || 

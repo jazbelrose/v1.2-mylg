@@ -5,33 +5,31 @@ const dynamo = DynamoDBDocument.from(new DynamoDB());
 const tableName = process.env.USER_PROFILES_TABLE || 'UserProfiles';
 
 export const handler = async (event) => {
-  console.log('PreTokenGeneration event:', JSON.stringify(event, null, 2));
-  const userId =
-    event.request.userAttributes?.['custom:userId'] ||
-    event.request.userAttributes?.sub;
-  let role = 'user';
+  console.log("PreTokenGeneration event:", JSON.stringify(event, null, 2));
 
-  if (userId) {
-    try {
-      const res = await dynamo.get({ TableName: tableName, Key: { userId } });
-      if (res.Item && res.Item.role) {
-        role = res.Item.role;
+  const userId = event.request.userAttributes["custom:userId"];
+  const role = "admin"; // or look it up dynamically like you’re already doing
+
+  console.log("Final claims to add:", { role, "custom:userId": userId });
+
+  event.response = {
+    claimsOverrideDetails: {
+      // ID token
+      claimsToAddOrOverride: {
+        role,
+        "custom:userId": userId
       }
-    } catch (err) {
-      console.error('Error fetching user role:', err);
+    },
+    claimsAndScopeOverrideDetails: {
+      // Access token
+      accessTokenGeneration: {
+        claimsToAddOrOverride: {
+          role,
+          "custom:userId": userId
+        }
+      }
     }
-  } else {
-    console.warn('No user identifier in event.request.userAttributes');
-  }
-
-  event.response = event.response || {};
-  event.response.claimsOverrideDetails = event.response.claimsOverrideDetails || {};
-  const CLAIM_KEY = 'role';
-  event.response.claimsOverrideDetails.claimsToAddOrOverride = {
-    ...(event.response.claimsOverrideDetails.claimsToAddOrOverride || {}),
-    [CLAIM_KEY]: role,
   };
 
-  console.log('Modified event:', JSON.stringify(event, null, 2));
   return event;
 };

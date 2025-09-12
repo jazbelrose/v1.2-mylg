@@ -137,11 +137,11 @@ const DesignerComponent = forwardRef<DesignerRef, DesignerComponentProps>(
         }
         try {
           const canvasJson = JSON.stringify(fabricCanvas.toJSON());
-          const apiUrl = `${EDIT_PROJECT_URL}?projectId=${activeProject.projectId}`;
+          const apiUrl = `${EDIT_PROJECT_URL}/${activeProject.projectId}`;
           // apiFetch returns parsed JSON or {} on empty; errors throw.
           console.debug('Saving canvas to:', apiUrl);
           await apiFetch(apiUrl, {
-            method: "PUT",
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ canvasJson }),
           });
@@ -233,7 +233,7 @@ const DesignerComponent = forwardRef<DesignerRef, DesignerComponentProps>(
         if (fabricCanvasRef.current && activeProject?.projectId) {
           const canvasJson = JSON.stringify(fabricCanvasRef.current.toJSON());
           navigator.sendBeacon(
-            `${EDIT_PROJECT_URL}?projectId=${activeProject.projectId}`,
+            `${EDIT_PROJECT_URL}/${activeProject.projectId}`,
             JSON.stringify({ canvasJson })
           );
         }
@@ -408,7 +408,7 @@ const DesignerComponent = forwardRef<DesignerRef, DesignerComponentProps>(
           let jsonString: string | null = activeProject?.canvasJson ?? null;
 
           if (activeProject?.projectId) {
-            const apiUrl = `${EDIT_PROJECT_URL}?projectId=${activeProject.projectId}`;
+            const apiUrl = `${EDIT_PROJECT_URL}/${activeProject.projectId}`;
             console.debug('Loading canvas from:', apiUrl);
             try {
               // apiFetch returns parsed JSON; will throw for non-2xx

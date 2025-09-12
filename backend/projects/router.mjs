@@ -73,9 +73,13 @@ const health = async (_e, C) => json(200, C, { ok: true, domain: "projects" });
 const listProjects = async (e, C) => {
   const q = Q(e);
   const limit = Math.min(parseInt(q.limit || "50", 10), 200);
+  
+  const authorizer = e?.requestContext?.authorizer || {};
+  const userId = authorizer.userId;
+  const role = authorizer.role;
 
-  // If a userId is provided, fetch the user's project list and batch-get projects
-  if (q.userId) {
+  // If a userId is provided in query AND user is not admin, fetch the user's project list
+  if (q.userId && role !== "admin") {
     const u = await ddb.get({
       TableName: USER_PROFILES_TABLE,
       Key: { userId: q.userId },
@@ -99,67 +103,62 @@ const listProjects = async (e, C) => {
     return json(200, C, { items, count: items.length, scannedCount: items.length, lastKey: null });
   }
 
-  const authorizer = e?.requestContext?.authorizer || {};
-  const userId = authorizer.userId;
-  const role = authorizer.role;
-
-  let params;
+  // Admin users can see all projects
   if (role === "admin") {
-    params = {
+    const startKey = q.lastKey ? JSON.parse(q.lastKey) : undefined;
+    
+    const scanResult = await ddb.scan({
       TableName: PROJECTS_TABLE,
-      IndexName: PROJECTS_VISIBILITY_INDEX,
-      KeyConditionExpression: "#visibility = :v",
-      ExpressionAttributeNames: { "#visibility": "visibility" },
-      ExpressionAttributeValues: { ":v": "admin" },
       Limit: limit,
-    };
-  } else {
-    if (!userId) return json(400, C, { error: "Missing userId" });
-    
-    // Fetch user's project IDs from their profile
-    const u = await ddb.get({
-      TableName: USER_PROFILES_TABLE,
-      Key: { userId },
-      ProjectionExpression: "projects",
+      ExclusiveStartKey: startKey,
     });
-    const projectIds = Array.isArray(u.Item?.projects) ? u.Item.projects.slice(0, limit) : [];
     
-    if (!projectIds.length) {
-      return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
-    }
-    
-    // Batch get the projects
-    const chunks = [];
-    for (let i = 0; i < projectIds.length; i += 100) {
-      chunks.push(projectIds.slice(i, i + 100));
-    }
-    
-    const items = [];
-    for (const chunk of chunks) {
-      const r = await ddb.batchGet({
-        RequestItems: {
-          [PROJECTS_TABLE]: { 
-            Keys: chunk.map((projectId) => ({ projectId })) 
-          },
-        },
-      });
-      items.push(...(r.Responses?.[PROJECTS_TABLE] || []));
-    }
-    
-    return json(200, C, { 
-      items, 
-      count: items.length, 
-      scannedCount: items.length, 
-      lastKey: null 
+    return json(200, C, {
+      items: scanResult.Items || [],
+      count: scanResult.Count ?? 0,
+      scannedCount: scanResult.ScannedCount ?? 0,
+      lastKey: scanResult.LastEvaluatedKey ? JSON.stringify(scanResult.LastEvaluatedKey) : null,
     });
   }
-
-  const r = await ddb.query(params);
-  return json(200, C, {
-    items: r.Items || [],
-    count: r.Count ?? 0,
-    scannedCount: r.ScannedCount ?? 0,
-    lastKey: r.LastEvaluatedKey || null,
+  
+  // Non-admin users see only their assigned projects
+  if (!userId) return json(400, C, { error: "Missing userId" });
+  
+  // Fetch user's project IDs from their profile
+  const u = await ddb.get({
+    TableName: USER_PROFILES_TABLE,
+    Key: { userId },
+    ProjectionExpression: "projects",
+  });
+  const projectIds = Array.isArray(u.Item?.projects) ? u.Item.projects.slice(0, limit) : [];
+  
+  if (!projectIds.length) {
+    return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
+  }
+  
+  // Batch get the projects
+  const chunks = [];
+  for (let i = 0; i < projectIds.length; i += 100) {
+    chunks.push(projectIds.slice(i, i + 100));
+  }
+  
+  const items = [];
+  for (const chunk of chunks) {
+    const r = await ddb.batchGet({
+      RequestItems: {
+        [PROJECTS_TABLE]: { 
+          Keys: chunk.map((projectId) => ({ projectId })) 
+        },
+      },
+    });
+    items.push(...(r.Responses?.[PROJECTS_TABLE] || []));
+  }
+  
+  return json(200, C, { 
+    items, 
+    count: items.length, 
+    scannedCount: items.length, 
+    lastKey: null 
   });
 };
 

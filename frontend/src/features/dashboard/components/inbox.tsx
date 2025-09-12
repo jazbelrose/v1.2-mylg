@@ -24,12 +24,13 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
     if (!userId) return;
     try {
       // ✅ apiFetch already returns parsed JSON — no res.json()
-      const data = await apiFetch(
+      const data = await apiFetch<Thread[] | { inbox?: Thread[] }>(
         `${MESSAGES_INBOX_URL}?userId=${encodeURIComponent(userId)}`
       );
       // Optional: sanity check in dev
       console.debug("[Inbox] fetched threads:", data);
-      setDmThreads(Array.isArray(data) ? (data as Thread[]) : []);
+      const threads = Array.isArray(data) ? data : data?.inbox || [];
+      setDmThreads(threads as Thread[]);
     } catch (err) {
       console.error("❌ inbox refresh failed", err);
       setDmThreads([]); // keep UI consistent on error

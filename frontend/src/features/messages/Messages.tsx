@@ -446,34 +446,47 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
       setIsLoading(true);
       setErrorMessage("");
       try {
-        const data = await apiFetch<DMMessage[]>(
-          `${MESSAGES_THREADS_URL}/${encodeURIComponent(selectedConversation)}`
+        const data = await apiFetch<
+          DMMessage[] | { messages?: DMMessage[] } | { Items?: DMMessage[] } | { items?: DMMessage[] }
+        >(
+          `${MESSAGES_THREADS_URL}/${encodeURIComponent(selectedConversation)}/messages`
         );
 
-        if (Array.isArray(data)) {
-          const readData = data
-            .filter(
-              (m) =>
-                !(
-                  deletedMessageIds.has(m.messageId || "") ||
-                  deletedMessageIds.has(m.optimisticId || "")
-                )
-            )
-            .map((m) => ({ ...m, read: true }));
-          const uniqueData = dedupeById(readData);
-          setWithTTL(msgKey(selectedConversation), uniqueData);
+        const arr = Array.isArray(data)
+          ? data
+          : Array.isArray((data as { messages?: DMMessage[] }).messages)
+          ? (data as { messages?: DMMessage[] }).messages!
+          : Array.isArray((data as { Items?: DMMessage[] }).Items)
+          ? (data as { Items?: DMMessage[] }).Items!
+          : Array.isArray((data as { items?: DMMessage[] }).items)
+          ? (data as { items?: DMMessage[] }).items!
+          : [];
 
-          setUserData((prev) => {
-            const prevMsgs = Array.isArray(prev.messages) ? prev.messages : [];
-            const others = prevMsgs.filter((m) => m.conversationId !== selectedConversation);
-            const merged = mergeAndDedupeMessages(others, uniqueData);
-            return { ...prev, messages: merged };
-          });
-
-          markConversationAsRead(selectedConversation);
-        } else {
+        if (!Array.isArray(arr)) {
           console.warn("Unexpected DM payload:", data);
+          return;
         }
+
+        const readData = arr
+          .filter(
+            (m) =>
+              !(
+                deletedMessageIds.has(m.messageId || "") ||
+                deletedMessageIds.has(m.optimisticId || "")
+              )
+          )
+          .map((m) => ({ ...m, read: true }));
+        const uniqueData = dedupeById(readData);
+        setWithTTL(msgKey(selectedConversation), uniqueData);
+
+        setUserData((prev) => {
+          const prevMsgs = Array.isArray(prev.messages) ? prev.messages : [];
+          const others = prevMsgs.filter((m) => m.conversationId !== selectedConversation);
+          const merged = mergeAndDedupeMessages(others, uniqueData);
+          return { ...prev, messages: merged };
+        });
+
+        markConversationAsRead(selectedConversation);
       } catch (error) {
         console.error("Error fetching messages:", error);
         setErrorMessage("Failed to load messages.");
@@ -825,9 +838,12 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
 
       // delete from store/server (defensive for Response vs JSON)
       if (message.messageId) {
-        const url =
-          `${MESSAGES_THREADS_URL}/${encodeURIComponent(selectedConversation)}/${encodeURIComponent(message.messageId)}`;
-        const res = await apiFetch<{ success?: boolean }>(url, { method: "DELETE" });
+        const url = `${EDIT_MESSAGE_URL}/${encodeURIComponent(
+          message.messageId
+        )}?conversationId=${encodeURIComponent(selectedConversation)}`;
+        const res = await apiFetch<{ success?: boolean }>(url, {
+          method: "DELETE",
+        });
         // Since apiFetch parses JSON and throws on error, res should be the success data
         console.log("Delete successful:", res);
       }
@@ -893,7 +909,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
 
     try {
       const res = await apiFetch<{ success?: boolean }>(
-        `${EDIT_MESSAGE_URL}/direct/${encodeURIComponent(message.messageId)}`,
+        `${EDIT_MESSAGE_URL}/${encodeURIComponent(message.messageId)}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

@@ -422,15 +422,16 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
             attempt > 0 ? { skipRateLimit: true } : undefined
           );
 
-          // Accept array, {items}, or {Items}
-          const items =
-            Array.isArray(data)
-              ? data
-              : Array.isArray((data as { items?: Message[] })?.items)
-              ? (data as { items?: Message[] }).items
-              : Array.isArray((data as { Items?: Message[] })?.Items)
-              ? (data as { Items?: Message[] }).Items
-              : [];
+          // Accept array or various wrapper shapes
+          const items = Array.isArray(data)
+            ? data
+            : Array.isArray((data as { messages?: Message[] })?.messages)
+            ? (data as { messages?: Message[] }).messages!
+            : Array.isArray((data as { items?: Message[] })?.items)
+            ? (data as { items?: Message[] }).items!
+            : Array.isArray((data as { Items?: Message[] })?.Items)
+            ? (data as { Items?: Message[] }).Items!
+            : [];
 
           const filtered = items.filter(
             (m: Message) =>

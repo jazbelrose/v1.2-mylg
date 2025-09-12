@@ -90,10 +90,13 @@ export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
     if (!userId) return;
     const fetchThreads = async () => {
       try {
-        const data = await apiFetch<Thread[] | unknown>(
+        const data = await apiFetch<Thread[] | { inbox?: Thread[] } | unknown>(
           `${MESSAGES_INBOX_URL}?userId=${encodeURIComponent(userId)}`
         );
-        setDmThreads(Array.isArray(data) ? (data as Thread[]) : []);
+        const threads = Array.isArray(data)
+          ? data
+          : (data as { inbox?: Thread[] })?.inbox || [];
+        setDmThreads(threads as Thread[]);
       } catch (err) {
         console.error("Failed to fetch threads", err);
       }

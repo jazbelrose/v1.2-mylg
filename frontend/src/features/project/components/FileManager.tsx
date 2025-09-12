@@ -762,13 +762,6 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
             // Add public/ prefix since files are stored in public/ but Amplify keys don't include it
             const fullKey = key.startsWith('public/') ? key : `public/${key}`;
             const url = `${S3_PUBLIC_BASE}${encodeS3Key(fullKey)}`;
-            console.log("📂 [FileManager] Debug:", { 
-              originalKey: key, 
-              fullKey: fullKey,
-              encodedKey: encodeS3Key(fullKey),
-              finalUrl: url,
-              fileName: name 
-            });
             return {
               fileName: name,
               url,

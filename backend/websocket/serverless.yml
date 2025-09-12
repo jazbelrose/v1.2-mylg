@@ -13,6 +13,15 @@ provider:
   stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
+  websocketsApiName: ${self:service}-${sls:stage}
+  websocketsApiRouteSelectionExpression: $request.body.action
+  websocketsAuthorizers:
+    jwtAuthorizer:
+      type: jwt
+      identitySource: $request.header.Authorization
+      issuerUrl: https://cognito-idp.us-west-2.amazonaws.com/us-west-2_EmStQTtG1
+      audience:
+        - 6f5f1vsm5bejjaffihc3e0n95k
   environment:
     # ---- CORS
     ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS}
@@ -54,6 +63,8 @@ functions:
     events:
       - websocket:
           route: $connect
+          authorizer:
+            name: jwtAuthorizer
   onDisconnect:
     handler: onDisconnect.handler
     events:

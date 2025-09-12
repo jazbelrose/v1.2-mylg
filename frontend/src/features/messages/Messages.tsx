@@ -442,7 +442,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
       });
     }
 
-    const fetchMessages = async () => {
+const fetchMessages = async () => {
       setIsLoading(true);
       setErrorMessage("");
       try {
@@ -836,7 +836,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
         }
       }
 
-      // delete from store/server (defensive for Response vs JSON)
+ // delete from store/server (defensive for Response vs JSON)
       if (message.messageId) {
         const url = `${EDIT_MESSAGE_URL}/${encodeURIComponent(
           message.messageId

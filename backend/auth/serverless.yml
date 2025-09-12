@@ -13,15 +13,40 @@ provider:
   stage: ${opt:stage, 'dev'}
   memorySize: 256
   timeout: 15
-  httpApi:
+  httpApi: {} 
   environment:
-    # Tables & shared config (CORS, etc.)
-    ${self:custom.env}
-    # ---- Cognito (using existing us-west-2 user pool)
-    COGNITO_USER_POOL_ID: us-west-2_EmStQTtG1
-    COGNITO_USER_POOL_NAME: mylg-dev-users-west2
-    COGNITO_USER_CLIENT_ID: 6f5f1vsm5bejjaffihc3e0n95k
-
+    # Tables & shared config (CORS, etc.) - imported from common
+    USER_PROFILES_TABLE: ${self:custom.env.USER_PROFILES_TABLE}
+    INVITES_TABLE: ${self:custom.env.INVITES_TABLE}
+    INVITES_BY_SENDER_INDEX: ${self:custom.env.INVITES_BY_SENDER_INDEX}
+    INVITES_BY_RECIPIENT_INDEX: ${self:custom.env.INVITES_BY_RECIPIENT_INDEX}
+    INBOX_TABLE: ${self:custom.env.INBOX_TABLE}
+    MESSAGES_TABLE: ${self:custom.env.MESSAGES_TABLE}
+    PROJECT_MESSAGES_TABLE: ${self:custom.env.PROJECT_MESSAGES_TABLE}
+    NOTIFICATIONS_TABLE: ${self:custom.env.NOTIFICATIONS_TABLE}
+    NOTIFICATIONS_BY_USER_INDEX: ${self:custom.env.NOTIFICATIONS_BY_USER_INDEX}
+    PROJECTS_TABLE: ${self:custom.env.PROJECTS_TABLE}
+    PROJECTS_VISIBILITY_INDEX: ${self:custom.env.PROJECTS_VISIBILITY_INDEX}
+    PROJECTS_TEAMUSERIDS_INDEX: ${self:custom.env.PROJECTS_TEAMUSERIDS_INDEX}
+    TASKS_TABLE: ${self:custom.env.TASKS_TABLE}
+    EVENTS_TABLE: ${self:custom.env.EVENTS_TABLE}
+    EVENTS_STARTAT_INDEX: ${self:custom.env.EVENTS_STARTAT_INDEX}
+    BUDGETS_TABLE: ${self:custom.env.BUDGETS_TABLE}
+    BUDGET_ID_INDEX: ${self:custom.env.BUDGET_ID_INDEX}
+    BUDGET_ITEM_ID_INDEX: ${self:custom.env.BUDGET_ITEM_ID_INDEX}
+    GALLERIES_TABLE: ${self:custom.env.GALLERIES_TABLE}
+    GALLERIES_PROJECT_GSI: ${self:custom.env.GALLERIES_PROJECT_GSI}
+    CONNECTIONS_TABLE: ${self:custom.env.CONNECTIONS_TABLE}
+    CONNECTIONS_USER_GSI: ${self:custom.env.CONNECTIONS_USER_GSI}
+    ALLOWED_ORIGINS: ${self:custom.env.ALLOWED_ORIGINS}
+    CORS_WILDCARD_HOSTS: ${self:custom.env.CORS_WILDCARD_HOSTS}
+    CORS_ALLOW_CREDENTIALS: ${self:custom.env.CORS_ALLOW_CREDENTIALS}
+    CORS_DEFAULT_ORIGIN: ${self:custom.env.CORS_DEFAULT_ORIGIN}
+    SCANS_ALLOWED: ${self:custom.env.SCANS_ALLOWED}
+    # ---- Cognito (separate from common - loaded from .env file)
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+    COGNITO_USER_POOL_NAME: ${env:COGNITO_USER_POOL_NAME}
+    COGNITO_USER_CLIENT_ID: ${env:COGNITO_USER_CLIENT_ID}
   iam:
     role:
       statements:

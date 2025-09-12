@@ -82,7 +82,7 @@ if (typeof document !== "undefined") {
 const encodeS3Key = (key: string = "") =>
   key
     .split("/")
-    .map((segment) => encodeURIComponent(segment))
+    .map((segment) => encodeURIComponent(segment).replace(/\+/g, '%20'))
     .join("/");
 
 const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
@@ -757,10 +757,21 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
           .flatMap((res: { items?: unknown[] }) => res?.items || [])
           .filter((item: unknown) => (item as { key?: string }).key && !(item as { key?: string }).key!.endsWith("/"))
           .map((item: unknown) => {
-            const name: string = (item as { key: string }).key.split("/").pop()!;
+            const key = (item as { key: string }).key;
+            const name: string = key.split("/").pop()!;
+            // Add public/ prefix since files are stored in public/ but Amplify keys don't include it
+            const fullKey = key.startsWith('public/') ? key : `public/${key}`;
+            const url = `${S3_PUBLIC_BASE}${encodeS3Key(fullKey)}`;
+            console.log("📂 [FileManager] Debug:", { 
+              originalKey: key, 
+              fullKey: fullKey,
+              encodedKey: encodeS3Key(fullKey),
+              finalUrl: url,
+              fileName: name 
+            });
             return {
               fileName: name,
-              url: `${S3_PUBLIC_BASE}/${encodeS3Key((item as { key: string }).key)}`,
+              url,
               lastModified: (item as { lastModified?: string | Date }).lastModified ? new Date((item as { lastModified?: string | Date }).lastModified!).getTime() : 0,
               kind: getFileKind(name),
             };

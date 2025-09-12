@@ -1,9 +1,12 @@
-import AWS from "aws-sdk";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand, DeleteCommand, QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 import jwt from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true });
-const apigw = new AWS.ApiGatewayManagementApi({
+const dynamoClient = new DynamoDBClient({});
+const dynamoDb = DynamoDBDocumentClient.from(dynamoClient);
+const apigw = new ApiGatewayManagementApiClient({
   endpoint: (process.env.WEBSOCKET_ENDPOINT || "").trim(),
 });
 
@@ -55,13 +58,11 @@ async function broadcastPresence(userId, online, excludeConnectionId) {
 
   let lastKey;
   do {
-    const r = await dynamoDb
-      .scan({
-        TableName: process.env.CONNECTIONS_TABLE,
-        ProjectionExpression: "connectionId",
-        ExclusiveStartKey: lastKey,
-      })
-      .promise();
+    const r = await dynamoDb.send(new ScanCommand({
+      TableName: process.env.CONNECTIONS_TABLE,
+      ProjectionExpression: "connectionId",
+      ExclusiveStartKey: lastKey,
+    }));
 
     const ids = (r.Items || [])
       .map((i) => i.connectionId)
@@ -72,19 +73,15 @@ async function broadcastPresence(userId, online, excludeConnectionId) {
 
     await Promise.allSettled(
       ids.map((id) =>
-        apigw
-          .postToConnection({ ConnectionId: id, Data: JSON.stringify(payload) })
-          .promise()
+        apigw.send(new PostToConnectionCommand({ ConnectionId: id, Data: JSON.stringify(payload) }))
           .catch(async (e) => {
             if (e && e.statusCode === 410) {
               console.warn("💀 Stale connection", id, "removing...");
               try {
-                await dynamoDb
-                  .delete({
-                    TableName: process.env.CONNECTIONS_TABLE,
-                    Key: { connectionId: id },
-                  })
-                  .promise();
+                await dynamoDb.send(new DeleteCommand({
+                  TableName: process.env.CONNECTIONS_TABLE,
+                  Key: { connectionId: id },
+                }));
               } catch {}
             } else {
               console.error("postToConnection error", { id, msg: e && e.message });
@@ -99,12 +96,10 @@ async function broadcastPresence(userId, online, excludeConnectionId) {
 async function sendPresenceSnapshot(connectionId) {
   if (!process.env.CONNECTIONS_TABLE) return;
   try {
-    const r = await dynamoDb
-      .scan({
-        TableName: process.env.CONNECTIONS_TABLE,
-        ProjectionExpression: "userId",
-      })
-      .promise();
+    const r = await dynamoDb.send(new ScanCommand({
+      TableName: process.env.CONNECTIONS_TABLE,
+      ProjectionExpression: "userId",
+    }));
 
     const users = Array.from(new Set((r.Items || []).map((i) => i.userId).filter(Boolean)));
     const payload = {
@@ -116,12 +111,10 @@ async function sendPresenceSnapshot(connectionId) {
     // 🔎 add this log here
     console.log("📤 Sending snapshot to", connectionId, "with users:", users);
 
-    await apigw
-      .postToConnection({
-        ConnectionId: connectionId,
-        Data: JSON.stringify(payload),
-      })
-      .promise();
+    await apigw.send(new PostToConnectionCommand({
+      ConnectionId: connectionId,
+      Data: JSON.stringify(payload),
+    }));
   } catch (e) {
     console.error("sendPresenceSnapshot error", { connectionId, msg: e && e.message });
   }
@@ -217,24 +210,20 @@ export const handler = async (event) => {
   try {
     // 1) OPTIONAL: prune only duplicates for the same (userId, sessionId)
     if (sessionId) {
-      const dup = await dynamoDb
-        .query({
-          TableName: process.env.CONNECTIONS_TABLE,
-          IndexName: "userId-sessionId-index",
-          KeyConditionExpression: "userId = :u AND sessionId = :s",
-          ExpressionAttributeValues: { ":u": userId, ":s": sessionId },
-        })
-        .promise();
+      const dup = await dynamoDb.send(new QueryCommand({
+        TableName: process.env.CONNECTIONS_TABLE,
+        IndexName: "userId-sessionId-index",
+        KeyConditionExpression: "userId = :u AND sessionId = :s",
+        ExpressionAttributeValues: { ":u": userId, ":s": sessionId },
+      }));
 
       if (dup.Items?.length) {
         await Promise.all(
           dup.Items.map((conn) =>
-            dynamoDb
-              .delete({
-                TableName: process.env.CONNECTIONS_TABLE,
-                Key: { connectionId: conn.connectionId },
-              })
-              .promise()
+            dynamoDb.send(new DeleteCommand({
+              TableName: process.env.CONNECTIONS_TABLE,
+              Key: { connectionId: conn.connectionId },
+            }))
           )
         );
       }
@@ -249,13 +238,11 @@ export const handler = async (event) => {
     };
     if (sessionId) item.sessionId = sessionId;
 
-    await dynamoDb
-      .put({
-        TableName: process.env.CONNECTIONS_TABLE,
-        Item: item,
-        ConditionExpression: "attribute_not_exists(connectionId)", // only write if not present
-      })
-      .promise();
+    await dynamoDb.send(new PutCommand({
+      TableName: process.env.CONNECTIONS_TABLE,
+      Item: item,
+      ConditionExpression: "attribute_not_exists(connectionId)", // only write if not present
+    }));
 
     console.log(
       `✅ Connection ${connectionId} saved for user ${userId} (session: ${

@@ -14,6 +14,13 @@ provider:
   memorySize: 256
   timeout: 15
   httpApi:
+    authorizers:
+      jwtAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.us-west-2.amazonaws.com/us-west-2_EmStQTtG1
+        audience:
+          - 6f5f1vsm5bejjaffihc3e0n95k
   environment:
     # Tables & shared config (CORS, etc.)
     ${self:custom.env}
@@ -55,13 +62,69 @@ functions:
     events:
       - httpApi:
           path: /messages
-          method: ANY
+          method: GET
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /messages
+          method: POST
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /messages
+          method: PUT
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /messages
+          method: PATCH
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /messages
+          method: DELETE
+          authorizer:
+            name: jwtAuthorizer
       - httpApi:
           path: /messages/{proxy+}
-          method: ANY
+          method: GET
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /messages/{proxy+}
+          method: POST
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /messages/{proxy+}
+          method: PUT
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /messages/{proxy+}
+          method: PATCH
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /messages/{proxy+}
+          method: DELETE
+          authorizer:
+            name: jwtAuthorizer
       - httpApi:
           path: /messages/health
-          method: ANY
+          method: GET
+          authorizer:
+            name: jwtAuthorizer
+      # CORS preflight requests (OPTIONS) should not require authorization
+      - httpApi:
+          path: /messages
+          method: OPTIONS
+      - httpApi:
+          path: /messages/{proxy+}
+          method: OPTIONS
+      - httpApi:
+          path: /messages/health
+          method: OPTIONS
 
 package:
   patterns:

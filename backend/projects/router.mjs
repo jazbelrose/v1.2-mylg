@@ -106,20 +106,36 @@ const listProjects = async (e, C) => {
 
   // Admin users can see all projects
   if (role === "admin") {
-    const startKey = q.lastKey ? JSON.parse(q.lastKey) : undefined;
-    
-    const scanResult = await ddb.scan({
-      TableName: PROJECTS_TABLE,
-      Limit: limit,
-      ExclusiveStartKey: startKey,
-    });
-    
-    return json(200, C, {
-      items: scanResult.Items || [],
-      count: scanResult.Count ?? 0,
-      scannedCount: scanResult.ScannedCount ?? 0,
-      lastKey: scanResult.LastEvaluatedKey ? JSON.stringify(scanResult.LastEvaluatedKey) : null,
-    });
+    try {
+      const startKey = q.lastKey ? JSON.parse(q.lastKey) : undefined;
+
+      const scanResult = await ddb.scan({
+        TableName: PROJECTS_TABLE,
+        Limit: limit,
+        ExclusiveStartKey: startKey,
+      });
+
+      return json(200, C, {
+        items: scanResult.Items || [],
+        count: scanResult.Count ?? 0,
+        scannedCount: scanResult.ScannedCount ?? 0,
+        lastKey: scanResult.LastEvaluatedKey ? JSON.stringify(scanResult.LastEvaluatedKey) : null,
+      });
+    } catch (error) {
+      console.error('Admin scan error:', error);
+      // If scan fails due to throttling, return empty result instead of error
+      if (error.name === 'ProvisionedThroughputExceededException') {
+        console.warn('Scan throttled, returning empty result for admin');
+        return json(200, C, {
+          items: [],
+          count: 0,
+          scannedCount: 0,
+          lastKey: null,
+          warning: 'Scan temporarily unavailable due to high load'
+        });
+      }
+      throw error; // Re-throw other errors
+    }
   }
   
   // Non-admin users see only their assigned projects

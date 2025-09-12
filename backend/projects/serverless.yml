@@ -52,6 +52,9 @@ provider:
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:PROJECTS_TABLE}
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:PROJECTS_TABLE}/index/*
 
+            # Project Directory (new table for listing)
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/ProjectDirectory
+
             # User profiles (project lookup by userId)
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_PROFILES_TABLE}
 

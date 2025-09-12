@@ -80,10 +80,24 @@ const listProjects = async (e, C) => {
   const authorizer = e?.requestContext?.authorizer || {};
   const jwtClaims = authorizer?.jwt?.claims || {};
   const userId = jwtClaims['custom:userId'] || jwtClaims.sub;
-  const role = jwtClaims.role;
+  
+  // Check for admin role in various possible locations
+  const role = jwtClaims.role || 
+               jwtClaims['custom:role'] || 
+               (jwtClaims['cognito:groups'] && jwtClaims['cognito:groups'].includes('admin') ? 'admin' : null) ||
+               (jwtClaims.groups && jwtClaims.groups.includes('admin') ? 'admin' : null);
+
+  console.log('Admin check:', {
+    userId,
+    role,
+    queryUserId: q.userId,
+    isAdmin: role === 'admin'
+  });
 
   // If a userId is provided in query AND user is not admin, fetch the user's project list
   if (q.userId && role !== "admin") {
+    console.log('Taking user-specific path for non-admin user');
+    // ... existing code ...
     const u = await ddb.get({
       TableName: USER_PROFILES_TABLE,
       Key: { userId: q.userId },
@@ -148,6 +162,8 @@ const listProjects = async (e, C) => {
 
   // Admin users can see all projects
   if (role === "admin") {
+    console.log('Taking admin path - should return all projects');
+    // ... existing code ...
     try {
       // Get all projects from the ProjectDirectory table
       const directoryResult = await ddb.get({
@@ -223,6 +239,7 @@ const listProjects = async (e, C) => {
   // Non-admin users see only their assigned projects
   if (!userId) return json(400, C, { error: "Missing userId" });
   
+  console.log('Taking fallback non-admin path');
   // Fetch user's project IDs from their profile
   const u = await ddb.get({
     TableName: USER_PROFILES_TABLE,

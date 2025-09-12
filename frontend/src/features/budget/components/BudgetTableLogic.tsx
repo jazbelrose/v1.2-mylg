@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faClone, faClock } from "@fortawesome/free-solid-svg-icons";
-import { Tooltip as AntTooltip } from "antd";
+import { Tooltip as AntTooltip, Table } from "antd";
 import { useBudget } from "@/features/budget/context/BudgetContext";
 import { formatUSD } from "../../../shared/utils/budgetUtils";
 import styles from "@/features/budget/pages/budget-page.module.css";
@@ -330,6 +330,7 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
       ),
       width: 60,
     });
+    cols.push(Table.EXPAND_COLUMN);
     return cols;
   }, [
     budgetItems,

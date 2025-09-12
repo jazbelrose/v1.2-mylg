@@ -4,6 +4,11 @@ import { ScrambleButton } from './ScrambleButton';
 import HomeHeader from '../../assets/svg/homeheader.svg?react';
 import './hero-section.css';
 
+// Wrapper component to forward ref to the SVG component
+const SvgHomeheader = React.forwardRef<SVGSVGElement>((props, ref) => (
+  <HomeHeader {...props} ref={ref} />
+));
+
 export const HeroSection: React.FC = () => {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -46,7 +51,7 @@ export const HeroSection: React.FC = () => {
   return (
     <div className="herosection-container">
       <div className="header-section" style={{ backgroundColor: '#0c0c0c', maxWidth: '1920px', margin: '0 auto' }}>
-        <HomeHeader ref={svgRef} />
+        <SvgHomeheader ref={svgRef} />
       </div>
       <div className="video-wrapper" style={{ maxWidth: '1920px', margin: '0 auto' }}>
         <div className="info-text">

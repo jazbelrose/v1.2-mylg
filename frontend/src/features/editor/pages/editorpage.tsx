@@ -75,11 +75,13 @@ const EditorPage: React.FC = () => {
     }
   }, [projectSlug, projects, initialActiveProject, navigate, fetchProjectDetails]);
 
+  const lastFetchedId = useRef<string | null>(null);
   useEffect(() => {
-    if (activeProject?.projectId && activeProject.description === undefined) {
+    if (activeProject?.projectId && lastFetchedId.current !== activeProject.projectId) {
+      lastFetchedId.current = activeProject.projectId;
       fetchProjectDetails(activeProject.projectId);
     }
-  }, [activeProject?.projectId, activeProject?.description, fetchProjectDetails]);
+  }, [activeProject?.projectId, fetchProjectDetails]);
 
   useEffect(() => {
     if (!ws || !activeProject?.projectId) return;

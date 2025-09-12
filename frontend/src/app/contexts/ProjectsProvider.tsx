@@ -178,8 +178,54 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
           return;
         }
 
-        setProjects(withIds);
-        setUserProjects(withIds);
+        const detailed = await Promise.all(
+          withIds.map(async (proj) => {
+            // Try to hydrate from localStorage first
+            if (proj.description === undefined) {
+              try {
+                const cached = localStorage.getItem(`project-${proj.projectId}`);
+                if (cached) {
+                  const parsed = JSON.parse(cached) as Project;
+                  if (parsed.description !== undefined) {
+                    return { ...proj, ...parsed } as Project;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+
+              // Fall back to deep fetch when not cached
+              try {
+                const fetched = (await fetchProjectById(proj.projectId)) as Project | undefined;
+                if (fetched) {
+                  const merged: Project = {
+                    ...proj,
+                    ...fetched,
+                    timelineEvents: proj.timelineEvents,
+                  };
+                  try {
+                    localStorage.setItem(`project-${proj.projectId}`, JSON.stringify(merged));
+                  } catch {
+                    /* ignore */
+                  }
+                  return merged;
+                }
+              } catch (err) {
+                console.error("Failed to fetch project details", err);
+              }
+            } else {
+              try {
+                localStorage.setItem(`project-${proj.projectId}`, JSON.stringify(proj));
+              } catch {
+                /* ignore */
+              }
+            }
+            return proj;
+          })
+        );
+
+        setProjects(detailed);
+        setUserProjects(detailed);
       } catch (error) {
         console.error("Error fetching projects:", error);
         setProjectsError(true);
@@ -203,6 +249,31 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
         return;
       }
       let project = projects.find((p) => p.projectId === projectId);
+
+      // Attempt to hydrate from localStorage when description is missing
+      if (project?.description === undefined) {
+        try {
+          const cached = localStorage.getItem(`project-${projectId}`);
+          if (cached) {
+            const parsed = JSON.parse(cached) as Project;
+            if (parsed.description !== undefined) {
+              project = { ...project, ...parsed } as Project;
+              setProjects((prev) => {
+                if (!Array.isArray(prev)) return prev;
+                const idx = prev.findIndex((p) => p.projectId === projectId);
+                if (idx !== -1) {
+                  const updated = [...prev];
+                  updated[idx] = project as Project;
+                  return updated;
+                }
+                return [...prev, project as Project];
+              });
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+      }
 
       if (
         !project ||

@@ -447,7 +447,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
       setErrorMessage("");
       try {
         const data = await apiFetch<DMMessage[]>(
-          `${MESSAGES_THREADS_URL}/${encodeURIComponent(selectedConversation)}`
+          `${MESSAGES_THREADS_URL}/${encodeURIComponent(selectedConversation)}/messages`
         );
 
         if (Array.isArray(data)) {

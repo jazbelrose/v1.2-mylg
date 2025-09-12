@@ -654,7 +654,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                   getPopupContainer={(trigger) => trigger.parentNode as HTMLElement}
                   value={assignForm.getFieldValue("budgetCode")}
                   onChange={(value) => assignForm.setFieldsValue({ budgetCode: value })}
-                  dropdownRender={(menu) => menu}
+                  popupRender={(menu) => menu}
                 />
               </Form.Item>
 

@@ -92,7 +92,6 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
             dataSource.length > 0
               ? {
                   expandedRowRender,
-                  expandIconColumnIndex: columns.length,
                   expandedRowOffset: groupBy === "none" ? 1 : 2,
                   expandedRowKeys,
                   onExpand: (expanded, record) => {

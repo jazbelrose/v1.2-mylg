@@ -150,7 +150,10 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
       setIsLoading(true);
       try {
+        console.log('Fetching projects for userId:', userId);
         const dataItems = await fetchProjectsFromApi(userId);
+        console.log('Received dataItems:', dataItems);
+        
         const limit = pLimit(3) as <T>(fn: () => Promise<T>) => Promise<T>;
 
         const withEvents = await Promise.all(

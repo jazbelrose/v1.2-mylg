@@ -100,8 +100,28 @@ const listProjects = async (e, C) => {
       Key: { directoryId: "1" },
     });
 
+    console.log('Directory result:', {
+      hasItem: !!directoryResult.Item,
+      hasProjects: !!(directoryResult.Item?.projects),
+      projectsCount: directoryResult.Item?.projects ? Object.keys(directoryResult.Item.projects).length : 0
+    });
+
     if (!directoryResult.Item || !directoryResult.Item.projects) {
-      return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
+      console.log('No projects found in directory, falling back to Projects table scan');
+      
+      // Fallback to old behavior for debugging
+      const scanResult = await ddb.scan({
+        TableName: PROJECTS_TABLE,
+        Limit: limit,
+      });
+      
+      console.log(`Fallback scan found ${scanResult.Items?.length || 0} projects`);
+      return json(200, C, {
+        items: scanResult.Items || [],
+        count: scanResult.Count ?? 0,
+        scannedCount: scanResult.ScannedCount ?? 0,
+        lastKey: null,
+      });
     }
 
       // Filter projects to only include those the user has access to
@@ -120,7 +140,10 @@ const listProjects = async (e, C) => {
           return null;
         })
         .filter(Boolean)
-        .slice(0, limit);    return json(200, C, { items: userProjects, count: userProjects.length, scannedCount: userProjects.length, lastKey: null });
+        .slice(0, limit);
+
+      console.log(`Returning ${userProjects.length} projects for user ${q.userId}`);
+      return json(200, C, { items: userProjects, count: userProjects.length, scannedCount: userProjects.length, lastKey: null });
   }
 
   // Admin users can see all projects
@@ -132,11 +155,26 @@ const listProjects = async (e, C) => {
         Key: { directoryId: "1" },
       });
 
+      console.log('Admin directory result:', {
+        hasItem: !!directoryResult.Item,
+        hasProjects: !!(directoryResult.Item?.projects),
+        projectsCount: directoryResult.Item?.projects ? Object.keys(directoryResult.Item.projects).length : 0
+      });
+
       if (!directoryResult.Item || !directoryResult.Item.projects) {
+        console.log('No projects found in directory for admin, falling back to Projects table scan');
+        
+        // Fallback to old behavior for debugging
+        const scanResult = await ddb.scan({
+          TableName: PROJECTS_TABLE,
+          Limit: limit,
+        });
+        
+        console.log(`Admin fallback scan found ${scanResult.Items?.length || 0} projects`);
         return json(200, C, {
-          items: [],
-          count: 0,
-          scannedCount: 0,
+          items: scanResult.Items || [],
+          count: scanResult.Count ?? 0,
+          scannedCount: scanResult.ScannedCount ?? 0,
           lastKey: null,
         });
       }
@@ -162,6 +200,7 @@ const listProjects = async (e, C) => {
         thumbnails: project.thumbnail ? [project.thumbnail] : [],
       }));
 
+      console.log(`Admin returning ${items.length} projects out of ${allProjects.length} total`);
       return json(200, C, {
         items,
         count: items.length,
@@ -202,11 +241,21 @@ const listProjects = async (e, C) => {
     Key: { directoryId: "1" },
   });
 
-  if (!directoryResult.Item || !directoryResult.Item.projects) {
-    return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
-  }
-
-  // Filter projects to only include those the user has access to
+    if (!directoryResult.Item || !directoryResult.Item.projects) {
+      console.log('No projects found in directory for user, falling back to Projects table');
+      
+      // Fallback to old behavior for debugging
+      const r = await ddb.batchGet({
+        RequestItems: {
+          [PROJECTS_TABLE]: { 
+            Keys: ids.map((projectId) => ({ projectId })) 
+          },
+        },
+      });
+      
+      console.log(`Fallback found ${r.Responses?.[PROJECTS_TABLE]?.length || 0} projects for user`);
+      return json(200, C, { items: r.Responses?.[PROJECTS_TABLE] || [], count: (r.Responses?.[PROJECTS_TABLE] || []).length, scannedCount: (r.Responses?.[PROJECTS_TABLE] || []).length, lastKey: null });
+    }  // Filter projects to only include those the user has access to
   const projectsMap = directoryResult.Item.projects;
   const userProjects = projectIds
     .map(projectId => {

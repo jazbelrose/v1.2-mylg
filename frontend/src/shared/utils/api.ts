@@ -475,10 +475,17 @@ export async function updateUserRole(userId: string, role: string): Promise<User
 // ───────────────────────────────────────────────────────────────────────────────
 
 export async function fetchProjectsFromApi(userId: string): Promise<Project[]> {
-  if (!userId) return [];
+  if (!userId) {
+    console.log('fetchProjectsFromApi: No userId provided');
+    return [];
+  }
   const url = `${PROJECTS_SERVICE_URL}/projects?userId=${encodeURIComponent(userId)}`;
+  console.log('fetchProjectsFromApi: Calling', url);
   const data = await apiFetch<MaybeItems<Project>>(url);
-  return extractItems<Project>(data);
+  console.log('fetchProjectsFromApi: Raw response data:', data);
+  const result = extractItems<Project>(data);
+  console.log('fetchProjectsFromApi: Extracted items:', result);
+  return result;
 }
 
 export async function fetchProjectById(projectId: string): Promise<Project | null> {

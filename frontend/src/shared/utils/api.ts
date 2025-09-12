@@ -248,10 +248,11 @@ export const {
 // Helpers
 // ───────────────────────────────────────────────────────────────────────────────
 
-/** Extracts array results from either `{ Items: T[] }`, `{ notifications: T[] }`, or `T[]`. */
+/** Extracts array results from either `{ Items: T[] }`, `{ items: T[] }`, `{ notifications: T[] }`, or `T[]`. */
 function extractItems<T>(data: MaybeItems<T> | JsonRecord): T[] {
   if (Array.isArray(data)) return data as T[];
   if ('Items' in (data as Record<string, unknown>) && Array.isArray((data as Record<string, unknown>).Items)) return (data as Record<string, unknown>).Items as T[];
+  if ('items' in (data as Record<string, unknown>) && Array.isArray((data as Record<string, unknown>).items)) return (data as Record<string, unknown>).items as T[];
   if ('notifications' in (data as Record<string, unknown>) && Array.isArray((data as Record<string, unknown>).notifications)) return (data as Record<string, unknown>).notifications as T[];
   return [];
 }

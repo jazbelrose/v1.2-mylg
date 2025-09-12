@@ -10,6 +10,9 @@ const REGION = process.env.AWS_REGION || "us-west-2";
 // Core projects table
 const PROJECTS_TABLE = process.env.PROJECTS_TABLE || "Projects";
 
+// Project directory table (contains all projects in a single item)
+const PROJECT_DIRECTORY_TABLE = process.env.PROJECT_DIRECTORY_TABLE || "ProjectDirectory";
+
 // User profiles table (for project lookup by userId)
 const USER_PROFILES_TABLE = process.env.USER_PROFILES_TABLE || "UserProfiles";
 // GSIs for project visibility and team membership
@@ -90,51 +93,91 @@ const listProjects = async (e, C) => {
     if (!ids.length) {
       return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
     }
-    const chunks = [];
-    for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
-    const items = [];
-    for (const ch of chunks) {
-      const r = await ddb.batchGet({
-        RequestItems: {
-          [PROJECTS_TABLE]: { Keys: ch.map((projectId) => ({ projectId })) },
-        },
-      });
-      items.push(...(r.Responses?.[PROJECTS_TABLE] || []));
+
+    // Get all projects from ProjectDirectory table
+    const directoryResult = await ddb.get({
+      TableName: PROJECT_DIRECTORY_TABLE,
+      Key: { directoryId: "1" },
+    });
+
+    if (!directoryResult.Item || !directoryResult.Item.projects) {
+      return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
     }
-    return json(200, C, { items, count: items.length, scannedCount: items.length, lastKey: null });
+
+      // Filter projects to only include those the user has access to
+      const projectsMap = directoryResult.Item.projects;
+      const userProjects = ids
+        .map(projectId => {
+          const projectData = projectsMap[projectId];
+          if (projectData) {
+            return {
+              projectId,
+              ...projectData,
+              // Convert thumbnail back to thumbnails for frontend compatibility
+              thumbnails: projectData.thumbnail ? [projectData.thumbnail] : [],
+            };
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .slice(0, limit);    return json(200, C, { items: userProjects, count: userProjects.length, scannedCount: userProjects.length, lastKey: null });
   }
 
   // Admin users can see all projects
   if (role === "admin") {
     try {
-      const startKey = q.lastKey ? JSON.parse(q.lastKey) : undefined;
-
-      const scanResult = await ddb.scan({
-        TableName: PROJECTS_TABLE,
-        Limit: limit,
-        ExclusiveStartKey: startKey,
+      // Get all projects from the ProjectDirectory table
+      const directoryResult = await ddb.get({
+        TableName: PROJECT_DIRECTORY_TABLE,
+        Key: { directoryId: "1" },
       });
 
-      return json(200, C, {
-        items: scanResult.Items || [],
-        count: scanResult.Count ?? 0,
-        scannedCount: scanResult.ScannedCount ?? 0,
-        lastKey: scanResult.LastEvaluatedKey ? JSON.stringify(scanResult.LastEvaluatedKey) : null,
-      });
-    } catch (error) {
-      console.error('Admin scan error:', error);
-      // If scan fails due to throttling, return empty result instead of error
-      if (error.name === 'ProvisionedThroughputExceededException') {
-        console.warn('Scan throttled, returning empty result for admin');
+      if (!directoryResult.Item || !directoryResult.Item.projects) {
         return json(200, C, {
           items: [],
           count: 0,
           scannedCount: 0,
           lastKey: null,
-          warning: 'Scan temporarily unavailable due to high load'
         });
       }
-      throw error; // Re-throw other errors
+
+      // Extract projects from the directory
+      const projectsMap = directoryResult.Item.projects;
+      const allProjects = Object.entries(projectsMap).map(([projectId, projectData]) => ({
+        projectId,
+        ...projectData,
+      }));
+
+      // Apply pagination
+      const startIndex = q.lastKey ? parseInt(q.lastKey) : 0;
+      const endIndex = startIndex + limit;
+      const paginatedProjects = allProjects.slice(startIndex, endIndex);
+
+      // Convert projects to expected format (add any missing fields from original Projects table if needed)
+      const items = paginatedProjects.map(project => ({
+        ...project,
+        // Ensure projectId is included (it should be from the map key)
+        projectId: project.projectId,
+        // Convert thumbnail back to thumbnails for frontend compatibility
+        thumbnails: project.thumbnail ? [project.thumbnail] : [],
+      }));
+
+      return json(200, C, {
+        items,
+        count: items.length,
+        scannedCount: allProjects.length, // Total count for scannedCount
+        lastKey: endIndex < allProjects.length ? endIndex.toString() : null,
+      });
+    } catch (error) {
+      console.error('Admin directory query error:', error);
+      // Return empty result on error
+      return json(200, C, {
+        items: [],
+        count: 0,
+        scannedCount: 0,
+        lastKey: null,
+        warning: 'Directory query temporarily unavailable'
+      });
     }
   }
   
@@ -153,28 +196,37 @@ const listProjects = async (e, C) => {
     return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
   }
   
-  // Batch get the projects
-  const chunks = [];
-  for (let i = 0; i < projectIds.length; i += 100) {
-    chunks.push(projectIds.slice(i, i + 100));
+  // Get all projects from ProjectDirectory table
+  const directoryResult = await ddb.get({
+    TableName: PROJECT_DIRECTORY_TABLE,
+    Key: { directoryId: "1" },
+  });
+
+  if (!directoryResult.Item || !directoryResult.Item.projects) {
+    return json(200, C, { items: [], count: 0, scannedCount: 0, lastKey: null });
   }
-  
-  const items = [];
-  for (const chunk of chunks) {
-    const r = await ddb.batchGet({
-      RequestItems: {
-        [PROJECTS_TABLE]: { 
-          Keys: chunk.map((projectId) => ({ projectId })) 
-        },
-      },
-    });
-    items.push(...(r.Responses?.[PROJECTS_TABLE] || []));
-  }
-  
+
+  // Filter projects to only include those the user has access to
+  const projectsMap = directoryResult.Item.projects;
+  const userProjects = projectIds
+    .map(projectId => {
+      const projectData = projectsMap[projectId];
+      if (projectData) {
+        return {
+          projectId,
+          ...projectData,
+          // Convert thumbnail back to thumbnails for frontend compatibility
+          thumbnails: projectData.thumbnail ? [projectData.thumbnail] : [],
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
+
   return json(200, C, { 
-    items, 
-    count: items.length, 
-    scannedCount: items.length, 
+    items: userProjects, 
+    count: userProjects.length, 
+    scannedCount: userProjects.length, 
     lastKey: null 
   });
 };

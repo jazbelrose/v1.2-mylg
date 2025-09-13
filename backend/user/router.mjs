@@ -31,7 +31,10 @@ const pendingKeyForEmail = (email) => `PENDING#${lowerEmail(email)}`;
 // Handle /user/{proxy} routes
 async function handleUserProxy(event, CORS, { proxy }) {
   if (proxy === 'notifications') {
-    return await getUserNotifications(event, CORS);
+    const method = M(event);
+    if (method === 'GET') return await getUserNotifications(event, CORS);
+    if (method === 'PATCH') return await patchNotification(event, CORS);
+    if (method === 'DELETE') return await deleteNotification(event, CORS);
   }
   // For other unknown user endpoints
   return json(404, CORS, { error: `Unknown user endpoint: /user/${proxy}` });
@@ -70,6 +73,47 @@ async function getUserNotifications(event, CORS) {
   } catch (error) {
     console.error("Error fetching user notifications:", error);
     return json(500, CORS, { error: "Failed to fetch notifications", details: error.message });
+  }
+}
+
+async function patchNotification(event, CORS) {
+  const q = Q(event);
+  const userId = q.userId;
+  const ts = q['timestamp#uuid'];
+  if (!userId || !ts) {
+    return json(400, CORS, { error: 'userId and timestamp#uuid required' });
+  }
+  try {
+    await ddb.update({
+      TableName: NOTIFICATIONS_TABLE,
+      Key: { userId, 'timestamp#uuid': ts },
+      UpdateExpression: 'SET #r = :t',
+      ExpressionAttributeNames: { '#r': 'read' },
+      ExpressionAttributeValues: { ':t': true },
+    });
+    return json(200, CORS, { ok: true });
+  } catch (error) {
+    console.error('Error marking notification read:', error);
+    return json(500, CORS, { error: 'Failed to mark notification read', details: error.message });
+  }
+}
+
+async function deleteNotification(event, CORS) {
+  const q = Q(event);
+  const userId = q.userId;
+  const ts = q['timestamp#uuid'];
+  if (!userId || !ts) {
+    return json(400, CORS, { error: 'userId and timestamp#uuid required' });
+  }
+  try {
+    await ddb.delete({
+      TableName: NOTIFICATIONS_TABLE,
+      Key: { userId, 'timestamp#uuid': ts },
+    });
+    return json(200, CORS, { ok: true });
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    return json(500, CORS, { error: 'Failed to delete notification', details: error.message });
   }
 }
 
@@ -374,6 +418,8 @@ async function postProjectToUserId(event, C) {
 const routes = [
   { M: "GET",    R: /^\/user\/health$/i,                                        H: health },
   { M: "GET",    R: /^\/user\/(?<proxy>[^/]+)$/i,                               H: handleUserProxy },
+  { M: "PATCH",  R: /^\/user\/(?<proxy>[^/]+)$/i,                               H: handleUserProxy },
+  { M: "DELETE", R: /^\/user\/(?<proxy>[^/]+)$/i,                               H: handleUserProxy },
 
   // user profiles
   { M: "GET",    R: /^\/userProfiles\/(?<userId>[^/]+)$/i,                      H: getUserProfile },

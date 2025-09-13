@@ -67,7 +67,7 @@ const Notifications: React.FC<NotificationsProps> = ({
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      console.log('⏰ Notifications render:', notifications);
+      
     }
   }, [notifications]);
 

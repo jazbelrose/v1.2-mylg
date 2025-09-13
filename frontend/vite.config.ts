@@ -80,7 +80,7 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/yjs': {
-          target: 'ws://35.165.113.63:1234',
+          target: process.env.VITE_YJS_WS_URL || 'ws://35.165.113.63:1234',
           ws: true,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/yjs/, ''),

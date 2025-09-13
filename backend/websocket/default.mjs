@@ -69,26 +69,25 @@ export const handler = async (event) => {
     case "lineUnlocked":
       return await handleLineUnlocked(payload, userId);
 
+    case "userLocation":
+      return await handleUserLocation(payload);
+
     case "fetchNotifications": {
       if (!notificationsTable) return { statusCode: 200, body: "Notifications disabled" };
       const connectionId = event.requestContext.connectionId;
 
-      const result = await dynamoDb
-        .query({
-          TableName: notificationsTable,
-          KeyConditionExpression: "userId = :u",
-          ExpressionAttributeValues: { ":u": userId },
-          ScanIndexForward: false,
-          Limit: 100,
-        })
-        .promise();
+      const result = await dynamoDb.send(new QueryCommand({
+        TableName: notificationsTable,
+        KeyConditionExpression: "userId = :u",
+        ExpressionAttributeValues: { ":u": userId },
+        ScanIndexForward: false,
+        Limit: 100,
+      }));
 
-      await apigwManagementApi
-        .postToConnection({
-          ConnectionId: connectionId,
-          Data: JSON.stringify({ action: "notificationsBatch", items: result.Items || [] }),
-        })
-        .promise();
+      await apigwManagementApi.send(new PostToConnectionCommand({
+        ConnectionId: connectionId,
+        Data: JSON.stringify({ action: "notificationsBatch", items: result.Items || [] }),
+      }));
 
       return { statusCode: 200 };
     }
@@ -109,15 +108,13 @@ const handleSetActiveConversation = async (event, payload) => {
   }
 
   try {
-    await dynamoDb
-      .update({
-        TableName: process.env.CONNECTIONS_TABLE,
-        Key: { connectionId },
-        UpdateExpression: "SET activeConversation = :c",
-        ExpressionAttributeValues: { ":c": String(conversationId).trim() },
-        ConditionExpression: "attribute_exists(userId)" // ✅ only update if row is valid
-      })
-      .promise();
+    await dynamoDb.send(new UpdateCommand({
+      TableName: process.env.CONNECTIONS_TABLE,
+      Key: { connectionId },
+      UpdateExpression: "SET activeConversation = :c",
+      ExpressionAttributeValues: { ":c": String(conversationId).trim() },
+      ConditionExpression: "attribute_exists(userId)" // ✅ only update if row is valid
+    }));
 
     console.log(`✅ Set activeConversation for ${connectionId} → ${conversationId}`);
     return { statusCode: 200, body: "Active conversation set" };
@@ -147,9 +144,10 @@ const broadcastToConversation = async (conversationId, payload) => {
     await Promise.allSettled(
       recipients.map(async ({ connectionId }) => {
         try {
-          await apigwManagementApi
-            .postToConnection({ ConnectionId: connectionId, Data: JSON.stringify(payload) })
-            .promise();
+          await apigwManagementApi.send(new PostToConnectionCommand({
+            ConnectionId: connectionId,
+            Data: JSON.stringify(payload),
+          }));
         } catch (err) {
           if (err && err.statusCode === 410) stale.push(connectionId);
           else console.error("❌ WS send failed", err);
@@ -161,9 +159,10 @@ const broadcastToConversation = async (conversationId, payload) => {
       console.log("🧹 Cleaning stale connections:", stale);
       await Promise.allSettled(
         stale.map((id) =>
-          dynamoDb
-            .delete({ TableName: process.env.CONNECTIONS_TABLE, Key: { connectionId: id } })
-            .promise()
+          dynamoDb.send(new DeleteCommand({
+            TableName: process.env.CONNECTIONS_TABLE,
+            Key: { connectionId: id },
+          }))
         )
       );
     }
@@ -217,9 +216,10 @@ async function broadcastToUser(userId, payload) {
 
     await Promise.allSettled(
       userConns.map((connId) =>
-        apigwManagementApi
-          .postToConnection({ ConnectionId: connId, Data: JSON.stringify(payload) })
-          .promise()
+        apigwManagementApi.send(new PostToConnectionCommand({
+          ConnectionId: connId,
+          Data: JSON.stringify(payload),
+        }))
       )
     );
 
@@ -238,15 +238,13 @@ async function saveNotification(userId, message, dedupeId, timestamp, senderId, 
   }
 
   try {
-    const existing = await dynamoDb
-      .query({
-        TableName: notificationsTable,
-        KeyConditionExpression: "userId = :u",
-        ExpressionAttributeValues: { ":u": userId },
-        ScanIndexForward: false,
-        Limit: 5,
-      })
-      .promise();
+    const existing = await dynamoDb.send(new QueryCommand({
+      TableName: notificationsTable,
+      KeyConditionExpression: "userId = :u",
+      ExpressionAttributeValues: { ":u": userId },
+      ScanIndexForward: false,
+      Limit: 5,
+    }));
 
     if (existing.Items && existing.Items.some((n) => n.dedupeId === dedupeId)) {
       console.log("🔁 Duplicate notification skipped");
@@ -287,9 +285,10 @@ async function saveProjectNotifications(projectId, message, dedupeId, senderId =
   }
 
   try {
-    const res = await dynamoDb
-      .get({ TableName: process.env.PROJECTS_TABLE_NAME, Key: { projectId } })
-      .promise();
+    const res = await dynamoDb.send(new GetCommand({
+      TableName: process.env.PROJECTS_TABLE_NAME,
+      Key: { projectId },
+    }));
 
     const teamArr = Array.isArray(res.Item?.team) ? res.Item.team.map((t) => t.userId) : [];
     if (senderId) teamArr.push(senderId);
@@ -314,16 +313,14 @@ async function deleteNotificationsByDedupeId(dedupeId) {
   if (!notificationsTable) return;
 
   try {
-    const { Items = [] } = await dynamoDb
-      .query({
-        TableName: notificationsTable,
-        IndexName: "dedupeId-index",
-        KeyConditionExpression: "dedupeId = :d",
-        ExpressionAttributeValues: { ":d": dedupeId },
-        ProjectionExpression: "userId, #ts",
-        ExpressionAttributeNames: { "#ts": "timestamp#uuid" },
-      })
-      .promise();
+    const { Items = [] } = await dynamoDb.send(new QueryCommand({
+      TableName: notificationsTable,
+      IndexName: "dedupeId-index",
+      KeyConditionExpression: "dedupeId = :d",
+      ExpressionAttributeValues: { ":d": dedupeId },
+      ProjectionExpression: "userId, #ts",
+      ExpressionAttributeNames: { "#ts": "timestamp#uuid" },
+    }));
 
     if (Items.length === 0) {
       console.warn("⚠️ No items found in GSI for that dedupeId");
@@ -589,14 +586,12 @@ const handleToggleReaction = async (payload) => {
   else delete reactions[emoji];
 
   try {
-    await dynamoDb
-      .update({
-        TableName: tableName,
-        Key: key,
-        UpdateExpression: "SET reactions = :r",
-        ExpressionAttributeValues: { ":r": reactions },
-      })
-      .promise();
+    await dynamoDb.send(new UpdateCommand({
+      TableName: tableName,
+      Key: key,
+      UpdateExpression: "SET reactions = :r",
+      ExpressionAttributeValues: { ":r": reactions },
+    }));
   } catch (err) {
     console.error("❌ Failed to update reactions", err);
     return { statusCode: 500, body: "DB update error" };
@@ -804,4 +799,10 @@ const handleLineUnlocked = async (payload, senderId) => {
   });
 
   return { statusCode: 200, body: "lineUnlocked broadcast" };
+};
+
+const handleUserLocation = async (payload) => {
+  // TODO: Implement user location handling
+  console.log("📍 handleUserLocation called with payload:", payload);
+  return { statusCode: 200, body: "userLocation handled" };
 };

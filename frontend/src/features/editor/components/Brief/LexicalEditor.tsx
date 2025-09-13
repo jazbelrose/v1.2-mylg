@@ -153,8 +153,14 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
       });
       persistenceRef.current = persistence;
 
+      const wsEndpoint =
+        import.meta.env.VITE_YJS_WS_URL ||
+        (typeof window !== "undefined"
+          ? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/yjs`
+          : "ws://35.165.113.63:1234");
+
       const provider = new WebsocketProvider(
-        "ws://35.165.113.63:1234",
+        wsEndpoint,
         id,
         doc
       ) as ExtendedWebsocketProvider;

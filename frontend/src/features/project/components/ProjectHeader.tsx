@@ -42,6 +42,7 @@ import {
   S3_PUBLIC_BASE,
   apiFetch,
   fetchUserProfilesBatch,
+  getFileUrl,
   type UserProfile,
 } from "@/shared/utils/api";
 import AvatarStack from "@/shared/ui/AvatarStack";
@@ -428,7 +429,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     teamMembers.forEach((m) => {
       if (m.thumbnail) {
         const img = new Image();
-        img.src = m.thumbnail;
+        img.src = getFileUrl(m.thumbnail);
       }
     });
   }, [teamMembers]);

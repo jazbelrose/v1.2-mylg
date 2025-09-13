@@ -24,6 +24,12 @@ type ProjectLike = {
   projectId?: string | null;
 } | null;
 
+const encodeS3Key = (key: string = "") =>
+  key
+    .split("/")
+    .map((segment) => encodeURIComponent(segment).replace(/\+/g, "%20"))
+    .join("/");
+
 // Bind modal to the app element for accessibility (avoid during SSR)
 if (typeof document !== "undefined") {
   ReactModal.setAppElement("#root");
@@ -55,17 +61,18 @@ export default function ImagePlugin({ showToolbarButton = true }: Props) {
   const handleFileUpload = async (f: File | null): Promise<string | null> => {
     if (!f || !activeProject?.projectId) return null;
 
-    const filename = `projects/${activeProject.projectId}/lexical/${f.name}`;
+    const key = `projects/${activeProject.projectId}/lexical/${f.name}`;
     setIsUploading(true);
 
     try {
       const { result } = await uploadData({
-        key: filename,
+        key,
         data: f,
         options: { accessLevel: "public" },
       });
       console.log("Upload completed:", result);
-      return `${S3_PUBLIC_BASE}${filename}`;
+      const publicKey = key.startsWith("public/") ? key : `public/${key}`;
+      return `${S3_PUBLIC_BASE}${encodeS3Key(publicKey)}`;
     } catch (error) {
       console.error("Error uploading file:", error);
       return null;

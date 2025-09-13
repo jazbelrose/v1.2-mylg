@@ -203,7 +203,7 @@ const BASE_ENDPOINTS = {
     
     // External services (unchanged)
     NOMINATIM_SEARCH_URL: 'https://nominatim.openstreetmap.org/search?format=json&q=',
-    S3_PUBLIC_BASE,
+    
     
     // Legacy endpoints that may need special handling or removal
     NEWSLETTER_SUBSCRIBE_URL: 'https://jmmn5p5yhe.execute-api.us-west-1.amazonaws.com/default/notifyNewSubscriber',
@@ -259,7 +259,6 @@ export const {
   EVENTS_URL,
   NOTIFICATIONS_URL,
   NOMINATIM_SEARCH_URL,
-  S3_PUBLIC_BASE,
   BUDGETS_API_URL,
   PROJECT_INVITES_URL,
   COLLAB_INVITES_BASE_URL,

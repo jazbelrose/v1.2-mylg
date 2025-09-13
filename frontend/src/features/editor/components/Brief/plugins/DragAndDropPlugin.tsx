@@ -31,6 +31,12 @@ const isImageFileLike = (file: File): boolean => {
   return (file.type && file.type.startsWith("image/")) || (ext && IMAGE_EXTENSIONS.includes(ext as (typeof IMAGE_EXTENSIONS)[number]));
 };
 
+const encodeS3Key = (key: string = "") =>
+  key
+    .split("/")
+    .map((segment) => encodeURIComponent(segment).replace(/\+/g, "%20"))
+    .join("/");
+
 async function uploadFileToS3(
   file: File,
   projectId: string
@@ -42,7 +48,8 @@ async function uploadFileToS3(
       data: file,
       options: { accessLevel: "public" },
     });
-    return `${S3_PUBLIC_BASE}${key}`;
+    const publicKey = key.startsWith("public/") ? key : `public/${key}`;
+    return `${S3_PUBLIC_BASE}${encodeS3Key(publicKey)}`;
   } catch (err) {
     console.error("Error uploading file:", err);
     return null;

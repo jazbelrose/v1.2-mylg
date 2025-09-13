@@ -2,10 +2,14 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TasksComponent from './TasksComponent';
-import { fetchTasks, deleteTask, fetchUserProfilesBatch } from '../../../utils/api';
+import {
+  fetchTasks,
+  deleteTask,
+  fetchUserProfilesBatch,
+} from '../../../shared/utils/api';
 import { message } from 'antd';
 
-vi.mock('../../../../utils/api', () => ({
+vi.mock('../../../shared/utils/api', () => ({
   __esModule: true,
   fetchTasks: vi.fn(() => Promise.resolve([])),
   createTask: vi.fn((t) => Promise.resolve(t)),
@@ -70,7 +74,7 @@ test('Assigned To select displays team members by full name', async () => {
 });
 
 test('Task Name lists budget item descriptions', async () => {
-  mockUseBudgetData.mockReturnValue({
+  mockUseBudget.mockReturnValue({
     budgetItems: [
       { budgetItemId: 'b1', descriptionShort: 'First description' },
       { budgetItemId: 'b2', descriptionShort: 'Second description' }

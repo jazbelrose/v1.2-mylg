@@ -304,7 +304,7 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
 
   for (let attempt = 0; attempt <= retryCount; attempt++) {
     try {
-      console.log(`[apiFetch] (${fetchOptions.method || 'GET'}) → ${url} (attempt ${attempt + 1}/${retryCount + 1})`);
+      // console.log(`[apiFetch] (${fetchOptions.method || 'GET'}) → ${url} (attempt ${attempt + 1}/${retryCount + 1})`);
 
       const res = await fetch(url, { ...fetchOptions, headers });
 
@@ -354,7 +354,7 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
         logSecurityEvent('api_state_change', { url: new URL(url).pathname, method: fetchOptions.method });
       }
 
-      console.log('[apiFetch] ✅ Success:', { url, method: fetchOptions.method || 'GET' });
+      // console.log('[apiFetch] ✅ Success:', { url, method: fetchOptions.method || 'GET' });
       return data;
 
     } catch (err) {
@@ -510,12 +510,8 @@ export async function updateProjectFields(projectId: string, fields: Partial<Pro
 // ───────────────────────────────────────────────────────────────────────────────
 
 export async function fetchTasks(projectId?: string): Promise<Task[]> {
-  if (!projectId) {
-    // If no projectId provided, we need to decide how to handle this
-    // For now, let's return empty array as we need projectId for the new route structure
-    return [];
-  }
-  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/tasks`;
+  if (!projectId) return [];
+  const url = `${TASKS_API_URL}?projectId=${encodeURIComponent(projectId)}`;
   const data = await apiFetch<MaybeItems<Task>>(url);
   return extractItems<Task>(data);
 }
@@ -524,11 +520,11 @@ export async function createTask(task: Task): Promise<Task> {
   const { projectId, ...payload } = task;
   if (!projectId) throw new Error('projectId is required for createTask');
   if (payload.budgetItemId === '' || payload.budgetItemId == null) delete payload.budgetItemId;
-  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/tasks`;
+  const url = `${TASKS_API_URL}`;
   return apiFetch<Task>(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, projectId }),
   });
 }
 
@@ -536,17 +532,17 @@ export async function updateTask(task: Task): Promise<Task> {
   const { projectId, taskId, ...payload } = task;
   if (!projectId || !taskId) throw new Error('projectId and taskId are required for updateTask');
   if (payload.budgetItemId === '' || payload.budgetItemId == null) delete payload.budgetItemId;
-  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`;
+  const url = `${TASKS_API_URL}/${encodeURIComponent(taskId)}`;
   return apiFetch<Task>(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, projectId }),
   });
 }
 
 export async function deleteTask({ projectId, taskId }: { projectId: string; taskId: string }): Promise<{ ok: true }> {
   if (!projectId || !taskId) throw new Error('projectId and taskId are required for deleteTask');
-  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`;
+  const url = `${TASKS_API_URL}/${encodeURIComponent(taskId)}?projectId=${encodeURIComponent(projectId)}`;
   await apiFetch<JsonRecord>(url, { method: 'DELETE' });
   return { ok: true };
 }

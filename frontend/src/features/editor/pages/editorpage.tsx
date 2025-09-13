@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import ProjectPageLayout from "@/features/project/components/ProjectPageLayout";
@@ -13,15 +13,7 @@ import { useData } from "../../../app/contexts/useData";
 import { Project } from "../../../app/contexts/DataProvider";
 import { useSocket } from "../../../app/contexts/useSocket";
 import { findProjectBySlug, slugify } from "../../../shared/utils/slug";
-
-// Debounce utility function
-function debounce<T extends (...args: unknown[]) => void>(func: T, wait: number): T {
-  let timeout: NodeJS.Timeout;
-  return ((...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  }) as T;
-}
+import { notify } from "@/shared/ui/ToastNotifications";
 
 const EditorPage: React.FC = () => {
   const { projectSlug } = useParams<{ projectSlug: string }>();
@@ -47,21 +39,48 @@ const EditorPage: React.FC = () => {
   const [briefToolbarActions, setBriefToolbarActions] = useState<Record<string, unknown>>({});
   const quickLinksRef = useRef<QuickLinksRef>(null);
   const designerRef = useRef<DesignerRef>(null);
+  const [briefContent, setBriefContent] = useState<string>("");
+  const [isBriefDirty, setIsBriefDirty] = useState(false);
 
-  // Debounced save function for description changes
-  const debouncedSaveDescription = useMemo(
-    () => debounce((json: string) => {
-      if (activeProject?.projectId) {
-        console.log("[EditorPage] Saving description to DB:", json.substring(0, 100) + "...");
-        updateProjectFields(activeProject.projectId, { description: json });
+  const handleBriefChange = useCallback((json: string) => {
+    setBriefContent(json);
+    setIsBriefDirty(true);
+  }, []);
+
+  const saveBrief = useCallback(
+    async (showToast = true) => {
+      if (!activeProject?.projectId) {
+        if (showToast) notify("error", "No active project to save");
+        return;
       }
-    }, 2000), // 2 second debounce
-    [activeProject?.projectId, updateProjectFields]
+      if (!isBriefDirty) {
+        if (showToast) notify("info", "Brief already saved");
+        return;
+      }
+      try {
+        await updateProjectFields(activeProject.projectId, {
+          description: briefContent,
+        });
+        setIsBriefDirty(false);
+        if (showToast) notify("success", "Brief saved successfully");
+      } catch (err) {
+        const error = err as { message?: string };
+        console.error("Failed to save brief:", error);
+        if (showToast)
+          notify("error", `Failed to save brief: ${error.message || "Unknown error"}`);
+      }
+    },
+    [activeProject?.projectId, briefContent, isBriefDirty, updateProjectFields]
   );
 
   useEffect(() => {
     setActiveProject(initialActiveProject);
   }, [initialActiveProject]);
+
+  useEffect(() => {
+    setBriefContent(activeProject?.description || "");
+    setIsBriefDirty(false);
+  }, [activeProject?.description]);
 
   useEffect(() => {
     if (!initialActiveProject) return;
@@ -136,11 +155,17 @@ const EditorPage: React.FC = () => {
   const handlePaste = () => designerRef.current?.handlePaste();
   const handleDelete = () => designerRef.current?.handleDelete();
   const handleClearCanvas = () => designerRef.current?.handleClear();
-  const handleSave = () => designerRef.current?.handleSave();
+  const handleSave = useCallback(() => {
+    if (activeTab === "canvas") {
+      designerRef.current?.handleSave();
+    } else {
+      void saveBrief();
+    }
+  }, [activeTab, saveBrief]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.code === "KeyS") {
+      if ((e.ctrlKey || e.metaKey) && e.code === "KeyS") {
         e.preventDefault();
         handleSave();
       }
@@ -149,7 +174,17 @@ const EditorPage: React.FC = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [handleSave]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isBriefDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isBriefDirty]);
 
   return (
     <ProjectPageLayout
@@ -218,7 +253,7 @@ const EditorPage: React.FC = () => {
                           <LexicalEditor
                             key={activeProject.projectId}
                             initialContent={activeProject.description}
-                            onChange={debouncedSaveDescription}
+                            onChange={handleBriefChange}
                             registerToolbar={setBriefToolbarActions}
                           />
                         ) : (

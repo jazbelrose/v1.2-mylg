@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { TimelineEvent } from "@/shared/utils/api";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { WeekWidget } from "./WeekWidget";
+import { getFileUrl } from "../../../shared/utils/api";
 
 // --- Types ---
 type Project = {
@@ -385,7 +386,7 @@ const AllProjectsCalendar: React.FC = () => {
                 >
                   {item.thumbnail ? (
                     <img
-                      src={item.thumbnail}
+                      src={getFileUrl(item.thumbnail)}
                       alt={item.title ?? "thumbnail"}
                       className="tooltip-thumb"
                     />

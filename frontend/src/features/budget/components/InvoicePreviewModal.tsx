@@ -26,6 +26,7 @@ import {
   DELETE_FILE_FROM_S3_URL,
   apiFetch,
   fileUrlsToKeys,
+  getFileUrl,
 } from "@/shared/utils/api";
 import { v4 as uuid } from "uuid";
 import { useData } from "@/app/contexts/useData";
@@ -1069,7 +1070,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                           aria-label="Company logo"
                         >
                           {logoDataUrl || brandLogoUrl ? (
-                            <img src={logoDataUrl || brandLogoUrl} alt="Company logo" />
+                            <img src={logoDataUrl || getFileUrl(brandLogoUrl || '')} alt="Company logo" />
                           ) : (
                             <span>Upload Logo</span>
                           )}
@@ -1371,7 +1372,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                             aria-label="Company logo"
                           >
                             {logoDataUrl || brandLogoUrl ? (
-                              <img src={logoDataUrl || brandLogoUrl} alt="Company logo" />
+                              <img src={logoDataUrl || getFileUrl(brandLogoUrl || '')} alt="Company logo" />
                             ) : (
                               <span>Upload Logo</span>
                             )}

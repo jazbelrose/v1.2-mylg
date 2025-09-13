@@ -24,6 +24,7 @@ import {
   POST_PROJECT_TO_USER_URL,
   S3_PUBLIC_BASE,
   apiFetch,
+  getFileUrl,
 } from "@/shared/utils/api";
 import UserProfilePicture from "@/shared/ui/UserProfilePicture";
 import styles from "./Collaborators.module.css";
@@ -759,7 +760,7 @@ interface EditValues {
                           onChange={() => toggleCollaboratorSelection(selectedUserId, u.userId)}
                         />
                         {u.thumbnail ? (
-                          <img src={u.thumbnail} alt="" className="collaborator-thumb" />
+                          <img src={getFileUrl(u.thumbnail)} alt="" className="collaborator-thumb" />
                         ) : (
                           <div className="collaborator-thumb" />
                         )}

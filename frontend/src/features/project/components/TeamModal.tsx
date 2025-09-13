@@ -3,6 +3,7 @@ import Modal from "../../../shared/ui/ModalWithStack";
 import { X } from "lucide-react";
 import styles from "./team-modal.module.css";
 import { useOnlineStatus } from "@/app/contexts/OnlineStatusContext";
+import { getFileUrl } from "../../../shared/utils/api";
 
 type Member = {
   userId: string;
@@ -59,7 +60,7 @@ export default function TeamModal({
             <div className={styles.avatarWrapper}>
               {m.thumbnail ? (
                 <img
-                  src={m.thumbnail}
+                  src={getFileUrl(m.thumbnail)}
                   alt={m.firstName || "Member"}
                   className={styles.avatar}
                 />

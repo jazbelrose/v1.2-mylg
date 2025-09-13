@@ -1,5 +1,6 @@
 import React from 'react';
 import { DecoratorNode } from 'lexical';
+import { getFileUrl } from '@/shared/utils/api';
 
 export class FileEmbedNode extends DecoratorNode {
   constructor(url, name, key) {
@@ -49,7 +50,7 @@ export class FileEmbedNode extends DecoratorNode {
   decorate() {
     const name = this.__name || this.__url.split('/').pop();
     return (
-      <a href={this.__url} target="_blank" rel="noopener noreferrer">
+      <a href={getFileUrl(this.__url)} target="_blank" rel="noopener noreferrer">
         {name}
       </a>
     );

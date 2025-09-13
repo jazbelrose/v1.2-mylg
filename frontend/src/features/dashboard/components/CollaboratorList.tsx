@@ -2,6 +2,7 @@ import React from 'react';
 import { MessageCircle, ListPlus } from 'lucide-react';
 import ProjectAvatar from '../../../shared/ui/ProjectAvatar';
 import { slugify } from '../../../shared/utils/slug';
+import { getFileUrl } from '../../../shared/utils/api';
 import styles from './Collaborators.module.css';
 
 interface User {
@@ -51,7 +52,7 @@ const CollaboratorList: React.FC<CollaboratorListProps> = ({
             <div className={styles.cardInfo}>
               <div className={styles.cardLeft}>
                 {u.thumbnail ? (
-                  <img src={u.thumbnail} alt={u.firstName} className={styles.avatar} />
+                  <img src={getFileUrl(u.thumbnail)} alt={u.firstName} className={styles.avatar} />
                 ) : (
                   <div className={styles.avatarPlaceholder} />
                 )}

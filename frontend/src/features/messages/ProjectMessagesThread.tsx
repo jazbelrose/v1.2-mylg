@@ -1013,9 +1013,11 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
               if (["jpg", "jpeg", "png"].includes(ext)) {
                 return (
                   <img
-                    src={
-                      selectedPreviewFile.finalUrl || selectedPreviewFile.url
-                    }
+                    src={getFileUrl(
+                      fileUrlsToKeys([
+                        selectedPreviewFile.finalUrl || selectedPreviewFile.url,
+                      ])[0]
+                    )}
                     alt={selectedPreviewFile.fileName}
                     className="preview-image"
                   />
@@ -1041,7 +1043,9 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
                 <FontAwesomeIcon icon={faTimes} />
               </button>
               <a
-                href={selectedPreviewFile.url}
+                href={getFileUrl(
+                  fileUrlsToKeys([selectedPreviewFile.url])[0]
+                )}
                 download
                 style={{ color: "white" }}
                 aria-label="Download"

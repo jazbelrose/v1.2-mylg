@@ -14,7 +14,7 @@ import { sha256 } from "../../shared/utils/hash";
 import useModalStack from "../../shared/utils/useModalStack";
 import { useData } from "@/app/contexts/useData";
 import { slugify, findProjectBySlug } from "../../shared/utils/slug";
-import { fetchGalleries } from "../../shared/utils/api";
+import { fetchGalleries, fileUrlsToKeys, getFileUrl } from "../../shared/utils/api";
 import Preloader from "../../shared/ui/Preloader";
 import * as pdfjsLibLocal from "pdfjs-dist/legacy/build/pdf";
 import GalleryMasonry from "./GalleryMasonry";
@@ -602,7 +602,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
           {"\u276E"}
         </button>
         <img
-          src={imageUrls[currentIndex]}
+          src={getFileUrl(fileUrlsToKeys([imageUrls[currentIndex]])[0])}
           alt={`Gallery item ${currentIndex + 1}`}
           className={styles.modalImage}
         />

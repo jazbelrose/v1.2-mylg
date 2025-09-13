@@ -19,6 +19,7 @@ import {
   Pin,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getFileUrl } from '../../../shared/utils/api';
 
 interface Project {
   projectId: string;
@@ -336,7 +337,7 @@ const AllProjects: React.FC = () => {
             project.thumbnails &&
             project.thumbnails.length > 0 ? (
               <img
-                src={project.thumbnails[0]}
+                src={getFileUrl(project.thumbnails[0])}
                 alt={`Thumbnail of ${
                   project.title?.trim() || 'Untitled project'
                 }`}
@@ -433,7 +434,7 @@ const AllProjects: React.FC = () => {
               project.thumbnails &&
               project.thumbnails.length > 0 ? (
                 <img
-                  src={project.thumbnails[0]}
+                  src={getFileUrl(project.thumbnails[0])}
                   alt={`Thumbnail of ${
                     project.title?.trim() || 'Untitled project'
                   }`}

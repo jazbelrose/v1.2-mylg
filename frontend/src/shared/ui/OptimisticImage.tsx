@@ -1,4 +1,5 @@
 import React, { useState, useEffect, CSSProperties } from 'react';
+import { getFileUrl } from '../utils/api';
 
 interface OptimisticImageProps {
   tempUrl: string;
@@ -26,7 +27,7 @@ const OptimisticImage: React.FC<OptimisticImageProps> = ({
 
   return (
     <img
-      src={loaded && finalUrl ? finalUrl : tempUrl}
+      src={loaded && finalUrl ? getFileUrl(finalUrl) : tempUrl}
       alt={alt}
       className={className}
       style={{

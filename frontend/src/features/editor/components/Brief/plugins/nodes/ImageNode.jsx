@@ -6,6 +6,7 @@ import Moveable from "react-moveable";
 import React, { useRef, useState, useEffect } from "react";
 import { useData } from "@/app/contexts/useData";
 import { useImageLocks } from "@/features/editor/components/Brief/plugins/ImageLockContext";
+import { getFileUrl } from "@/shared/utils/api";
 
 export class ImageNode extends DecoratorNode {
   constructor(src, altText, x = 0, y = 0, width = 300, height = 200, clipPath = "none", key) {
@@ -111,7 +112,7 @@ export class ImageNode extends DecoratorNode {
   decorate() {
     return (
       <MoveableImage
-        src={this.__src}
+        src={getFileUrl(this.__src)}
         altText={this.__altText}
         x={this.__x}
         y={this.__y}

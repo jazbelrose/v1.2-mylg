@@ -5,6 +5,7 @@ import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
 import React, { useRef, useState, useEffect } from "react";
 import { useData } from "@/app/contexts/useData";
 import { useImageLocks } from "@/features/editor/components/Brief/plugins/ImageLockContext";
+import { getFileUrl } from "@/shared/utils/api";
 
 export class ResizableImageNode extends DecoratorNode {
   static getType() {
@@ -86,7 +87,7 @@ export class ResizableImageNode extends DecoratorNode {
   decorate() {
     return (
       <ResizableImageComponent
-        src={this.__src}
+        src={getFileUrl(this.__src)}
         altText={this.__altText}
         width={this.__width}
         height={this.__height}

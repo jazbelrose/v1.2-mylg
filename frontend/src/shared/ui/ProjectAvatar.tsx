@@ -1,5 +1,6 @@
 import React from 'react';
 import SVGThumbnail from '../../features/dashboard/components/SvgThumbnail';
+import { getFileUrl } from '../utils/api';
 
 interface ProjectAvatarProps {
   thumb?: string;
@@ -15,7 +16,7 @@ const ProjectAvatar: React.FC<ProjectAvatarProps> = ({
   className = '',
 }) =>
   thumb ? (
-    <img src={thumb} alt={name} className={className} />
+    <img src={getFileUrl(thumb)} alt={name} className={className} />
   ) : (
     <SVGThumbnail
       initial={(initial || name.charAt(0)).toUpperCase()}

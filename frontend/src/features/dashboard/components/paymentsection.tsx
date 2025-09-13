@@ -1,5 +1,6 @@
 import React from "react";
 import { Download } from "lucide-react";
+import { getFileUrl } from "../../../shared/utils/api";
 
 type Invoice = { url: string; fileName?: string };
 
@@ -36,7 +37,7 @@ const PaymentsSection: React.FC<PaymentsSectionProps> = ({
         {invoiceList.length > 0 ? (
           invoiceList.map((inv) => (
             <div className="invoice-item" key={inv.url}>
-              <a href={inv.url} download>
+              <a href={getFileUrl(inv.url)} download>
                 <Download size={16} /> {inv.fileName ?? "Invoice"}
               </a>
             </div>

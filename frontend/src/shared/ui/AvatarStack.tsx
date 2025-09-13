@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './avatar-stack.module.css';
+import { getFileUrl } from '../utils/api';
 
 interface Member {
   userId: string;
@@ -63,7 +64,7 @@ const AvatarStack: React.FC<AvatarStackProps> = ({ members = [], onClick, size }
             aria-label={label}
           >
             {m.thumbnail ? (
-              <img src={m.thumbnail} alt={label} />
+              <img src={getFileUrl(m.thumbnail)} alt={label} />
             ) : (
               <span className={styles.initials}>{initials}</span>
             )}

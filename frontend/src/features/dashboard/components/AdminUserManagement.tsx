@@ -12,6 +12,7 @@ import {
   S3_PUBLIC_BASE,
   apiFetch,
   UserProfile,
+  getFileUrl,
 } from '../../../shared/utils/api';
 import UserProfilePicture from '../../../shared/ui/UserProfilePicture';
 import ProjectAvatar from '../../../shared/ui/ProjectAvatar';
@@ -491,7 +492,7 @@ export default function AdminUserManagement() {
                           onChange={() => toggleCollaboratorSelection(selectedUserId, u.userId)}
                         />
                         {u.thumbnail ? (
-                          <img src={u.thumbnail} alt="" className="collaborator-thumb" />
+                          <img src={getFileUrl(u.thumbnail)} alt="" className="collaborator-thumb" />
                         ) : (
                           <div className="collaborator-thumb" />
                         )}

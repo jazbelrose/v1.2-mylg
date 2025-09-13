@@ -294,6 +294,23 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
     ).sort((a, b) => +new Date(a.timestamp) - +new Date(b.timestamp));
   }, [userData, selectedConversation, deletedMessageIds]);
 
+  // Normalize: prefer explicit attachments; keep legacy `file` fallback
+  const displayMessages = useMemo(() => {
+    return messages.map((m: DMMessage) => {
+      if (!m?.file && Array.isArray(m?.attachments) && m.attachments.length) {
+        const a = m.attachments[0];
+        return {
+          ...m,
+          file: {
+            fileName: a.fileName || getFileNameFromUrl(a.url),
+            url: a.url,
+          },
+        } as DMMessage;
+      }
+      return m;
+    });
+  }, [messages]);
+
   const persistReadStatus = useCallback(async (conversationId: string) => {
     try {
       await apiFetch(MESSAGES_THREADS_URL, {
@@ -1173,21 +1190,21 @@ const fetchMessages = async () => {
               marginBottom: "10px",
               display: "flex",
               flexDirection: "column",
-              justifyContent: messages.length === 0 ? "center" : "flex-start",
-              alignItems: messages.length === 0 ? "center" : "stretch",
+              justifyContent: displayMessages.length === 0 ? "center" : "flex-start",
+              alignItems: displayMessages.length === 0 ? "center" : "stretch",
             }}
             onClick={() => selectedConversation && handleMarkRead(selectedConversation)}
           >
-            {messages.length === 0 && !isLoading ? (
+            {displayMessages.length === 0 && !isLoading ? (
               <div style={{ color: "#aaa", fontSize: 16, textAlign: "center" }}>
                 No messages yet.
               </div>
             ) : (
-              messages.map((msg, index) => (
+              displayMessages.map((msg, index) => (
                 <MessageItem
                   key={msg.optimisticId || msg.messageId || String(msg.timestamp)}
                   msg={msg as ChatMessage}
-                  prevMsg={messages[index - 1] as ChatMessage}
+                  prevMsg={displayMessages[index - 1] as ChatMessage}
                   userData={userData}
                   allUsers={allUsers}
                   openPreviewModal={openPreviewModal}

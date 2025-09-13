@@ -67,6 +67,38 @@ function buildUpdate(obj) {
   };
 }
 
+function buildDirectoryUpdate(projectId, obj) {
+  const Names = { "#projects": "projects", "#pid": projectId };
+  const Values = { ":now": nowISO() };
+  const sets = ["lastUpdated = :now"];
+  let i = 0;
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    const nk = `#f${i}`;
+    const vk = `:v${i}`;
+    Names[nk] = k;
+    Values[vk] = v;
+    sets.push(`#projects.#pid.${nk} = ${vk}`);
+    i++;
+  }
+  if (sets.length === 1) return null;
+  return {
+    UpdateExpression: "SET " + sets.join(", "),
+    ExpressionAttributeNames: Names,
+    ExpressionAttributeValues: Values,
+  };
+}
+
+async function updateProjectDirectory(projectId, fields) {
+  const upd = buildDirectoryUpdate(projectId, fields);
+  if (!upd) return;
+  await ddb.update({
+    TableName: PROJECT_DIRECTORY_TABLE,
+    Key: { directoryId: "1" },
+    ...upd,
+  });
+}
+
 /* ============== Handlers ============== */
 
 // Health
@@ -122,6 +154,7 @@ const listProjects = async (e, C) => {
     const directoryResult = await ddb.get({
       TableName: PROJECT_DIRECTORY_TABLE,
       Key: { directoryId: "1" },
+      ConsistentRead: true,
     });
 
     console.log('Directory result:', {
@@ -179,6 +212,7 @@ const listProjects = async (e, C) => {
       const directoryResult = await ddb.get({
         TableName: PROJECT_DIRECTORY_TABLE,
         Key: { directoryId: "1" },
+        ConsistentRead: true,
       });
 
       console.log('Admin directory result:', {
@@ -266,6 +300,7 @@ const listProjects = async (e, C) => {
   const directoryResult = await ddb.get({
     TableName: PROJECT_DIRECTORY_TABLE,
     Key: { directoryId: "1" },
+    ConsistentRead: true,
   });
 
     if (!directoryResult.Item || !directoryResult.Item.projects) {
@@ -339,6 +374,17 @@ const createProject = async (e, C) => {
     ConditionExpression: "attribute_not_exists(projectId)",
   });
 
+  await updateProjectDirectory(projectId, {
+    title: item.title,
+    slug: item.slug,
+    color: item.color,
+    status: item.status,
+    team: item.team,
+    thumbnail: item.thumbnails[0],
+    dateCreated: item.dateCreated,
+    finishline: item.finishLine || item.finishline,
+  });
+
   return json(201, C, item);
 };
 
@@ -353,6 +399,18 @@ const patchProject = async (e, C, { projectId }) => {
   const body = B(e);
   const upd = buildUpdate({ ...body, updatedAt: nowISO() });
   if (!upd) return json(400, C, { error: "No fields to update" });
+  const dirFields = [
+    "color",
+    "dateCreated",
+    "finishLine",
+    "finishline",
+    "slug",
+    "status",
+    "team",
+    "thumbnail",
+    "thumbnails",
+    "title",
+  ];
 
   const r = await ddb.update({
     TableName: PROJECTS_TABLE,
@@ -360,6 +418,20 @@ const patchProject = async (e, C, { projectId }) => {
     ...upd,
     ReturnValues: "ALL_NEW",
   });
+
+  if (Object.keys(body).some((k) => dirFields.includes(k))) {
+    await updateProjectDirectory(projectId, {
+      color: r.Attributes.color,
+      dateCreated: r.Attributes.dateCreated,
+      finishline: r.Attributes.finishLine || r.Attributes.finishline,
+      slug: r.Attributes.slug,
+      status: r.Attributes.status,
+      team: r.Attributes.team,
+      thumbnail: (r.Attributes.thumbnails && r.Attributes.thumbnails[0]) || r.Attributes.thumbnail,
+      title: r.Attributes.title,
+    });
+  }
+
   return json(200, C, r.Attributes);
 };
 
@@ -410,6 +482,7 @@ const addTeam = async (e, C, { projectId }) => {
     },
     ReturnValues: "ALL_NEW",
   });
+  await updateProjectDirectory(projectId, { team: r.Attributes.team });
   return json(201, C, {
     projectId,
     team: r.Attributes.team || [],
@@ -436,6 +509,7 @@ const removeTeam = async (_e, C, { projectId, userId }) => {
     },
     ExpressionAttributeValues: { ":team": team, ":ids": teamUserIds, ":ts": nowISO() },
   });
+  await updateProjectDirectory(projectId, { team });
   return json(200, C, { projectId, removedUserId: userId, team, teamUserIds });
 };
 

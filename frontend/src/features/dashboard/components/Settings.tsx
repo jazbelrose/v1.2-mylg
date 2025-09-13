@@ -107,7 +107,7 @@ const Settings: React.FC = () => {
       });
        
       console.log("Thumbnail uploaded:", result);
-      const completeUrl = `${S3_PUBLIC_BASE}/${filename}`;
+      const completeUrl = `${S3_PUBLIC_BASE}${filename}`;
       return `${completeUrl}?t=${Date.now()}`;
     } catch (error) {
        

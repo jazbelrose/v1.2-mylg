@@ -180,7 +180,7 @@ export default function AdminUserManagement() {
       options: { accessLevel: 'guest' },
     });
     console.log('Thumbnail uploaded:', result);
-    return `${S3_PUBLIC_BASE}/${filename}?t=${Date.now()}`;
+    return `${S3_PUBLIC_BASE}${filename}?t=${Date.now()}`;
   };
 
   const handleThumbnailChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {

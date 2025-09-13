@@ -700,7 +700,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
       const encodedProjectId = encodeURIComponent(activeProject.projectId);
       const encodedFileName = encodeURIComponent(selectedThumbnailFile.name);
-      const uploadedURL = `${S3_PUBLIC_BASE}/project-thumbnails/${encodedProjectId}/${encodedFileName}`;
+      const uploadedURL = `${S3_PUBLIC_BASE}project-thumbnails/${encodedProjectId}/${encodedFileName}`;
 
       const updatedLocal: Project = {
         ...localActiveProject,

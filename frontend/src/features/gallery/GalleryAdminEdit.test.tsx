@@ -265,7 +265,7 @@ describe("GalleryComponent admin edit", () => {
     expect(fileInput).toBeTruthy();
     await userEvent.upload(fileInput as HTMLInputElement, file);
 
-    const expectedUrl = `${S3_PUBLIC_BASE}/projects/1/galleries/g1/cover/cover.png?t=${fixedTime}`;
+    const expectedUrl = `${S3_PUBLIC_BASE}projects/1/galleries/g1/cover/cover.png?t=${fixedTime}`;
 
     await waitFor(() => {
       expect(updateGallery).toHaveBeenCalled();
@@ -312,7 +312,7 @@ describe("GalleryComponent admin edit", () => {
     expect(projectId).toBe("1");
 
     const img = document.querySelector("img") as HTMLImageElement | null;
-    const expectedSrc = `${S3_PUBLIC_BASE}/projects/1/galleries/legacy/cover/my%20cover.png?t=${fixedTime}`;
+    const expectedSrc = `${S3_PUBLIC_BASE}projects/1/galleries/legacy/cover/my%20cover.png?t=${fixedTime}`;
 
     expect(fields.gallery[0].coverImageUrl).toBe(expectedSrc);
     expect(img?.getAttribute("src")).toBe(expectedSrc);

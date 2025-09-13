@@ -647,7 +647,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
           });
           // small delay for edge consistency
           await new Promise((resolve) => setTimeout(resolve, 2000));
-          const fileUrl = `${S3_PUBLIC_BASE}/${encodeS3Key(filename)}`;
+          const fileUrl = `${S3_PUBLIC_BASE}${encodeS3Key(filename)}`;
           return { fileName: file.name, url: fileUrl };
         } catch (error) {
           console.error("Error uploading file:", error);

@@ -597,7 +597,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       });
       await uploadTask.result;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // deliberate delay
-      const fileUrl = `${S3_PUBLIC_BASE}/${filename}`;
+      const fileUrl = `${S3_PUBLIC_BASE}${filename}`;
       return { fileName: file.name, url: fileUrl };
     } catch (error) {
       console.error("Error uploading file:", error);

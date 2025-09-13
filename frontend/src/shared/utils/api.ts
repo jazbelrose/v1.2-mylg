@@ -148,9 +148,22 @@ const FILE_REGION = import.meta.env.VITE_AWS_REGION ||
   'us-west-2';
 const FILE_CDN = import.meta.env.VITE_FILE_CDN || import.meta.env.VITE_S3_PUBLIC_BASE || '';
 
-export function getFileUrl(key: string): string {
+export function getFileUrl(keyOrUrl: string): string {
+  if (!keyOrUrl || typeof keyOrUrl !== 'string') return keyOrUrl;
+  
+  // If it's already a full URL, extract the key
+  if (keyOrUrl.startsWith('http')) {
+    try {
+      const parsed = new URL(keyOrUrl);
+      const path = parsed.pathname.startsWith('/') ? parsed.pathname.slice(1) : parsed.pathname;
+      keyOrUrl = decodeURIComponent(path);
+    } catch {
+      // If parsing fails, use as-is
+    }
+  }
+  
   const base = FILE_CDN || `https://${FILE_BUCKET}.s3.${FILE_REGION}.amazonaws.com`;
-  return `${base.replace(/\/$/, '')}/${key}`;
+  return `${base.replace(/\/$/, '')}/${keyOrUrl}`;
 }
 
 export function normalizeFileUrl(urlOrKey: string): string {

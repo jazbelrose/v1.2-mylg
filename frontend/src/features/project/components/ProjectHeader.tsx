@@ -39,12 +39,10 @@ import styles from "@/features/dashboard/components/finish-line-component.module
 
 import {
   POST_PROJECT_TO_USER_URL,
-  S3_PUBLIC_BASE,
   apiFetch,
   fetchUserProfilesBatch,
   getFileUrl,
   type UserProfile,
-  getFileUrl,
 } from "@/shared/utils/api";
 import AvatarStack from "@/shared/ui/AvatarStack";
 import TeamModal from "@/features/project/components/TeamModal";
@@ -700,21 +698,17 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       // Small delay to let the CDN catch up (as in your original)
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const encodedProjectId = encodeURIComponent(activeProject.projectId);
-      const encodedFileName = encodeURIComponent(selectedThumbnailFile.name);
-      const uploadedURL = `${S3_PUBLIC_BASE}project-thumbnails/${encodedProjectId}/${encodedFileName}`;
-
       const updatedLocal: Project = {
         ...localActiveProject,
         thumbnails: Array.from(
-          new Set([uploadedURL, ...(localActiveProject.thumbnails || [])])
+          new Set([filename, ...(localActiveProject.thumbnails || [])])
         ),
       };
       setLocalActiveProject(updatedLocal);
       onActiveProjectChange?.(updatedLocal);
       setActiveProject(updatedLocal);
 
-      await queueUpdate({ thumbnails: [uploadedURL] });
+      await queueUpdate({ thumbnails: [filename] });
 
       if (ws && (ws as WebSocket).readyState === WebSocket.OPEN) {
         ws.send(
@@ -722,7 +716,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             action: "projectUpdated",
             projectId: activeProject.projectId,
             title: activeProject.title,
-            fields: { thumbnails: [uploadedURL] },
+            fields: { thumbnails: [filename] },
             conversationId: `project#${activeProject.projectId}`,
             username: user?.firstName || "Someone",
             senderId: user.userId,

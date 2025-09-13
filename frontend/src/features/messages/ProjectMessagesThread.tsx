@@ -50,6 +50,7 @@ import {
   normalizeFileUrl,
   fileUrlsToKeys,
 } from "../../shared/utils/api";
+import { getFileNameFromUrl } from "../../shared/utils/fileUtils";
 
 /* =============================================================================
    Types
@@ -122,9 +123,6 @@ if (typeof document !== "undefined") {
 // Use "chat_uploads" folder key for previews
 const getThumbnailUrl = (url: string, folderKey = "chat_uploads") =>
   url.replace(`/${folderKey}/`, `/${folderKey}_thumbnails/`);
-
-// Extract filename from URL.
-const getFileNameFromUrl = (url: string) => url.split("/").pop() || url;
 
 // Custom preview renderer for files
 const renderFilePreview = (file: FileObj, folderKey = "chat_uploads") => {

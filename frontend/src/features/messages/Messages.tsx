@@ -54,6 +54,7 @@ import {
   normalizeFileUrl,
   fileUrlsToKeys,
 } from "@/shared/utils/api";
+import { getFileNameFromUrl } from "@/shared/utils/fileUtils";
 import MessageItem, { ChatMessage } from "@/features/messages/MessageItem";
 import "@/features/messages/project-messages-thread.css";
 
@@ -91,8 +92,6 @@ const msgKey = (convId: string) => `messages_${convId}`;
 
 const getThumbnailUrl = (url: string, folderKey = "chat_uploads") =>
   url.replace(`/${folderKey}/`, `/${folderKey}_thumbnails/`);
-
-const getFileNameFromUrl = (url: string) => url.split("/").pop() || "";
 
 const renderFilePreview = (file: DMFile, folderKey = "chat_uploads") => {
   const extension = file.fileName.split(".").pop()?.toLowerCase() || "";

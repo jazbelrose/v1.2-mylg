@@ -26,7 +26,7 @@ interface MessageItemProps {
   openPreviewModal: (file: ChatFile | DMFile) => void;
   folderKey: string;
   renderFilePreview: (file: ChatFile | DMFile, folderKey: string) => React.ReactNode;
-  getFileNameFromUrl: (url: string) => string;
+  getFileNameFromUrl: (url?: string) => string;
   onDelete?: (msg: ChatMessage) => void;
   onEditRequest?: (msg: ChatMessage) => void;
   onReact?: (messageId: string, emoji: Emoji) => void;

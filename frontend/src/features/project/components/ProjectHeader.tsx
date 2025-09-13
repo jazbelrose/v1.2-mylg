@@ -41,6 +41,7 @@ import {
   POST_PROJECT_TO_USER_URL,
   apiFetch,
   fetchUserProfilesBatch,
+  fileUrlsToKeys,
   getFileUrl,
   type UserProfile,
 } from "@/shared/utils/api";
@@ -130,7 +131,10 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
   // Keep local state in sync with incoming activeProject changes
   useEffect(() => {
-    setLocalActiveProject(activeProject || ({} as Project));
+    const thumbs = fileUrlsToKeys(activeProject?.thumbnails || []);
+    setLocalActiveProject(
+      activeProject ? { ...activeProject, thumbnails: thumbs } : ({} as Project)
+    );
     setUpdatedName(activeProject?.title || "");
     setUpdatedStatus(activeProject?.status?.toString?.() || "");
     setSelectedColor((activeProject?.color as string) || "#FA3356");
@@ -688,9 +692,9 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             )
           : selectedThumbnailFile;
 
-      const filename = `project-thumbnails/${activeProject.projectId}/${selectedThumbnailFile.name}`;
+      const baseKey = `project-thumbnails/${activeProject.projectId}/${selectedThumbnailFile.name}`;
       await uploadData({
-        key: filename,
+        key: baseKey,
         data: croppedBlob,
         options: { accessLevel: "public" },
       });
@@ -698,17 +702,19 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       // Small delay to let the CDN catch up (as in your original)
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
+      const fullKey = `public/${baseKey}`;
+
       const updatedLocal: Project = {
         ...localActiveProject,
         thumbnails: Array.from(
-          new Set([filename, ...(localActiveProject.thumbnails || [])])
+           new Set([fullKey, ...(localActiveProject.thumbnails || [])])
         ),
       };
       setLocalActiveProject(updatedLocal);
       onActiveProjectChange?.(updatedLocal);
       setActiveProject(updatedLocal);
 
-      await queueUpdate({ thumbnails: [filename] });
+      await queueUpdate({ thumbnails: [fullKey] });
 
       if (ws && (ws as WebSocket).readyState === WebSocket.OPEN) {
         ws.send(
@@ -716,7 +722,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             action: "projectUpdated",
             projectId: activeProject.projectId,
             title: activeProject.title,
-            fields: { thumbnails: [filename] },
+            fields: { thumbnails: [fullKey] },
             conversationId: `project#${activeProject.projectId}`,
             username: user?.firstName || "Someone",
             senderId: user.userId,

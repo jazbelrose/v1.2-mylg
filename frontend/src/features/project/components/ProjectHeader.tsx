@@ -1733,6 +1733,23 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
     return () => window.removeEventListener("resize", updateSlider);
   }, [updateSlider]);
 
+  const confirmNavigate = useCallback(
+    (path: string) => {
+      const hasUnsaved =
+        (typeof window.hasUnsavedChanges === "function" &&
+          window.hasUnsavedChanges()) ||
+        window.unsavedChanges === true;
+      if (hasUnsaved) {
+        const proceed = window.confirm(
+          "You have unsaved changes, continue?"
+        );
+        if (!proceed) return;
+      }
+      navigate(path, { state: { fromTab: getActiveIndex() } });
+    },
+    [navigate, getActiveIndex]
+  );
+
   const { user } = useData();
   const isAdmin = user?.role === "admin";
   const isDesigner = user?.role === "designer";
@@ -1761,11 +1778,7 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
         ref={(el) => {
           if (el) tabRefs.current[0] = el;
         }}
-        onClick={() =>
-          navigate(`/dashboard/projects/${projectSlug}`, {
-            state: { fromTab: getActiveIndex() },
-          })
-        }
+        onClick={() => confirmNavigate(`/dashboard/projects/${projectSlug}`)}
         className={
           location.pathname === `/dashboard/projects/${projectSlug}` ? "active" : ""
         }
@@ -1782,9 +1795,7 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
             if (el) tabRefs.current[1] = el;
           }}
           onClick={() =>
-            navigate(`/dashboard/projects/${projectSlug}/budget`, {
-              state: { fromTab: getActiveIndex() },
-            })
+            confirmNavigate(`/dashboard/projects/${projectSlug}/budget`)
           }
           className={
             location.pathname.startsWith(
@@ -1809,9 +1820,7 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
             if (el) tabRefs.current[2] = el;
           }}
           onClick={() =>
-            navigate(`/dashboard/projects/${projectSlug}/calendar`, {
-              state: { fromTab: getActiveIndex() },
-            })
+            confirmNavigate(`/dashboard/projects/${projectSlug}/calendar`)
           }
           className={
             location.pathname.startsWith(
@@ -1836,9 +1845,7 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
             if (el) tabRefs.current[3] = el;
           }}
           onClick={() =>
-            navigate(`/dashboard/projects/${projectSlug}/editor`, {
-              state: { fromTab: getActiveIndex() },
-            })
+            confirmNavigate(`/dashboard/projects/${projectSlug}/editor`)
           }
           className={
             location.pathname.startsWith(

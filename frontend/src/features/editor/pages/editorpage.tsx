@@ -186,6 +186,15 @@ const EditorPage: React.FC = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isBriefDirty]);
 
+  useEffect(() => {
+    window.hasUnsavedChanges = () => isBriefDirty;
+    window.unsavedChanges = isBriefDirty;
+    return () => {
+      delete window.hasUnsavedChanges;
+      delete window.unsavedChanges;
+    };
+  }, [isBriefDirty]);
+
   return (
     <ProjectPageLayout
       projectId={activeProject?.projectId}
@@ -206,7 +215,15 @@ const EditorPage: React.FC = () => {
         <div className="designer-scroll-container">
           <UnifiedToolbar
             initialMode={activeTab}
-            onModeChange={(mode) => setActiveTab(mode)}
+            onModeChange={(mode) => {
+              if (mode === "canvas" && activeTab === "brief" && isBriefDirty) {
+                const confirmLeave = window.confirm(
+                  "You have unsaved changes, continue?"
+                );
+                if (!confirmLeave) return;
+              }
+              setActiveTab(mode);
+            }}
             onPreview={() => setPreviewOpen(true)}
             {...(activeTab === "brief" ? briefToolbarActions : {})}
             onSelectTool={handleSelectTool}

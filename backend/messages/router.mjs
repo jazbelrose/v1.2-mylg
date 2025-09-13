@@ -208,6 +208,33 @@ const postConversationMessage = async (e, C, { conversationId }) => {
   return json(201, C, { conversationId, message: msg });
 };
 
+/* Update conversation metadata (e.g., mark read)
+   Body requires userId and conversationId; optional fields: read, title, snippet */
+const patchThread = async (e, C) => {
+  const b = B(e);
+  const { userId, conversationId } = b;
+  if (!userId || !conversationId) {
+    return json(400, C, { error: "userId and conversationId required" });
+  }
+
+  const upd = buildUpdate({
+    ...(b.read !== undefined ? { read: !!b.read } : {}),
+    ...(b.title !== undefined ? { title: b.title } : {}),
+    ...(b.snippet !== undefined ? { snippet: b.snippet } : {}),
+    updatedAt: nowISO(),
+  });
+  if (!upd) return json(400, C, { error: "No fields to update" });
+
+  const r = await ddb.update({
+    TableName: INBOX_TABLE,
+    Key: { userId, conversationId },
+    ...upd,
+    ReturnValues: "ALL_NEW",
+  });
+
+  return json(200, C, { conversation: r.Attributes });
+};
+
 /* Patch / Delete message by messageId
    Requires conversationId (body for patch, query param for delete). */
 const patchMessage = async (e, C, { messageId }) => {
@@ -373,6 +400,7 @@ const routes = [
   { m: "GET",   r: /^\/messages\/inbox$/i,                                 h: getInbox },
   { m: "GET",   r: /^\/messages\/threads$/i,                               h: listThreads },
   { m: "POST",  r: /^\/messages\/threads$/i,                               h: createConversation },
+  { m: "PUT",   r: /^\/messages\/threads$/i,                               h: patchThread },
   { m: "GET",   r: /^\/messages\/threads\/(?<conversationId>[^/]+)$/i,     h: getConversation },
 
   // conversation messages

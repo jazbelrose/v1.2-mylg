@@ -35,6 +35,7 @@ import {
   apiFetch,
   getFileUrl,
   normalizeFileUrl,
+  fileUrlsToKeys,
 } from "../../../shared/utils/api";
 import Spinner from "../../../shared/ui/Spinner";
 import styles from "./file-manager.module.css";
@@ -452,6 +453,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
 
     const performDelete = async () => {
       const fileUrlsToDelete = Array.from(selectedItems);
+      const fileKeysToDelete = fileUrlsToKeys(fileUrlsToDelete);
       setIsConfirmingDelete(false);
 
       const messages = projectMessages[activeProject.projectId] || [];
@@ -464,7 +466,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
           body: JSON.stringify({
             projectId: activeProject.projectId,
             field: folderKey,
-            fileKeys: fileUrlsToDelete,
+            fileKeys: fileKeysToDelete,
           }),
           headers: { "Content-Type": "application/json" },
         });
@@ -528,12 +530,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
 
     const getZippedFiles = async (fileUrls: string[]): Promise<string> => {
       try {
-        const fileKeys = fileUrls
-          .map((url) => {
-            const matches = url.match(/amazonaws\.com\/(.+)$/);
-            return matches ? decodeURIComponent(matches[1]) : null;
-          })
-          .filter((key): key is string => key !== null);
+        const fileKeys = fileUrlsToKeys(fileUrls);
 
         const response = await apiFetch<{ zipFileUrl: string }>(apiGatewayEndpoint, {
           method: "POST",

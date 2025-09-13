@@ -60,6 +60,7 @@ vi.mock("../../../../utils/api", () => ({
   EDIT_MESSAGE_URL: "editMsg",
   getFileUrl: (key: string) => `https://s3/${key}`,
   normalizeFileUrl: (u: string) => u,
+  fileUrlsToKeys: (urls: string[]) => urls.map((u) => u.replace('https://s3/', '')),
   apiFetch: vi.fn(() =>
     Promise.resolve({ ok: true, json: vi.fn().mockResolvedValue([]) })
   ),

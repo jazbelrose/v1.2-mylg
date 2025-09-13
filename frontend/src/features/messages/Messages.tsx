@@ -52,6 +52,7 @@ import {
   apiFetch,
   getFileUrl,
   normalizeFileUrl,
+  fileUrlsToKeys,
 } from "@/shared/utils/api";
 import MessageItem, { ChatMessage } from "@/features/messages/MessageItem";
 import "@/features/messages/project-messages-thread.css";
@@ -824,13 +825,14 @@ const fetchMessages = async () => {
       const fileUrl = message.file?.url ?? message.attachments?.[0]?.url;
       if (fileUrl) {
         try {
+          const fileKeys = fileUrlsToKeys([fileUrl]);
           await apiFetch(DELETE_FILE_FROM_S3_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               projectId: selectedConversation,
               field: folderKey,
-              fileKeys: [fileUrl],
+              fileKeys,
             }),
           });
         } catch (err) {

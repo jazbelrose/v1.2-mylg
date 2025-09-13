@@ -161,6 +161,18 @@ export function normalizeFileUrl(urlOrKey: string): string {
   return getFileUrl(urlOrKey);
 }
 
+export function fileUrlsToKeys(urls: string[]): string[] {
+  return urls.map((url) => {
+    try {
+      const parsed = new URL(url);
+      const path = parsed.pathname.startsWith('/') ? parsed.pathname.slice(1) : parsed.pathname;
+      return decodeURIComponent(path);
+    } catch {
+      return url;
+    }
+  });
+}
+
 export const S3_PUBLIC_BASE = `${FILE_CDN || `https://${FILE_BUCKET}.s3.${FILE_REGION}.amazonaws.com`}/`;
 
 const BASE_ENDPOINTS = {

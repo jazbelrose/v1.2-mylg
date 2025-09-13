@@ -48,6 +48,7 @@ import {
   apiFetch,
   getFileUrl,
   normalizeFileUrl,
+  fileUrlsToKeys,
 } from "../../shared/utils/api";
 
 /* =============================================================================
@@ -748,14 +749,15 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
         ...(message.attachments?.map((a) => a.url) ?? []),
         ...(message.file?.url ? [message.file.url] : []),
       ];
-      if (fileUrls.length) {
+      const fileKeys = fileUrlsToKeys(fileUrls);
+      if (fileKeys.length) {
         await apiFetch<DeleteS3FilesResponse>(DELETE_FILE_FROM_S3_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             projectId,
             field: folderKey,
-            fileKeys: fileUrls,
+            fileKeys,
           }),
         });
       }

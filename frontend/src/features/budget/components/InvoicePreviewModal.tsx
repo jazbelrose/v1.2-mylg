@@ -25,6 +25,7 @@ import {
   S3_PUBLIC_BASE,
   DELETE_FILE_FROM_S3_URL,
   apiFetch,
+  fileUrlsToKeys,
 } from "@/shared/utils/api";
 import { v4 as uuid } from "uuid";
 import { useData } from "@/app/contexts/useData";
@@ -239,7 +240,8 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
   const performDeleteInvoices = async () => {
     const fileUrls = Array.from(selectedInvoices);
-    if (!fileUrls.length || !project?.projectId) return;
+    const fileKeys = fileUrlsToKeys(fileUrls);
+    if (!fileKeys.length || !project?.projectId) return;
     setIsConfirmingDelete(false);
     const toastId = toast.loading("Deleting invoices...");
     try {
@@ -249,7 +251,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         body: JSON.stringify({
           projectId: project.projectId,
           field: "invoices",
-          fileKeys: fileUrls,
+          fileKeys,
         }),
       });
       setSavedInvoices((prev) => prev.filter((inv) => !fileUrls.includes(inv.url)));

@@ -109,6 +109,12 @@ export default function DragAndDropPlugin() {
       }
 
       const insertAsLink = () => {
+        // Avoid scheduling updates if the editor is unmounted
+        if (!editor.getRootElement()) {
+          setIsLoading(false);
+          return;
+        }
+
         editor.update(() => {
           const link = $createLinkNode(src);
           if (file) link.append($createTextNode(file.name));
@@ -128,6 +134,11 @@ export default function DragAndDropPlugin() {
           const img = new Image();
           img.src = src;
           img.onload = () => {
+            if (!editor.getRootElement()) {
+              setIsLoading(false);
+              return;
+            }
+
             editor.update(() => {
               const payload: ResizableImagePayload = {
                 src,
@@ -161,6 +172,11 @@ export default function DragAndDropPlugin() {
   const onDrop = useCallback(
     async (e: DragEvent) => {
       e.preventDefault();
+
+      // Skip if editor DOM is not available (e.g., unmounted)
+      if (!editor.getRootElement()) {
+        return;
+      }
 
       moveCaretToPoint(editor, e.clientX, e.clientY);
 

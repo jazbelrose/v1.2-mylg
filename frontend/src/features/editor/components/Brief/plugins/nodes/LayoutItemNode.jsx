@@ -11,10 +11,6 @@ export class LayoutItemNode extends ElementNode {
     return new LayoutItemNode(node.__key);
   }
 
-  afterCloneFrom(prevNode) {
-    // LayoutItemNode doesn't have custom properties to copy
-  }
-
   createDOM(config) {
     const dom = document.createElement('div');
     dom.setAttribute('data-lexical-layout-item', 'true');

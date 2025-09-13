@@ -58,6 +58,7 @@ export interface DMFile {
   fileName: string;
   url: string;
   finalUrl?: string | null;
+  key: string;
   [key: string]: unknown;
 }
 

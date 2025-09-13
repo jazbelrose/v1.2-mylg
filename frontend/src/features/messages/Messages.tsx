@@ -682,7 +682,7 @@ const fetchMessages = async () => {
         conversationId: selectedConversation,
         senderId: userData?.userId || "",
         text: tempUrl,
-        file: { fileName: file.name, url: tempUrl, finalUrl: null },
+        file: { fileName: file.name, url: tempUrl, finalUrl: null, key },
         attachments: [{ fileName: file.name, url: tempUrl, key }],
         timestamp,
         optimisticId,

@@ -659,7 +659,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
               </Form.Item>
 
               <Form.Item label="Address" name="address">
-                <>
+                <div>
                   <Input
                     placeholder="Search address"
                     value={assignLocationSearch}
@@ -718,7 +718,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                       {assignTaskAddress}
                     </div>
                   )}
-                </>
+                </div>
               </Form.Item>
             </div>
 
@@ -793,10 +793,10 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
               </Form.Item>
 
               <Form.Item label="Budget Code" name="budgetItemId">
-                <>
+                <div>
                   <Select options={budgetOptions} />
                   <Input />
-                </>
+                </div>
               </Form.Item>
 
               <Form.Item label="Event ID" name="eventId">
@@ -804,7 +804,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
               </Form.Item>
 
               <Form.Item label="Location" name="location">
-                <>
+                <div>
                   <Input
                     placeholder="{lat, lng}"
                     value={
@@ -831,11 +831,11 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                       ))}
                     </div>
                   )}
-                </>
+                </div>
               </Form.Item>
 
               <Form.Item label="Address" name="address">
-                <>
+                <div>
                   <Input
                     placeholder="Search address"
                     value={locationSearch}
@@ -893,7 +893,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                       {taskAddress}
                     </div>
                   )}
-                </>
+                </div>
               </Form.Item>
             </Form>
           </Modal>

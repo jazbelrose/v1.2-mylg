@@ -294,6 +294,23 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
     ).sort((a, b) => +new Date(a.timestamp) - +new Date(b.timestamp));
   }, [userData, selectedConversation, deletedMessageIds]);
 
+  const displayMessages = useMemo(() => {
+    return messages.map((m) => {
+      if (!m.file && Array.isArray(m.attachments) && m.attachments.length) {
+        const a = m.attachments[0];
+        const url = a.url || (a.key ? getFileUrl(a.key) : "");
+        return {
+          ...m,
+          file: {
+            fileName: a.fileName || a.name || getFileNameFromUrl(url),
+            url,
+          },
+        } as DMMessage;
+      }
+      return m;
+    });
+  }, [messages]);
+
   const persistReadStatus = useCallback(async (conversationId: string) => {
     try {
       await apiFetch(MESSAGES_THREADS_URL, {
@@ -511,7 +528,7 @@ const fetchMessages = async () => {
     } else {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [displayMessages]);
 
   useEffect(() => {
     initialScrollRef.current = true;
@@ -648,6 +665,7 @@ const fetchMessages = async () => {
       const tempUrl = URL.createObjectURL(file);
       const optimisticId = `${Date.now()}-${file.name}`;
       const timestamp = new Date().toISOString();
+      const key = `dms/${selectedConversation}/${folderKey}/${file.name}`;
 
       const websocketMessage = {
         action: "sendMessage",
@@ -664,7 +682,7 @@ const fetchMessages = async () => {
         senderId: userData?.userId || "",
         text: tempUrl,
         file: { fileName: file.name, url: tempUrl, finalUrl: null },
-        attachments: [{ fileName: file.name, url: tempUrl }],
+        attachments: [{ fileName: file.name, url: tempUrl, key }],
         timestamp,
         optimisticId,
         optimistic: true,
@@ -694,7 +712,15 @@ const fetchMessages = async () => {
                     ...msg.file!,
                     url: uploadedFile.url,
                     finalUrl: uploadedFile.url,
+                    key: uploadedFile.key,
                   },
+                  attachments: [
+                    {
+                      fileName: uploadedFile.fileName,
+                      url: uploadedFile.url,
+                      key: uploadedFile.key,
+                    },
+                  ],
                   optimistic: false,
                 }
               : msg
@@ -706,8 +732,14 @@ const fetchMessages = async () => {
         const payload = {
           ...websocketMessage,
           text: uploadedFile.url,
-          file: { fileName: file.name, url: uploadedFile.url },
-          attachments: [{ fileName: file.name, url: uploadedFile.url }],
+          file: { fileName: file.name, url: uploadedFile.url, key: uploadedFile.key },
+          attachments: [
+            {
+              key: uploadedFile.key,
+              name: file.name,
+              type: file.type,
+            },
+          ],
         };
 
         const maxAttempts = 5;
@@ -809,7 +841,7 @@ const fetchMessages = async () => {
       const fileUrl = getFileUrl(
         `dms/${encodeURIComponent(conversationId)}/${folderKey}/${encodeURIComponent(file.name)}`
       );
-      return { fileName: file.name, url: normalizeFileUrl(fileUrl) };
+      return { fileName: file.name, url: normalizeFileUrl(fileUrl), key: filename };
     } catch (error) {
       console.error("Error uploading file:", error);
     }
@@ -821,17 +853,22 @@ const fetchMessages = async () => {
 
     try {
       // delete file (if any)
-      const fileUrl = message.file?.url ?? message.attachments?.[0]?.url;
-      if (fileUrl) {
+      const fileKey =
+        message.attachments?.[0]?.key ||
+        (message.file?.url
+          ? fileUrlsToKeys([message.file.url])[0]
+          : message.attachments?.[0]?.url
+          ? fileUrlsToKeys([message.attachments[0].url])[0]
+          : undefined);
+      if (fileKey) {
         try {
-          const fileKeys = fileUrlsToKeys([fileUrl]);
           await apiFetch(DELETE_FILE_FROM_S3_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               projectId: selectedConversation,
               field: folderKey,
-              fileKeys,
+              fileKeys: [fileKey],
             }),
           });
         } catch (err) {
@@ -1173,21 +1210,21 @@ const fetchMessages = async () => {
               marginBottom: "10px",
               display: "flex",
               flexDirection: "column",
-              justifyContent: messages.length === 0 ? "center" : "flex-start",
-              alignItems: messages.length === 0 ? "center" : "stretch",
+              justifyContent: displayMessages.length === 0 ? "center" : "flex-start",
+              alignItems: displayMessages.length === 0 ? "center" : "stretch",
             }}
             onClick={() => selectedConversation && handleMarkRead(selectedConversation)}
           >
-            {messages.length === 0 && !isLoading ? (
+            {displayMessages.length === 0 && !isLoading ? (
               <div style={{ color: "#aaa", fontSize: 16, textAlign: "center" }}>
                 No messages yet.
               </div>
             ) : (
-              messages.map((msg, index) => (
+              displayMessages.map((msg, index) => (
                 <MessageItem
                   key={msg.optimisticId || msg.messageId || String(msg.timestamp)}
                   msg={msg as ChatMessage}
-                  prevMsg={messages[index - 1] as ChatMessage}
+                  prevMsg={displayMessages[index - 1] as ChatMessage}
                   userData={userData}
                   allUsers={allUsers}
                   openPreviewModal={openPreviewModal}

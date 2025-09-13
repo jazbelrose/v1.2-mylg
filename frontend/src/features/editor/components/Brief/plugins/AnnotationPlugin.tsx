@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $getSelection, $isRangeSelection } from "lexical";
+
+import {
+  $getSelection,
+  $isRangeSelection,
+  $getRoot,
+  $isTextNode,
+  TextNode,
+} from "lexical";
 
 type ButtonPos = { top: number; left: number } | null;
 
@@ -56,53 +63,36 @@ const AnnotationPlugin: React.FC<Props> = ({ onAddAnnotation }) => {
       const selected = ce?.detail?.selectionText;
       if (!selected) return;
 
-      editor.update(() => {
-        const rootEl = editor.getRootElement();
-        if (!rootEl) return;
-
-        const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT);
-        let found:
-          | {
-              node: Text;
-              idx: number;
-            }
-          | null = null;
-
-        while (walker.nextNode()) {
-          const node = walker.currentNode as Text;
-          const idx = node.textContent.indexOf(selected);
+     editor.update(() => {
+        const textNodes = $getRoot().getAllTextNodes();
+        for (const textNode of textNodes) {
+          const content = textNode.getTextContent();
+          const idx = content.indexOf(selected);
           if (idx !== -1) {
-            found = { node, idx };
+            const [, highlightNode] = textNode.splitText(
+              idx,
+              idx + selected.length,
+            );
+            highlightNode.setStyle("background: yellow");
+
+            window.setTimeout(() => {
+              editor.update(() => {
+                highlightNode.setStyle("");
+                const prev = highlightNode.getPreviousSibling();
+                const next = highlightNode.getNextSibling();
+                let node: TextNode = highlightNode;
+                if ($isTextNode(prev) && prev.getStyle() === "") {
+                  node = prev.mergeWithSibling(node);
+                }
+                if ($isTextNode(next) && next.getStyle() === "") {
+                  node.mergeWithSibling(next);
+                }
+              });
+            }, 2000);
             break;
           }
         }
 
-        if (found) {
-          const range = document.createRange();
-          range.setStart(found.node, found.idx);
-          range.setEnd(found.node, found.idx + selected.length);
-
-          const highlight = document.createElement("span");
-          highlight.style.background = "yellow";
-          try {
-            range.surroundContents(highlight);
-          } catch {
-            // If DOM structure prevents surrounding, just bail gracefully
-            return;
-          }
-
-          // Auto-remove highlight after 2s
-          window.setTimeout(() => {
-            if (highlight.parentNode) {
-              // unwrap <span>
-              const parent = highlight.parentNode;
-              while (highlight.firstChild) {
-                parent.insertBefore(highlight.firstChild, highlight);
-              }
-              parent.removeChild(highlight);
-            }
-          }, 2000);
-        }
       });
     };
 

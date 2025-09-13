@@ -50,6 +50,7 @@ import {
   DELETE_FILE_FROM_S3_URL,
   EDIT_MESSAGE_URL,
   S3_PUBLIC_BASE,
+  ensureS3Url,
   apiFetch,
 } from "@/shared/utils/api";
 import MessageItem, { ChatMessage } from "@/features/messages/MessageItem";
@@ -288,7 +289,22 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
         )
     );
     return dedupeById(
-      filtered.map((m) => ({ ...m, read: true } as DMMessage))
+      filtered.map((m) => {
+        const text = m.text ? ensureS3Url(m.text) : m.text;
+        let file = m.file ? { ...m.file, url: ensureS3Url(m.file.url) } : null;
+
+        if (!file && Array.isArray(m.attachments) && m.attachments.length) {
+          const a = m.attachments[0];
+          const url = ensureS3Url(a.url);
+          file = { fileName: a.fileName || getFileNameFromUrl(url), url };
+        }
+
+        const attachments = Array.isArray(m.attachments)
+          ? m.attachments.map((a) => ({ ...a, url: ensureS3Url(a.url) }))
+          : m.attachments;
+
+        return { ...m, read: true, text, file: file || undefined, attachments } as DMMessage;
+      })
     ).sort((a, b) => +new Date(a.timestamp) - +new Date(b.timestamp));
   }, [userData, selectedConversation, deletedMessageIds]);
 

@@ -46,6 +46,7 @@ import {
   DELETE_FILE_FROM_S3_URL,
   EDIT_MESSAGE_URL,
   S3_PUBLIC_BASE,
+  ensureS3Url,
   apiFetch,
 } from "../../shared/utils/api";
 
@@ -273,17 +274,23 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
   const displayMessages = React.useMemo(() => {
     const arr = Array.isArray(messages) ? messages : [];
     return arr.map((m: Message) => {
-      if (!m?.file && Array.isArray(m?.attachments) && m.attachments.length) {
+      const text = m.text ? ensureS3Url(m.text) : m.text;
+      let file = m.file ? { ...m.file, url: ensureS3Url(m.file.url) } : null;
+
+      if (!file && Array.isArray(m?.attachments) && m.attachments.length) {
         const a = m.attachments[0];
-        return {
-          ...m,
-          file: {
-            fileName: a.fileName || getFileNameFromUrl(a.url),
-            url: a.url,
-          },
+        const url = ensureS3Url(a.url);
+        file = {
+          fileName: a.fileName || getFileNameFromUrl(url),
+          url,
         };
       }
-      return m;
+
+      const attachments = Array.isArray(m.attachments)
+        ? m.attachments.map((a) => ({ ...a, url: ensureS3Url(a.url) }))
+        : m.attachments;
+
+      return { ...m, text, file: file || undefined, attachments };
     });
   }, [messages]);
 

@@ -5,10 +5,12 @@ import { config } from "dotenv";
 // Load environment variables
 config();
 
-const OLD_BUCKET = "mylguserdata194416-dev";
-const NEW_BUCKET = "mylg-files-v12";
-const OLD_REGION = "us-west-1";
-const NEW_REGION = "us-west-2";
+// Allow overriding bucket names/regions via environment variables so this
+// script can be reused for future migrations without code changes.
+const OLD_BUCKET = process.env.OLD_BUCKET || "mylguserdata194416-dev";
+const NEW_BUCKET = process.env.NEW_BUCKET || "mylg-files-v12";
+const OLD_REGION = process.env.OLD_REGION || "us-west-1";
+const NEW_REGION = process.env.NEW_REGION || "us-west-2";
 
 async function migrateS3Content() {
   console.log("🚀 Starting S3 content migration using AWS CLI...");

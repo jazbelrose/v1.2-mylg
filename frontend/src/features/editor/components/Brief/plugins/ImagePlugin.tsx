@@ -65,7 +65,7 @@ export default function ImagePlugin({ showToolbarButton = true }: Props) {
         options: { accessLevel: "public" },
       });
       console.log("Upload completed:", result);
-      return `${S3_PUBLIC_BASE}/${filename}`;
+      return `${S3_PUBLIC_BASE}${filename}`;
     } catch (error) {
       console.error("Error uploading file:", error);
       return null;

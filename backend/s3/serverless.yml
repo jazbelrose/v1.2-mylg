@@ -14,7 +14,7 @@ resources:
     S3Bucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: mylg-files-v12
+        BucketName: ${env:S3_BUCKET_NAME, 'mylg-files-v12'}
         CorsConfiguration:
           CorsRules:
             - AllowedHeaders:
@@ -55,13 +55,13 @@ resources:
               Principal: "*"
               Action:
                 - s3:GetObject
-              Resource: !Sub "arn:aws:s3:::mylg-files-v12/*"
+              Resource: arn:aws:s3:::${env:S3_BUCKET_NAME, 'mylg-files-v12'}/*
             - Sid: PublicListBucket
               Effect: Allow
               Principal: "*"
               Action:
                 - s3:ListBucket
-              Resource: !Sub "arn:aws:s3:::mylg-files-v12"
+              Resource: arn:aws:s3:::${env:S3_BUCKET_NAME, 'mylg-files-v12'}
 
   Outputs:
     S3BucketName:

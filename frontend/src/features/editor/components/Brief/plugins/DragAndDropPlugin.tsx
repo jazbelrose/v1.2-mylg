@@ -42,7 +42,7 @@ async function uploadFileToS3(
       data: file,
       options: { accessLevel: "public" },
     });
-    return `${S3_PUBLIC_BASE}/${key}`;
+    return `${S3_PUBLIC_BASE}${key}`;
   } catch (err) {
     console.error("Error uploading file:", err);
     return null;

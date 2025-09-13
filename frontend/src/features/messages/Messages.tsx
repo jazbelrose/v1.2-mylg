@@ -804,7 +804,7 @@ const fetchMessages = async () => {
       await uploadTask.result;
       // small delay for availability
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      const fileUrl = `${S3_PUBLIC_BASE}/dms/${encodeURIComponent(
+      const fileUrl = `${S3_PUBLIC_BASE}dms/${encodeURIComponent(
         conversationId
       )}/${folderKey}/${encodeURIComponent(file.name)}`;
       return { fileName: file.name, url: fileUrl };

@@ -755,7 +755,7 @@ const GalleryComponent: React.FC = () => {
         options: { accessLevel: "public" },
       });
       const encodedName = encodeURIComponent(file.name);
-      const url = `${S3_PUBLIC_BASE}/projects/${activeProject.projectId}/galleries/${galleryId}/cover/${encodedName}?t=${Date.now()}`;
+      const url = `${S3_PUBLIC_BASE}projects/${activeProject.projectId}/galleries/${galleryId}/cover/${encodedName}?t=${Date.now()}`;
       await applyCoverUrl(pendingCover.index, pendingCover.isLegacy, pendingCover.gallery, url);
     } catch (err) {
       console.error("Failed to upload cover image", err);

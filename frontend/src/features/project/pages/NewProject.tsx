@@ -164,7 +164,7 @@ const NewProject: React.FC = () => {
           options: { accessLevel: "public" },
         });
 
-        const fileUrl = `${S3_PUBLIC_BASE}/${filename}`;
+        const fileUrl = `${S3_PUBLIC_BASE}${filename}`;
         uploadedFileUrls.push({ fileName: file.name, url: fileUrl });
 
         completed += 1;

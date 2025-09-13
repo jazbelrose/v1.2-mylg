@@ -247,7 +247,7 @@ interface EditValues {
       data: file,
       options: { accessLevel: 'guest' },
     });
-    return `${S3_PUBLIC_BASE}/${filename}?t=${Date.now()}`;
+    return `${S3_PUBLIC_BASE}${filename}?t=${Date.now()}`;
   };
 
   const handleThumbnailChange = async (e, userId) => {

@@ -140,6 +140,16 @@ type MaybeItem<T> = { Item?: T } | T;
 
 const ENV = import.meta.env.VITE_APP_ENV || 'development';
 
+// Resolve the public S3 base URL dynamically. This allows overriding the full
+// URL via VITE_S3_PUBLIC_BASE while still supporting the legacy approach of
+// specifying the bucket/region separately. A trailing slash is maintained for
+// backwards compatibility with existing URL concatenations.
+const DEFAULT_S3_BUCKET = import.meta.env.VITE_S3_FILES_BUCKET || 'mylg-files-v12';
+const DEFAULT_S3_REGION = import.meta.env.VITE_S3_REGION || 'us-west-2';
+const DEFAULT_S3_PUBLIC_BASE =
+  import.meta.env.VITE_S3_PUBLIC_BASE ||
+  `https://${DEFAULT_S3_BUCKET}.s3.${DEFAULT_S3_REGION}.amazonaws.com/`;
+
 const BASE_ENDPOINTS = {
   development: {
     // Core v1.2 Services (us-west-2)
@@ -180,7 +190,7 @@ const BASE_ENDPOINTS = {
     
     // External services (unchanged)
     NOMINATIM_SEARCH_URL: 'https://nominatim.openstreetmap.org/search?format=json&q=',
-    S3_PUBLIC_BASE: 'https://mylg-files-v12.s3.us-west-2.amazonaws.com/',
+    S3_PUBLIC_BASE: DEFAULT_S3_PUBLIC_BASE,
     
     // Legacy endpoints that may need special handling or removal
     NEWSLETTER_SUBSCRIBE_URL: 'https://jmmn5p5yhe.execute-api.us-west-1.amazonaws.com/default/notifyNewSubscriber',

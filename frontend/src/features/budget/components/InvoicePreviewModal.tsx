@@ -212,7 +212,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         .filter((item) => item.key && !String(item.key).endsWith("/"))
         .map((item) => ({
           name: String(item.key).split("/").pop() || "",
-          url: `${S3_PUBLIC_BASE}/${item.key}`,
+          url: `${S3_PUBLIC_BASE}${item.key}`,
         }));
     } catch (err) {
       console.error("Failed to list invoice files", err);
@@ -731,7 +731,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
           metadata: { friendlyName: fileName },
         },
       });
-      const url = `${S3_PUBLIC_BASE}/${key}`;
+      const url = `${S3_PUBLIC_BASE}${key}`;
       setSavedInvoices((prev) => [...prev, { name: fileName, url }]);
       setInvoiceDirty(false);
       setCurrentFileName(fileName);
@@ -757,7 +757,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         const file = new File([blob], `logo.${ext}`, { type: blob.type });
         const filename = `userBranding/${userData.userId}/${file.name}`;
         await uploadData({ key: filename, data: file, options: { accessLevel: "public" } });
-        uploadedUrl = `${S3_PUBLIC_BASE}/${filename}`;
+        uploadedUrl = `${S3_PUBLIC_BASE}${filename}`;
       }
 
       const updated = {

@@ -4,7 +4,7 @@ import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import { Trash2, Pencil, Smile } from "lucide-react";
 import ReactPlayer from "react-player";
 // import "../../../../index.css";
-import { S3_PUBLIC_BASE } from "../../shared/utils/api";
+import { S3_PUBLIC_BASE, ensureS3Url } from "../../shared/utils/api";
 import ReactionBar from "@/shared/ui/ReactionBar";
 import { ChatMessage, ChatFile, DMFile } from "@/shared/utils/messageUtils";
 
@@ -147,16 +147,19 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       );
     }
-    if (text && text.includes(S3_PUBLIC_BASE)) {
-      const file: ChatFile = { fileName: getFileNameFromUrl(text), url: text };
-      return (
-        <div
-          onClick={() => openPreviewModal(file)}
-          style={{ cursor: "pointer" }}
-        >
-          {renderFilePreview(file, folderKey)}
-        </div>
-      );
+    if (text) {
+      const normalized = ensureS3Url(text);
+      if (normalized !== text || text.includes(S3_PUBLIC_BASE)) {
+        const file: ChatFile = {
+          fileName: getFileNameFromUrl(normalized),
+          url: normalized,
+        };
+        return (
+          <div onClick={() => openPreviewModal(file)} style={{ cursor: "pointer" }}>
+            {renderFilePreview(file, folderKey)}
+          </div>
+        );
+      }
     }
     if (matchedUrl) {
       return <RenderLinkContent url={matchedUrl} />;

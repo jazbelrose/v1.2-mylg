@@ -248,6 +248,26 @@ export const {
 // Helpers
 // ───────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Ensures that a provided URL points to the currently configured public S3
+ * bucket. If the URL references any previous `mylg-files*` bucket or region,
+ * it will be rewritten to use {@link S3_PUBLIC_BASE} while preserving the
+ * original path.
+ */
+export function ensureS3Url(url: string): string {
+  if (!url) return url;
+  try {
+    const pattern = /^https?:\/\/[^/]*mylg-files[^/]*\.s3\.[^/]+\.amazonaws\.com\//;
+    if (pattern.test(url)) {
+      const path = url.replace(pattern, "");
+      return `${S3_PUBLIC_BASE.replace(/\/$/, "")}/${path}`;
+    }
+  } catch {
+    // Ignore parsing errors and fall back to the original URL
+  }
+  return url;
+}
+
 /** Extracts array results from either `{ Items: T[] }`, `{ items: T[] }`, `{ notifications: T[] }`, or `T[]`. */
 function extractItems<T>(data: MaybeItems<T> | JsonRecord): T[] {
   if (Array.isArray(data)) return data as T[];

@@ -405,7 +405,7 @@ const DesignerComponent = forwardRef<DesignerRef, DesignerComponentProps>(
         const fabricCanvas = fabricCanvasRef.current;
         try {
           // Start with any canvas JSON already on the active project as a fallback
-          let jsonString: string | null = activeProject?.canvasJson ?? null;
+          let jsonString: string | null = (activeProject?.canvasJson as string | null) ?? null;
 
           if (activeProject?.projectId) {
             const apiUrl = `${EDIT_PROJECT_URL}/${activeProject.projectId}`;
@@ -474,7 +474,7 @@ const DesignerComponent = forwardRef<DesignerRef, DesignerComponentProps>(
       };
 
       loadCanvas();
-    }, [canvasReady, activeProject?.projectId, setActiveProject]);
+    }, [canvasReady, activeProject?.projectId, activeProject?.canvasJson, setActiveProject]);
 
     useEffect(() => {
       applyCanvasMode(mode);

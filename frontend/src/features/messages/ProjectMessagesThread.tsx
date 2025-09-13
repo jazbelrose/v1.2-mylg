@@ -57,9 +57,12 @@ import { getFileNameFromUrl } from "../../shared/utils/fileUtils";
 ============================================================================= */
 
 type Attachment = {
-  fileName: string;
-  url: string;
+  fileName?: string;
+  url?: string;
+  key?: string;
+  name?: string;
   mimeType?: string;
+  type?: string;
   size?: number;
 };
 
@@ -67,6 +70,7 @@ type FileObj = {
   fileName: string;
   url: string;
   finalUrl?: string | null;
+  key?: string;
 };
 
 type Message = {
@@ -277,27 +281,14 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       // If attachments exist, derive a file object and ensure text contains the url
       if (Array.isArray(m.attachments) && m.attachments.length > 0) {
         const a = m.attachments[0];
-        const url = normalizeFileUrl(a.url);
+        const url = a.url || (a.key ? getFileUrl(a.key) : "");
         return {
           ...m,
-          file:
-            m.file && typeof m.file === "object" && "url" in m.file
-              ? m.file
-              : {
-                  fileName: a.fileName || getFileNameFromUrl(url),
-                  url,
-                },
-          text: m.text || url,
-        } as Message;
-      }
-      // Legacy messages may have the file URL directly in the text field
-      if (!m.file && typeof m.text === "string" && /mylg-files-v\d+/.test(m.text)) {
-        const url = normalizeFileUrl(m.text);
-        return {
-          ...m,
-          file: { fileName: getFileNameFromUrl(url), url },
-          text: url,
-        } as Message;
+          file: {
+            fileName: a.fileName || a.name || getFileNameFromUrl(url),
+            url,
+          },
+        };
       }
       return m;
     });
@@ -614,7 +605,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       await uploadTask.result;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // deliberate delay
       const fileUrl = getFileUrl(filename);
-      return { fileName: file.name, url: fileUrl };
+      return { fileName: file.name, url: fileUrl, key: filename };
     } catch (error) {
       console.error("Error uploading file:", error);
     }
@@ -630,6 +621,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       const tempUrl = URL.createObjectURL(file);
       const optimisticId = Date.now() + "-" + file.name;
       const timestamp = new Date().toISOString();
+      const key = `projects/${projectId}/${folderKey}/${file.name}`;
 
       const optimisticMessage: Message = {
         action: "sendMessage",
@@ -642,6 +634,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
           {
             fileName: file.name,
             url: tempUrl,
+            key,
             mimeType: file.type,
             size: file.size,
           },
@@ -677,11 +670,13 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
                     ...msg.file!,
                     finalUrl: uploadedFile.url,
                     url: uploadedFile.url,
+                    key: uploadedFile.key,
                   },
                   attachments: [
                     {
                       fileName: uploadedFile.fileName,
                       url: uploadedFile.url,
+                      key: uploadedFile.key,
                       // mimeType/size unknown after upload; omit
                     },
                   ],
@@ -704,8 +699,9 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
           file: uploadedFile,     // legacy
           attachments: [
             {
-              fileName: uploadedFile.fileName,
-              url: uploadedFile.url,
+              key: uploadedFile.key,
+              name: uploadedFile.fileName,
+              type: file.type,
             },
           ], // NEW
           timestamp,
@@ -758,11 +754,12 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
 
     try {
       // Delete S3 files if present
-      const fileUrls: string[] = [
-        ...(message.attachments?.map((a) => a.url) ?? []),
-        ...(message.file?.url ? [message.file.url] : []),
+      const fileKeys: string[] = [
+        ...(message.attachments
+          ?.map((a) => a.key || (a.url ? fileUrlsToKeys([a.url])[0] : ""))
+          .filter(Boolean) ?? []),
+        ...(message.file?.url ? fileUrlsToKeys([message.file.url]) : []),
       ];
-      const fileKeys = fileUrlsToKeys(fileUrls);
       if (fileKeys.length) {
         await apiFetch<DeleteS3FilesResponse>(DELETE_FILE_FROM_S3_URL, {
           method: "POST",

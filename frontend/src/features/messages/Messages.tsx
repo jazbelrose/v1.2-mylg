@@ -296,14 +296,15 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
 
   // Normalize: prefer explicit attachments; keep legacy `file` fallback
   const displayMessages = useMemo(() => {
-    return messages.map((m: DMMessage) => {
-      if (!m?.file && Array.isArray(m?.attachments) && m.attachments.length) {
+    return messages.map((m) => {
+      if (!m.file && Array.isArray(m.attachments) && m.attachments.length) {
         const a = m.attachments[0];
+        const url = a.url || (a.key ? getFileUrl(a.key) : "");
         return {
           ...m,
           file: {
-            fileName: a.fileName || getFileNameFromUrl(a.url),
-            url: a.url,
+            fileName: a.fileName || a.name || getFileNameFromUrl(url),
+            url,
           },
         } as DMMessage;
       }
@@ -528,7 +529,7 @@ const fetchMessages = async () => {
     } else {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [displayMessages]);
 
   useEffect(() => {
     initialScrollRef.current = true;
@@ -665,6 +666,7 @@ const fetchMessages = async () => {
       const tempUrl = URL.createObjectURL(file);
       const optimisticId = `${Date.now()}-${file.name}`;
       const timestamp = new Date().toISOString();
+      const key = `dms/${selectedConversation}/${folderKey}/${file.name}`;
 
       const websocketMessage = {
         action: "sendMessage",
@@ -681,7 +683,7 @@ const fetchMessages = async () => {
         senderId: userData?.userId || "",
         text: tempUrl,
         file: { fileName: file.name, url: tempUrl, finalUrl: null },
-        attachments: [{ fileName: file.name, url: tempUrl }],
+        attachments: [{ fileName: file.name, url: tempUrl, key }],
         timestamp,
         optimisticId,
         optimistic: true,
@@ -711,7 +713,15 @@ const fetchMessages = async () => {
                     ...msg.file!,
                     url: uploadedFile.url,
                     finalUrl: uploadedFile.url,
+                    key: uploadedFile.key,
                   },
+                  attachments: [
+                    {
+                      fileName: uploadedFile.fileName,
+                      url: uploadedFile.url,
+                      key: uploadedFile.key,
+                    },
+                  ],
                   optimistic: false,
                 }
               : msg
@@ -723,8 +733,14 @@ const fetchMessages = async () => {
         const payload = {
           ...websocketMessage,
           text: uploadedFile.url,
-          file: { fileName: file.name, url: uploadedFile.url },
-          attachments: [{ fileName: file.name, url: uploadedFile.url }],
+          file: { fileName: file.name, url: uploadedFile.url, key: uploadedFile.key },
+          attachments: [
+            {
+              key: uploadedFile.key,
+              name: file.name,
+              type: file.type,
+            },
+          ],
         };
 
         const maxAttempts = 5;
@@ -826,7 +842,7 @@ const fetchMessages = async () => {
       const fileUrl = getFileUrl(
         `dms/${encodeURIComponent(conversationId)}/${folderKey}/${encodeURIComponent(file.name)}`
       );
-      return { fileName: file.name, url: normalizeFileUrl(fileUrl) };
+      return { fileName: file.name, url: normalizeFileUrl(fileUrl), key: filename };
     } catch (error) {
       console.error("Error uploading file:", error);
     }
@@ -838,17 +854,22 @@ const fetchMessages = async () => {
 
     try {
       // delete file (if any)
-      const fileUrl = message.file?.url ?? message.attachments?.[0]?.url;
-      if (fileUrl) {
+      const fileKey =
+        message.attachments?.[0]?.key ||
+        (message.file?.url
+          ? fileUrlsToKeys([message.file.url])[0]
+          : message.attachments?.[0]?.url
+          ? fileUrlsToKeys([message.attachments[0].url])[0]
+          : undefined);
+      if (fileKey) {
         try {
-          const fileKeys = fileUrlsToKeys([fileUrl]);
           await apiFetch(DELETE_FILE_FROM_S3_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               projectId: selectedConversation,
               field: folderKey,
-              fileKeys,
+              fileKeys: [fileKey],
             }),
           });
         } catch (err) {

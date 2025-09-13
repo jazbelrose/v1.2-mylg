@@ -34,8 +34,10 @@ export interface DMMessage extends BaseMessage {
 
 export interface Attachment {
   id?: string;
-  fileName: string;
-  url: string;
+  fileName?: string;
+  url?: string;
+  key?: string;
+  name?: string;
   type?: string;
   size?: number;
 }

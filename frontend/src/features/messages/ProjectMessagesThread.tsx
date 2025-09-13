@@ -270,19 +270,34 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
     return dedupeById(filtered) as Message[];
   }, [projectMessages, projectId, deletedMessageIds]);
 
-  // Normalize: prefer explicit attachments; keep legacy `file` fallback
+  // Normalize: ensure messages with attachments or file URLs display properly
   const displayMessages = React.useMemo(() => {
     const arr = Array.isArray(messages) ? messages : [];
     return arr.map((m: Message) => {
-      if (!m?.file && Array.isArray(m?.attachments) && m.attachments.length) {
+      // If attachments exist, derive a file object and ensure text contains the url
+      if (Array.isArray(m.attachments) && m.attachments.length > 0) {
         const a = m.attachments[0];
+        const url = normalizeFileUrl(a.url);
         return {
           ...m,
-          file: {
-            fileName: a.fileName || getFileNameFromUrl(a.url),
-            url: a.url,
-          },
-        };
+          file:
+            m.file && typeof m.file === "object" && "url" in m.file
+              ? m.file
+              : {
+                  fileName: a.fileName || getFileNameFromUrl(url),
+                  url,
+                },
+          text: m.text || url,
+        } as Message;
+      }
+      // Legacy messages may have the file URL directly in the text field
+      if (!m.file && typeof m.text === "string" && /mylg-files-v\d+/.test(m.text)) {
+        const url = normalizeFileUrl(m.text);
+        return {
+          ...m,
+          file: { fileName: getFileNameFromUrl(url), url },
+          text: url,
+        } as Message;
       }
       return m;
     });

@@ -4,25 +4,21 @@ import { ScrambleButton } from './ScrambleButton';
 import HomeHeader from '../../assets/svg/homeheader.svg?react';
 import './hero-section.css';
 
-// Wrapper component to forward ref to the SVG component
-const SvgHomeheader = React.forwardRef<SVGSVGElement>((props, ref) => (
-  <HomeHeader {...props} ref={ref} />
-));
-
 export const HeroSection: React.FC = () => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const masterTimeline = gsap.timeline();
 
-    if (svgRef.current) {
+    const svgRef = headerRef.current?.querySelector<SVGSVGElement>('svg');
+    if (svgRef) {
       masterTimeline.fromTo(
-        svgRef.current.querySelectorAll<SVGElement>('.arrow'),
+        svgRef.querySelectorAll<SVGElement>('.arrow'),
         { scale: 0.8, opacity: 0 },
         { scale: 1, opacity: 1, delay: 0.1, duration: 0.6, stagger: 0.05, ease: 'Power2.easeOut' }
       );
 
-      const svgText = svgRef.current.querySelector<SVGElement>('.hero-text');
+      const svgText = svgRef.querySelector<SVGElement>('.hero-text');
       if (svgText) {
         masterTimeline.fromTo(
           svgText,
@@ -50,8 +46,12 @@ export const HeroSection: React.FC = () => {
 
   return (
     <div className="herosection-container">
-      <div className="header-section" style={{ backgroundColor: '#0c0c0c', maxWidth: '1920px', margin: '0 auto' }}>
-        <SvgHomeheader ref={svgRef} />
+      <div
+        className="header-section"
+        style={{ backgroundColor: '#0c0c0c', maxWidth: '1920px', margin: '0 auto' }}
+        ref={headerRef}
+      >
+        <HomeHeader />
       </div>
       <div className="video-wrapper" style={{ maxWidth: '1920px', margin: '0 auto' }}>
         <div className="info-text">

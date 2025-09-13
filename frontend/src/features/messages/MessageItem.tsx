@@ -4,7 +4,7 @@ import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import { Trash2, Pencil, Smile } from "lucide-react";
 import ReactPlayer from "react-player";
 // import "../../../../index.css";
-import { normalizeFileUrl } from "../../shared/utils/api";
+import { normalizeFileUrl, getFileUrl } from "../../shared/utils/api";
 import ReactionBar from "@/shared/ui/ReactionBar";
 import { ChatMessage, ChatFile, DMFile } from "@/shared/utils/messageUtils";
 
@@ -173,7 +173,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         {!isCurrentUser && (
           <div className="avatar-wrapper">
             {senderThumbnail ? (
-              <img src={senderThumbnail} alt={senderName} className="avatar" />
+              <img src={getFileUrl(senderThumbnail)} alt={senderName} className="avatar" />
             ) : (
               <User className="avatar" />
             )}
@@ -252,7 +252,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         {isCurrentUser && (
           <div className="avatar-wrapper">
             {senderThumbnail ? (
-              <img src={senderThumbnail} alt="You" className="avatar avatar-right" />
+              <img src={getFileUrl(senderThumbnail)} alt="You" className="avatar avatar-right" />
             ) : (
               <User className="avatar avatar-right" />
             )}

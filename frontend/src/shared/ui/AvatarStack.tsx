@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getFileUrl } from '@/shared/utils/api';
 import styles from './avatar-stack.module.css';
+import { getFileUrl } from '../utils/api';
 
 interface Member {
   userId: string;

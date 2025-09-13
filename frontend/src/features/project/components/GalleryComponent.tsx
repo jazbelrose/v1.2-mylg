@@ -26,6 +26,7 @@ import {
   updateGallery,
   apiFetch,
   S3_PUBLIC_BASE,
+  getFileUrl,
 } from "../../../shared/utils/api";
 import { uploadData } from "aws-amplify/storage";
 import styles from "./gallery-component.module.css";
@@ -834,7 +835,7 @@ const GalleryComponent: React.FC = () => {
               const previewUrl = getPreviewUrl(galleryItem);
               return previewUrl ? (
                 <img
-                  src={previewUrl}
+                  src={previewUrl ? getFileUrl(previewUrl) : ''}
                   alt=""
                   className={styles.previewThumbnail}
                   key={galleryItem.slug || idx}
@@ -1010,7 +1011,7 @@ const GalleryComponent: React.FC = () => {
                           >
                             {previewUrl ? (
                               <img
-                                src={previewUrl}
+                                src={previewUrl ? getFileUrl(previewUrl) : ''}
                                 className={`${styles.thumbnail} ${styles.listThumbnail}`}
                                 alt=""
                               />
@@ -1147,7 +1148,7 @@ const GalleryComponent: React.FC = () => {
 
                 {editingIndex !== null && galleries[editingIndex]?.svgUrl && (
                   <a
-                    href={galleries[editingIndex].svgUrl}
+                    href={getFileUrl(galleries[editingIndex].svgUrl)}
                     download
                     className={styles.originalLink}
                   >
@@ -1308,7 +1309,7 @@ const GalleryComponent: React.FC = () => {
               onClick={() => chooseCoverUrl(url)}
               key={`${startIndex + i}`}
             >
-              <img src={url} alt={`Cover option ${startIndex + i + 1}`} />
+              <img src={getFileUrl(url)} alt={`Cover option ${startIndex + i + 1}`} />
             </div>
           ))}
         </div>

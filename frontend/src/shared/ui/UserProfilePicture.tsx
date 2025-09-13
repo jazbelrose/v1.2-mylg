@@ -1,6 +1,7 @@
 import React from 'react';
 
 import User from '@/assets/svg/user.svg?react';
+import { getFileUrl } from '../utils/api';
 
 export interface UserProfilePictureProps {
   thumbnail?: string | null;
@@ -18,7 +19,7 @@ const UserProfilePicture: React.FC<UserProfilePictureProps> = ({
     <label htmlFor="thumbnail" className="thumbnail-label">
       {localPreview || thumbnail ? (
         <img
-          src={localPreview || thumbnail || ''}
+          src={localPreview || (thumbnail ? getFileUrl(thumbnail) : '')}
           alt="Profile Thumbnail"
           className="profile-thumbnail"
         />

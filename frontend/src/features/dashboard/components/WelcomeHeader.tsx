@@ -10,6 +10,7 @@ import NavBadge from "../../../shared/ui/NavBadge";
 import { GridPlus } from "../../../shared/icons/GridPlus";
 import GlobalSearch from './GlobalSearch';
 import './GlobalSearch.css';
+import { getFileUrl } from '../../../shared/utils/api';
 
 const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string) => void }> = ({ userName: propUserName, setActiveView }) => {
   const { userData } = useData();
@@ -150,7 +151,7 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
           <div style={{ position: 'relative' }}>
             {userThumbnail ? (
               <img
-                src={userThumbnail}
+                src={getFileUrl(userThumbnail)}
                 alt={`${userName}'s Thumbnail`}
                 style={{
                   width: isMobile ? '32px' : '40px',

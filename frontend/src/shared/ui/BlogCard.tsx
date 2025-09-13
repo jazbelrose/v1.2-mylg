@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './blog-card.css';
 import { ScrambleButton } from './ScrambleButton';
+import { getFileUrl } from '../utils/api';
 
 export interface BlogCardProps {
   type?: 'blog' | 'project';
@@ -39,7 +40,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
       {layout === 'row1' && (
         <>
           <div className="row1-image">
-            <img src={images[0]} alt={title} className="card-image" />
+            <img src={getFileUrl(images[0])} alt={title} className="card-image" />
           </div>
           <div className="row1-content">
             <div className="column1">
@@ -68,7 +69,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
           </div>
           <div className="row2-image">
             <Link to={linkTarget}>
-              <img src={images[0]} alt={title} className="card-image" />
+              <img src={getFileUrl(images[0])} alt={title} className="card-image" />
             </Link>
           </div>
           <div className="content-row">
@@ -109,7 +110,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
             </div>
           </div>
           <div className="image-column2">
-            <img src={images[0]} alt={title} className="card-image" />
+            <img src={getFileUrl(images[0])} alt={title} className="card-image" />
           </div>
         </>
       )}
@@ -118,7 +119,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
         <>
           <div className="row1-image">
             <Link to={linkTarget}>
-              <img src={images[0]} alt={title} className="card-image" />
+              <img src={getFileUrl(images[0])} alt={title} className="card-image" />
             </Link>
           </div>
           <div className="row1-content">

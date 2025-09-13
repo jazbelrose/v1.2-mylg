@@ -44,6 +44,7 @@ import {
   fetchUserProfilesBatch,
   getFileUrl,
   type UserProfile,
+  getFileUrl,
 } from "@/shared/utils/api";
 import AvatarStack from "@/shared/ui/AvatarStack";
 import TeamModal from "@/features/project/components/TeamModal";
@@ -874,7 +875,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               {localActiveProject?.thumbnails &&
               localActiveProject.thumbnails.length > 0 ? (
                 <img
-                  src={localActiveProject.thumbnails[0]}
+                  src={getFileUrl(localActiveProject.thumbnails[0])}
                   alt="Project Thumbnail"
                   className="project-logo"
                 />

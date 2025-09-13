@@ -983,7 +983,7 @@ const fetchMessages = async () => {
       chatTitle = `Direct Message / ${dmUser.title}`;
       chatIcon = dmUser.profilePicture ? (
         <img
-          src={dmUser.profilePicture}
+          src={getFileUrl(dmUser.profilePicture)}
           alt={dmUser.title}
           style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" }}
         />
@@ -1062,7 +1062,7 @@ const fetchMessages = async () => {
                         <>
                           {conv.profilePicture ? (
                             <img
-                              src={conv.profilePicture}
+                              src={getFileUrl(conv.profilePicture)}
                               alt={conv.title}
                               style={{
                                 width: 32,
@@ -1293,7 +1293,7 @@ const fetchMessages = async () => {
                   if (["jpg", "jpeg", "png"].includes(ext)) {
                     return (
                       <img
-                        src={selectedPreviewFile.finalUrl || selectedPreviewFile.url}
+                        src={getFileUrl(fileUrlsToKeys([selectedPreviewFile.finalUrl || selectedPreviewFile.url])[0])}
                         alt={selectedPreviewFile.fileName}
                         style={{ maxWidth: "90vw", maxHeight: "80vh" }}
                       />
@@ -1305,7 +1305,7 @@ const fetchMessages = async () => {
                   <button onClick={closePreviewModal} className="modal-button secondary" aria-label="Close preview">
                     <FontAwesomeIcon icon={faTimes} />
                   </button>
-                  <a href={selectedPreviewFile.url} download style={{ color: "white" }}>
+                  <a href={getFileUrl(fileUrlsToKeys([selectedPreviewFile.url])[0])} download style={{ color: "white" }}>
                     <FontAwesomeIcon icon={faDownload} />
                   </a>
                 </div>

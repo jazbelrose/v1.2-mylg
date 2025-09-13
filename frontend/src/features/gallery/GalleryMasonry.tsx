@@ -1,6 +1,7 @@
 import React, { type FC } from 'react';
 
 import styles from './gallery-masonry.module.css';
+import { getFileUrl } from '../../shared/utils/api';
 
 interface GalleryMasonryProps {
   imageUrls?: string[];
@@ -15,7 +16,7 @@ const GalleryMasonry: FC<GalleryMasonryProps> = ({
     {imageUrls.map((src, idx) => (
       <img
         key={idx}
-        src={src}
+        src={getFileUrl(src)}
         alt={`Gallery item ${idx + 1}`}
         className={styles.image}
         onClick={() => onImageClick(idx)}

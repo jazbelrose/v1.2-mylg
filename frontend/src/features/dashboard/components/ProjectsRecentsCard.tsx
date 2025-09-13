@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { Kebab } from "@/shared/icons/Kebab";
 import { useData } from "@/app/contexts/useData";
 import { ProjectCard } from "@/shared/icons/ProjectCard";
+import { getFileUrl } from "../../../shared/utils/api";
 
 type ProjectLike = {
   projectId: string;
@@ -162,7 +163,7 @@ const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
                     {thumb && !imgError[id] ? (
                       <img
                         className="prc-thumb"
-                        src={thumb}
+                        src={getFileUrl(thumb)}
                         alt=""
                         onError={() => setImgError((m) => ({ ...m, [id]: true }))}
                       />

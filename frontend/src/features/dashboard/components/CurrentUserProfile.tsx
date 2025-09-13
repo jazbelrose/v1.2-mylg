@@ -1,5 +1,6 @@
 import React from 'react';
 import ProjectAvatar from '../../../shared/ui/ProjectAvatar';
+import { getFileUrl } from '../../../shared/utils/api';
 import styles from './Collaborators.module.css';
 
 interface CurrentUserProfileProps {
@@ -19,7 +20,7 @@ const CurrentUserProfile: React.FC<CurrentUserProfileProps> = ({
     <div className={styles.profileBlock}>
       <div className={styles.avatarWrapper}>
         {userData?.thumbnail ? (
-          <img src={userData.thumbnail} alt="Me" className={styles.avatar} />
+          <img src={getFileUrl(userData.thumbnail)} alt="Me" className={styles.avatar} />
         ) : (
           <div className={styles.avatarPlaceholder} />
         )}

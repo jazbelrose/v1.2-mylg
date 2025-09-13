@@ -1,6 +1,7 @@
 import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Mousewheel } from 'swiper/modules';
+import { getFileUrl } from '../utils/api';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -32,8 +33,8 @@ const Slideshow: React.FC<SlideshowProps> = ({ slides }) => {
         {slides.map((slide, index) => (
           <SwiperSlide key={index}>
             <div className="slide-content">
-              <a href={slide.url} target="_blank" rel="noopener noreferrer">
-                <img src={slide.imageUrl} alt={slide.title} />
+              <a href={getFileUrl(slide.url)} target="_blank" rel="noopener noreferrer">
+                <img src={getFileUrl(slide.imageUrl)} alt={slide.title} />
                 <h2>{slide.title}</h2>
                 <p>{slide.content}</p>
               </a>

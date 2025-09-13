@@ -704,7 +704,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
         const thumbUrl = getThumbnailUrl(file.url, folderKey);
         return (
           <img
-            src={thumbUrl}
+            src={getFileUrl(fileUrlsToKeys([thumbUrl])[0])}
             alt={file.fileName}
             className={styles.previewImage}
             onError={(e) => {
@@ -1125,10 +1125,10 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
                 if (ext && ["jpg", "jpeg", "png"].includes(ext)) {
                   return (
                     <img
-                      src={selectedImage}
+                      src={selectedImage ? getFileUrl(fileUrlsToKeys([selectedImage])[0]) : ''}
                       alt="Selected"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = selectedImage;
+                        (e.target as HTMLImageElement).src = selectedImage || '';
                       }}
                       className={styles.fullImage}
                     />
@@ -1157,7 +1157,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
                 <button onClick={closeImageModal} className={styles.iconButton} aria-label="Close image">
                   <FontAwesomeIcon icon={faXmark} />
                 </button>
-                <a href={selectedImage} download className={styles.iconButton} aria-label="Download image">
+                <a href={selectedImage ? getFileUrl(fileUrlsToKeys([selectedImage])[0]) : ''} download className={styles.iconButton} aria-label="Download image">
                   <FontAwesomeIcon icon={faDownload} />
                 </a>
               </div>

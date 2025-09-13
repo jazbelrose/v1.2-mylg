@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutGrid, FileDown } from 'lucide-react';
 import styles from './layout-pdf-buttons.module.css';
+import { getFileUrl } from '../utils/api';
 
 interface LayoutPdfButtonsProps {
   useMasonryLayout?: boolean;
@@ -27,7 +28,7 @@ const LayoutPdfButtons: React.FC<LayoutPdfButtonsProps> = ({
       <span>{useMasonryLayout ? 'Grid Layout' : 'Masonry Layout'}</span>
     </button>
     {downloadUrl && (
-      <a href={downloadUrl} download className={styles.actionButton}>
+      <a href={getFileUrl(downloadUrl)} download className={styles.actionButton}>
         <FileDown size={16} />
         <span>{isPdf ? 'Download PDF' : 'Download SVG'}</span>
       </a>

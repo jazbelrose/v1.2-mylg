@@ -6,6 +6,7 @@ import { useData } from "@/app/contexts/useData";
 import SVGThumbnail from "./SvgThumbnail";
 import styles from "./projects-panel.module.css";
 import { useProjectKpis, type ProjectLike } from "../hooks/useProjectKpis";
+import { getFileUrl } from "../../../shared/utils/api";
 
 type Props = {
   onOpenProject: (projectId: string) => void;
@@ -227,7 +228,7 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
                       {thumb && !imgError[id] ? (
                         <img
                           className={styles.thumbSm}
-                          src={thumb}
+                          src={getFileUrl(thumb)}
                           alt=""
                           onError={() =>
                             setImgError((m) => ({ ...m, [id]: true }))
@@ -397,7 +398,7 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
                     {thumb && !imgError[id] ? (
                       <img
                         className={styles.thumb}
-                        src={thumb}
+                        src={getFileUrl(thumb)}
                         alt=""
                         onError={() =>
                           setImgError((m) => ({ ...m, [id]: true }))

@@ -5,7 +5,7 @@ import { useData } from "@/app/contexts/useData";
 import { Thread } from "@/app/contexts/DataProvider";
 import { useSocket } from "../../../app/contexts/useSocket";
 import { User as UserIcon, Mail, Check } from "lucide-react";
-import { MESSAGES_INBOX_URL, MESSAGES_THREADS_URL, apiFetch } from "../../../shared/utils/api";
+import { MESSAGES_INBOX_URL, MESSAGES_THREADS_URL, apiFetch, getFileUrl } from "../../../shared/utils/api";
 import { slugify } from "../../../shared/utils/slug";
 
 type InboxProps = {
@@ -162,7 +162,7 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
                 }
               >
                 {thumb ? (
-                  <img src={thumb} alt={name} className="dm-avatar" />
+                  <img src={getFileUrl(thumb)} alt={name} className="dm-avatar" />
                 ) : (
                   <UserIcon className="dm-avatar" />
                 )}

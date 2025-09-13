@@ -58,7 +58,8 @@ vi.mock("../../../../utils/api", () => ({
   DELETE_PROJECT_MESSAGE_URL: "delMsg",
   GET_PROJECT_MESSAGES_URL: "getMsgs",
   EDIT_MESSAGE_URL: "editMsg",
-  S3_PUBLIC_BASE: "https://s3",
+  getFileUrl: (key: string) => `https://s3/${key}`,
+  normalizeFileUrl: (u: string) => u,
   apiFetch: vi.fn(() =>
     Promise.resolve({ ok: true, json: vi.fn().mockResolvedValue([]) })
   ),

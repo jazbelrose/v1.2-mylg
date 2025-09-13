@@ -49,8 +49,9 @@ import {
   MESSAGES_THREADS_URL,
   DELETE_FILE_FROM_S3_URL,
   EDIT_MESSAGE_URL,
-  S3_PUBLIC_BASE,
   apiFetch,
+  getFileUrl,
+  normalizeFileUrl,
 } from "@/shared/utils/api";
 import MessageItem, { ChatMessage } from "@/features/messages/MessageItem";
 import "@/features/messages/project-messages-thread.css";
@@ -101,8 +102,9 @@ const renderFilePreview = (file: DMFile, folderKey = "chat_uploads") => {
   };
 
   if (["jpg", "jpeg", "png"].includes(extension)) {
-    const thumbnailUrl = getThumbnailUrl(file.url, folderKey);
-    const finalUrl = file.finalUrl || file.url;
+    const normalizedUrl = normalizeFileUrl(file.url);
+    const thumbnailUrl = getThumbnailUrl(normalizedUrl, folderKey);
+    const finalUrl = normalizeFileUrl(file.finalUrl || file.url);
     return <OptimisticImage tempUrl={thumbnailUrl} finalUrl={finalUrl} alt={file.fileName} />;
   }
   if (extension === "pdf") {
@@ -804,10 +806,10 @@ const fetchMessages = async () => {
       await uploadTask.result;
       // small delay for availability
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      const fileUrl = `${S3_PUBLIC_BASE}dms/${encodeURIComponent(
-        conversationId
-      )}/${folderKey}/${encodeURIComponent(file.name)}`;
-      return { fileName: file.name, url: fileUrl };
+      const fileUrl = getFileUrl(
+        `dms/${encodeURIComponent(conversationId)}/${folderKey}/${encodeURIComponent(file.name)}`
+      );
+      return { fileName: file.name, url: normalizeFileUrl(fileUrl) };
     } catch (error) {
       console.error("Error uploading file:", error);
     }

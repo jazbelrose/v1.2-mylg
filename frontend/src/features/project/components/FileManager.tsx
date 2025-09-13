@@ -32,8 +32,9 @@ import {
   ZIP_FILES_URL,
   DELETE_FILE_FROM_S3_URL,
   EDIT_MESSAGE_URL,
-  S3_PUBLIC_BASE,
   apiFetch,
+  getFileUrl,
+  normalizeFileUrl,
 } from "../../../shared/utils/api";
 import Spinner from "../../../shared/ui/Spinner";
 import styles from "./file-manager.module.css";
@@ -647,7 +648,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
           });
           // small delay for edge consistency
           await new Promise((resolve) => setTimeout(resolve, 2000));
-          const fileUrl = `${S3_PUBLIC_BASE}${encodeS3Key(filename)}`;
+          const fileUrl = getFileUrl(encodeS3Key(filename));
           return { fileName: file.name, url: fileUrl };
         } catch (error) {
           console.error("Error uploading file:", error);
@@ -761,10 +762,10 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
             const name: string = key.split("/").pop()!;
             // Add public/ prefix since files are stored in public/ but Amplify keys don't include it
             const fullKey = key.startsWith('public/') ? key : `public/${key}`;
-            const url = `${S3_PUBLIC_BASE}${encodeS3Key(fullKey)}`;
+            const url = getFileUrl(encodeS3Key(fullKey));
             return {
               fileName: name,
-              url,
+              url: normalizeFileUrl(url),
               lastModified: (item as { lastModified?: string | Date }).lastModified ? new Date((item as { lastModified?: string | Date }).lastModified!).getTime() : 0,
               kind: getFileKind(name),
             };

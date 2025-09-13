@@ -45,8 +45,9 @@ import {
   DELETE_PROJECT_MESSAGE_URL,
   DELETE_FILE_FROM_S3_URL,
   EDIT_MESSAGE_URL,
-  S3_PUBLIC_BASE,
   apiFetch,
+  getFileUrl,
+  normalizeFileUrl,
 } from "../../shared/utils/api";
 
 /* =============================================================================
@@ -139,8 +140,9 @@ const renderFilePreview = (file: FileObj, folderKey = "chat_uploads") => {
   };
 
   if (["jpg", "jpeg", "png"].includes(extension)) {
-    const thumbnailUrl = getThumbnailUrl(file.url, folderKey);
-    const finalUrl = file.finalUrl || file.url;
+    const normalizedUrl = normalizeFileUrl(file.url);
+    const thumbnailUrl = getThumbnailUrl(normalizedUrl, folderKey);
+    const finalUrl = normalizeFileUrl(file.finalUrl || file.url);
     return (
       <OptimisticImage
         tempUrl={thumbnailUrl}
@@ -597,7 +599,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       });
       await uploadTask.result;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // deliberate delay
-      const fileUrl = `${S3_PUBLIC_BASE}${filename}`;
+      const fileUrl = getFileUrl(filename);
       return { fileName: file.name, url: fileUrl };
     } catch (error) {
       console.error("Error uploading file:", error);

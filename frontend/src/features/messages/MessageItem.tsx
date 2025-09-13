@@ -4,7 +4,7 @@ import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import { Trash2, Pencil, Smile } from "lucide-react";
 import ReactPlayer from "react-player";
 // import "../../../../index.css";
-import { S3_PUBLIC_BASE } from "../../shared/utils/api";
+import { normalizeFileUrl } from "../../shared/utils/api";
 import ReactionBar from "@/shared/ui/ReactionBar";
 import { ChatMessage, ChatFile, DMFile } from "@/shared/utils/messageUtils";
 
@@ -147,8 +147,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       );
     }
-    if (text && text.includes(S3_PUBLIC_BASE)) {
-      const file: ChatFile = { fileName: getFileNameFromUrl(text), url: text };
+    if (text && /mylg-files-v\d+/.test(text)) {
+      const url = normalizeFileUrl(text);
+      const file: ChatFile = { fileName: getFileNameFromUrl(url), url };
       return (
         <div
           onClick={() => openPreviewModal(file)}

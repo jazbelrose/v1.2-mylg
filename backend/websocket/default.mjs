@@ -100,6 +100,7 @@ export const handler = async (event) => {
 
 const handleSetActiveConversation = async (event, payload) => {
   const connectionId = event.requestContext.connectionId;
+  const authorizerUserId = event.requestContext?.authorizer?.userId; // ✅ add this for presence
   const { conversationId } = payload || {};
 
   if (!connectionId || !conversationId) {
@@ -107,34 +108,49 @@ const handleSetActiveConversation = async (event, payload) => {
     return { statusCode: 400, body: "Missing connectionId or conversationId" };
   }
 
-  // Normalize DM conversation IDs
+  // Normalize DM conversation IDs (stable ordering)
   let normalizedConversationId = conversationId;
-  if (conversationId.startsWith('dm#')) {
-    const userIds = conversationId.replace('dm#', '').split('___');
+  if (conversationId.startsWith("dm#")) {
+    const userIds = conversationId.replace("dm#", "").split("___");
     if (userIds.length === 2) {
       const sortedIds = userIds.sort();
-      normalizedConversationId = `dm#${sortedIds.join('___')}`;
+      normalizedConversationId = `dm#${sortedIds.join("___")}`;
     }
   }
+  const conv = String(normalizedConversationId).trim();
 
   try {
+    // Idempotent update (no condition) — safe even if called multiple times
     await dynamoDb.send(new UpdateCommand({
       TableName: process.env.CONNECTIONS_TABLE,
       Key: { connectionId },
-      UpdateExpression: "SET activeConversation = :c",
-      ExpressionAttributeValues: { ":c": String(normalizedConversationId).trim() },
-      ConditionExpression: "attribute_exists(userId)" // ✅ only update if row is valid
+      UpdateExpression: "SET activeConversation = :c, updatedAt = :now",
+      ExpressionAttributeValues: { ":c": conv, ":now": new Date().toISOString() },
     }));
 
-    console.log(`✅ Set activeConversation for ${connectionId} → ${normalizedConversationId}`);
+    console.log(`✅ Set activeConversation for ${connectionId} → ${conv}`);
     return { statusCode: 200, body: "Active conversation set" };
   } catch (err) {
-    // Handle ConditionalCheckFailedException specifically
-    if (err.name === 'ConditionalCheckFailedException') {
-      console.warn(`⚠️ Cannot set active conversation for ${connectionId} - connection not properly initialized (missing userId)`);
-      return { statusCode: 400, body: "Connection not properly initialized" };
+    if (err.name === "ConditionalCheckFailedException") {
+      console.warn(`⚠️ Connection not found for ${connectionId}, inserting new row...`);
+      try {
+        await dynamoDb.send(new PutCommand({
+          TableName: process.env.CONNECTIONS_TABLE,
+          Item: {
+            connectionId,
+            userId: authorizerUserId || null,       // ✅ include userId for presence
+            activeConversation: conv,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        }));
+        console.log(`✅ Inserted connection and set activeConversation for ${connectionId} → ${conv}`);
+        return { statusCode: 200, body: "Active conversation set (inserted)" };
+      } catch (insertErr) {
+        console.error("❌ Failed to insert connection record:", insertErr);
+        return { statusCode: 500, body: "DB insert error" };
+      }
     }
-    
     console.error("❌ Failed to set active conversation:", err);
     return { statusCode: 500, body: "DB update error" };
   }

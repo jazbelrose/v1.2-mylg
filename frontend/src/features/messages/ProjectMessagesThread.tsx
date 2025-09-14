@@ -42,7 +42,6 @@ import PromptModal from "../../shared/ui/PromptModal";
 import PDFPreview from "../project/components/PDFPreview";
 import {
   GET_PROJECT_MESSAGES_URL,
-  DELETE_PROJECT_MESSAGE_URL,
   DELETE_FILE_FROM_S3_URL,
   EDIT_MESSAGE_URL,
   apiFetch,
@@ -595,17 +594,18 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
     pid: string,
     file: File
   ): Promise<FileObj | undefined> => {
-    const filename = `projects/${pid}/${folderKey}/${file.name}`;
+    const baseKey = `projects/${pid}/${folderKey}/${file.name}`;
+    const storedKey = `public/${baseKey}`;
     try {
       const uploadTask = uploadData({
-        key: filename,
+        key: baseKey,
         data: file,
         options: { accessLevel: "public" },
       });
       await uploadTask.result;
       await new Promise((resolve) => setTimeout(resolve, 2000)); // deliberate delay
-      const fileUrl = getFileUrl(filename);
-      return { fileName: file.name, url: fileUrl, key: filename };
+      const fileUrl = getFileUrl(storedKey);
+      return { fileName: file.name, url: fileUrl, key: storedKey };
     } catch (error) {
       console.error("Error uploading file:", error);
     }
@@ -621,7 +621,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       const tempUrl = URL.createObjectURL(file);
       const optimisticId = Date.now() + "-" + file.name;
       const timestamp = new Date().toISOString();
-      const key = `projects/${projectId}/${folderKey}/${file.name}`;
+      const key = `public/projects/${projectId}/${folderKey}/${file.name}`;
 
       const optimisticMessage: Message = {
         action: "sendMessage",
@@ -775,9 +775,9 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       // Delete message from backend (if it has a server id)
       if (message.messageId) {
         const url =
-          `${DELETE_PROJECT_MESSAGE_URL}?` +
-          `projectId=${encodeURIComponent(projectId)}` +
-          `&messageId=${encodeURIComponent(message.messageId)}`;
+          `${EDIT_MESSAGE_URL}/project/${encodeURIComponent(
+            message.messageId
+          )}?projectId=${encodeURIComponent(projectId)}`;
         await apiFetch<DeleteMessageResponse>(url, { method: "DELETE" });
       }
 

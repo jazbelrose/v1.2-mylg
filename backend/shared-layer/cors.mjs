@@ -14,7 +14,7 @@
 // - CORS_ALLOW_CREDENTIALS: Whether to allow credentials (true/false)
 //
 // Current Configuration:
-// ALLOWED_ORIGINS = https://beta.mylg.studio,https://mylg.studio,http://localhost:3000,http://localhost:5173
+// ALLOWED_ORIGINS = https://beta.mylg.studio,https://mylg.studio,http://localhost:3000,http://localhost:5173,http://192.168.1.172:5173,http://192.168.1.200:5173,http://192.168.1.172:3000,http://192.168.1.200:3000
 // CORS_WILDCARD_HOSTS = mylg.studio
 // CORS_DEFAULT_ORIGIN = https://beta.mylg.studio
 // CORS_ALLOW_CREDENTIALS = false

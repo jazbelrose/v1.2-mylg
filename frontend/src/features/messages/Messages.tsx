@@ -528,9 +528,10 @@ const fetchMessages = async () => {
         conversationType: "dm",
         conversationId: normalizedConversationId,
         senderId: userData?.userId,
-        text: tempUrl,
+        text: "", // file messages don't have text
         timestamp,
         optimisticId,
+        attachments: [{ fileName: file.name, url: tempUrl, key }],
       };
 
       const optimisticMessage: DMMessage = {
@@ -587,8 +588,7 @@ const fetchMessages = async () => {
         // send via WS with retry logic
         const payload = {
           ...websocketMessage,
-          text: uploadedFile.url,
-          file: { fileName: file.name, url: uploadedFile.url, key: uploadedFile.key },
+          text: "", // file messages don't have text
           attachments: [
             {
               key: uploadedFile.key,
@@ -636,7 +636,7 @@ const fetchMessages = async () => {
               conversationId: normalizedConversationId,
               senderId: userData.userId,
               recipientId,
-              snippet: uploadedFile.url,
+              snippet: `📎 ${file.name}`,
               timestamp,
             }),
           }).catch((err) => console.error("Thread update failed:", err));

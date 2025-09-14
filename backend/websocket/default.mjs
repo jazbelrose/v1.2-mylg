@@ -356,9 +356,9 @@ async function deleteNotificationsByDedupeId(dedupeId) {
 }
 
 const handleSendMessage = async (payload) => {
-  const { conversationType, conversationId, senderId, username, text, timestamp, title } = payload || {};
+  const { conversationType, conversationId, senderId, username, text, timestamp, title, attachments } = payload || {};
 
-  if (!conversationType || !conversationId || !senderId || !text || !timestamp) {
+  if (!conversationType || !conversationId || !senderId || (!text && !attachments) || !timestamp) {
     console.error("❌ Missing required message fields");
     return { statusCode: 400, body: "Missing required fields" };
   }
@@ -378,17 +378,36 @@ const handleSendMessage = async (payload) => {
   const [uid1, uid2] = finalConversationId.replace("dm#", "").split("___");
   const recipientId = senderId === uid1 ? uid2 : uid1;
 
+  // sanitize attachments before saving
+  const cleanAttachments = (attachments || [])
+    .filter(a => a && a.key)
+    .map(a => {
+      let key = a.key;
+
+      // Always ensure prefix "public/"
+      if (!key.startsWith("public/")) {
+        key = `public/${key.replace(/^\/?public\//, "")}`;
+      }
+
+      return {
+        key,
+        name: a.name || key.split("/").pop(),
+        type: a.type || "application/octet-stream"
+      };
+    });
+
   const messageItem = {
     messageId: `MESSAGE#${String(timestamp).padStart(13, "0")}#${uuid()}`,
     senderId,
     username,
-    text,
+    text: text && !cleanAttachments.length ? text : "", // only keep text if it's not a file
     timestamp,
     conversationId: finalConversationId,
     GSI1PK: `USER#${recipientId}`,
     GSI1SK: timestamp,
     optimisticId: payload.optimisticId || undefined,
     reactions: {},
+    attachments: cleanAttachments,
   };
 
   if (conversationType === "project") {
@@ -400,6 +419,11 @@ const handleSendMessage = async (payload) => {
     console.log("✅ Message saved to DB with GSI:", messageItem);
 
     if (conversationType === "dm" && inboxTable) {
+      const isFile = cleanAttachments.length > 0;
+      const snippet = isFile
+        ? `📎 ${cleanAttachments.length} file(s) uploaded`
+        : text.length > 60 ? text.slice(0, 57) + "..." : text;
+
       const threadUpdateSender = {
         TableName: inboxTable,
         Key: { userId: senderId, conversationId: finalConversationId },
@@ -407,7 +431,7 @@ const handleSendMessage = async (payload) => {
         ExpressionAttributeNames: { "#r": "read" },
         ExpressionAttributeValues: {
           ":ts": timestamp,
-          ":snip": text,
+          ":snip": snippet,
           ":other": recipientId,
           ":true": true,
         },
@@ -420,7 +444,7 @@ const handleSendMessage = async (payload) => {
         ExpressionAttributeNames: { "#r": "read" },
         ExpressionAttributeValues: {
           ":ts": timestamp,
-          ":snip": text,
+          ":snip": snippet,
           ":other": senderId,
           ":false": false,
         },

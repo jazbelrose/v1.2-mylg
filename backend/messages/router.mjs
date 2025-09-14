@@ -96,21 +96,26 @@ const getConversation = async (e, C, { conversationId }) => {
 /* Messages in a conversation
    MESSAGES_TABLE: PK=conversationId, SK=messageId (MESSAGE#<millis>#uuid) */
 const listConversationMessages = async (e, C, { conversationId }) => {
-  const q = Q(e);
-  const limit = Math.min(parseInt(q.limit || "50", 10), 200);
   const normalizedId = normalizeDMConversationId(conversationId);
-  const r = await ddb.query({
-    TableName: MESSAGES_TABLE,
-    KeyConditionExpression: "conversationId = :c",
-    ExpressionAttributeValues: { ":c": normalizedId },
-    ScanIndexForward: true,
-    Limit: limit,
-    ExclusiveStartKey: q.nextKey ? JSON.parse(q.nextKey) : undefined,
-  });
+  let lastEvaluatedKey = undefined;
+  let allItems = [];
+
+  do {
+    const r = await ddb.query({
+      TableName: MESSAGES_TABLE,
+      KeyConditionExpression: "conversationId = :c",
+      ExpressionAttributeValues: { ":c": normalizedId },
+      ScanIndexForward: true,
+      ExclusiveStartKey: lastEvaluatedKey,
+    });
+
+    allItems = allItems.concat(r.Items || []);
+    lastEvaluatedKey = r.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
+
   return json(200, C, {
     conversationId: normalizedId,
-    messages: r.Items || [],
-    nextKey: r.LastEvaluatedKey ? JSON.stringify(r.LastEvaluatedKey) : null,
+    messages: allItems,
   });
 };
 

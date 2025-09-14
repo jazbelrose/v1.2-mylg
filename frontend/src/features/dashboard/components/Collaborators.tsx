@@ -100,17 +100,23 @@ interface EditValues {
   const closeInviteModal = () => setInviteOpen(false);
 
   const loadInvites = useCallback(async () => {
+    const userId = userData?.userId;
+    if (!userId) {
+      setOutgoingInvites([]);
+      setIncomingInvites([]);
+      return;
+    }
     try {
       const [out, inc] = await Promise.all([
-        fetchOutgoingCollabInvites(),
-        fetchIncomingCollabInvites(),
+        fetchOutgoingCollabInvites(userId),
+        fetchIncomingCollabInvites(userId),
       ]);
       setOutgoingInvites(Array.isArray(out) ? out : []);
       setIncomingInvites(Array.isArray(inc) ? inc : []);
     } catch (err) {
       console.error("Failed to fetch invites", err);
     }
-  }, []);
+  }, [userData?.userId]);
 
   const refreshInvites = useCallback(() => {
     loadInvites();
@@ -119,7 +125,7 @@ interface EditValues {
 
   useEffect(() => {
     loadInvites();
-  }, [userData?.userId, loadInvites]);
+  }, [loadInvites]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

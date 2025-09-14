@@ -924,14 +924,16 @@ export async function cancelProjectInvite(inviteId: string): Promise<{ ok: true 
 // Collaborator & User Invites
 // ───────────────────────────────────────────────────────────────────────────────
 
-export async function fetchOutgoingCollabInvites(): Promise<Invite[]> {
-  const url = `${COLLAB_INVITES_BASE_URL}/outgoing`;
+export async function fetchOutgoingCollabInvites(userId: string): Promise<Invite[]> {
+  if (!userId) return [];
+  const url = `${COLLAB_INVITES_BASE_URL}/outgoing?userId=${encodeURIComponent(userId)}`;
   const data = await apiFetch<MaybeItems<Invite>>(url);
   return extractItems<Invite>(data);
 }
 
-export async function fetchIncomingCollabInvites(): Promise<Invite[]> {
-  const url = `${COLLAB_INVITES_BASE_URL}/incoming`;
+export async function fetchIncomingCollabInvites(userId: string): Promise<Invite[]> {
+  if (!userId) return [];
+  const url = `${COLLAB_INVITES_BASE_URL}/incoming?userId=${encodeURIComponent(userId)}`;
   const data = await apiFetch<MaybeItems<Invite>>(url);
   return extractItems<Invite>(data);
 }

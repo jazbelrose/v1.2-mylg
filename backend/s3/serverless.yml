@@ -52,6 +52,27 @@ resources:
         CloudFrontOriginAccessIdentityConfig:
           Comment: Access identity for ${env:S3_BUCKET_NAME, 'mylg-files-v12'}
 
+    # ---- Response Headers Policy for CORS ----
+    CloudFrontResponseHeadersPolicy:
+      Type: AWS::CloudFront::ResponseHeadersPolicy
+      Properties:
+        ResponseHeadersPolicyConfig:
+          Name: mylg-cors-policy
+          Comment: "CORS policy for MYLG assets"
+          CorsConfig:
+            AccessControlAllowCredentials: false
+            AccessControlAllowHeaders:
+              Items: ["*"]
+            AccessControlAllowMethods:
+              Items: ["GET", "HEAD", "OPTIONS"]
+            AccessControlAllowOrigins:
+              Items:
+                - "http://localhost:5173"
+                - "http://localhost:3000"
+                - "https://beta.mylg.studio"
+                - "https://mylg.studio"
+            OriginOverride: true
+
     # ---- CloudFront Distribution ----
     CloudFrontDistribution:
       Type: AWS::CloudFront::Distribution
@@ -67,22 +88,12 @@ resources:
           DefaultCacheBehavior:
             TargetOriginId: S3Origin
             ViewerProtocolPolicy: redirect-to-https
-            AllowedMethods:
-              - GET
-              - HEAD
-            CachedMethods:
-              - GET
-              - HEAD
+            AllowedMethods: ["GET", "HEAD", "OPTIONS"]
+            CachedMethods: ["GET", "HEAD"]
             ForwardedValues:
               QueryString: true
-              Headers:
-                - Origin
-                - Access-Control-Request-Method
-                - Access-Control-Request-Headers
             Compress: true
-            DefaultTTL: 0        # avoid caching missing headers
-            MinTTL: 0
-            MaxTTL: 0
+            ResponseHeadersPolicyId: !Ref CloudFrontResponseHeadersPolicy
           ViewerCertificate:
             CloudFrontDefaultCertificate: true # change to ACM cert for custom domain
           HttpVersion: http2

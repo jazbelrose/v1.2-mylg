@@ -13,6 +13,7 @@ resources:
   Resources:
     S3Bucket:
       Type: AWS::S3::Bucket
+      DeletionPolicy: Retain
       Properties:
         BucketName: ${env:S3_BUCKET_NAME, 'mylg-files-v12'}
         CorsConfiguration:
@@ -44,24 +45,61 @@ resources:
             - ServerSideEncryptionByDefault:
                 SSEAlgorithm: AES256
 
+    # ---- CloudFront Origin Access Identity ----
+    S3OriginAccessIdentity:
+      Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+      Properties:
+        CloudFrontOriginAccessIdentityConfig:
+          Comment: Access identity for ${env:S3_BUCKET_NAME, 'mylg-files-v12'}
+
+    # ---- CloudFront Distribution ----
+    CloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          DefaultRootObject: index.html
+          Origins:
+            - DomainName: !GetAtt S3Bucket.RegionalDomainName
+              Id: S3Origin
+              S3OriginConfig:
+                OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${S3OriginAccessIdentity}"
+          DefaultCacheBehavior:
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            ForwardedValues:
+              QueryString: true
+              Headers:
+                - Origin
+                - Access-Control-Request-Method
+                - Access-Control-Request-Headers
+            Compress: true
+            DefaultTTL: 0        # avoid caching missing headers
+            MinTTL: 0
+            MaxTTL: 0
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true # change to ACM cert for custom domain
+          HttpVersion: http2
+          PriceClass: PriceClass_100
+
     S3BucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
         Bucket: !Ref S3Bucket
         PolicyDocument:
           Statement:
-            - Sid: PublicReadGetObject
+            - Sid: AllowCloudFrontRead
               Effect: Allow
-              Principal: "*"
-              Action:
-                - s3:GetObject
-              Resource: arn:aws:s3:::${env:S3_BUCKET_NAME, 'mylg-files-v12'}/*
-            - Sid: PublicListBucket
-              Effect: Allow
-              Principal: "*"
-              Action:
-                - s3:ListBucket
-              Resource: arn:aws:s3:::${env:S3_BUCKET_NAME, 'mylg-files-v12'}
+              Principal:
+                CanonicalUser: !GetAtt S3OriginAccessIdentity.S3CanonicalUserId
+              Action: s3:GetObject
+              Resource: !Sub "${S3Bucket.Arn}/*"
 
   Outputs:
     S3BucketName:
@@ -72,3 +110,7 @@ resources:
       Value: !GetAtt S3Bucket.Arn
       Export:
         Name: s3-bucket-arn-${self:provider.stage}
+    CloudFrontDomain:
+      Value: !GetAtt CloudFrontDistribution.DomainName
+      Export:
+        Name: cloudfront-domain-${self:provider.stage}

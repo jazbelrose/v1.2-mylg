@@ -309,12 +309,19 @@ export const {
 /** Extracts array results from either `{ Items: T[] }`, `{ items: T[] }`, `{ notifications: T[] }`, or `T[]`. */
 function extractItems<T>(data: MaybeItems<T> | JsonRecord): T[] {
   if (Array.isArray(data)) return data as T[];
-  if ('Items' in (data as Record<string, unknown>) && Array.isArray((data as Record<string, unknown>).Items)) return (data as Record<string, unknown>).Items as T[];
-  if ('items' in (data as Record<string, unknown>) && Array.isArray((data as Record<string, unknown>).items)) return (data as Record<string, unknown>).items as T[];
-  if ('notifications' in (data as Record<string, unknown>) && Array.isArray((data as Record<string, unknown>).notifications)) return (data as Record<string, unknown>).notifications as T[];
+  if (data && typeof data === 'object') {
+    if ('Items' in data && Array.isArray((data as Record<string, unknown>).Items)) {
+      return (data as Record<string, unknown>).Items as T[];
+    }
+    if ('items' in data && Array.isArray((data as Record<string, unknown>).items)) {
+      return (data as Record<string, unknown>).items as T[];
+    }
+    if ('notifications' in data && Array.isArray((data as Record<string, unknown>).notifications)) {
+      return (data as Record<string, unknown>).notifications as T[];
+    }
+  }
   return [];
 }
-
 /** Extracts single item from `{ Item: T }` or returns `null` if missing. */
 function extractItem<T>(data: MaybeItem<T> | JsonRecord): T | null {
   if ('Item' in (data as Record<string, unknown>)) return ((data as Record<string, unknown>).Item ?? null) as T | null;
@@ -402,18 +409,28 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
         try {
           return JSON.parse(text) as T;
         } catch {
-          // Return raw text if not JSON
-          return (text as unknown) as T;
+              console.warn('[apiFetch] Non-JSON response, returning {}:', { url, text });
+          return ({} as unknown) as T;
         }
       }
-      const data = (await res.json()) as T;
+      let data: unknown;
+      try {
+        data = await res.json();
+      } catch {
+        console.warn('[apiFetch] Failed to parse JSON, returning {}:', { url });
+        return ({} as unknown) as T;
+      }
+      if (data === null || (typeof data !== 'object' && !Array.isArray(data))) {
+        console.warn('[apiFetch] Response was not valid JSON, returning {}:', { url });
+        return ({} as unknown) as T;
+      }
 
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes((fetchOptions.method || '').toUpperCase())) {
         logSecurityEvent('api_state_change', { url: new URL(url).pathname, method: fetchOptions.method });
       }
 
       // console.log('[apiFetch] ✅ Success:', { url, method: fetchOptions.method || 'GET' });
-      return data;
+       return data as T;
 
     } catch (err) {
       lastError = err;

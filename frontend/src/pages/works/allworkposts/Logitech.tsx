@@ -7,7 +7,7 @@ import "./workpage.css";
 import works from '../works.json';
 import BlogPostButton from "../../../shared/ui/blogpostbutton";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import InlineSvg from "../../../shared/ui/inlinesvg";
 
 interface WorkItem {

@@ -20,7 +20,7 @@ import { useData } from "@/app/contexts/useData";
 
 import Ticker from "../../../shared/ui/ticker";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import InlineSvg from "../../../shared/ui/inlinesvg";
 
 

@@ -8,7 +8,7 @@ import jewelieStarkData from './Jewelie-Stark.json';
 
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal"; // Import ReactModal
 import { useScrollContext } from "@/app/contexts/useScrollContext";

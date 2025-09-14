@@ -5,7 +5,7 @@ import "./workpage.css";
 
 import aFLowerBathData from "./A-Flower-Bath.json";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";

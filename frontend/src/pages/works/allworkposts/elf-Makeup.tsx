@@ -15,7 +15,7 @@ import BlogPostButton from "@/shared/ui/blogpostbutton";
 
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import InlineSvg from "../../../shared/ui/inlinesvg";
 

@@ -218,7 +218,17 @@ async function getUserProfiles(event, C) {
   const role = jwtClaims.role;
   const isAuthenticated = !!jwtClaims.sub; // Check if user has JWT claims (authenticated)
   
-  const ids = (Q(event).ids || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const idsRaw = Q(event).ids || "";
+  let decodedIds = idsRaw;
+  try {
+    decodedIds = decodeURIComponent(idsRaw);
+  } catch {
+    // ignore malformed URI components
+  }
+  const ids = decodedIds
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (ids.length) {
     const users = await batchGetUsersByIds(ids);
     return json(200, C, { Items: users.map(withFirstNameFallback) });

@@ -446,7 +446,14 @@ export async function handler(event) {
     for (const { m, r, h } of routes) {
       if (m !== method) continue;
       const match = r.exec(path);
-      if (match) return await h(event, CORS, match.groups || {});
+      if (match) {
+        // Decode any URL-encoded path parameters (e.g., conversationId with '#')
+        const params = {};
+        for (const [k, v] of Object.entries(match.groups || {})) {
+          params[k] = decodeURIComponent(v);
+        }
+        return await h(event, CORS, params);
+      }
     }
     return json(404, CORS, { error: "Not found", method, path });
   } catch (err) {

@@ -19,9 +19,9 @@ vi.mock('../../../shared/utils/api', () => ({
 }));
 
 const mockUseBudget = vi.fn(() => ({ budgetItems: [] }));
-vi.mock('./BudgetDataProvider', () => ({
+vi.mock('@/features/budget/context/BudgetContext', () => ({
   __esModule: true,
-  useBudget: (...args: unknown[]) => mockUseBudget(...args)
+  useBudget: (...args: unknown[]) => mockUseBudget(...args),
 }));
 
 beforeAll(() => {
@@ -119,4 +119,21 @@ test('restores task and shows error message when deleteTask fails', async () => 
   expect(screen.getByText('Sample')).toBeInTheDocument();
 
   errorSpy.mockRestore();
+});
+
+test('loads tasks when API returns { tasks: [...] }', async () => {
+  const actualApi = await vi.importActual<typeof import('../../../shared/utils/api')>(
+    '../../../shared/utils/api'
+  );
+  const apiFetchSpy = vi
+    .spyOn(actualApi, 'apiFetch')
+    .mockResolvedValue({ tasks: [{ projectId: 'p1', taskId: '1', title: 'Sample' }] });
+  (fetchTasks as vi.Mock).mockImplementation(actualApi.fetchTasks);
+
+  render(<TasksComponent projectId="p1" team={[]} />);
+
+  expect(await screen.findByText('Sample')).toBeInTheDocument();
+
+  apiFetchSpy.mockRestore();
+  (fetchTasks as vi.Mock).mockReset();
 });

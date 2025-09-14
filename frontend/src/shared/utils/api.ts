@@ -316,7 +316,7 @@ export const {
 // Helpers
 // ───────────────────────────────────────────────────────────────────────────────
 
-/** Extracts array results from either `{ Items: T[] }`, `{ items: T[] }`, `{ notifications: T[] }`, or `T[]`. */
+/** Extracts array results from either `{ Items: T[] }`, `{ items: T[] }`, `{ notifications: T[] }`, `{ tasks: T[] }`, or `T[]`. */
 function extractItems<T>(data: MaybeItems<T> | JsonRecord): T[] {
   if (Array.isArray(data)) return data as T[];
   if (data && typeof data === 'object') {
@@ -328,6 +328,9 @@ function extractItems<T>(data: MaybeItems<T> | JsonRecord): T[] {
     }
     if ('notifications' in data && Array.isArray((data as Record<string, unknown>).notifications)) {
       return (data as Record<string, unknown>).notifications as T[];
+    }
+    if ('tasks' in data && Array.isArray((data as Record<string, unknown>).tasks)) {
+      return (data as Record<string, unknown>).tasks as T[];
     }
   }
   return [];
@@ -592,8 +595,9 @@ export async function updateProjectFields(projectId: string, fields: Partial<Pro
 export async function fetchTasks(projectId?: string): Promise<Task[]> {
   if (!projectId) return [];
   const url = `${TASKS_API_URL}?projectId=${encodeURIComponent(projectId)}`;
-  const data = await apiFetch<MaybeItems<Task>>(url);
-  return extractItems<Task>(data);
+  const data = await apiFetch<MaybeItems<Task> | { tasks?: Task[] }>(url);
+  const items = 'tasks' in data ? data.tasks : extractItems<Task>(data);
+  return items ?? [];
 }
 
 export async function createTask(task: Task): Promise<Task> {

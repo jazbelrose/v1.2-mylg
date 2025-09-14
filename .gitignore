@@ -38,3 +38,4 @@ logs/
 
 # Scripts (migration and utility scripts)
 backend/scripts/
+backend/test-audit-report.mjs

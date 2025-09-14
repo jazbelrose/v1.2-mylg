@@ -142,6 +142,15 @@ functions:
       - httpApi:
           path: /budgets/{proxy+}
           method: OPTIONS
+      # Audit reports endpoint
+      - httpApi:
+          path: /reports/audit
+          method: GET
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /reports/audit
+          method: OPTIONS
 
 package:
   patterns:

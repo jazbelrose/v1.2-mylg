@@ -1,6 +1,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Home, Folder, Bell, MessageSquare, Settings, LogOut, Shield, Users, X } from 'lucide-react';
+import { Home, Folder, Bell, MessageSquare, Settings, LogOut, Shield, Users, X, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/app/contexts/useAuth';
 import { useData } from '@/app/contexts/useData';
 import { useNotifications } from '../../app/contexts/useNotifications';
@@ -99,6 +99,11 @@ const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
       icon: <Users size={24} color="white" />,
       label: "Collaborators",
       onClick: () => handleNavigation("collaborators"),
+    },
+    {
+      icon: <BarChart3 size={24} color="white" />,
+      label: "Audit Report",
+      onClick: () => handleNavigation("audit-report"),
     },
   ];
 

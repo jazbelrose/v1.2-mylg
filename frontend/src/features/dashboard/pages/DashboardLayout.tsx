@@ -27,6 +27,8 @@ const Dashboard: React.FC = () => {
         return "Dashboard - Settings";
       case "/dashboard/collaborators":
         return "Dashboard - Collaborators";
+      case "/dashboard/audit-report":
+        return "Dashboard - Audit Report";
       default:
         return "Dashboard";
     }

@@ -14,6 +14,7 @@ import NotificationsPage from "@/features/dashboard/components/NotificationsPage
 import Messages from "@/features/messages";
 import Settings from "@/features/dashboard/components/Settings";
 import Collaborators from "@/features/dashboard/components/Collaborators";
+import AuditReport from "@/features/dashboard/components/AuditReport";
 import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
 import AllProjectsCalendar from "@/features/dashboard/components/AllProjectsCalendar";
@@ -136,7 +137,7 @@ const WelcomeScreen: React.FC = () => {
   if (userData?.pending) return <PendingApprovalScreen />;
 
   // Hide TopBar and QuickStats for these views
-  const isFullWidthView = ["projects", "notifications", "messages", "settings", "collaborators"].includes(
+  const isFullWidthView = ["projects", "notifications", "messages", "settings", "collaborators", "audit-report"].includes(
     activeView
   );
   const showTopBar = !isFullWidthView;
@@ -193,6 +194,7 @@ const WelcomeScreen: React.FC = () => {
                 ),
                 settings: <Settings />,
                 collaborators: <Collaborators />,
+                "audit-report": <AuditReport />,
               }[activeView] || null}
             </div>
           </div>

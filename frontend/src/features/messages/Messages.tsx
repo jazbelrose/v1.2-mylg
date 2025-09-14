@@ -56,6 +56,8 @@ import {
 } from "@/shared/utils/api";
 import { getFileNameFromUrl } from "@/shared/utils/fileUtils";
 import MessageItem, { ChatMessage } from "@/features/messages/MessageItem";
+import ConversationList from "@/features/messages/ConversationList";
+import MessageInput from "@/features/messages/MessageInput";
 import "@/features/messages/project-messages-thread.css";
 
 // Accessibility binding
@@ -296,7 +298,6 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
   // 🔥 Removed watcher effect (setWatchedUserIds/refreshPresence) — presence is push-only now
 
   const [newMessage, setNewMessage] = useState<string>("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -1104,19 +1105,6 @@ const fetchMessages = async () => {
     }
   }
 
-  const listItemStyle: CSSProperties = {
-    fontSize: "14px",
-    padding: "10px",
-    cursor: "pointer",
-    borderRadius: "5px",
-    marginBottom: "1px",
-    transition: "0.2s ease-in-out",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "10px",
-  };
-
   return (
     <div
       className="messages-container"
@@ -1124,92 +1112,15 @@ const fetchMessages = async () => {
     >
       {/* Sidebar */}
       {(!isMobile || !showConversation) && (
-        <div
-          className="sidebar"
-          style={{
-            width: isMobile ? "100%" : "25%",
-            borderRight: isMobile ? "none" : "1px solid #444",
-            background: "#0c0c0c",
-          }}
-        >
-          <div className="sidebar-section">
-            <h3
-              style={{
-                fontSize: "18px",
-                background: "linear-gradient(30deg, #181818, #0c0c0c)",
-                padding: "15px",
-                margin: 0,
-              }}
-            >
-              # Direct Messages
-            </h3>
-            <div
-              style={{
-                maxHeight: isMobile ? "calc(100vh - 150px)" : "400px",
-                overflowY: "auto",
-              }}
-            >
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {dmConversations.map((conv, index) => {
-                  const onlinePeerId = conv.id
-                    .replace("dm#", "")
-                    .split("___")
-                    .find((id) => id !== userData.userId);
-                  const online = onlinePeerId ? isOnline(onlinePeerId) : false;
-
-                  return (
-                    <li
-                      key={`${conv.id}-${conv.userId}-${index}`} // Changed from conv.id to uniqueKey
-                      onClick={() => openConversation(conv.id)}
-                      style={{
-                        ...listItemStyle,
-                        background: selectedConversation === conv.id ? "#252525" : undefined,
-                        color: selectedConversation === conv.id ? "#fff" : "#bbb",
-                        padding: "10px 15px",
-                        position: "relative",
-                      }}
-                    >
-                      <div className="avatar-wrapper" style={{ marginRight: 8 }}>
-                        <>
-                          {conv.profilePicture ? (
-                            <img
-                              src={getFileUrl(conv.profilePicture)}
-                              alt={conv.title}
-                              style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : (
-                            <User style={{ width: 32, height: 32, opacity: 0.5 }} />
-                          )}
-                          {online && <span className="online-indicator" />}
-                        </>
-                      </div>
-                      <span style={{ flexGrow: 1, textAlign: "right" }}>{conv.title}</span>
-                      {threadMap[conv.id] && (
-                        <span
-                          style={{
-                            background: "#FA3356",
-                            color: "#fff",
-                            borderRadius: "12px",
-                            padding: "2px 6px",
-                            fontSize: "12px",
-                            marginLeft: "4px",
-                          }}
-                        >
-                          NEW
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </div>
-        </div>
+        <ConversationList
+          conversations={dmConversations}
+          currentUserId={userData.userId}
+          isMobile={isMobile}
+          onSelect={openConversation}
+          selectedId={selectedConversation}
+          threadMap={threadMap}
+          isOnline={isOnline}
+        />
       )}
 
       {/* Chat Window */}
@@ -1315,77 +1226,12 @@ const fetchMessages = async () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center", position: "relative" }}>
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onFocus={() => selectedConversation && handleMarkRead(selectedConversation)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-              style={{
-                flexGrow: 1,
-                padding: "10px",
-                borderRadius: "6px",
-                border: "1px solid #444",
-                background: "#1c1c1c",
-                color: "#fff",
-              }}
-              aria-label="Message input"
-            />
-            <button
-              onClick={() => setShowEmojiPicker((p) => !p)}
-              style={{ background: "none", border: "none", cursor: "pointer" }}
-              aria-label="Toggle emoji picker"
-            >
-              😊
-            </button>
-            {showEmojiPicker && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 40,
-                  right: 60,
-                  background: "#333",
-                  padding: 5,
-                  borderRadius: 8,
-                  display: "flex",
-                  gap: 4,
-                }}
-              >
-                {["😀", "😂", "👍", "❤️", "✅", "💯"].map((em) => (
-                  <span
-                    key={em}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setNewMessage((m) => m + em);
-                      setShowEmojiPicker(false);
-                    }}
-                  >
-                    {em}
-                  </span>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={sendMessage}
-              style={{
-                padding: "10px 15px",
-                background: "#FA3356",
-                border: "none",
-                borderRadius: "6px",
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              Send
-            </button>
-          </div>
+          <MessageInput
+            value={newMessage}
+            onChange={setNewMessage}
+            onSend={sendMessage}
+            onFocus={() => selectedConversation && handleMarkRead(selectedConversation)}
+          />
 
           {isDragging && <div className="drag-overlay">Drop files to upload</div>}
 

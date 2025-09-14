@@ -15,7 +15,17 @@ export type { ChatMessage };
 export interface SimpleUser {
   userId?: string;
   firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
   thumbnail?: string;
+  profilePicture?: string;
+  photoUrl?: string;
+  avatar?: string;
+  avatarUrl?: string;
+  image?: string;
+  profileImage?: string;
+  picture?: string;
 }
 
 interface MessageItemProps {
@@ -48,10 +58,25 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const { isOnline } = useOnlineStatus() as { isOnline: (id?: string | null) => boolean };
   const isCurrentUser = msg.senderId === (userData?.userId ?? "");
   const sender = allUsers.find((u) => u.userId === msg.senderId) || ({} as SimpleUser);
-  const senderName = isCurrentUser
-    ? userData?.firstName || "You"
-    : sender.firstName || "Unknown";
-  const senderThumbnail = isCurrentUser ? userData?.thumbnail : sender.thumbnail;
+  const getDisplayName = (u?: SimpleUser | null) =>
+    u
+      ? `${u.firstName ?? ""} ${(u as any).lastName ?? ""}`.trim() ||
+        ((u as any).username as string | undefined) ||
+        ((u as any).email as string | undefined) ||
+        (u.userId ?? "Unknown")
+      : "Unknown";
+  const getThumbnail = (u?: SimpleUser | null) =>
+    ((u as any)?.thumbnail as string | undefined) ||
+    ((u as any)?.profilePicture as string | undefined) ||
+    ((u as any)?.photoUrl as string | undefined) ||
+    ((u as any)?.avatar as string | undefined) ||
+    ((u as any)?.avatarUrl as string | undefined) ||
+    ((u as any)?.image as string | undefined) ||
+    ((u as any)?.profileImage as string | undefined) ||
+    ((u as any)?.picture as string | undefined) ||
+    undefined;
+  const senderName = isCurrentUser ? "You" : getDisplayName(sender);
+  const senderThumbnail = isCurrentUser ? getThumbnail(userData) : getThumbnail(sender);
   const isSenderOnline = isOnline(msg.senderId);
 
   const senderThumbnailUrl =

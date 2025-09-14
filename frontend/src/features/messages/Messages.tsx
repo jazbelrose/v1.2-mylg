@@ -188,6 +188,27 @@ const renderFilePreview = (file: DMFile, folderKey = "chat_uploads") => {
   );
 };
 
+// Attempt to derive a display name from available user fields
+const getUserDisplayName = (u?: AppUser) =>
+  u
+    ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
+      ((u as any).username as string | undefined) ||
+      ((u as any).email as string | undefined) ||
+      u.userId
+    : "Unknown";
+
+// Attempt to derive a thumbnail path from various possible field names
+const getUserThumbnail = (u?: AppUser) =>
+  ((u as any)?.thumbnail as string | undefined) ||
+  ((u as any)?.profilePicture as string | undefined) ||
+  ((u as any)?.photoUrl as string | undefined) ||
+  ((u as any)?.avatar as string | undefined) ||
+  ((u as any)?.avatarUrl as string | undefined) ||
+  ((u as any)?.image as string | undefined) ||
+  ((u as any)?.profileImage as string | undefined) ||
+  ((u as any)?.picture as string | undefined) ||
+  null;
+
 /* ----------------------------------
    Component
 ----------------------------------- */
@@ -1028,14 +1049,12 @@ const fetchMessages = async () => {
           .split("___")
           .find((id) => id !== userData.userId) || "";
       const u = allUsers.find((x) => x.userId === otherId);
-      const title = u && (u.firstName || u.lastName)
-        ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim()
-        : otherId;
+      const title = getUserDisplayName(u) || otherId;
       return {
         id: t.conversationId,
         userId: otherId,
-        title: title || "Unknown",
-        profilePicture: u?.thumbnail || null,
+        title,
+        profilePicture: getUserThumbnail(u),
         lastMsgTs: t.lastMsgTs,
       } as { id: string; userId: string; title: string; profilePicture: string | null; lastMsgTs?: string };
     });
@@ -1047,8 +1066,8 @@ const fetchMessages = async () => {
       return {
         id: conversationId,
         userId: u.userId,
-        title: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Unnamed User",
-        profilePicture: u.thumbnail || null,
+        title: getUserDisplayName(u),
+        profilePicture: getUserThumbnail(u),
       } as { id: string; userId: string; title: string; profilePicture: string | null; lastMsgTs?: string };
     });
 

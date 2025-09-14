@@ -5,15 +5,13 @@ import React, {
   useRef,
   useMemo,
   useCallback,
-  CSSProperties,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/app/contexts/useData";
 import { Thread } from "@/app/contexts/DataProvider";
 import { useAuth } from "@/app/contexts/useAuth";
-import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import { useDMConversation } from "@/app/contexts/useDMConversation";
-import { useSocket } from "@/app/contexts/useSocket"; // <-- ADDED
+import { useSocket } from "@/app/contexts/useSocket";
 import {
   dedupeById,
   mergeAndDedupeMessages,
@@ -23,22 +21,7 @@ import {
 import User from "@/assets/svg/user.svg?react";
 import { normalizeMessage } from "@/shared/utils/websocketUtils";
 import { getWithTTL, setWithTTL } from "@/shared/utils/storageWithTTL";
-import SpinnerOverlay from "@/shared/ui/SpinnerOverlay";
-import OptimisticImage from "@/shared/ui/OptimisticImage";
 import { uploadData } from "aws-amplify/storage";
-import {
-  FaFilePdf,
-  FaFileExcel,
-  FaFileAlt,
-  FaDraftingCompass,
-  FaCube,
-} from "react-icons/fa";
-import {
-  SiAdobe,
-  SiAffinitydesigner,
-  SiAffinitypublisher,
-  SiSvg,
-} from "react-icons/si";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes, faDownload } from "@fortawesome/free-solid-svg-icons";
 import Modal from "@/shared/ui/ModalWithStack";
@@ -55,163 +38,19 @@ import {
   fileUrlsToKeys,
 } from "@/shared/utils/api";
 import { getFileNameFromUrl } from "@/shared/utils/fileUtils";
-import MessageItem, { ChatMessage } from "@/features/messages/MessageItem";
+import { ChatMessage } from "@/features/messages/MessageItem";
+import ConversationSidebar from "./components/ConversationSidebar";
+import ChatWindow from "./components/ChatWindow";
+import { MessagesProps, AppUser } from "./types";
+import { FOLDER_KEY, getCacheKey, MAX_RETRY_ATTEMPTS, FILE_UPLOAD_DELAY } from "./constants";
+import { getUserDisplayName, getUserThumbnail } from "./utils/userHelpers";
+import { renderFilePreview } from "./utils/filePreview";
 import "@/features/messages/project-messages-thread.css";
 
 // Accessibility binding
 if (typeof document !== "undefined") {
   Modal.setAppElement("#root");
 }
-
-/* ----------------------------------
-   Types
------------------------------------ */
-type ID = string;
-
-interface AppUser {
-  userId: ID;
-  firstName?: string;
-  lastName?: string;
-  thumbnail?: string;
-  role?: string;
-  collaborators?: ID[];
-  messages?: DMMessage[];
-  [key: string]: unknown;
-}
-
-interface MessagesProps {
-  initialUserSlug?: string | null;
-}
-
-/* ----------------------------------
-   Helpers
------------------------------------ */
-
-// Make apiFetch tolerant whether it returns Response or already JSON
-const msgKey = (convId: string) => `messages_${convId}`;
-
-const getThumbnailUrl = (url: string, folderKey = "chat_uploads") =>
-  url.replace(`/${folderKey}/`, `/${folderKey}_thumbnails/`);
-
-const renderFilePreview = (file: DMFile, folderKey = "chat_uploads") => {
-  const extension = file.fileName.split(".").pop()?.toLowerCase() || "";
-  const commonStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  };
-
-  if (["jpg", "jpeg", "png"].includes(extension)) {
-    const normalizedUrl = normalizeFileUrl(file.url);
-    const thumbnailUrl = getThumbnailUrl(normalizedUrl, folderKey);
-    const finalUrl = normalizeFileUrl(file.finalUrl || file.url);
-    return <OptimisticImage tempUrl={thumbnailUrl} finalUrl={finalUrl} alt={file.fileName} />;
-  }
-  if (extension === "pdf") {
-    return (
-      <div style={commonStyle}>
-        <FaFilePdf size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-  if (extension === "svg") {
-    return (
-      <div style={commonStyle}>
-        <SiSvg size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-  if (extension === "txt") {
-    return (
-      <div style={commonStyle}>
-        <FaFileAlt size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-  if (["xls", "xlsx", "csv"].includes(extension)) {
-    return (
-      <div style={commonStyle}>
-        <FaFileExcel size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-  if (["dwg", "vwx"].includes(extension)) {
-    return (
-      <div style={commonStyle}>
-        <FaDraftingCompass size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-  if (["c4d", "obj"].includes(extension)) {
-    return (
-      <div style={commonStyle}>
-        <FaCube size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-  if (extension === "ai") {
-    return (
-      <div style={commonStyle}>
-        <SiAdobe size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-  if (extension === "afdesign") {
-    return (
-      <div style={commonStyle}>
-        <SiAffinitydesigner size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-  if (extension === "afpub") {
-    return (
-      <div style={commonStyle}>
-        <SiAffinitypublisher size={50} />
-        <span>{file.fileName}</span>
-      </div>
-    );
-  }
-
-  return (
-    <div style={commonStyle}>
-      <FaFileAlt size={50} />
-      <span>{file.fileName}</span>
-    </div>
-  );
-};
-
-// Attempt to derive a display name from available user fields
-const getUserDisplayName = (u?: AppUser) =>
-  u
-    ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
-      ((u as any).username as string | undefined) ||
-      ((u as any).email as string | undefined) ||
-      u.userId
-    : "Unknown";
-
-// Attempt to derive a thumbnail path from various possible field names
-const getUserThumbnail = (u?: AppUser) =>
-  ((u as any)?.thumbnail as string | undefined) ||
-  ((u as any)?.profilePicture as string | undefined) ||
-  ((u as any)?.photoUrl as string | undefined) ||
-  ((u as any)?.avatar as string | undefined) ||
-  ((u as any)?.avatarUrl as string | undefined) ||
-  ((u as any)?.image as string | undefined) ||
-  ((u as any)?.profileImage as string | undefined) ||
-  ((u as any)?.picture as string | undefined) ||
-  null;
-
-/* ----------------------------------
-   Component
------------------------------------ */
 
 const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
   const navigate = useNavigate();
@@ -247,9 +86,6 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
       ws?: WebSocket | null
     ) => void;
   };
-
-  // presence: query with helper instead of inspecting raw list
-  const { isOnline } = useOnlineStatus() as { isOnline: (id?: string | null) => boolean };
 
   const { setActiveDmConversationId } = useDMConversation() as {
     setActiveDmConversationId: (id: string | null) => void;
@@ -292,9 +128,6 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
 
   // Local state
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-
-  // 🔥 Removed watcher effect (setWatchedUserIds/refreshPresence) — presence is push-only now
-
   const [newMessage, setNewMessage] = useState<string>("");
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -304,8 +137,6 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
   const [selectedPreviewFile, setSelectedPreviewFile] = useState<DMFile | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DMMessage | null>(null);
   const [editTarget, setEditTarget] = useState<DMMessage | null>(null);
-
-  const folderKey = "chat_uploads";
 
   const messages = useMemo(() => {
     if (!selectedConversation) return [];
@@ -383,39 +214,12 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
     persistReadStatus(conversationId);
   }, [setUserData, setDmReadStatus, persistReadStatus]);
 
-  const openConversation = async (conversationId: string) => {
-    console.log("[Messages] openConversation click", { conversationId });
-    const [a, b] = conversationId.replace("dm#", "").split("___");
-    const otherId = a === userData.userId ? b : a;
-    const otherUser = allUsers.find((u) => u.userId === otherId);
-    const slug = otherUser ? slugify(`${otherUser.firstName}-${otherUser.lastName}`) : otherId;
-    navigate(`/dashboard/messages/${slug}`);
-
-    setSelectedConversation(conversationId);
-    if (isMobile) setShowConversation(true);
-
-    // mark read locally
-    setInbox((prev) =>
-      prev.map((t) => (t.conversationId === conversationId ? { ...t, read: true } : t))
-    );
-    markConversationAsRead(conversationId);
-  };
-
   const handleMarkRead = (conversationId: string | null) => {
     if (!conversationId) return;
     setInbox((prev) =>
       prev.map((t) => (t.conversationId === conversationId ? { ...t, read: true } : t))
     );
     markConversationAsRead(conversationId);
-  };
-
-  const openPreviewModal = (file: DMFile) => {
-    setSelectedPreviewFile(file);
-    setPreviewModalOpen(true);
-  };
-  const closePreviewModal = () => {
-    setPreviewModalOpen(false);
-    setSelectedPreviewFile(null);
   };
 
   // Filter who you can DM
@@ -490,7 +294,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
       return;
     }
 
-    const cached = getWithTTL(msgKey(selectedConversation));
+    const cached = getWithTTL(getCacheKey(selectedConversation));
     if (cached) {
       setUserData((prev) => {
         const prevMsgs = Array.isArray(prev.messages) ? prev.messages : [];
@@ -534,7 +338,7 @@ const fetchMessages = async () => {
           )
           .map((m) => ({ ...m, read: true }));
         const uniqueData = dedupeById(readData);
-        setWithTTL(msgKey(selectedConversation), uniqueData);
+        setWithTTL(getCacheKey(selectedConversation), uniqueData);
 
         setUserData((prev) => {
           const prevMsgs = Array.isArray(prev.messages) ? prev.messages : [];
@@ -575,7 +379,7 @@ const fetchMessages = async () => {
   // persist cache on change
   useEffect(() => {
     if (selectedConversation) {
-      setWithTTL(msgKey(selectedConversation), messages);
+      setWithTTL(getCacheKey(selectedConversation), messages);
     }
   }, [messages, selectedConversation]);
 
@@ -622,7 +426,7 @@ const fetchMessages = async () => {
       };
     });
 
-    const maxAttempts = 5;
+    const maxAttempts = MAX_RETRY_ATTEMPTS;
     const trySendMessage = (attempts = 0) => {
       if (!ws || ws.readyState !== WebSocket.OPEN) {
         if (ws && ws.readyState !== WebSocket.OPEN) {
@@ -694,7 +498,7 @@ const fetchMessages = async () => {
   };
 
   // File drop & upload
-  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const files = Array.from(event.dataTransfer.files);
     if (!files.length || !selectedConversation) return;
@@ -703,7 +507,7 @@ const fetchMessages = async () => {
       const tempUrl = URL.createObjectURL(file);
       const optimisticId = `${Date.now()}-${file.name}`;
       const timestamp = new Date().toISOString();
-      const key = `dms/${selectedConversation}/${folderKey}/${file.name}`;
+      const key = `dms/${selectedConversation}/${FOLDER_KEY}/${file.name}`;
 
       const websocketMessage = {
         action: "sendMessage",
@@ -780,7 +584,7 @@ const fetchMessages = async () => {
           ],
         };
 
-        const maxAttempts = 5;
+        const maxAttempts = MAX_RETRY_ATTEMPTS;
         const trySendFileMessage = (attempts = 0) => {
           if (!ws || ws.readyState !== WebSocket.OPEN) {
             if (ws && ws.readyState !== WebSocket.OPEN) {
@@ -860,13 +664,13 @@ const fetchMessages = async () => {
         URL.revokeObjectURL(tempUrl);
       }
     }
-  };
+  }, [selectedConversation, userData, ws, setUserData, setInbox]);
 
-  const handleFileUpload = async (
+  const handleFileUpload = useCallback(async (
     conversationId: string,
     file: File
   ): Promise<DMFile | undefined> => {
-    const filename = `dms/${conversationId}/${folderKey}/${file.name}`;
+    const filename = `dms/${conversationId}/${FOLDER_KEY}/${file.name}`;
     try {
       const uploadTask = uploadData({
         key: filename,
@@ -875,15 +679,15 @@ const fetchMessages = async () => {
       });
       await uploadTask.result;
       // small delay for availability
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, FILE_UPLOAD_DELAY));
       const fileUrl = getFileUrl(
-        `dms/${encodeURIComponent(conversationId)}/${folderKey}/${encodeURIComponent(file.name)}`
+        `dms/${encodeURIComponent(conversationId)}/${FOLDER_KEY}/${encodeURIComponent(file.name)}`
       );
       return { fileName: file.name, url: normalizeFileUrl(fileUrl), key: filename };
     } catch (error) {
       console.error("Error uploading file:", error);
     }
-  };
+  }, []);
 
   const deleteMessage = async (message: DMMessage) => {
     const id = message.messageId || message.optimisticId;
@@ -905,7 +709,7 @@ const fetchMessages = async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               projectId: selectedConversation,
-              field: folderKey,
+              field: FOLDER_KEY,
               fileKeys: [fileKey],
             }),
           });
@@ -1032,11 +836,6 @@ const fetchMessages = async () => {
     }
   };
 
-  const reactToMessage = (messageId: string, emoji: string) => {
-    if (!messageId || !emoji || !selectedConversation) return;
-    toggleReaction(messageId, emoji, userData.userId, selectedConversation, "dm", ws || undefined);
-  };
-
   // Conversations list
   // Build list from inbox threads (existing convos) and eligible users (for new DMs), then dedupe
   const dmConversations = useMemo(() => {
@@ -1104,17 +903,69 @@ const fetchMessages = async () => {
     }
   }
 
-  const listItemStyle: CSSProperties = {
-    fontSize: "14px",
-    padding: "10px",
-    cursor: "pointer",
-    borderRadius: "5px",
-    marginBottom: "1px",
-    transition: "0.2s ease-in-out",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "10px",
+  // Callback functions for child components
+  const handleConversationOpen = useCallback(async (conversationId: string) => {
+    console.log("[Messages] openConversation click", { conversationId });
+    const [a, b] = conversationId.replace("dm#", "").split("___");
+    const otherId = a === userData.userId ? b : a;
+    const otherUser = allUsers.find((u) => u.userId === otherId);
+    const slug = otherUser ? slugify(`${otherUser.firstName}-${otherUser.lastName}`) : otherId;
+    navigate(`/dashboard/messages/${slug}`);
+
+    setSelectedConversation(conversationId);
+    if (isMobile) setShowConversation(true);
+
+    // mark read locally
+    setInbox((prev) =>
+      prev.map((t) => (t.conversationId === conversationId ? { ...t, read: true } : t))
+    );
+    markConversationAsRead(conversationId);
+  }, [navigate, userData.userId, allUsers, isMobile, setInbox, markConversationAsRead]);
+
+  const handleMessageChange = useCallback((message: string) => {
+    setNewMessage(message);
+  }, []);
+
+  const handleToggleEmojiPicker = useCallback(() => {
+    setShowEmojiPicker((p) => !p);
+  }, []);
+
+  const handleEmojiSelect = useCallback((emoji: string) => {
+    setNewMessage((m) => m + emoji);
+    setShowEmojiPicker(false);
+  }, []);
+
+  const handleDropEvent = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    handleDrop(event);
+  }, [handleDrop]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setShowConversation(false);
+  }, []);
+
+  const openPreviewModal = (file: DMFile) => {
+    setSelectedPreviewFile(file);
+    setPreviewModalOpen(true);
+  };
+  
+  const closePreviewModal = () => {
+    setPreviewModalOpen(false);
+    setSelectedPreviewFile(null);
+  };
+
+  const reactToMessage = (messageId: string, emoji: string) => {
+    if (!messageId || !emoji || !selectedConversation) return;
+    toggleReaction(messageId, emoji, userData.userId, selectedConversation, "dm", ws || undefined);
   };
 
   return (
@@ -1123,335 +974,110 @@ const fetchMessages = async () => {
       style={{ display: isMobile ? "block" : "flex", height: "100%" }}
     >
       {/* Sidebar */}
-      {(!isMobile || !showConversation) && (
-        <div
-          className="sidebar"
-          style={{
-            width: isMobile ? "100%" : "25%",
-            borderRight: isMobile ? "none" : "1px solid #444",
-            background: "#0c0c0c",
-          }}
-        >
-          <div className="sidebar-section">
-            <h3
-              style={{
-                fontSize: "18px",
-                background: "linear-gradient(30deg, #181818, #0c0c0c)",
-                padding: "15px",
-                margin: 0,
-              }}
-            >
-              # Direct Messages
-            </h3>
-            <div
-              style={{
-                maxHeight: isMobile ? "calc(100vh - 150px)" : "400px",
-                overflowY: "auto",
-              }}
-            >
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {dmConversations.map((conv, index) => {
-                  const onlinePeerId = conv.id
-                    .replace("dm#", "")
-                    .split("___")
-                    .find((id) => id !== userData.userId);
-                  const online = onlinePeerId ? isOnline(onlinePeerId) : false;
-
-                  return (
-                    <li
-                      key={`${conv.id}-${conv.userId}-${index}`} // Changed from conv.id to uniqueKey
-                      onClick={() => openConversation(conv.id)}
-                      style={{
-                        ...listItemStyle,
-                        background: selectedConversation === conv.id ? "#252525" : undefined,
-                        color: selectedConversation === conv.id ? "#fff" : "#bbb",
-                        padding: "10px 15px",
-                        position: "relative",
-                      }}
-                    >
-                      <div className="avatar-wrapper" style={{ marginRight: 8 }}>
-                        <>
-                          {conv.profilePicture ? (
-                            <img
-                              src={getFileUrl(conv.profilePicture)}
-                              alt={conv.title}
-                              style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                              }}
-                            />
-                          ) : (
-                            <User style={{ width: 32, height: 32, opacity: 0.5 }} />
-                          )}
-                          {online && <span className="online-indicator" />}
-                        </>
-                      </div>
-                      <span style={{ flexGrow: 1, textAlign: "right" }}>{conv.title}</span>
-                      {threadMap[conv.id] && (
-                        <span
-                          style={{
-                            background: "#FA3356",
-                            color: "#fff",
-                            borderRadius: "12px",
-                            padding: "2px 6px",
-                            fontSize: "12px",
-                            marginLeft: "4px",
-                          }}
-                        >
-                          NEW
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConversationSidebar
+        dmConversations={dmConversations}
+        selectedConversation={selectedConversation}
+        threadMap={threadMap}
+        userData={userData}
+        isMobile={isMobile}
+        showConversation={showConversation}
+        onConversationOpen={handleConversationOpen}
+      />
 
       {/* Chat Window */}
-      {(!isMobile || showConversation) && (
-        <div
-          className={`chat-window ${isDragging ? "dragging" : ""}`}
-          style={{
-            width: isMobile ? "100%" : "75%",
-            display: "flex",
-            flexDirection: "column",
-            padding: "15px",
-            position: "relative",
-            height: "100%",
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            setIsDragging(false);
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            setIsDragging(false);
-            handleDrop(e);
-          }}
-        >
-          {isMobile && showConversation && (
-            <button
-              onClick={() => setShowConversation(false)}
-              style={{
-                position: "absolute",
-                top: 10,
-                left: 10,
-                background: "none",
-                border: "none",
-                color: "#fff",
-                fontSize: "18px",
-                zIndex: 10,
-              }}
-              aria-label="Back to conversations"
-            >
-              ←
-            </button>
-          )}
+      <ChatWindow
+        selectedConversation={selectedConversation}
+        displayMessages={displayMessages}
+        chatTitle={chatTitle}
+        chatIcon={chatIcon}
+        newMessage={newMessage}
+        showEmojiPicker={showEmojiPicker}
+        isLoading={isLoading}
+        errorMessage={errorMessage}
+        isDragging={isDragging}
+        isMobile={isMobile}
+        showConversation={showConversation}
+        messagesEndRef={messagesEndRef}
+        userData={userData}
+        allUsers={allUsers}
+        folderKey={FOLDER_KEY}
+        onMessageChange={handleMessageChange}
+        onSendMessage={sendMessage}
+        onToggleEmojiPicker={handleToggleEmojiPicker}
+        onEmojiSelect={handleEmojiSelect}
+        onMarkRead={handleMarkRead}
+        onDrop={handleDropEvent}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onBack={handleBack}
+        setIsDragging={setIsDragging}
+        onDelete={(m: ChatMessage) => setDeleteTarget(m as DMMessage)}
+        onEditRequest={(m: ChatMessage) => setEditTarget(m as DMMessage)}
+        onReact={reactToMessage}
+        openPreviewModal={openPreviewModal}
+      />
 
-          {isLoading && <SpinnerOverlay />}
-          {errorMessage && <div className="error-message">{errorMessage}</div>}
-
-          <div
-            className="chat-header"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingBottom: "5px",
-              marginBottom: "10px",
-            }}
-          >
-            <h2 style={{ fontSize: 18 }}>{chatTitle}</h2>
-            {chatIcon}
+      {/* Preview Modal */}
+      <Modal
+        isOpen={isPreviewModalOpen}
+        onRequestClose={closePreviewModal}
+        contentLabel="File Preview Modal"
+        className="messages-modal-content"
+        overlayClassName="messages-modal-overlay"
+      >
+        {selectedPreviewFile && (
+          <div className="preview-container">
+            {(() => {
+              const ext = selectedPreviewFile.fileName.split(".").pop()?.toLowerCase() || "";
+              if (["jpg", "jpeg", "png"].includes(ext)) {
+                return (
+                  <img
+                    src={getFileUrl(fileUrlsToKeys([selectedPreviewFile.finalUrl || selectedPreviewFile.url])[0])}
+                    alt={selectedPreviewFile.fileName}
+                    style={{ maxWidth: "90vw", maxHeight: "80vh" }}
+                  />
+                );
+              }
+              return renderFilePreview(selectedPreviewFile, FOLDER_KEY);
+            })()}
+            <div className="preview-header">
+              <button onClick={closePreviewModal} className="modal-button secondary" aria-label="Close preview">
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+              <a href={getFileUrl(fileUrlsToKeys([selectedPreviewFile.url])[0])} download style={{ color: "white" }}>
+                <FontAwesomeIcon icon={faDownload} />
+              </a>
+            </div>
           </div>
+        )}
+      </Modal>
 
-          <div
-            className="chat-messages"
-            style={{
-              flexGrow: 1,
-              overflowY: isLoading ? "hidden" : "auto",
-              padding: "10px",
-              background: "#222",
-              borderRadius: "5px",
-              marginBottom: "10px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: displayMessages.length === 0 ? "center" : "flex-start",
-              alignItems: displayMessages.length === 0 ? "center" : "stretch",
-            }}
-            onClick={() => selectedConversation && handleMarkRead(selectedConversation)}
-          >
-            {displayMessages.length === 0 && !isLoading ? (
-              <div style={{ color: "#aaa", fontSize: 16, textAlign: "center" }}>
-                No messages yet.
-              </div>
-            ) : (
-              displayMessages.map((msg, index) => (
-                <MessageItem
-                  key={msg.optimisticId || msg.messageId || String(msg.timestamp)}
-                  msg={msg as ChatMessage}
-                  prevMsg={displayMessages[index - 1] as ChatMessage}
-                  userData={userData}
-                  allUsers={allUsers}
-                  openPreviewModal={openPreviewModal}
-                  folderKey={folderKey}
-                  renderFilePreview={renderFilePreview}
-                  getFileNameFromUrl={getFileNameFromUrl}
-                  onDelete={(m: ChatMessage) => setDeleteTarget(m as DMMessage)}
-                  onEditRequest={(m: ChatMessage) => setEditTarget(m as DMMessage)}
-                  onReact={reactToMessage}
-                />
-              ))
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+      {/* Delete Confirm */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onRequestClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) deleteMessage(deleteTarget);
+          setDeleteTarget(null);
+        }}
+        message="Delete this message?"
+        className="messages-modal-content"
+        overlayClassName="messages-modal-overlay"
+      />
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center", position: "relative" }}>
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onFocus={() => selectedConversation && handleMarkRead(selectedConversation)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-              style={{
-                flexGrow: 1,
-                padding: "10px",
-                borderRadius: "6px",
-                border: "1px solid #444",
-                background: "#1c1c1c",
-                color: "#fff",
-              }}
-              aria-label="Message input"
-            />
-            <button
-              onClick={() => setShowEmojiPicker((p) => !p)}
-              style={{ background: "none", border: "none", cursor: "pointer" }}
-              aria-label="Toggle emoji picker"
-            >
-              😊
-            </button>
-            {showEmojiPicker && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 40,
-                  right: 60,
-                  background: "#333",
-                  padding: 5,
-                  borderRadius: 8,
-                  display: "flex",
-                  gap: 4,
-                }}
-              >
-                {["😀", "😂", "👍", "❤️", "✅", "💯"].map((em) => (
-                  <span
-                    key={em}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => {
-                      setNewMessage((m) => m + em);
-                      setShowEmojiPicker(false);
-                    }}
-                  >
-                    {em}
-                  </span>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={sendMessage}
-              style={{
-                padding: "10px 15px",
-                background: "#FA3356",
-                border: "none",
-                borderRadius: "6px",
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              Send
-            </button>
-          </div>
-
-          {isDragging && <div className="drag-overlay">Drop files to upload</div>}
-
-          {/* Preview Modal */}
-          <Modal
-            isOpen={isPreviewModalOpen}
-            onRequestClose={closePreviewModal}
-            contentLabel="File Preview Modal"
-            className="messages-modal-content"
-            overlayClassName="messages-modal-overlay"
-          >
-            {selectedPreviewFile && (
-              <div className="preview-container">
-                {(() => {
-                  const ext = selectedPreviewFile.fileName.split(".").pop()?.toLowerCase() || "";
-                  if (["jpg", "jpeg", "png"].includes(ext)) {
-                    return (
-                      <img
-                        src={getFileUrl(fileUrlsToKeys([selectedPreviewFile.finalUrl || selectedPreviewFile.url])[0])}
-                        alt={selectedPreviewFile.fileName}
-                        style={{ maxWidth: "90vw", maxHeight: "80vh" }}
-                      />
-                    );
-                  }
-                  return renderFilePreview(selectedPreviewFile, folderKey);
-                })()}
-                <div className="preview-header">
-                  <button onClick={closePreviewModal} className="modal-button secondary" aria-label="Close preview">
-                    <FontAwesomeIcon icon={faTimes} />
-                  </button>
-                  <a href={getFileUrl(fileUrlsToKeys([selectedPreviewFile.url])[0])} download style={{ color: "white" }}>
-                    <FontAwesomeIcon icon={faDownload} />
-                  </a>
-                </div>
-              </div>
-            )}
-          </Modal>
-
-          {/* Delete Confirm */}
-          <ConfirmModal
-            isOpen={!!deleteTarget}
-            onRequestClose={() => setDeleteTarget(null)}
-            onConfirm={() => {
-              if (deleteTarget) deleteMessage(deleteTarget);
-              setDeleteTarget(null);
-            }}
-            message="Delete this message?"
-            className="messages-modal-content"
-            overlayClassName="messages-modal-overlay"
-          />
-
-          {/* Edit Prompt */}
-          <PromptModal
-            isOpen={!!editTarget}
-            onRequestClose={() => setEditTarget(null)}
-            onSubmit={(text) => {
-              if (editTarget) editMessage(editTarget, text);
-              setEditTarget(null);
-            }}
-            message="Edit message"
-            defaultValue={editTarget?.text || ""}
-            className="messages-modal-content"
-            overlayClassName="messages-modal-overlay"
-          />
-        </div>
-      )}
+      {/* Edit Prompt */}
+      <PromptModal
+        isOpen={!!editTarget}
+        onRequestClose={() => setEditTarget(null)}
+        onSubmit={(text) => {
+          if (editTarget) editMessage(editTarget, text);
+          setEditTarget(null);
+        }}
+        message="Edit message"
+        defaultValue={editTarget?.text || ""}
+        className="messages-modal-content"
+        overlayClassName="messages-modal-overlay"
+      />
     </div>
   );
 };

@@ -245,7 +245,7 @@ const BASE_ENDPOINTS = {
     PROJECT_INVITES_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/sendProjectInvitation',
     COLLAB_INVITES_BASE_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/invites',
     USER_INVITES_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/invites/users',
-    TASKS_API_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/tasks',
+    TASKS_API_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/',
     
     // External services (unchanged)
     NOMINATIM_SEARCH_URL: 'https://nominatim.openstreetmap.org/search?format=json&q=',
@@ -594,10 +594,15 @@ export async function updateProjectFields(projectId: string, fields: Partial<Pro
 
 export async function fetchTasks(projectId?: string): Promise<Task[]> {
   if (!projectId) return [];
-  const url = `${TASKS_API_URL}?projectId=${encodeURIComponent(projectId)}`;
-  const data = await apiFetch<MaybeItems<Task> | { tasks?: Task[] }>(url);
-  const items = 'tasks' in data ? data.tasks : extractItems<Task>(data);
-  return items ?? [];
+  const url = `${TASKS_API_URL}${encodeURIComponent(projectId)}/tasks`;
+  const res = await apiFetch(url);
+
+  if (Array.isArray(res)) return res;
+  const obj = res as Record<string, unknown>;
+  if (Array.isArray(obj?.Items)) return obj.Items as Task[];
+  if (Array.isArray(obj?.tasks)) return obj.tasks as Task[];
+
+  return [];
 }
 
 export async function createTask(task: Task): Promise<Task> {

@@ -107,16 +107,26 @@ const handleSetActiveConversation = async (event, payload) => {
     return { statusCode: 400, body: "Missing connectionId or conversationId" };
   }
 
+  // Normalize DM conversation IDs
+  let normalizedConversationId = conversationId;
+  if (conversationId.startsWith('dm#')) {
+    const userIds = conversationId.replace('dm#', '').split('___');
+    if (userIds.length === 2) {
+      const sortedIds = userIds.sort();
+      normalizedConversationId = `dm#${sortedIds.join('___')}`;
+    }
+  }
+
   try {
     await dynamoDb.send(new UpdateCommand({
       TableName: process.env.CONNECTIONS_TABLE,
       Key: { connectionId },
       UpdateExpression: "SET activeConversation = :c",
-      ExpressionAttributeValues: { ":c": String(conversationId).trim() },
+      ExpressionAttributeValues: { ":c": String(normalizedConversationId).trim() },
       ConditionExpression: "attribute_exists(userId)" // ✅ only update if row is valid
     }));
 
-    console.log(`✅ Set activeConversation for ${connectionId} → ${conversationId}`);
+    console.log(`✅ Set activeConversation for ${connectionId} → ${normalizedConversationId}`);
     return { statusCode: 200, body: "Active conversation set" };
   } catch (err) {
     console.error("❌ Failed to set active conversation:", err);
@@ -133,6 +143,9 @@ const broadcastToConversation = async (conversationId, payload) => {
     const recipients = connections.filter(
       (c) => String(c.activeConversation || "").trim() === convIdTrim
     );
+
+    console.log("📡 [broadcastToConversation] conversationId:", convIdTrim);
+    console.log("📡 [broadcastToConversation] Recipients found:", recipients.map(r => r.connectionId));
 
     if (recipients.length === 0) {
       console.warn("⚠️ No active connections for", convIdTrim);
@@ -498,6 +511,17 @@ const handleDeleteMessage = async (payload) => {
   const eventPayload = { action: "deleteMessage", conversationType, conversationId, messageId };
 
   if (conversationType === "dm") {
+    // Delete message from database
+    try {
+      await dynamoDb.send(new DeleteCommand({
+        TableName: process.env.MESSAGES_TABLE,
+        Key: { conversationId, messageId },
+      }));
+      console.log("✅ DM message deleted from DB:", messageId);
+    } catch (err) {
+      console.error("❌ Failed to delete DM message from DB:", err);
+    }
+
     const [uid1, uid2] = conversationId.replace("dm#", "").split("___");
     await Promise.all([
       broadcastToUser(uid1, eventPayload),
@@ -545,6 +569,25 @@ const handleEditMessage = async (payload) => {
   };
 
   if (conversationType === "dm") {
+    // Update message in database
+    try {
+      await dynamoDb.send(new UpdateCommand({
+        TableName: process.env.MESSAGES_TABLE,
+        Key: { conversationId, messageId },
+        UpdateExpression: "SET #t = :text, edited = :edited, editedAt = :editedAt, editedBy = :editedBy",
+        ExpressionAttributeNames: { "#t": "text" },
+        ExpressionAttributeValues: {
+          ":text": text,
+          ":edited": true,
+          ":editedAt": editedAt || new Date().toISOString(),
+          ":editedBy": editedBy,
+        },
+      }));
+      console.log("✅ DM message updated in DB:", messageId);
+    } catch (err) {
+      console.error("❌ Failed to update DM message in DB:", err);
+    }
+
     const [uid1, uid2] = conversationId.replace("dm#", "").split("___");
     await Promise.all([
       broadcastToUser(uid1, eventPayload),

@@ -8,6 +8,7 @@ import { WEBSOCKET_URL } from "@/shared/utils/api";
 import { mergeAndDedupeMessages } from "@/shared/utils/messageUtils";
 import { createSecureWebSocketConnection } from "@/shared/utils/secureWebSocketAuth";
 import { logSecurityEvent } from "@/shared/utils/securityUtils";
+import { normalizeDMConversationId } from "@/shared/utils/websocketUtils";
 import type { SocketContextType } from "./SocketContextValue";
 
 const SocketContext = createContext<SocketContextType>({ ws: null, isConnected: false });
@@ -116,6 +117,9 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
         try {
           const data = JSON.parse(event.data);
 
+          // Add debug logging for incoming WS messages
+          console.log("📩 Incoming WS message:", data);
+
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("ws-message", { detail: data }));
           }
@@ -152,18 +156,20 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
           if (data.conversationType === "dm") {
             if (data.action === "sendMessage" || data.action === "newMessage") {
               if (deletedMessageIds.has(data.messageId) || deletedMessageIds.has(data.optimisticId)) return;
+              const normalizedConversationId = normalizeDMConversationId(data.conversationId);
               const isSelf = data.senderId === userId;
-              const viewing = activeDmConversationId === data.conversationId;
+              const viewing = activeDmConversationId === normalizedConversationId;
 
               setUserData((prev) => {
                 if (!prev) return prev;
                 const prevMsgs = Array.isArray(prev.messages) ? prev.messages : [];
-                const merged = mergeAndDedupeMessages(prevMsgs, [{ ...data, read: viewing || isSelf }]);
+                const messageWithNormalizedId = { ...data, conversationId: normalizedConversationId };
+                const merged = mergeAndDedupeMessages(prevMsgs, [{ ...messageWithNormalizedId, read: viewing || isSelf }]);
                 return { ...prev, messages: merged };
               });
 
               setInbox((prev) => {
-                const idx = prev.findIndex((t) => t.conversationId === data.conversationId);
+                const idx = prev.findIndex((t) => t.conversationId === normalizedConversationId);
                 if (idx !== -1) {
                   const shouldBeRead = viewing || isSelf;
                   const updated = [...prev];
@@ -178,7 +184,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                   return [
                     ...prev,
                     {
-                      conversationId: data.conversationId,
+                      conversationId: normalizedConversationId,
                       snippet: data.text,
                       lastMsgTs: data.timestamp,
                       read: viewing || isSelf,
@@ -188,7 +194,8 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                 }
               });
             } else if (data.action === "deleteMessage") {
-              const viewing = activeDmConversationId === data.conversationId;
+              const normalizedConversationId = normalizeDMConversationId(data.conversationId);
+              const viewing = activeDmConversationId === normalizedConversationId;
               markMessageDeleted(data.messageId || data.optimisticId);
 
               setUserData((prev) => {
@@ -203,7 +210,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                 );
 
                 const convoMsgs = updatedMsgs
-                  .filter((m) => m.conversationId === data.conversationId)
+                  .filter((m) => m.conversationId === normalizedConversationId)
                   .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
                 const lastMsg = convoMsgs[0];
                 const newSnippet = lastMsg?.text || "";
@@ -211,7 +218,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
 
                 setInbox((prevThreads) =>
                   prevThreads.map((t) =>
-                    t.conversationId === data.conversationId
+                    t.conversationId === normalizedConversationId
                       ? { ...t, snippet: newSnippet, lastMsgTs: newTs, read: viewing ? true : t.read }
                       : t
                   )
@@ -220,6 +227,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                 return { ...prev, messages: updatedMsgs };
               });
             } else if (data.action === "editMessage") {
+              const normalizedConversationId = normalizeDMConversationId(data.conversationId);
               setUserData((prev) => {
                 if (!prev) return prev;
                 const msgs = Array.isArray(prev.messages) ? prev.messages : [];
@@ -232,12 +240,13 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
               });
               setInbox((prev) =>
                 prev.map((t) =>
-                  t.conversationId === data.conversationId && t.lastMsgTs === data.timestamp
+                  t.conversationId === normalizedConversationId && t.lastMsgTs === data.timestamp
                     ? { ...t, snippet: data.text, lastMsgTs: data.timestamp }
                     : t
                 )
               );
             } else if (data.action === "toggleReaction") {
+              const normalizedConversationId = normalizeDMConversationId(data.conversationId);
               setUserData((prev) => {
                 if (!prev) return prev;
                 const msgs = Array.isArray(prev.messages) ? prev.messages : [];

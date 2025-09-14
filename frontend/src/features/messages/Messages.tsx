@@ -19,7 +19,7 @@ import {
   DMFile,
 } from "@/shared/utils/messageUtils";
 import User from "@/assets/svg/user.svg?react";
-import { normalizeMessage } from "@/shared/utils/websocketUtils";
+import { normalizeMessage, normalizeDMConversationId } from "@/shared/utils/websocketUtils";
 import { getWithTTL, setWithTTL } from "@/shared/utils/storageWithTTL";
 import { uploadData } from "aws-amplify/storage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -399,10 +399,12 @@ const fetchMessages = async () => {
     const timestamp = new Date().toISOString();
     const optimisticId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+    const normalizedConversationId = normalizeDMConversationId(selectedConversation);
+
     const messageData = {
       action: "sendMessage",
       conversationType: "dm",
-      conversationId: selectedConversation,
+      conversationId: normalizedConversationId,
       senderId: userData?.userId,
       text: newMessage,
       timestamp,
@@ -410,7 +412,7 @@ const fetchMessages = async () => {
     };
 
     const optimisticMessage: DMMessage = {
-      conversationId: selectedConversation,
+      conversationId: normalizedConversationId,
       senderId: userData?.userId || "",
       text: newMessage,
       timestamp,
@@ -446,7 +448,7 @@ const fetchMessages = async () => {
 
       try {
         ws.send(JSON.stringify(normalizeMessage(messageData, "sendMessage")));
-        const [a, b] = selectedConversation.replace("dm#", "").split("___");
+        const [a, b] = normalizedConversationId.replace("dm#", "").split("___");
         const recipientId = a === userData.userId ? b : a;
 
         if (MESSAGES_THREADS_URL) {
@@ -454,7 +456,7 @@ const fetchMessages = async () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              conversationId: selectedConversation,
+              conversationId: normalizedConversationId,
               senderId: userData.userId,
               recipientId,
               snippet: newMessage,
@@ -465,7 +467,7 @@ const fetchMessages = async () => {
 
         // update thread list
         setInbox((prev) => {
-          const idx = prev.findIndex((t) => t.conversationId === selectedConversation);
+          const idx = prev.findIndex((t) => t.conversationId === normalizedConversationId);
           if (idx !== -1) {
             const updated = [...prev];
             updated[idx] = {
@@ -479,7 +481,7 @@ const fetchMessages = async () => {
           return [
             ...prev,
             {
-              conversationId: selectedConversation,
+              conversationId: normalizedConversationId,
               snippet: newMessage,
               lastMsgTs: timestamp,
               read: true,
@@ -507,12 +509,13 @@ const fetchMessages = async () => {
       const tempUrl = URL.createObjectURL(file);
       const optimisticId = `${Date.now()}-${file.name}`;
       const timestamp = new Date().toISOString();
-      const key = `dms/${selectedConversation}/${FOLDER_KEY}/${file.name}`;
+      const normalizedConversationId = normalizeDMConversationId(selectedConversation);
+      const key = `dms/${normalizedConversationId}/${FOLDER_KEY}/${file.name}`;
 
       const websocketMessage = {
         action: "sendMessage",
         conversationType: "dm",
-        conversationId: selectedConversation,
+        conversationId: normalizedConversationId,
         senderId: userData?.userId,
         text: tempUrl,
         timestamp,
@@ -520,7 +523,7 @@ const fetchMessages = async () => {
       };
 
       const optimisticMessage: DMMessage = {
-        conversationId: selectedConversation,
+        conversationId: normalizedConversationId,
         senderId: userData?.userId || "",
         text: tempUrl,
         file: { fileName: file.name, url: tempUrl, finalUrl: null, key },
@@ -611,7 +614,7 @@ const fetchMessages = async () => {
         trySendFileMessage();
 
         // update thread list
-        const [a, b] = selectedConversation.replace("dm#", "").split("___");
+        const [a, b] = normalizedConversationId.replace("dm#", "").split("___");
         const recipientId = a === userData.userId ? b : a;
 
         if (MESSAGES_THREADS_URL) {
@@ -619,7 +622,7 @@ const fetchMessages = async () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              conversationId: selectedConversation,
+              conversationId: normalizedConversationId,
               senderId: userData.userId,
               recipientId,
               snippet: uploadedFile.url,
@@ -629,7 +632,7 @@ const fetchMessages = async () => {
         }
 
         setInbox((prev) => {
-          const idx = prev.findIndex((t) => t.conversationId === selectedConversation);
+          const idx = prev.findIndex((t) => t.conversationId === normalizedConversationId);
           if (idx !== -1) {
             const updated = [...prev];
             updated[idx] = {
@@ -643,7 +646,7 @@ const fetchMessages = async () => {
           return [
             ...prev,
             {
-              conversationId: selectedConversation,
+              conversationId: normalizedConversationId,
               snippet: uploadedFile.url,
               lastMsgTs: timestamp,
               read: true,
@@ -841,16 +844,17 @@ const fetchMessages = async () => {
   const dmConversations = useMemo(() => {
     // from inbox
     const fromInbox = (inbox || []).map((t) => {
+      const normalizedConversationId = normalizeDMConversationId(t.conversationId);
       const otherId =
         t.otherUserId ||
-        t.conversationId
+        normalizedConversationId
           .replace("dm#", "")
           .split("___")
           .find((id) => id !== userData.userId) || "";
       const u = allUsers.find((x) => x.userId === otherId);
       const title = getUserDisplayName(u) || otherId;
       return {
-        id: t.conversationId,
+        id: normalizedConversationId,
         userId: otherId,
         title,
         profilePicture: getUserThumbnail(u),
@@ -906,20 +910,21 @@ const fetchMessages = async () => {
   // Callback functions for child components
   const handleConversationOpen = useCallback(async (conversationId: string) => {
     console.log("[Messages] openConversation click", { conversationId });
-    const [a, b] = conversationId.replace("dm#", "").split("___");
+    const normalizedConversationId = normalizeDMConversationId(conversationId);
+    const [a, b] = normalizedConversationId.replace("dm#", "").split("___");
     const otherId = a === userData.userId ? b : a;
     const otherUser = allUsers.find((u) => u.userId === otherId);
     const slug = otherUser ? slugify(`${otherUser.firstName}-${otherUser.lastName}`) : otherId;
     navigate(`/dashboard/messages/${slug}`);
 
-    setSelectedConversation(conversationId);
+    setSelectedConversation(normalizedConversationId);
     if (isMobile) setShowConversation(true);
 
     // mark read locally
     setInbox((prev) =>
-      prev.map((t) => (t.conversationId === conversationId ? { ...t, read: true } : t))
+      prev.map((t) => (t.conversationId === normalizedConversationId ? { ...t, read: true } : t))
     );
-    markConversationAsRead(conversationId);
+    markConversationAsRead(normalizedConversationId);
   }, [navigate, userData.userId, allUsers, isMobile, setInbox, markConversationAsRead]);
 
   const handleMessageChange = useCallback((message: string) => {

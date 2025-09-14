@@ -31,7 +31,6 @@ import { slugify, findUserBySlug } from "@/shared/utils/slug";
 import {
   MESSAGES_THREADS_URL,
   DELETE_FILE_FROM_S3_URL,
-  EDIT_MESSAGE_URL,
   apiFetch,
   getFileUrl,
   normalizeFileUrl,
@@ -709,18 +708,8 @@ const fetchMessages = async () => {
         }
       }
 
- // delete from store/server (defensive for Response vs JSON)
-      if (message.messageId) {
-        const url = `${EDIT_MESSAGE_URL}/${encodeURIComponent(
-          message.messageId
-        )}?conversationId=${encodeURIComponent(selectedConversation)}`;
-        const res = await apiFetch<{ success?: boolean }>(url, {
-          method: "DELETE",
-        });
-        // Since apiFetch parses JSON and throws on error, res should be the success data
-        console.log("Delete successful:", res);
-      }
-
+      // delete from store/server (defensive for Response vs JSON)
+      // Note: Message deletion now handled via WebSocket only
       const prevMsgs = Array.isArray(userData?.messages) ? userData.messages! : [];
       const updatedMsgs = prevMsgs.filter((m) => (m.messageId || m.optimisticId) !== id);
       setUserData((prev) => (prev ? { ...(prev as AppUser), messages: updatedMsgs } : prev));
@@ -781,21 +770,6 @@ const fetchMessages = async () => {
     if (!message.messageId || !newText || !selectedConversation) return;
 
     try {
-      const res = await apiFetch<{ success?: boolean }>(
-        `${EDIT_MESSAGE_URL}/${encodeURIComponent(message.messageId)}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: newText,
-            editedBy: userData.userId,
-            conversationId: selectedConversation,
-          }),
-        }
-      );
-      // Since apiFetch throws on error, success means we got here
-      console.log("Edit successful:", res);
-
       const ts = new Date().toISOString();
       setUserData((prev) => {
         const msgs = Array.isArray(prev.messages) ? prev.messages : [];

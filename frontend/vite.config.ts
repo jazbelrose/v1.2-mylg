@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from "vite";
 import react from '@vitejs/plugin-react'
 import svgr from 'vite-plugin-svgr'
 import path from 'path'
@@ -29,7 +29,15 @@ const prodCsp = [
 ].join('; ')
 
 export default defineConfig(({ mode }) => {
-  const isDev = mode === 'development'
+  const env = loadEnv(mode, process.cwd(), "");
+  const isHttps = false; // Vite dev is usually http
+  const scheme = isHttps ? "wss" : "ws";
+
+  const yjsTarget =
+    (env.VITE_YJS_WS_URL && env.VITE_YJS_WS_URL.trim()) ||
+    `${scheme}://35.165.113.63:1234`;
+
+  const isDev = mode === 'development';
 
   const securityHeaders = {
     'Content-Security-Policy': isDev ? devCsp : prodCsp,
@@ -79,11 +87,12 @@ export default defineConfig(({ mode }) => {
         protocol: 'ws',
       },
       proxy: {
-        '/yjs': {
-          target: process.env.VITE_YJS_WS_URL || 'ws://35.165.113.63:1234',
+        "/yjs": {
+          target: yjsTarget,
           ws: true,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/yjs/, ''),
+          secure: false,
+          rewrite: (p) => p.replace(/^\/yjs/, ""), // so final path is "/<room>"
         },
       },
 

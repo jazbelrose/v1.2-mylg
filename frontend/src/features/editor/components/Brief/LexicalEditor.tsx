@@ -35,6 +35,7 @@ import { WebsocketProvider } from "y-websocket";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import type { Provider } from "@lexical/yjs";
+import { YJS_WS_URL } from "@/config/realtime";
 
 import "./lexical-editor.css";
 
@@ -153,15 +154,9 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({
       });
       persistenceRef.current = persistence;
 
-      const wsEndpoint =
-        import.meta.env.VITE_YJS_WS_URL ||
-        (typeof window !== "undefined"
-          ? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/yjs`
-          : "ws://35.165.113.63:1234");
-
       const provider = new WebsocketProvider(
-        wsEndpoint,
-        id,
+        YJS_WS_URL.replace(/\/$/, ""),       // base only, no trailing slash
+        id,                                  // room id; y-websocket appends this
         doc
       ) as ExtendedWebsocketProvider;
 

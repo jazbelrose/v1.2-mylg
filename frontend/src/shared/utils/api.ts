@@ -155,10 +155,20 @@ export function getFileUrl(keyOrUrl: string): string {
   if (keyOrUrl.startsWith('http')) {
     try {
       const parsed = new URL(keyOrUrl);
+      const host = parsed.hostname;
+      const cdnHost = FILE_CDN ? new URL(FILE_CDN).hostname : '';
+      const shouldRewrite =
+        host.includes(FILE_BUCKET) ||
+        host.endsWith('amazonaws.com') ||
+        (cdnHost && host === cdnHost);
+      if (!shouldRewrite) {
+        return keyOrUrl;
+      }
       const path = parsed.pathname.startsWith('/') ? parsed.pathname.slice(1) : parsed.pathname;
       keyOrUrl = decodeURIComponent(path);
     } catch {
       // If parsing fails, use as-is
+      return keyOrUrl;
     }
   }
 

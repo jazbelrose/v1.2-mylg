@@ -20,6 +20,8 @@ vi.mock('../../../shared/utils/api', () => ({
 }));
 vi.mock('antd', () => ({
   Form: { useForm: vi.fn(() => [{}]) },
+  ConfigProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  message: { error: vi.fn(), success: vi.fn() },
   // other antd components if needed
 }));
 

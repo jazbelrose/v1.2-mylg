@@ -5,10 +5,10 @@ import { SocketProvider } from "./SocketContext";
 import "@testing-library/jest-dom";
 
 // ---- Mock contexts ----
-vi.mock("./AuthContext", () => ({
+vi.mock("./useAuth", () => ({
   useAuth: vi.fn(),
 }));
-vi.mock("./DataProvider", () => ({
+vi.mock("./useData", () => ({
   useData: vi.fn(),
 }));
 vi.mock("./useDMConversation", () => ({

@@ -37,38 +37,42 @@ vi.mock("./useBudget", () => ({
 }));
 
 // Mock the BudgetContext to provide the useBudget hook
-vi.mock("./BudgetContext", () => ({
-  useBudget: () => ({
-    budgetHeader: {
-      headerBallPark: 1000,
-      headerFinalTotalCost: 1500,
-      headerBudgetedTotalCost: 1200,
-      headerActualTotalCost: 1100,
-      headerEffectiveMarkup: 0.25,
-      revision: 1,
-    },
-    budgetItems: [
-      { itemBudgetedCost: 500, invoiceGroup: "Group A" },
-      { itemBudgetedCost: 300, invoiceGroup: "Group B" },
-      { itemBudgetedCost: 700, invoiceGroup: "Group A" },
-    ],
-    setBudgetHeader: vi.fn(),
-    setBudgetItems: vi.fn(),
-    refresh: vi.fn(),
-    loading: false,
-    getStats: () => ({
-      ballpark: 1000,
-      finalCost: 1500,
-      budgetedCost: 1200,
-      actualCost: 1100,
-      markup: 0.25,
+vi.mock("./BudgetContext", async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
+    useBudget: () => ({
+      budgetHeader: {
+        headerBallPark: 1000,
+        headerFinalTotalCost: 1500,
+        headerBudgetedTotalCost: 1200,
+        headerActualTotalCost: 1100,
+        headerEffectiveMarkup: 0.25,
+        revision: 1,
+      },
+      budgetItems: [
+        { itemBudgetedCost: 500, invoiceGroup: "Group A" },
+        { itemBudgetedCost: 300, invoiceGroup: "Group B" },
+        { itemBudgetedCost: 700, invoiceGroup: "Group A" },
+      ],
+      setBudgetHeader: vi.fn(),
+      setBudgetItems: vi.fn(),
+      refresh: vi.fn(),
+      loading: false,
+      getStats: () => ({
+        ballpark: 1000,
+        finalCost: 1500,
+        budgetedCost: 1200,
+        actualCost: 1100,
+        markup: 0.25,
+      }),
+      getPie: () => [{ label: "Group A", value: 1200 }],
+      getRows: () => [],
+      getLocks: () => [],
+      wsOps: { emitBudgetUpdate: vi.fn() },
     }),
-    getPie: () => [{ label: "Group A", value: 1200 }],
-    getRows: () => [],
-    getLocks: () => [],
-    wsOps: { emitBudgetUpdate: vi.fn() },
-  }),
-}));
+  };
+});
 
 // Test component to access context
 const TestComponent = () => {

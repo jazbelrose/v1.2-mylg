@@ -430,11 +430,6 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
         console.warn('[apiFetch] Failed to parse JSON, returning {}:', { url });
         return ({} as unknown) as T;
       }
-      if (data === null || (typeof data !== 'object' && !Array.isArray(data))) {
-        console.warn('[apiFetch] Response was not valid JSON, returning {}:', { url });
-        return ({} as unknown) as T;
-      }
-
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes((fetchOptions.method || '').toUpperCase())) {
         logSecurityEvent('api_state_change', { url: new URL(url).pathname, method: fetchOptions.method });
       }

@@ -761,6 +761,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
             onCancel={() => setIsTaskModalOpen(false)}
             centered
             okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
+            forceRender
           >
             <Form layout="vertical" form={editForm} preserve={false}>
               <Form.Item

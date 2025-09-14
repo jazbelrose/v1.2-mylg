@@ -7,6 +7,14 @@ import { vi } from "vitest";
 import ConversationSidebar from "./components/ConversationSidebar";
 import MessageInput from "./components/MessageInput";
 
+// Mock dependencies
+vi.mock("@/app/contexts/OnlineStatusContext", () => ({
+  useOnlineStatus: () => ({
+    onlineUsers: ["user2"],
+    isOnline: (userId: string) => userId === "user2",
+  }),
+}));
+
 describe("Refactored Messages Components", () => {
   it("ConversationSidebar renders correctly", () => {
     const mockProps = {

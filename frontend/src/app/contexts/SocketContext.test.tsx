@@ -11,12 +11,12 @@ vi.mock("./AuthContext", () => ({
 vi.mock("./DataProvider", () => ({
   useData: vi.fn(),
 }));
-vi.mock("./DMConversationContext", () => ({
+vi.mock("./useDMConversation", () => ({
   useDMConversation: vi.fn(),
 }));
 
-import { useAuth } from "./AuthContext";
-import { useData } from "./DataProvider";
+import { useAuth } from "./useAuth";
+import { useData } from "./useData";
 import { useDMConversation } from "./useDMConversation";
 
 // ---- Types ----

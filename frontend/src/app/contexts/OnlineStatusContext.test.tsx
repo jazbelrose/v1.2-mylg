@@ -5,7 +5,7 @@ import { vi, describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } 
 
 import { OnlineStatusProvider, useOnlineStatus } from "./OnlineStatusContext";
 
-vi.mock("./SocketContext", () => ({
+vi.mock("./useSocket", () => ({
   useSocket: vi.fn(),
 }));
 

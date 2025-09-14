@@ -3,11 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
-vi.mock('./AuthContext', () => ({
+vi.mock('./useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('./DataProvider', () => ({
+vi.mock('./useProjects', () => ({
   useProjects: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ vi.mock('@/shared/utils/api', () => ({
   cancelProjectInvite: vi.fn(),
 }));
 
-import { useAuth } from './AuthContext';
+import { useAuth } from './useAuth';
 import { useProjects } from './useProjects';
 import * as api from '@/shared/utils/api';
 import { InvitesProvider } from './InvitesProvider';
@@ -32,8 +32,8 @@ const TestComponent: React.FC = () => {
 
 describe('InvitesProvider', () => {
   beforeEach(() => {
-    useAuth.mockReturnValue({ userId: 'u1' });
-    useProjects.mockReturnValue({ fetchProjects: vi.fn() });
+    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ userId: 'u1' });
+    (useProjects as ReturnType<typeof vi.fn>).mockReturnValue({ fetchProjects: vi.fn() });
     api.fetchPendingInvites.mockResolvedValue([
       { inviteId: '1', projectId: 'p1', recipientUsername: 'r' },
     ]);

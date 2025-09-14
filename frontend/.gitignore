@@ -34,9 +34,7 @@ backend/build
 backend/.env
 backend/.env.*
 
-# AWS config with secrets
-amplifyconfiguration.json
-aws-exports.js
+
 
 # Ignore PyMuPDF, fitz, and .dist-info folders in CreateGalleryFunction
 backend/lambdas/CreateGalleryFunction/pymupdf/

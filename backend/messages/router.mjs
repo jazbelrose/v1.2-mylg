@@ -185,11 +185,11 @@ const routes = [
   // conversation messages
   { m: "GET", r: /^\/messages\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: listConversationMessages },
 
-  // project messages (query param)
-  { m: "GET", r: /^\/messages\/$/i, h: listProjectMessages },
+  // project messages (query param, allow /messages and /messages/)
+  { m: "GET", r: /^\/messages\/?$/i, h: listProjectMessages },
 
-  // project-scoped
-  { m: "GET", r: /^\/messages\/project\/(?<projectId>[^/]+)$/i, h: listProjectMessages },
+  // project-scoped (allow with or without trailing slash)
+  { m: "GET", r: /^\/messages\/project\/(?<projectId>[^/]+)\/?$/i, h: listProjectMessages },
 
   // notifications (v1.2)
   { m: "GET", r: /^\/messages\/notifications$/i, h: listNotifications },
@@ -200,6 +200,7 @@ const routes = [
   { m: "GET", r: /^\/messages\/getProjectMessages$/i, h: listProjectMessages },
   { m: "GET", r: /^\/messages\/getNotifications$/i, h: listNotifications },
 ];
+
 
 export async function handler(event) {
   if (M(event) === "OPTIONS") return preflightFromEvent(event);

@@ -137,7 +137,7 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
       <div className="stat-item-header">
         <Mail className="stat-icon" />
         <div className="stats-header">
-          <span className="stats-title">DMs</span>
+          <span className="stats-title">Inbox</span>
           <span className="stats-count">{totalUnread}</span>
         </div>
       </div>

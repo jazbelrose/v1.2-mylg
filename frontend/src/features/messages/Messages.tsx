@@ -391,14 +391,16 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
   // Filter who you can DM
   const filteredDMUsers = useMemo(
     () =>
-      allUsers.filter((u) => {
-        if (u.userId === userData.userId) return false;
-        if (isCurrentUserAdmin) return true;
-        return (
-          (userData.collaborators && userData.collaborators.includes(u.userId)) ||
-          ((u.role || "").toLowerCase() === "admin")
-        );
-      }),
+      allUsers
+        .filter((u) => {
+          if (u.userId === userData.userId) return false;
+          if (isCurrentUserAdmin) return true;
+          return (
+            (userData.collaborators && userData.collaborators.includes(u.userId)) ||
+            ((u.role || "").toLowerCase() === "admin")
+          );
+        })
+        .filter((u, index, arr) => arr.findIndex((user) => user.userId === u.userId) === index), // Deduplicate by userId
     [allUsers, userData, isCurrentUserAdmin]
   );
 
@@ -1006,6 +1008,7 @@ const fetchMessages = async () => {
     const conversationId = `dm#${sortedIds.join("___")}`;
     return {
       id: conversationId,
+      userId: u.userId, // Add for unique key fallback
       title: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Unnamed User",
       profilePicture: u.thumbnail || null,
     };
@@ -1076,7 +1079,7 @@ const fetchMessages = async () => {
               }}
             >
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {dmConversations.map((conv) => {
+                {dmConversations.map((conv, index) => {
                   const onlinePeerId = conv.id
                     .replace("dm#", "")
                     .split("___")
@@ -1085,7 +1088,7 @@ const fetchMessages = async () => {
 
                   return (
                     <li
-                      key={conv.id}
+                      key={`${conv.id}-${conv.userId}-${index}`} // Changed from conv.id to uniqueKey
                       onClick={() => openConversation(conv.id)}
                       style={{
                         ...listItemStyle,

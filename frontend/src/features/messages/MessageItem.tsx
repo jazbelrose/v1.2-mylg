@@ -54,6 +54,13 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const senderThumbnail = isCurrentUser ? userData?.thumbnail : sender.thumbnail;
   const isSenderOnline = isOnline(msg.senderId);
 
+  const senderThumbnailUrl =
+    senderThumbnail && senderThumbnail.startsWith("http")
+      ? senderThumbnail
+      : senderThumbnail
+        ? getFileUrl(senderThumbnail)
+        : undefined;
+
  
   const [showReactions, setShowReactions] = useState(false);
   const bubbleRef = useRef<HTMLDivElement | null>(null);
@@ -173,7 +180,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         {!isCurrentUser && (
           <div className="avatar-wrapper">
             {senderThumbnail ? (
-              <img src={getFileUrl(senderThumbnail)} alt={senderName} className="avatar" />
+              <img src={senderThumbnailUrl} alt={senderName} className="avatar" />
             ) : (
               <User className="avatar" />
             )}
@@ -252,7 +259,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         {isCurrentUser && (
           <div className="avatar-wrapper">
             {senderThumbnail ? (
-              <img src={getFileUrl(senderThumbnail)} alt="You" className="avatar avatar-right" />
+              <img src={senderThumbnailUrl} alt="You" className="avatar avatar-right" />
             ) : (
               <User className="avatar avatar-right" />
             )}

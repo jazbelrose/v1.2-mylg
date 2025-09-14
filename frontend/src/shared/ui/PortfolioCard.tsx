@@ -24,9 +24,11 @@ const PortfolioCard: React.FC<PortfolioCardProps> = ({
   description,
   className = '',
 }) => {
+  const resolvedSrc = imageSrc.startsWith('http') ? imageSrc : getFileUrl(imageSrc);
+
   return (
     <Link to={linkUrl} className={`portfolio-card ${className}`}>
-      <img src={getFileUrl(imageSrc)} alt={imageAlt} className="card-image" />
+      <img src={resolvedSrc} alt={imageAlt} className="card-image" />
       <div className="top-left title">
         <h3 className="title">{title}</h3>
         <h3 className="subtitle">{subtitle}</h3>

@@ -34,13 +34,15 @@ const BlogCard: React.FC<BlogCardProps> = ({
   subtitle,
 }) => {
   const linkTarget = type === 'blog' ? `/blog/${slug}` : `/works/${slug}`;
+  const mainImage = images[0] || '';
+  const resolvedImage = mainImage.startsWith('http') ? mainImage : getFileUrl(mainImage);
 
   return (
     <div className={`blog-card ${layout} ${className}`.trim()}>
       {layout === 'row1' && (
         <>
           <div className="row1-image">
-            <img src={getFileUrl(images[0])} alt={title} className="card-image" />
+            <img src={resolvedImage} alt={title} className="card-image" />
           </div>
           <div className="row1-content">
             <div className="column1">
@@ -69,7 +71,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
           </div>
           <div className="row2-image">
             <Link to={linkTarget}>
-              <img src={getFileUrl(images[0])} alt={title} className="card-image" />
+              <img src={resolvedImage} alt={title} className="card-image" />
             </Link>
           </div>
           <div className="content-row">
@@ -110,7 +112,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
             </div>
           </div>
           <div className="image-column2">
-            <img src={getFileUrl(images[0])} alt={title} className="card-image" />
+            <img src={resolvedImage} alt={title} className="card-image" />
           </div>
         </>
       )}
@@ -119,7 +121,7 @@ const BlogCard: React.FC<BlogCardProps> = ({
         <>
           <div className="row1-image">
             <Link to={linkTarget}>
-              <img src={getFileUrl(images[0])} alt={title} className="card-image" />
+              <img src={resolvedImage} alt={title} className="card-image" />
             </Link>
           </div>
           <div className="row1-content">

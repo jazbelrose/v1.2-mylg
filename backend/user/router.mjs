@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 /* ---------- ENV ---------- */
 const REGION = process.env.AWS_REGION || "us-west-2";
 const USER_PROFILES_TABLE = process.env.USER_PROFILES_TABLE || "UserProfiles";
+const USER_DIRECTORY_TABLE = process.env.USER_DIRECTORY_TABLE || "UserDirectory";
 const INVITES_TABLE = process.env.INVITES_TABLE || "ProjectInvitations";
 const INVITES_BY_SENDER_INDEX = process.env.INVITES_BY_SENDER_INDEX || "senderId-index";
 const INVITES_BY_RECIPIENT_INDEX = process.env.INVITES_BY_RECIPIENT_INDEX || "recipientId-index";
@@ -134,6 +135,22 @@ function buildUpdate(obj) {
 }
 
 async function batchGetUsersByIds(ids) {
+  // Prefer the aggregated UserDirectory table for batch fetches
+  try {
+    const directory = await ddb.get({
+      TableName: USER_DIRECTORY_TABLE,
+      Key: { directoryId: "1" },
+      ConsistentRead: true,
+    });
+    const map = directory.Item?.users || {};
+    const out = ids.map((id) => map[id]).filter(Boolean);
+    // Fallback to original table if directory is empty
+    if (out.length === ids.length) return out;
+  } catch (err) {
+    console.warn("UserDirectory batch fetch failed, falling back", err);
+  }
+
+  // Fallback to fetching directly from UserProfiles in chunks
   const chunks = [];
   for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
   const out = [];
@@ -177,12 +194,34 @@ async function getUserProfiles(event, C) {
   }
   // Allow authenticated users to scan all users
   if (isAuthenticated) {
+    try {
+      const d = await ddb.get({
+        TableName: USER_DIRECTORY_TABLE,
+        Key: { directoryId: "1" },
+        ConsistentRead: true,
+      });
+      const map = d.Item?.users || {};
+      return json(200, C, { Items: Object.values(map).map(withFirstNameFallback) });
+    } catch (err) {
+      console.warn("UserDirectory scan failed, falling back", err);
+      const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });
+      return json(200, C, { Items: (r.Items || []).map(withFirstNameFallback) });
+    }
+  }
+  if (!SCANS_ALLOWED) return json(400, C, { error: "ids required (comma-separated)" });
+  try {
+    const d = await ddb.get({
+      TableName: USER_DIRECTORY_TABLE,
+      Key: { directoryId: "1" },
+      ConsistentRead: true,
+    });
+    const map = d.Item?.users || {};
+    return json(200, C, { Items: Object.values(map).map(withFirstNameFallback) });
+  } catch (err) {
+    console.warn("UserDirectory scan failed, falling back", err);
     const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });
     return json(200, C, { Items: (r.Items || []).map(withFirstNameFallback) });
   }
-  if (!SCANS_ALLOWED) return json(400, C, { error: "ids required (comma-separated)" });
-  const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });
-  return json(200, C, { Items: (r.Items || []).map(withFirstNameFallback) });
 }
 
 // PUT /userProfiles  (v1.1 semantics: upsert + merge pending PENDING#<email>)

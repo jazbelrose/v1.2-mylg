@@ -1,16 +1,13 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Modal from 'react-modal';
 import ConfirmModal from './ConfirmModal';
-import { beforeAll, test, expect } from 'vitest';
+import { test, expect, vi } from 'vitest';
 
-beforeAll(() => {
-  const root = document.createElement('div');
-  root.setAttribute('id', 'root');
-  document.body.appendChild(root);
-  Modal.setAppElement(root);
-});
+vi.mock('react-modal', () => ({
+  default: vi.fn().mockImplementation(({ children, ...props }) => <div {...props}>{children}</div>),
+  setAppElement: vi.fn(),
+}));
 
 test("shows feedback when confirmation text doesn't match", async () => {
   const user = userEvent.setup();
@@ -26,13 +23,13 @@ test("shows feedback when confirmation text doesn't match", async () => {
   const input = screen.getByPlaceholderText('Type "Project" to confirm');
   await user.type(input, 'Wrong');
 
-  expect(screen.getByText(/does not match/i)).toBeInTheDocument();
-  const confirmBtn = screen.getByRole('button', { name: /yes/i });
-  expect(confirmBtn).toBeDisabled();
+  expect(screen.getByText(/does not match/i)).toBeTruthy();
+  const confirmBtn = screen.getByRole('button', { name: /yes/i }) as HTMLButtonElement;
+  expect(confirmBtn.disabled).toBe(true);
 
   await user.clear(input);
   await user.type(input, 'Project');
 
-  expect(screen.queryByText(/does not match/i)).not.toBeInTheDocument();
-  expect(confirmBtn).not.toBeDisabled();
+  expect(screen.queryByText(/does not match/i)).toBeNull();
+  expect(confirmBtn.disabled).toBe(false);
 });

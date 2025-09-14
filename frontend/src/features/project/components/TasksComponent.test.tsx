@@ -34,15 +34,21 @@ vi.mock('antd', () => ({
   ConfigProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   message: { error: vi.fn(), success: vi.fn() },
   theme: { defaultAlgorithm: {}, darkAlgorithm: {} },
-  Table: vi.fn(({ dataSource }) => 
+  Table: vi.fn(({ columns, dataSource }) => 
     !dataSource || dataSource.length === 0 ? <div>No tasks yet!</div> : (
       <div>
-        {dataSource.map((task: any) => (
-          <div key={task.id || task.taskId}>
-            {(task.name || "").toUpperCase()}
-            <button aria-label="actions-dropdown">Actions</button>
-            <button onClick={() => {}}>Edit</button>
-            <button onClick={() => deleteTask({ projectId: task.projectId, taskId: task.taskId || task.id })}>Delete</button>
+        {dataSource.map((record: any) => (
+          <div key={record.id || record.taskId}>
+            {columns.map((col: any) => {
+              if (col.dataIndex === 'name') {
+                return <div key={col.key}>{(record[col.dataIndex] || "").toUpperCase()}</div>;
+              }
+              if (col.key === 'actions') {
+                return <div key={col.key}>{col.render(null, record)}</div>;
+              }
+              // Add other columns if needed
+              return null;
+            })}
           </div>
         ))}
       </div>
@@ -79,7 +85,7 @@ vi.mock('antd', () => ({
   AutoComplete: vi.fn(({ id, options, ...props }) => (
     <div>
       <input id={id} name={id} {...props} />
-      {options ? options.map((opt: any) => <div key={opt.value}>{opt.label || opt}</div>) : null}
+      {options ? options.map((opt: any) => <div key={opt.value} role="option">{opt.label || opt}</div>) : null}
     </div>
   )),
   // other antd components if needed
@@ -152,11 +158,11 @@ test('Task Name lists budget item descriptions', async () => {
   const input = screen.getByLabelText('Task Name');
 
   await userEvent.type(input, 'First');
-  expect(await screen.findByText('First description')).toBeInTheDocument();
+  expect((await screen.findAllByRole('option', { name: 'First description' })).length).toBeGreaterThan(0);
 
   await userEvent.clear(input);
   await userEvent.type(input, 'Second');
-  expect(await screen.findByRole('option', { name: 'Second description' })).toBeInTheDocument();
+  expect((await screen.findAllByRole('option', { name: 'Second description' })).length).toBeGreaterThan(0);
 });
 
 test('invokes deleteTask when deleting a task', async () => {

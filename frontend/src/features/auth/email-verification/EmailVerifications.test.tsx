@@ -28,7 +28,7 @@ vi.mock('@/app/contexts/useAuth', () => ({
   useAuth: () => ({ validateAndSetUserSession: vi.fn() }),
 }));
 
-vi.mock('../../../utils/api', () => ({
+vi.mock('../../../shared/utils/api', () => ({
   updateUserProfile: vi.fn(),
 }));
 

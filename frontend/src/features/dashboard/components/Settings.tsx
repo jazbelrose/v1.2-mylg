@@ -4,7 +4,7 @@ import { uploadData } from "aws-amplify/storage";
 import { updatePassword } from "aws-amplify/auth";
 
 import { toast } from "react-toastify";
-import { updateUserProfile, S3_PUBLIC_BASE } from "@/shared/utils/api";
+import { updateUserProfile } from "@/shared/utils/api";
 import PaymentsSection from "@/features/dashboard/components/paymentsection";
 import EditableTextField from "@/shared/ui/EditableTextField";
 import UserProfilePicture from "@/shared/ui/UserProfilePicture";
@@ -66,7 +66,7 @@ const Settings: React.FC = () => {
   const [isFormDirty, setIsFormDirty] = useState<boolean>(false);
 
   const [localPreview, setLocalPreview] = useState<string | null>(null);
-  const [uploadedURL, setUploadedURL] = useState<string | null>(null);
+  const [uploadedKey, setUploadedKey] = useState<string | null>(null);
 
   const ROLE_DESCRIPTIONS: Record<RoleKey, string> = {
     admin: "Full administrative access",
@@ -100,17 +100,13 @@ const Settings: React.FC = () => {
   const handleFileUpload = async (userId: string, file: File): Promise<string> => {
     try {
       const filename = `userData-thumbnails/${userId}/${file.name}`;
-      const result = await uploadData({
+      await uploadData({
         key: filename,
         data: file,
         options: { accessLevel: "guest" },
       });
-       
-      console.log("Thumbnail uploaded:", result);
-      const completeUrl = `${S3_PUBLIC_BASE}${filename}`;
-      return `${completeUrl}?t=${Date.now()}`;
+      return filename;
     } catch (error) {
-       
       console.error("Error uploading thumbnail:", error);
       toast.error("Failed to upload image");
       throw error;
@@ -128,9 +124,10 @@ const Settings: React.FC = () => {
 
     try {
       const uploaded = await handleFileUpload(userData.userId, file);
-      setUploadedURL(uploaded);
-       
-      console.log("Uploaded URL stored:", uploaded);
+      setUploadedKey(uploaded);
+      setFormData((prev) => ({ ...prev, thumbnail: `${uploaded}?t=${Date.now()}` }));
+
+      console.log("Uploaded key stored:", uploaded);
     } catch {
       // already toasted inside handleFileUpload
     } finally {
@@ -162,13 +159,13 @@ const Settings: React.FC = () => {
     const passwordDirty =
       oldPassword.trim() !== "" || newPassword.trim() !== "" || confirmNewPassword.trim() !== "";
 
-    setIsFormDirty(profileDirty || passwordDirty || Boolean(uploadedURL));
+    setIsFormDirty(profileDirty || passwordDirty || Boolean(uploadedKey));
   };
 
   useEffect(() => {
     checkIfFormIsDirty();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData, oldPassword, newPassword, confirmNewPassword, uploadedURL]);
+  }, [formData, oldPassword, newPassword, confirmNewPassword, uploadedKey]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -207,7 +204,7 @@ const Settings: React.FC = () => {
       const updatedUserData: UserData = {
         ...userData,
         ...formData,
-        thumbnail: uploadedURL || formData.thumbnail,
+        thumbnail: uploadedKey || formData.thumbnail.split("?")[0],
       };
 
       await updateUserProfile(updatedUserData);
@@ -216,6 +213,7 @@ const Settings: React.FC = () => {
       setShowSavedWindow(true);
       toast.success("Profile updated");
       setIsFormDirty(false);
+      setUploadedKey(null);
 
       // Refresh user session/profile
       await refreshUser(true);

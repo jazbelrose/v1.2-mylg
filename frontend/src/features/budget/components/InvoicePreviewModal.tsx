@@ -148,7 +148,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
   const [brandAddress, setBrandAddress] = useState("");
   const [brandPhone, setBrandPhone] = useState("");
   const [brandTagline, setBrandTagline] = useState("");
-  const [brandLogoUrl, setBrandLogoUrl] = useState("");
+  const [brandLogoKey, setBrandLogoKey] = useState("");
   const [useProjectAddress, setUseProjectAddress] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -192,7 +192,10 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setLogoDataUrl(reader.result as string);
+    reader.onload = () => {
+      setLogoDataUrl(reader.result as string);
+      setIsDirty(true);
+    };
     reader.readAsDataURL(file);
   };
 
@@ -201,7 +204,10 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setLogoDataUrl(reader.result as string);
+    reader.onload = () => {
+      setLogoDataUrl(reader.result as string);
+      setIsDirty(true);
+    };
     reader.readAsDataURL(file);
   };
 
@@ -353,6 +359,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     const u = (userData || {}) as {
+      brandLogoKey?: string;
       brandLogoUrl?: string;
       brandName?: string;
       company?: string;
@@ -360,12 +367,16 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       brandPhone?: string;
       brandTagline?: string;
     };
-    setBrandLogoUrl(u.brandLogoUrl || "");
+    let logoKey = u.brandLogoKey || "";
+    if (!logoKey && u.brandLogoUrl) {
+      logoKey = fileUrlsToKeys([u.brandLogoUrl])[0] || "";
+    }
+    setBrandLogoKey(logoKey);
     setBrandName(u.brandName || u.company || "");
     setBrandAddress(u.brandAddress || "");
     setBrandPhone(u.brandPhone || "");
     setBrandTagline(u.brandTagline || "");
-    setLogoDataUrl(u.brandLogoUrl || null);
+    setLogoDataUrl(null);
     setUseProjectAddress(false);
     setShowSaved(false);
     setIsDirty(false);
@@ -396,6 +407,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
   // Is header dirty vs saved branding?
   useEffect(() => {
     const u = (userData || {}) as {
+      brandLogoKey?: string;
       brandLogoUrl?: string;
       brandName?: string;
       company?: string;
@@ -403,14 +415,15 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       brandPhone?: string;
       brandTagline?: string;
     };
+    const currentKey = u.brandLogoKey || (u.brandLogoUrl ? fileUrlsToKeys([u.brandLogoUrl])[0] : "");
     const dirty =
-      (brandLogoUrl || "") !== (u.brandLogoUrl || "") ||
+      (brandLogoKey || "") !== currentKey ||
       (brandName || "") !== (u.brandName || u.company || "") ||
       (brandAddress || "") !== (u.brandAddress || "") ||
       (brandPhone || "") !== (u.brandPhone || "") ||
       (brandTagline || "") !== (u.brandTagline || "");
     setIsDirty(dirty);
-  }, [brandLogoUrl, brandName, brandAddress, brandPhone, brandTagline, userData]);
+  }, [brandLogoKey, brandName, brandAddress, brandPhone, brandTagline, userData]);
 
   // Load items
   useEffect(() => {
@@ -571,7 +584,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
           : brandAddress || "Address";
         const headerPhone = brandPhone || "Phone";
         const headerTag = brandTagline || "";
-        const logoSrc = logoDataUrl || brandLogoUrl;
+        const logoSrc = logoDataUrl || (brandLogoKey ? getFileUrl(brandLogoKey) : "");
 
         const invNum = invoiceNumber || "";
         const issue = issueDate || "";
@@ -750,7 +763,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
   const handleSaveHeader = async () => {
     try {
-      let uploadedUrl = brandLogoUrl;
+      let uploadedKey = brandLogoKey;
 
       // If a new data URL logo is present, upload it to public S3
       if (logoDataUrl && logoDataUrl.startsWith("data:") && userData?.userId) {
@@ -760,12 +773,12 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         const file = new File([blob], `logo.${ext}`, { type: blob.type });
         const filename = `userBranding/${userData.userId}/${file.name}`;
         await uploadData({ key: filename, data: file, options: { accessLevel: "public" } });
-        uploadedUrl = `${S3_PUBLIC_BASE}${filename}`;
+        uploadedKey = filename;
       }
 
       const updated = {
         ...userData,
-        brandLogoUrl: uploadedUrl,
+        brandLogoKey: uploadedKey,
         brandName,
         brandAddress,
         brandPhone,
@@ -774,7 +787,8 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
       await updateUserProfile(updated);
       setUserData(updated);
-      setBrandLogoUrl(uploadedUrl);
+      setBrandLogoKey(uploadedKey);
+      setLogoDataUrl(null);
       setShowSaved(true);
       setIsDirty(false);
     } catch (err) {
@@ -1069,8 +1083,8 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                           onDrop={handleLogoDrop}
                           aria-label="Company logo"
                         >
-                          {logoDataUrl || brandLogoUrl ? (
-                            <img src={logoDataUrl || getFileUrl(brandLogoUrl || '')} alt="Company logo" />
+                          {logoDataUrl || brandLogoKey ? (
+                            <img src={logoDataUrl || getFileUrl(brandLogoKey || '')} alt="Company logo" />
                           ) : (
                             <span>Upload Logo</span>
                           )}
@@ -1371,8 +1385,8 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                             onDrop={handleLogoDrop}
                             aria-label="Company logo"
                           >
-                            {logoDataUrl || brandLogoUrl ? (
-                              <img src={logoDataUrl || getFileUrl(brandLogoUrl || '')} alt="Company logo" />
+                            {logoDataUrl || brandLogoKey ? (
+                              <img src={logoDataUrl || getFileUrl(brandLogoKey || '')} alt="Company logo" />
                             ) : (
                               <span>Upload Logo</span>
                             )}

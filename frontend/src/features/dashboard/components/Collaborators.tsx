@@ -22,7 +22,6 @@ import {
   fetchUserProfilesBatch,
   updateUserRole,
   POST_PROJECT_TO_USER_URL,
-  S3_PUBLIC_BASE,
   apiFetch,
   getFileUrl,
 } from "@/shared/utils/api";
@@ -81,6 +80,7 @@ interface EditValues {
   const [localPreviews, setLocalPreviews] = useState({});
   const [assignedProjects, setAssignedProjects] = useState({});
   const [assignedCollaborators, setAssignedCollaborators] = useState({});
+  const [thumbCacheBust, setThumbCacheBust] = useState(Date.now());
   const [projectFilter, setProjectFilter] = useState('');
   const [collabFilter, setCollabFilter] = useState('');
   const [isSaveConfirmOpen, setIsSaveConfirmOpen] = useState(false);
@@ -201,7 +201,7 @@ interface EditValues {
         phoneNumber: u.phoneNumber || '',
         company: u.company || '',
         occupation: u.occupation || '',
-        thumbnail: u.thumbnail || '',
+        thumbnail: u.thumbnail ? `${u.thumbnail}?t=${Date.now()}` : '',
         collaborators: Array.isArray(u.collaborators) ? u.collaborators.join(',') : '',
         projects: Array.isArray(u.projects) ? u.projects.join(',') : '',
       };
@@ -248,7 +248,7 @@ interface EditValues {
       data: file,
       options: { accessLevel: 'guest' },
     });
-    return `${S3_PUBLIC_BASE}${filename}?t=${Date.now()}`;
+    return filename;
   };
 
   const handleThumbnailChange = async (e, userId) => {
@@ -261,8 +261,8 @@ interface EditValues {
       return { ...p, [userId]: previewURL };
     });
     try {
-      const uploadedURL = await handleFileUpload(userId, file);
-      handleChange(userId, 'thumbnail', uploadedURL);
+      const uploadedKey = await handleFileUpload(userId, file);
+      handleChange(userId, 'thumbnail', `${uploadedKey}?t=${Date.now()}`);
     } catch (err) {
       console.error('Failed to upload thumbnail', err);
       alert('Failed to upload thumbnail');
@@ -296,6 +296,7 @@ interface EditValues {
     const payload = {
       userId,
       ...vals,
+      thumbnail: vals.thumbnail ? vals.thumbnail.split('?')[0] : '',
       collaborators: collaboratorIds,
     };
 
@@ -331,6 +332,7 @@ interface EditValues {
       }
 
       await refreshUsers();
+      setThumbCacheBust(Date.now());
       await fetchProjects();
       setEditValues((prev) => ({
         ...prev,
@@ -760,7 +762,11 @@ interface EditValues {
                           onChange={() => toggleCollaboratorSelection(selectedUserId, u.userId)}
                         />
                         {u.thumbnail ? (
-                          <img src={getFileUrl(u.thumbnail)} alt="" className="collaborator-thumb" />
+                          <img
+                            src={getFileUrl(`${u.thumbnail}?t=${thumbCacheBust}`)}
+                            alt=""
+                            className="collaborator-thumb"
+                          />
                         ) : (
                           <div className="collaborator-thumb" />
                         )}

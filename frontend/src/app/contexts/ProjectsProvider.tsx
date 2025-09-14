@@ -187,7 +187,17 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
                 if (cached) {
                   const parsed = JSON.parse(cached) as Project;
                   if (parsed.description !== undefined) {
-                    return { ...proj, ...parsed } as Project;
+                    const merged: Project = {
+                      ...proj,
+                      ...parsed,
+                      thumbnails: proj.thumbnails ?? parsed.thumbnails,
+                    };
+                    try {
+                      localStorage.setItem(`project-${proj.projectId}`, JSON.stringify(merged));
+                    } catch {
+                      /* ignore */
+                    }
+                    return merged;
                   }
                 }
               } catch {
@@ -226,6 +236,11 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
         setProjects(detailed);
         setUserProjects(detailed);
+        setActiveProject((prev) => {
+          if (!prev) return prev;
+          const updated = detailed.find((p) => p.projectId === prev.projectId);
+          return updated ?? prev;
+        });
       } catch (error) {
         console.error("Error fetching projects:", error);
         setProjectsError(true);

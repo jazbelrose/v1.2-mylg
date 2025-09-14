@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { test, expect, beforeAll, beforeEach, vi } from 'vitest';
 import TasksComponent from './TasksComponent';
 import {
   fetchTasks,
@@ -8,7 +9,6 @@ import {
   fetchUserProfilesBatch,
 } from '../../../shared/utils/api';
 import { message } from 'antd';
-import { vi } from 'vitest';
 
 vi.mock('../../../shared/utils/api', () => ({
   __esModule: true,
@@ -19,9 +19,51 @@ vi.mock('../../../shared/utils/api', () => ({
   fetchUserProfilesBatch: vi.fn(() => Promise.resolve([]))
 }));
 vi.mock('antd', () => ({
-  Form: { useForm: vi.fn(() => [{}]) },
+  Form: Object.assign(
+    vi.fn(({ children, ...props }) => <form {...props}>{children}</form>),
+    {
+      Item: vi.fn(({ children, label, name, ...props }) => (
+        <div {...props}>
+          {label && <label htmlFor={name}>{label}</label>}
+          {children}
+        </div>
+      )),
+      useForm: vi.fn(() => [{
+        getFieldValue: vi.fn(),
+        setFieldsValue: vi.fn(),
+        resetFields: vi.fn(),
+        validateFields: vi.fn(),
+      }])
+    }
+  ),
   ConfigProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   message: { error: vi.fn(), success: vi.fn() },
+  theme: { defaultAlgorithm: {}, darkAlgorithm: {} },
+  Table: vi.fn(({ dataSource }) => 
+    !dataSource || dataSource.length === 0 ? <div>No tasks yet!</div> : (
+      <div>
+        {dataSource.map((task: any) => (
+          <div key={task.id}>
+            {task.name}
+            <button aria-label="actions-dropdown">Actions</button>
+          </div>
+        ))}
+      </div>
+    )
+  ),
+  Select: vi.fn(({ id, children, ...props }) => <select id={id} {...props}>{children}</select>),
+  Button: vi.fn(({ children, ...props }) => <button {...props}>{children || 'Button'}</button>),
+  Dropdown: vi.fn(({ children, ...props }) => <div {...props}>{children || 'Dropdown'}</div>),
+  Modal: vi.fn(({ children, ...props }) => <div {...props}>{children || 'Modal'}</div>),
+  Input: Object.assign(
+    vi.fn(({ id, ...props }) => <input id={id} {...props} />),
+    {
+      TextArea: vi.fn(({ id, ...props }) => <textarea id={id} {...props} />)
+    }
+  ),
+  Tooltip: vi.fn(({ children, ...props }) => <div {...props}>{children || 'Tooltip'}</div>),
+  DatePicker: vi.fn(({ id, ...props }) => <input id={id} type="date" {...props} />),
+  AutoComplete: vi.fn(({ id, ...props }) => <input id={id} {...props} />),
   // other antd components if needed
 }));
 
@@ -103,7 +145,7 @@ test('invokes deleteTask when deleting a task', async () => {
   (fetchTasks as vi.Mock).mockResolvedValue([{ projectId: 'p1', taskId: '1', name: 'Sample' }]);
 
   render(<TasksComponent projectId="p1" team={[]} />);
-  await screen.findByText('Sample');
+  await screen.findByText('SAMPLE');
 
   await userEvent.click(screen.getByLabelText('actions-dropdown'));
   await userEvent.click(await screen.findByText('Delete'));
@@ -117,13 +159,13 @@ test('restores task and shows error message when deleteTask fails', async () => 
   const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => {});
 
   render(<TasksComponent projectId="p1" team={[]} />);
-  await screen.findByText('Sample');
+  await screen.findByText('SAMPLE');
 
   await userEvent.click(screen.getByLabelText('actions-dropdown'));
   await userEvent.click(await screen.findByText('Delete'));
 
   await waitFor(() => expect(errorSpy).toHaveBeenCalledWith('Failed to delete task'));
-  expect(screen.getByText('Sample')).toBeInTheDocument();
+  expect(screen.getByText('SAMPLE')).toBeInTheDocument();
 
   errorSpy.mockRestore();
 });
@@ -139,7 +181,7 @@ test('loads tasks when API returns { tasks: [...] }', async () => {
 
   render(<TasksComponent projectId="p1" team={[]} />);
 
-  expect(await screen.findByText('Sample')).toBeInTheDocument();
+  expect(await screen.findByText('SAMPLE')).toBeInTheDocument();
 
   apiFetchSpy.mockRestore();
   (fetchTasks as vi.Mock).mockReset();

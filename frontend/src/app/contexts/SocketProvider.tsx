@@ -43,6 +43,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
   const collaboratorsUpdateTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const lastPresence = useRef<Record<string, boolean>>({});
 
   const generateSessionId = useCallback(() => {
     if (typeof crypto !== "undefined" && typeof (crypto as { randomUUID?: () => string }).randomUUID === "function") {
@@ -116,6 +117,19 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
       socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+
+          // Deduplicate presenceChanged events
+          if (data.action === "presenceChanged" && data.userId && typeof data.online === "boolean") {
+            const prev = lastPresence.current[data.userId];
+            if (prev !== data.online) {
+              lastPresence.current[data.userId] = data.online;
+              // Update state/UI for presence change
+              scheduleCollaboratorsRefresh();
+            } else {
+              // Ignore duplicate presence event
+              return;
+            }
+          }
 
           // Add debug logging for incoming WS messages
           console.log("📩 Incoming WS message:", data);

@@ -32,6 +32,25 @@ const M = (e) => e?.requestContext?.http?.method?.toUpperCase?.() || e?.httpMeth
 const P = (e) => (e?.rawPath || e?.path || "/");
 const Q = (e) => e?.queryStringParameters || {};
 
+/**
+ * Normalizes a DM conversation ID by sorting the user IDs
+ * @param conversationId - The conversation ID to normalize (e.g., "dm#user2___user1")
+ * @returns The normalized conversation ID (e.g., "dm#user1___user2")
+ */
+function normalizeDMConversationId(conversationId) {
+  if (!conversationId.startsWith('dm#')) {
+    return conversationId;
+  }
+  
+  const userIds = conversationId.replace('dm#', '').split('___');
+  if (userIds.length !== 2) {
+    return conversationId;
+  }
+  
+  const sortedIds = userIds.sort();
+  return `dm#${sortedIds.join('___')}`;
+}
+
 
 
 /* ------------ Handlers ------------ */
@@ -79,16 +98,17 @@ const getConversation = async (e, C, { conversationId }) => {
 const listConversationMessages = async (e, C, { conversationId }) => {
   const q = Q(e);
   const limit = Math.min(parseInt(q.limit || "50", 10), 200);
+  const normalizedId = normalizeDMConversationId(conversationId);
   const r = await ddb.query({
     TableName: MESSAGES_TABLE,
     KeyConditionExpression: "conversationId = :c",
-    ExpressionAttributeValues: { ":c": conversationId },
+    ExpressionAttributeValues: { ":c": normalizedId },
     ScanIndexForward: true,
     Limit: limit,
     ExclusiveStartKey: q.nextKey ? JSON.parse(q.nextKey) : undefined,
   });
   return json(200, C, {
-    conversationId,
+    conversationId: normalizedId,
     messages: r.Items || [],
     nextKey: r.LastEvaluatedKey ? JSON.stringify(r.LastEvaluatedKey) : null,
   });
@@ -150,24 +170,24 @@ const listNotifications = async (e, C) => {
 
 /* ------------ Routes ------------ */
 const routes = [
-  { m: "GET",   r: /^\/messages\/health$/i,                               h: health },
+  { m: "GET",   r: /^\/health$/i,                               h: health },
 
   // inbox & conversations
-  { m: "GET",   r: /^\/messages\/inbox$/i,                                 h: getInbox },
-  { m: "GET",   r: /^\/messages\/threads$/i,                               h: listThreads },
-  { m: "GET",   r: /^\/messages\/threads\/(?<conversationId>[^/]+)$/i,     h: getConversation },
+  { m: "GET",   r: /^\/inbox$/i,                                 h: getInbox },
+  { m: "GET",   r: /^\/threads$/i,                               h: listThreads },
+  { m: "GET",   r: /^\/threads\/(?<conversationId>[^/]+)$/i,     h: getConversation },
 
   // conversation messages
-  { m: "GET",   r: /^\/messages\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: listConversationMessages },
+  { m: "GET",   r: /^\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: listConversationMessages },
 
   // project messages (query param)
-  { m: "GET",   r: /^\/messages$/i,                                        h: listProjectMessages },
+  { m: "GET",   r: /^\/$/i,                                        h: listProjectMessages },
 
   // project-scoped
-  { m: "GET",   r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: listProjectMessages },
+  { m: "GET",   r: /^\/project\/(?<projectId>[^/]+)$/i,          h: listProjectMessages },
 
   // notifications (v1.2)
-  { m: "GET",   r: /^\/messages\/notifications$/i,                         h: listNotifications },
+  { m: "GET",   r: /^\/notifications$/i,                         h: listNotifications },
 
   // v1.1 compat aliases
   { m: "GET",   r: /^\/getDirectMessages$/i,                                h: listConversationMessages },

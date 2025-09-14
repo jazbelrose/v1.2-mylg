@@ -172,31 +172,19 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
     });
   }, [messages]);
 
-  const persistReadStatus = useCallback(async (conversationId: string) => {
-    try {
-      await apiFetch(MESSAGES_THREADS_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: userData.userId,
-          conversationId,
-          read: true,
-        }),
-      });
-      if (ws?.readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            action: "markRead",
-            conversationType: "dm",
-            conversationId,
-            userId: userData.userId,
-            read: true,
-          })
-        );
-      }
-    } catch (err) {
-      console.error("Failed to mark conversation read", err);
-    }
+  const persistReadStatus = useCallback((conversationId: string) => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+    const payload = {
+      action: "markRead",
+      conversationType: "dm",
+      conversationId,
+      userId: userData.userId,
+      read: true,
+      lastMsgTs: new Date().toISOString(),
+    };
+
+    ws.send(JSON.stringify(payload));
   }, [userData.userId, ws]);
 
   const markConversationAsRead = useCallback((conversationId: string) => {
@@ -499,6 +487,29 @@ const fetchMessages = async () => {
     trySendMessage();
   };
 
+  const handleFileUpload = useCallback(async (
+    conversationId: string,
+    file: File
+  ): Promise<DMFile | undefined> => {
+    const filename = `dms/${conversationId}/${FOLDER_KEY}/${file.name}`;
+    try {
+      const uploadTask = uploadData({
+        key: filename,
+        data: file,
+        options: { accessLevel: "public" },
+      });
+      await uploadTask.result;
+      // small delay for availability
+      await new Promise((resolve) => setTimeout(resolve, FILE_UPLOAD_DELAY));
+      const fileUrl = getFileUrl(
+        `dms/${encodeURIComponent(conversationId)}/${FOLDER_KEY}/${encodeURIComponent(file.name)}`
+      );
+      return { fileName: file.name, url: normalizeFileUrl(fileUrl), key: filename };
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+  }, []);
+
   // File drop & upload
   const handleDrop = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -667,30 +678,7 @@ const fetchMessages = async () => {
         URL.revokeObjectURL(tempUrl);
       }
     }
-  }, [selectedConversation, userData, ws, setUserData, setInbox]);
-
-  const handleFileUpload = useCallback(async (
-    conversationId: string,
-    file: File
-  ): Promise<DMFile | undefined> => {
-    const filename = `dms/${conversationId}/${FOLDER_KEY}/${file.name}`;
-    try {
-      const uploadTask = uploadData({
-        key: filename,
-        data: file,
-        options: { accessLevel: "public" },
-      });
-      await uploadTask.result;
-      // small delay for availability
-      await new Promise((resolve) => setTimeout(resolve, FILE_UPLOAD_DELAY));
-      const fileUrl = getFileUrl(
-        `dms/${encodeURIComponent(conversationId)}/${FOLDER_KEY}/${encodeURIComponent(file.name)}`
-      );
-      return { fileName: file.name, url: normalizeFileUrl(fileUrl), key: filename };
-    } catch (error) {
-      console.error("Error uploading file:", error);
-    }
-  }, []);
+  }, [selectedConversation, userData, ws, setUserData, setInbox, handleFileUpload]);
 
   const deleteMessage = async (message: DMMessage) => {
     const id = message.messageId || message.optimisticId;

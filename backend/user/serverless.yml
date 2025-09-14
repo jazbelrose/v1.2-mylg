@@ -40,7 +40,6 @@ provider:
             - dynamodb:Scan
           Resource:
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_PROFILES_TABLE}
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:USER_DIRECTORY_TABLE}
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE}
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:INVITES_TABLE}/index/*
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:NOTIFICATIONS_TABLE}

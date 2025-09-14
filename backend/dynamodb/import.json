@@ -63,10 +63,5 @@
     "ResourceType": "AWS::DynamoDB::Table",
     "LogicalResourceId": "UserProfiles",
     "ResourceIdentifier": { "TableName": "UserProfiles" }
-  },
-  {
-    "ResourceType": "AWS::DynamoDB::Table",
-    "LogicalResourceId": "UserDirectory",
-    "ResourceIdentifier": { "TableName": "UserDirectory" }
   }
 ]

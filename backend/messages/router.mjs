@@ -305,6 +305,43 @@ const postProjectMessage = async (e, C, { projectId }) => {
   return json(201, C, { projectId, message: item });
 };
 
+const patchProjectMessage = async (e, C, { messageId }) => {
+  const b = B(e);
+  const projectId = b.projectId;
+  if (!projectId) return json(400, C, { error: "projectId required in body" });
+  
+  const upd = buildUpdate({
+    content: b.content,
+    editedBy: b.editedBy,
+    editedAt: nowISO(),
+  });
+  
+  if (!upd) return json(400, C, { error: "No valid fields to update" });
+  
+  const r = await ddb.update({
+    TableName: PROJECT_MESSAGES_TABLE,
+    Key: { projectId, messageId },
+    ...upd,
+    ReturnValues: "ALL_NEW",
+    ConditionExpression: "attribute_exists(projectId) AND attribute_exists(messageId)",
+  });
+  
+  return json(200, C, { message: r.Attributes });
+};
+
+const deleteProjectMessage = async (e, C, { messageId }) => {
+  const projectId = Q(e).projectId;
+  if (!projectId) return json(400, C, { error: "projectId query param required" });
+  
+  await ddb.delete({ 
+    TableName: PROJECT_MESSAGES_TABLE, 
+    Key: { projectId, messageId },
+    ConditionExpression: "attribute_exists(projectId) AND attribute_exists(messageId)"
+  });
+  
+  return json(204, C, "");
+};
+
 /* ----------------- Notifications -----------------
    NOTIFICATIONS_TABLE:
      PK: userId, SK: notificationId (e.g., N#<millis>#uuid)
@@ -421,6 +458,8 @@ const routes = [
   // project-scoped
   { m: "GET",   r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: listProjectMessages },
   { m: "POST",  r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: postProjectMessage },
+  { m: "PATCH", r: /^\/messages\/project\/(?<messageId>[^/]+)$/i,          h: patchProjectMessage },
+  { m: "DELETE",r: /^\/messages\/project\/(?<messageId>[^/]+)$/i,          h: deleteProjectMessage },
 
   // notifications (v1.2)
   { m: "GET",   r: /^\/messages\/notifications$/i,                         h: listNotifications },

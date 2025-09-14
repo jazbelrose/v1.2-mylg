@@ -260,7 +260,6 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                 )
               );
             } else if (data.action === "toggleReaction") {
-              const normalizedConversationId = normalizeDMConversationId(data.conversationId);
               setUserData((prev) => {
                 if (!prev) return prev;
                 const msgs = Array.isArray(prev.messages) ? prev.messages : [];

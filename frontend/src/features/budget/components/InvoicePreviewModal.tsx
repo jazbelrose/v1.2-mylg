@@ -292,7 +292,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
       const q = (sel: string) => page.querySelector(sel);
 
-      setBrandLogoUrl(
+      setBrandLogoKey(
         q(".invoice-header img")?.getAttribute("src") || ""
       );
       setLogoDataUrl(null);

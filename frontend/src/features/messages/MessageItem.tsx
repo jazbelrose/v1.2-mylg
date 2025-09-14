@@ -60,20 +60,20 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const sender = allUsers.find((u) => u.userId === msg.senderId) || ({} as SimpleUser);
   const getDisplayName = (u?: SimpleUser | null) =>
     u
-      ? `${u.firstName ?? ""} ${(u as any).lastName ?? ""}`.trim() ||
-        ((u as any).username as string | undefined) ||
-        ((u as any).email as string | undefined) ||
+      ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
+        (u.username as string | undefined) ||
+        (u.email as string | undefined) ||
         (u.userId ?? "Unknown")
       : "Unknown";
   const getThumbnail = (u?: SimpleUser | null) =>
-    ((u as any)?.thumbnail as string | undefined) ||
-    ((u as any)?.profilePicture as string | undefined) ||
-    ((u as any)?.photoUrl as string | undefined) ||
-    ((u as any)?.avatar as string | undefined) ||
-    ((u as any)?.avatarUrl as string | undefined) ||
-    ((u as any)?.image as string | undefined) ||
-    ((u as any)?.profileImage as string | undefined) ||
-    ((u as any)?.picture as string | undefined) ||
+    u?.thumbnail ||
+    u?.profilePicture ||
+    u?.photoUrl ||
+    u?.avatar ||
+    u?.avatarUrl ||
+    u?.image ||
+    u?.profileImage ||
+    u?.picture ||
     undefined;
   const senderName = isCurrentUser ? "You" : getDisplayName(sender);
   const senderThumbnail = isCurrentUser ? getThumbnail(userData) : getThumbnail(sender);

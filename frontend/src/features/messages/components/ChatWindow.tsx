@@ -1,6 +1,7 @@
 import React from "react";
 import { ChatWindowProps } from "../types";
 import { ChatMessage } from "../MessageItem";
+import { DMFile, ChatFile } from "@/shared/utils/messageUtils";
 import MessageItem from "../MessageItem";
 import MessageInput from "./MessageInput";
 import FileUpload from "./FileUpload";
@@ -12,7 +13,7 @@ const ChatWindow: React.FC<ChatWindowProps & {
   onDelete: (msg: ChatMessage) => void;
   onEditRequest: (msg: ChatMessage) => void;
   onReact: (messageId: string, emoji: string) => void;
-  openPreviewModal: (file: DMFile) => void;
+  openPreviewModal: (file: ChatFile | DMFile) => void;
 }> = ({
   selectedConversation,
   displayMessages,

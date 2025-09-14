@@ -129,6 +129,12 @@ const handleSetActiveConversation = async (event, payload) => {
     console.log(`✅ Set activeConversation for ${connectionId} → ${normalizedConversationId}`);
     return { statusCode: 200, body: "Active conversation set" };
   } catch (err) {
+    // Handle ConditionalCheckFailedException specifically
+    if (err.name === 'ConditionalCheckFailedException') {
+      console.warn(`⚠️ Cannot set active conversation for ${connectionId} - connection not properly initialized (missing userId)`);
+      return { statusCode: 400, body: "Connection not properly initialized" };
+    }
+    
     console.error("❌ Failed to set active conversation:", err);
     return { statusCode: 500, body: "DB update error" };
   }
@@ -188,27 +194,32 @@ async function handlePresenceLookup(event) {
   const connectionId = event?.requestContext?.connectionId;
   if (!connectionId) return;
 
-  const r = await dynamoDb.send(new ScanCommand({
-    TableName: process.env.CONNECTIONS_TABLE,
-    ProjectionExpression: "userId",
-  }));
+  try {
+    const r = await dynamoDb.send(new ScanCommand({
+      TableName: process.env.CONNECTIONS_TABLE,
+      ProjectionExpression: "userId",
+    }));
 
-  const users = Array.from(
-    new Set((r.Items || []).map(i => i.userId).filter(Boolean))
-  );
+    const users = Array.from(
+      new Set((r.Items || []).map(i => i.userId).filter(Boolean))
+    );
 
-  const payload = {
-    action: "presenceSnapshot",
-    userIds: users,
-    at: new Date().toISOString(),
-  };
+    const payload = {
+      action: "presenceSnapshot",
+      userIds: users,
+      at: new Date().toISOString(),
+    };
 
-  console.log("📤 Sending snapshot via presenceLookup to", connectionId, "with users:", users);
+    console.log("📤 Sending snapshot via presenceLookup to", connectionId, "with users:", users);
 
-  await apigwManagementApi.send(new PostToConnectionCommand({
-    ConnectionId: connectionId,
-    Data: JSON.stringify(payload),
-  }));
+    await apigwManagementApi.send(new PostToConnectionCommand({
+      ConnectionId: connectionId,
+      Data: JSON.stringify(payload),
+    }));
+  } catch (err) {
+    console.error("❌ handlePresenceLookup error:", err);
+    return { statusCode: 500, body: "Internal server error" };
+  }
 }
 
 

@@ -505,6 +505,18 @@ const handleDeleteMessage = async (payload) => {
       broadcastToConversation(conversationId, eventPayload),
     ]);
   } else if (conversationType === "project") {
+    // Delete message from database
+    const projectId = conversationId.replace("project#", "");
+    try {
+      await dynamoDb.send(new DeleteCommand({
+        TableName: process.env.PROJECT_MESSAGES_TABLE,
+        Key: { projectId, messageId },
+      }));
+      console.log("✅ Project message deleted from DB:", messageId);
+    } catch (err) {
+      console.error("❌ Failed to delete project message from DB:", err);
+    }
+
     await broadcastToConversation(conversationId, eventPayload);
     await deleteNotificationsByDedupeId(messageId);
   } else {
@@ -540,6 +552,26 @@ const handleEditMessage = async (payload) => {
       broadcastToConversation(conversationId, eventPayload),
     ]);
   } else if (conversationType === "project") {
+    // Update message in database
+    const projectId = conversationId.replace("project#", "");
+    try {
+      await dynamoDb.send(new UpdateCommand({
+        TableName: process.env.PROJECT_MESSAGES_TABLE,
+        Key: { projectId, messageId },
+        UpdateExpression: "SET #t = :text, edited = :edited, editedAt = :editedAt, editedBy = :editedBy",
+        ExpressionAttributeNames: { "#t": "text" },
+        ExpressionAttributeValues: {
+          ":text": text,
+          ":edited": true,
+          ":editedAt": editedAt || new Date().toISOString(),
+          ":editedBy": editedBy,
+        },
+      }));
+      console.log("✅ Project message updated in DB:", messageId);
+    } catch (err) {
+      console.error("❌ Failed to update project message in DB:", err);
+    }
+
     await broadcastToConversation(conversationId, eventPayload);
   } else {
     return { statusCode: 400, body: "Invalid conversationType" };

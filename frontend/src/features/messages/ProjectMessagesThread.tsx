@@ -43,7 +43,6 @@ import PDFPreview from "../project/components/PDFPreview";
 import {
   GET_PROJECT_MESSAGES_URL,
   DELETE_FILE_FROM_S3_URL,
-  EDIT_MESSAGE_URL,
   apiFetch,
   getFileUrl,
   normalizeFileUrl,
@@ -97,8 +96,6 @@ type GetProjectMessagesResponse =
   | { Items?: Message[] }
   | Message[];
 
-type PatchEditMessageResponse = { ok?: boolean; [k: string]: unknown };
-type DeleteMessageResponse = { ok?: boolean; [k: string]: unknown };
 type DeleteS3FilesResponse = { ok?: boolean; [k: string]: unknown };
 
 type ProjectMessagesMap = Record<string, Message[]>;
@@ -772,15 +769,6 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
         });
       }
 
-      // Delete message from backend (if it has a server id)
-      if (message.messageId) {
-        const url =
-          `${EDIT_MESSAGE_URL}/project/${encodeURIComponent(
-            message.messageId
-          )}?projectId=${encodeURIComponent(projectId)}`;
-        await apiFetch<DeleteMessageResponse>(url, { method: "DELETE" });
-      }
-
       // Optimistic local removal
       setProjectMessages((prev: ProjectMessagesMap) => {
         const msgs: Message[] = Array.isArray(prev[projectId])
@@ -813,19 +801,6 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
   const editMessage = async (message: Message, newText: string) => {
     if (!message.messageId || !newText) return;
     try {
-      await apiFetch<PatchEditMessageResponse>(
-        `${EDIT_MESSAGE_URL}/project/${encodeURIComponent(message.messageId)}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: newText,
-            editedBy: userData?.userId,
-            projectId,
-          }),
-        }
-      );
-
       const ts = new Date().toISOString();
       setProjectMessages((prev: ProjectMessagesMap) => {
         const msgs: Message[] = Array.isArray(prev[projectId])

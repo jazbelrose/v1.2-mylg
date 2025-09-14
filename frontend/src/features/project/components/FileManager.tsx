@@ -27,16 +27,17 @@ import { notify, notifyLoading, updateNotification } from "../../../shared/ui/To
 import ConfirmModal from "@/shared/ui/ConfirmModal";
 import { Message } from "@/app/contexts/DataProvider";
 import { useData } from "@/app/contexts/useData";
+import { useSocket } from "@/app/contexts/useSocket";
 import {
   API_BASE_URL,
   ZIP_FILES_URL,
   DELETE_FILE_FROM_S3_URL,
-  EDIT_MESSAGE_URL,
   apiFetch,
   getFileUrl,
   normalizeFileUrl,
   fileUrlsToKeys,
 } from "../../../shared/utils/api";
+import { normalizeMessage } from "../../../shared/utils/websocketUtils";
 import Spinner from "../../../shared/ui/Spinner";
 import styles from "./file-manager.module.css";
 import Dropdown from "./Dropdown";
@@ -108,6 +109,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       projectMessages = {},
       setProjectMessages = () => {},
     } = useData();
+    const { ws } = useSocket() || {};
 
     const [folderKey, setFolderKey] = useState<string>(folder);
     const renderedName =
@@ -365,18 +367,21 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
         for (const msg of referencing) {
           if (msg.messageId) {
             try {
-              await apiFetch(
-                `${EDIT_MESSAGE_URL}/project/${encodeURIComponent(msg.messageId)}`,
-                {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    content: "File deleted.",
-                    editedBy: user.userId,
-                    projectId: activeProject.projectId,
-                  }),
-                }
-              );
+              // Update message via WebSocket
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                const editPayload = {
+                  action: "editMessage",
+                  conversationType: "project",
+                  conversationId: `project#${activeProject.projectId}`,
+                  projectId: activeProject.projectId,
+                  messageId: msg.messageId,
+                  text: "File deleted.",
+                  timestamp: msg.timestamp,
+                  editedAt: new Date().toISOString(),
+                  editedBy: user.userId,
+                };
+                ws.send(JSON.stringify(normalizeMessage(editPayload, "editMessage")));
+              }
 
               msg.text = "File deleted.";
               delete msg.file;

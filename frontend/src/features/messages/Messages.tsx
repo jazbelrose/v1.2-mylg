@@ -251,6 +251,14 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
     }
   }, []);
 
+  // Logging for debugging: component mount/unmount
+  useEffect(() => {
+    console.log("[Messages] mounted", { initialUserSlug, userId: userData?.userId });
+    return () => {
+      console.log("[Messages] unmounted");
+    };
+  }, [initialUserSlug, userData?.userId]);
+
   // map for unread badge
   const threadMap = useMemo<Record<string, boolean>>(
     () =>
@@ -355,6 +363,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
   }, [setUserData, setDmReadStatus, persistReadStatus]);
 
   const openConversation = async (conversationId: string) => {
+    console.log("[Messages] openConversation click", { conversationId });
     const [a, b] = conversationId.replace("dm#", "").split("___");
     const otherId = a === userData.userId ? b : a;
     const otherUser = allUsers.find((u) => u.userId === otherId);
@@ -417,7 +426,12 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
   // Navigate to initial user (slug) if provided
   useEffect(() => {
     if (initialUserSlug && userData) {
-      const user = findUserBySlug(allUsers, initialUserSlug);
+      // Attempt to resolve the slug to a user either by slugified name or by raw userId
+      let user = findUserBySlug(allUsers, initialUserSlug);
+      if (!user) {
+        user = allUsers.find((u) => u.userId === initialUserSlug);
+      }
+
       if (user) {
         const sortedIds = [userData.userId, user.userId].sort();
         const conversationId = `dm#${sortedIds.join("___")}`;
@@ -1003,16 +1017,54 @@ const fetchMessages = async () => {
   };
 
   // Conversations list
-  const dmConversations = filteredDMUsers.map((u) => {
-    const sortedIds = [userData.userId, u.userId].sort();
-    const conversationId = `dm#${sortedIds.join("___")}`;
-    return {
-      id: conversationId,
-      userId: u.userId, // Add for unique key fallback
-      title: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Unnamed User",
-      profilePicture: u.thumbnail || null,
-    };
-  });
+  // Build list from inbox threads (existing convos) and eligible users (for new DMs), then dedupe
+  const dmConversations = useMemo(() => {
+    // from inbox
+    const fromInbox = (inbox || []).map((t) => {
+      const otherId =
+        t.otherUserId ||
+        t.conversationId
+          .replace("dm#", "")
+          .split("___")
+          .find((id) => id !== userData.userId) || "";
+      const u = allUsers.find((x) => x.userId === otherId);
+      const title = u && (u.firstName || u.lastName)
+        ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim()
+        : otherId;
+      return {
+        id: t.conversationId,
+        userId: otherId,
+        title: title || "Unknown",
+        profilePicture: u?.thumbnail || null,
+        lastMsgTs: t.lastMsgTs,
+      } as { id: string; userId: string; title: string; profilePicture: string | null; lastMsgTs?: string };
+    });
+
+    // from eligible users (collaborators/admins)
+    const fromUsers = filteredDMUsers.map((u) => {
+      const sortedIds = [userData.userId, u.userId].sort();
+      const conversationId = `dm#${sortedIds.join("___")}`;
+      return {
+        id: conversationId,
+        userId: u.userId,
+        title: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Unnamed User",
+        profilePicture: u.thumbnail || null,
+      } as { id: string; userId: string; title: string; profilePicture: string | null; lastMsgTs?: string };
+    });
+
+    // union + prefer inbox data, then sort by recency/title
+    const byId = new Map<string, { id: string; userId: string; title: string; profilePicture: string | null; lastMsgTs?: string }>();
+    for (const c of fromUsers) byId.set(c.id, c);
+    for (const c of fromInbox) byId.set(c.id, { ...byId.get(c.id), ...c });
+    const arr = Array.from(byId.values());
+    arr.sort((a, b) => {
+      const ta = a.lastMsgTs ? Date.parse(a.lastMsgTs) : 0;
+      const tb = b.lastMsgTs ? Date.parse(b.lastMsgTs) : 0;
+      if (tb !== ta) return tb - ta;
+      return a.title.localeCompare(b.title);
+    });
+    return arr;
+  }, [inbox, allUsers, filteredDMUsers, userData.userId]);
 
   // Header title/icon
   let chatTitle = "Select a conversation";

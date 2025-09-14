@@ -2,7 +2,6 @@
 import { corsHeadersFromEvent, preflightFromEvent, json } from "/opt/nodejs/utils/cors.mjs";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
-import { v4 as uuidv4 } from "uuid";
 
 /* ------------ ENV ------------ */
 const REGION = process.env.AWS_REGION || "us-west-2";
@@ -32,25 +31,8 @@ const ddb = DynamoDBDocument.from(new DynamoDBClient({ region: REGION }), {
 const M = (e) => e?.requestContext?.http?.method?.toUpperCase?.() || e?.httpMethod?.toUpperCase?.() || "GET";
 const P = (e) => (e?.rawPath || e?.path || "/");
 const Q = (e) => e?.queryStringParameters || {};
-const B = (e) => { try { return JSON.parse(e?.body || "{}"); } catch { return {}; } };
-const nowISO = () => new Date().toISOString();
-const makeMsgId = (ts = Date.now()) => `MESSAGE#${String(ts).padStart(13, "0")}#${uuidv4()}`;
 
-function buildUpdate(obj) {
-  const Names = {}, Values = {}, sets = [];
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined) continue;
-    Names["#" + k] = k;
-    Values[":" + k] = v;
-    sets.push(`#${k} = :${k}`);
-  }
-  if (!sets.length) return null;
-  return {
-    UpdateExpression: "SET " + sets.join(", "),
-    ExpressionAttributeNames: Names,
-    ExpressionAttributeValues: Values,
-  };
-}
+
 
 /* ------------ Handlers ------------ */
 const health = async (_e, C) => json(200, C, { ok: true, domain: "messages" });
@@ -83,36 +65,7 @@ const listThreads = async (e, C) => {
   return json(200, C, { inbox: r.Items || [] });
 };
 
-/* Create a conversation: body { participants: [userIds], projectId?, title? } */
-const createConversation = async (e, C) => {
-  const b = B(e);
-  const participants = Array.isArray(b.participants) ? b.participants.filter(Boolean) : [];
-  if (participants.length < 2) return json(400, C, { error: "participants (>=2) required" });
 
-  const ts = nowISO();
-  const conversationId = b.conversationId || `C-${uuidv4()}`;
-
-  for (const uid of participants) {
-    await ddb.put({
-      TableName: INBOX_TABLE,
-      Item: {
-        userId: uid,
-        conversationId,
-        participants,
-        projectId: b.projectId,
-        title: b.title,
-        createdAt: ts,
-        updatedAt: ts,
-        lastMsgTs: null,
-        snippet: "",
-        meta: b.meta || {},
-      },
-      ConditionExpression: "attribute_not_exists(userId) AND attribute_not_exists(conversationId)",
-    });
-  }
-
-  return json(201, C, { conversation: { conversationId, participants, projectId: b.projectId, title: b.title, createdAt: ts, updatedAt: ts } });
-};
 
 const getConversation = async (e, C, { conversationId }) => {
   const userId = Q(e).userId;
@@ -141,125 +94,11 @@ const listConversationMessages = async (e, C, { conversationId }) => {
   });
 };
 
-const postConversationMessage = async (e, C, { conversationId }) => {
-  const b = B(e);
-  if (!b.senderId) return json(400, C, { error: "senderId required" });
-  if (!b.text && !b.body && !b.content) return json(400, C, { error: "text/body/content required" });
 
-  const tsMillis = Date.now();
-  const messageId = b.messageId || makeMsgId(tsMillis);
-  const ts = b.timestamp || new Date(tsMillis).toISOString();
 
-  let participants = b.participants;
-  if (!participants) {
-    const pr = await ddb.get({ TableName: INBOX_TABLE, Key: { userId: b.senderId, conversationId } });
-    participants = pr.Item?.participants || [];
-  }
-  const recipientId = participants.find((p) => p !== b.senderId);
 
-  const msg = {
-    conversationId,
-    messageId,
-    senderId: b.senderId,
-    text: b.text,
-    body: b.body,
-    content: b.content,
-    reactions: b.reactions || {},
-    timestamp: ts,
-    meta: b.meta || {},
-    GSI1PK: recipientId ? `USER#${recipientId}` : undefined,
-    GSI1SK: ts,
-  };
 
-  await ddb.put({
-    TableName: MESSAGES_TABLE,
-    Item: msg,
-    ConditionExpression: "attribute_not_exists(conversationId) AND attribute_not_exists(messageId)",
-  });
 
-  const snippet = (msg.text || msg.body || msg.content || "").toString().slice(0, 180);
-  await Promise.all(
-    (participants || []).map((uid) => {
-      const otherUserId = participants.find((p) => p !== uid);
-      const read = uid === b.senderId;
-      return ddb.update({
-        TableName: INBOX_TABLE,
-        Key: { userId: uid, conversationId },
-        UpdateExpression:
-          "SET #snippet = :s, #lastMsgTs = :ts, #updatedAt = :u, #otherUserId = :ou, #read = :r",
-        ExpressionAttributeNames: {
-          "#snippet": "snippet",
-          "#lastMsgTs": "lastMsgTs",
-          "#updatedAt": "updatedAt",
-          "#otherUserId": "otherUserId",
-          "#read": "read",
-        },
-        ExpressionAttributeValues: {
-          ":s": snippet,
-          ":ts": ts,
-          ":u": nowISO(),
-          ":ou": otherUserId,
-          ":r": read,
-        },
-      });
-    })
-  );
-
-  return json(201, C, { conversationId, message: msg });
-};
-
-/* Update conversation metadata (e.g., mark read)
-   Body requires userId and conversationId; optional fields: read, title, snippet */
-const patchThread = async (e, C) => {
-  const b = B(e);
-  const { userId, conversationId } = b;
-  if (!userId || !conversationId) {
-    return json(400, C, { error: "userId and conversationId required" });
-  }
-
-  const upd = buildUpdate({
-    ...(b.read !== undefined ? { read: !!b.read } : {}),
-    ...(b.title !== undefined ? { title: b.title } : {}),
-    ...(b.snippet !== undefined ? { snippet: b.snippet } : {}),
-    updatedAt: nowISO(),
-  });
-  if (!upd) return json(400, C, { error: "No fields to update" });
-
-  const r = await ddb.update({
-    TableName: INBOX_TABLE,
-    Key: { userId, conversationId },
-    ...upd,
-    ReturnValues: "ALL_NEW",
-  });
-
-  return json(200, C, { conversation: r.Attributes });
-};
-
-/* Patch / Delete message by messageId
-   Requires conversationId (body for patch, query param for delete). */
-const patchMessage = async (e, C, { messageId }) => {
-  const b = B(e);
-  const conversationId = b.conversationId;
-  if (!conversationId) return json(400, C, { error: "conversationId required in body" });
-
-  const upd = buildUpdate({ ...b, updatedAt: nowISO() });
-  if (!upd) return json(400, C, { error: "No fields to update" });
-
-  const r = await ddb.update({
-    TableName: MESSAGES_TABLE,
-    Key: { conversationId, messageId },
-    ...upd,
-    ReturnValues: "ALL_NEW",
-  });
-  return json(200, C, { message: r.Attributes });
-};
-
-const deleteMessage = async (e, C, { messageId }) => {
-  const conversationId = Q(e).conversationId;
-  if (!conversationId) return json(400, C, { error: "conversationId query param required" });
-  await ddb.delete({ TableName: MESSAGES_TABLE, Key: { conversationId, messageId } });
-  return json(204, C, "");
-};
 
 /* Project-scoped messages: PROJECT_MESSAGES_TABLE (PK=projectId, SK=messageId) */
 const listProjectMessages = async (e, C, { projectId }) => {
@@ -275,72 +114,11 @@ const listProjectMessages = async (e, C, { projectId }) => {
   return json(200, C, { projectId, messages: r.Items || [] });
 };
 
-const postProjectMessage = async (e, C, { projectId }) => {
-  const b = B(e);
-  if (!b.senderId) return json(400, C, { error: "senderId required" });
-  if (!b.text && !b.body && !b.content) return json(400, C, { error: "text/body/content required" });
 
-  const tsMillis = Date.now();
-  const messageId = b.messageId || makeMsgId(tsMillis);
-  const ts = b.timestamp || new Date(tsMillis).toISOString();
 
-  const item = {
-    projectId,
-    messageId,
-    senderId: b.senderId,
-    text: b.text,
-    body: b.body,
-    content: b.content,
-    reactions: b.reactions || {},
-    timestamp: ts,
-    meta: b.meta || {},
-  };
 
-  await ddb.put({
-    TableName: PROJECT_MESSAGES_TABLE,
-    Item: item,
-    ConditionExpression: "attribute_not_exists(projectId) AND attribute_not_exists(messageId)",
-  });
 
-  return json(201, C, { projectId, message: item });
-};
 
-const patchProjectMessage = async (e, C, { messageId }) => {
-  const b = B(e);
-  const projectId = b.projectId;
-  if (!projectId) return json(400, C, { error: "projectId required in body" });
-  
-  const upd = buildUpdate({
-    content: b.content,
-    editedBy: b.editedBy,
-    editedAt: nowISO(),
-  });
-  
-  if (!upd) return json(400, C, { error: "No valid fields to update" });
-  
-  const r = await ddb.update({
-    TableName: PROJECT_MESSAGES_TABLE,
-    Key: { projectId, messageId },
-    ...upd,
-    ReturnValues: "ALL_NEW",
-    ConditionExpression: "attribute_exists(projectId) AND attribute_exists(messageId)",
-  });
-  
-  return json(200, C, { message: r.Attributes });
-};
-
-const deleteProjectMessage = async (e, C, { messageId }) => {
-  const projectId = Q(e).projectId;
-  if (!projectId) return json(400, C, { error: "projectId query param required" });
-  
-  await ddb.delete({ 
-    TableName: PROJECT_MESSAGES_TABLE, 
-    Key: { projectId, messageId },
-    ConditionExpression: "attribute_exists(projectId) AND attribute_exists(messageId)"
-  });
-  
-  return json(204, C, "");
-};
 
 /* ----------------- Notifications -----------------
    NOTIFICATIONS_TABLE:
@@ -364,70 +142,11 @@ const listNotifications = async (e, C) => {
   return json(200, C, { userId, notifications: r.Items || [] });
 };
 
-const sendNotification = async (e, C) => {
-  const b = B(e);
-  const userId = b.userId || b.recipientId; // allow both names
-  if (!userId) return json(400, C, { error: "userId (recipient) required" });
 
-  const ts = Date.now();
-  const notificationId = b.notificationId || `N#${String(ts).padStart(13, "0")}#${uuidv4()}`;
 
-  const item = {
-    userId,
-    notificationId,
-    title: b.title || "",
-    body: b.body || "",
-    type: b.type || "project",
-    projectId: b.projectId,
-    createdAt: new Date(ts).toISOString(),
-    readAt: b.readAt || null,
-    meta: b.meta || {},
-  };
 
-  await ddb.put({
-    TableName: NOTIFICATIONS_TABLE,
-    Item: item,
-    ConditionExpression: "attribute_not_exists(userId) AND attribute_not_exists(notificationId)",
-  });
 
-  return json(201, C, { notification: item });
-};
 
-const patchNotification = async (e, C, { notificationId }) => {
-  const b = B(e);
-  const userId = b.userId || Q(e).userId;
-  if (!userId) return json(400, C, { error: "userId required (body or query)" });
-
-  const upd = buildUpdate({
-    ...(b.title !== undefined ? { title: b.title } : {}),
-    ...(b.body  !== undefined ? { body:  b.body }  : {}),
-    ...(b.type  !== undefined ? { type:  b.type }  : {}),
-    ...(b.projectId !== undefined ? { projectId: b.projectId } : {}),
-    ...(b.readAt !== undefined ? { readAt: b.readAt || nowISO() } : {}),
-    updatedAt: nowISO(),
-  });
-  if (!upd) return json(400, C, { error: "No fields to update" });
-
-  const r = await ddb.update({
-    TableName: NOTIFICATIONS_TABLE,
-    Key: { userId, notificationId },
-    ...upd,
-    ReturnValues: "ALL_NEW",
-  });
-
-  return json(200, C, { notification: r.Attributes });
-};
-
-const deleteNotification = async (e, C, { notificationId }) => {
-  const userId = Q(e).userId || B(e).userId;
-  if (!userId) return json(400, C, { error: "userId required (query or body)" });
-
-  await ddb.delete({
-    TableName: NOTIFICATIONS_TABLE,
-    Key: { userId, notificationId },
-  });
-  return json(204, C, "");
-};
 
 /* ------------ Routes ------------ */
 const routes = [
@@ -436,43 +155,25 @@ const routes = [
   // inbox & conversations
   { m: "GET",   r: /^\/messages\/inbox$/i,                                 h: getInbox },
   { m: "GET",   r: /^\/messages\/threads$/i,                               h: listThreads },
-  { m: "POST",  r: /^\/messages\/threads$/i,                               h: createConversation },
-  { m: "PUT",   r: /^\/messages\/threads$/i,                               h: patchThread },
   { m: "GET",   r: /^\/messages\/threads\/(?<conversationId>[^/]+)$/i,     h: getConversation },
 
   // conversation messages
   { m: "GET",   r: /^\/messages\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: listConversationMessages },
-  { m: "POST",  r: /^\/messages\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: postConversationMessage },
-
-  // individual message ops by id
-  // v1.2 path:
-  { m: "PATCH", r: /^\/messages\/(?<messageId>[^/]+)$/i,                   h: patchMessage },
-  { m: "DELETE",r: /^\/messages\/(?<messageId>[^/]+)$/i,                   h: deleteMessage },
-  // v1.1 compat alias:
-  { m: "PATCH", r: /^\/messages\/messages\/(?<messageId>[^/]+)$/i,         h: patchMessage },
-  { m: "DELETE",r: /^\/messages\/messages\/(?<messageId>[^/]+)$/i,         h: deleteMessage },
 
   // project messages (query param)
   { m: "GET",   r: /^\/messages$/i,                                        h: listProjectMessages },
 
   // project-scoped
   { m: "GET",   r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: listProjectMessages },
-  { m: "POST",  r: /^\/messages\/project\/(?<projectId>[^/]+)$/i,          h: postProjectMessage },
-  { m: "PATCH", r: /^\/messages\/project\/(?<messageId>[^/]+)$/i,          h: patchProjectMessage },
-  { m: "DELETE",r: /^\/messages\/project\/(?<messageId>[^/]+)$/i,          h: deleteProjectMessage },
 
   // notifications (v1.2)
   { m: "GET",   r: /^\/messages\/notifications$/i,                         h: listNotifications },
-  { m: "POST",  r: /^\/messages\/notifications$/i,                         h: sendNotification },
-  { m: "PATCH", r: /^\/messages\/notifications\/(?<notificationId>[^/]+)$/i, h: patchNotification },
-  { m: "DELETE",r: /^\/messages\/notifications\/(?<notificationId>[^/]+)$/i, h: deleteNotification },
 
   // v1.1 compat aliases
   { m: "GET",   r: /^\/getDirectMessages$/i,                                h: listConversationMessages },
   { m: "GET",   r: /^\/getDmInbox$/i,                                       h: getInbox },
   { m: "GET",   r: /^\/getProjectMessages$/i,                               h: listProjectMessages },
   { m: "GET",   r: /^\/getNotifications$/i,                                h: listNotifications },
-  { m: "POST",  r: /^\/SendProjectNotification$/i,                         h: sendNotification },
 ];
 
 export async function handler(event) {

@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from "uuid";
 /* ---------- ENV ---------- */
 const REGION = process.env.AWS_REGION || "us-west-2";
 const USER_PROFILES_TABLE = process.env.USER_PROFILES_TABLE || "UserProfiles";
-const USER_DIRECTORY_TABLE = process.env.USER_DIRECTORY_TABLE || "UserDirectory";
 const INVITES_TABLE = process.env.INVITES_TABLE || "ProjectInvitations";
 const INVITES_BY_SENDER_INDEX = process.env.INVITES_BY_SENDER_INDEX || "senderId-index";
 const INVITES_BY_RECIPIENT_INDEX = process.env.INVITES_BY_RECIPIENT_INDEX || "recipientId-index";
@@ -135,22 +134,7 @@ function buildUpdate(obj) {
 }
 
 async function batchGetUsersByIds(ids) {
-  // Prefer the aggregated UserDirectory table for batch fetches
-  try {
-    const directory = await ddb.get({
-      TableName: USER_DIRECTORY_TABLE,
-      Key: { directoryId: "1" },
-      ConsistentRead: true,
-    });
-    const map = directory.Item?.users || {};
-    const out = ids.map((id) => map[id]).filter(Boolean);
-    // Fallback to original table if directory is empty
-    if (out.length === ids.length) return out;
-  } catch (err) {
-    console.warn("UserDirectory batch fetch failed, falling back", err);
-  }
-
-  // Fallback to fetching directly from UserProfiles in chunks
+  // Always fetch directly from UserProfiles in chunks
   const chunks = [];
   for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
   const out = [];
@@ -165,37 +149,6 @@ async function batchGetUsersByIds(ids) {
 
 const withFirstNameFallback = (u) =>
   u ? { ...u, firstName: u.firstName || u.cognitoAttributes?.given_name || "" } : u;
-
-async function upsertUserDirectory(user) {
-  if (!user?.userId) return;
-  const item = withFirstNameFallback(user);
-  try {
-    await ddb.update({
-      TableName: USER_DIRECTORY_TABLE,
-      Key: { directoryId: "1" },
-      UpdateExpression:
-        "SET #u = if_not_exists(#u, :e), #u.#id = :v",
-      ExpressionAttributeNames: { "#u": "users", "#id": item.userId },
-      ExpressionAttributeValues: { ":e": {}, ":v": item },
-    });
-  } catch (err) {
-    console.error("Failed to update UserDirectory", err);
-  }
-}
-
-async function removeUserFromDirectory(userId) {
-  if (!userId) return;
-  try {
-    await ddb.update({
-      TableName: USER_DIRECTORY_TABLE,
-      Key: { directoryId: "1" },
-      UpdateExpression: "REMOVE #u.#id",
-      ExpressionAttributeNames: { "#u": "users", "#id": userId },
-    });
-  } catch (err) {
-    console.error("Failed to remove user from UserDirectory", err);
-  }
-}
 
 /* ---------- handlers ---------- */
 
@@ -235,34 +188,14 @@ async function getUserProfiles(event, C) {
   }
   // Allow authenticated users to scan all users
   if (isAuthenticated) {
-    try {
-      const d = await ddb.get({
-        TableName: USER_DIRECTORY_TABLE,
-        Key: { directoryId: "1" },
-        ConsistentRead: true,
-      });
-      const map = d.Item?.users || {};
-      return json(200, C, { Items: Object.values(map).map(withFirstNameFallback) });
-    } catch (err) {
-      console.warn("UserDirectory scan failed, falling back", err);
-      const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });
-      return json(200, C, { Items: (r.Items || []).map(withFirstNameFallback) });
-    }
-  }
-  if (!SCANS_ALLOWED) return json(400, C, { error: "ids required (comma-separated)" });
-  try {
-    const d = await ddb.get({
-      TableName: USER_DIRECTORY_TABLE,
-      Key: { directoryId: "1" },
-      ConsistentRead: true,
-    });
-    const map = d.Item?.users || {};
-    return json(200, C, { Items: Object.values(map).map(withFirstNameFallback) });
-  } catch (err) {
-    console.warn("UserDirectory scan failed, falling back", err);
+    // Always fallback to UserProfiles scan
     const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });
     return json(200, C, { Items: (r.Items || []).map(withFirstNameFallback) });
   }
+  if (!SCANS_ALLOWED) return json(400, C, { error: "ids required (comma-separated)" });
+  // Always fallback to UserProfiles scan
+  const r = await ddb.scan({ TableName: USER_PROFILES_TABLE });
+  return json(200, C, { Items: (r.Items || []).map(withFirstNameFallback) });
 }
 
 // PUT /userProfiles  (v1.1 semantics: upsert + merge pending PENDING#<email>)
@@ -293,7 +226,6 @@ async function putUserProfile(event, C) {
   }
 
   await ddb.put({ TableName: table, Item: item });
-  await upsertUserDirectory(item);
   return json(200, C, { ok: true, Item: withFirstNameFallback(item) });
 }
 
@@ -310,7 +242,6 @@ async function patchUserProfile(event, C, { userId }) {
     ...upd,
     ReturnValues: "ALL_NEW",
   });
-  await upsertUserDirectory(r.Attributes);
   return json(200, C, withFirstNameFallback(r.Attributes));
 }
 
@@ -318,7 +249,6 @@ async function patchUserProfile(event, C, { userId }) {
 async function deleteUserProfile(_e, C, { userId }) {
   if (!userId) return json(400, C, { error: "userId required" });
   await ddb.delete({ TableName: USER_PROFILES_TABLE, Key: { userId } });
-  await removeUserFromDirectory(userId);
   return json(204, C, "");
 }
 

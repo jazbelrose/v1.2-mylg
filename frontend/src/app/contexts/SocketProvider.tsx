@@ -18,7 +18,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
   const { getAuthTokens } = useAuth();
   const {
     setUserData,
-    setDmThreads,
+    setInbox,
     userId,
     setProjects,
     setUserProjects,
@@ -162,7 +162,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                 return { ...prev, messages: merged };
               });
 
-              setDmThreads((prev) => {
+              setInbox((prev) => {
                 const idx = prev.findIndex((t) => t.conversationId === data.conversationId);
                 if (idx !== -1) {
                   const shouldBeRead = viewing || isSelf;
@@ -209,7 +209,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                 const newSnippet = lastMsg?.text || "";
                 const newTs = lastMsg?.timestamp || new Date().toISOString();
 
-                setDmThreads((prevThreads) =>
+                setInbox((prevThreads) =>
                   prevThreads.map((t) =>
                     t.conversationId === data.conversationId
                       ? { ...t, snippet: newSnippet, lastMsgTs: newTs, read: viewing ? true : t.read }
@@ -230,7 +230,7 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                   ),
                 };
               });
-              setDmThreads((prev) =>
+              setInbox((prev) =>
                 prev.map((t) =>
                   t.conversationId === data.conversationId && t.lastMsgTs === data.timestamp
                     ? { ...t, snippet: data.text, lastMsgTs: data.timestamp }

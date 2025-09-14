@@ -35,7 +35,7 @@ const WelcomeScreen: React.FC = () => {
     userData,
     userName,
     loadingProfile,
-    dmThreads,
+    inbox,
     allUsers,
     projects,
     fetchProjectDetails,
@@ -105,11 +105,11 @@ const WelcomeScreen: React.FC = () => {
       !isMobile &&
       activeView === "messages" &&
       !dmUserSlug &&
-      dmThreads &&
-      dmThreads.length > 0 &&
+      inbox &&
+      inbox.length > 0 &&
       userData
     ) {
-      const sorted = [...dmThreads].sort(
+      const sorted = [...inbox].sort(
         (a, b) => new Date(b.lastMsgTs).getTime() - new Date(a.lastMsgTs).getTime()
       );
       const lastThread = sorted[0];
@@ -130,7 +130,7 @@ const WelcomeScreen: React.FC = () => {
         }
       }
     }
-  }, [activeView, dmUserSlug, dmThreads, userData, allUsers, navigate, isMobile]);
+  }, [activeView, dmUserSlug, inbox, userData, allUsers, navigate, isMobile]);
 
   if (loadingProfile) return <SpinnerScreen />;
   if (userData?.pending) return <PendingApprovalScreen />;

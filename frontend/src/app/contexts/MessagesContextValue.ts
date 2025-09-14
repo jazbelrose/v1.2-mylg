@@ -3,8 +3,8 @@ import type { Thread, Message } from "./DataProvider";
 export type ProjectMessagesMap = Record<string, Message[]>;
 
 export interface MessagesValue {
-  dmThreads: Thread[];
-  setDmThreads: React.Dispatch<React.SetStateAction<Thread[]>>;
+  inbox: Thread[];
+  setInbox: React.Dispatch<React.SetStateAction<Thread[]>>;
   projectMessages: ProjectMessagesMap;
   setProjectMessages: React.Dispatch<React.SetStateAction<ProjectMessagesMap>>;
   deletedMessageIds: Set<string>;

@@ -17,8 +17,8 @@ export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
 
   const [projectMessages, setProjectMessages] = useState<ProjectMessagesMap>({});
-  const [dmThreads, setDmThreads] = useState<Thread[]>(() => {
-    const stored = getWithTTL("dmThreads");
+  const [inbox, setInbox] = useState<Thread[]>(() => {
+    const stored = getWithTTL("inbox");
     return Array.isArray(stored) ? (stored as Thread[]) : [];
   });
 
@@ -80,12 +80,12 @@ export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  // Persist DM threads
+  // Persist inbox threads
   useEffect(() => {
-    setWithTTL("dmThreads", dmThreads, DEFAULT_TTL);
-  }, [dmThreads]);
+    setWithTTL("inbox", inbox, DEFAULT_TTL);
+  }, [inbox]);
 
-  // Load DM threads
+  // Load inbox threads
   useEffect(() => {
     if (!userId) return;
     const fetchThreads = async () => {
@@ -96,7 +96,7 @@ export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
         const threads = Array.isArray(data)
           ? data
           : (data as { inbox?: Thread[] })?.inbox || [];
-        setDmThreads(threads as Thread[]);
+        setInbox(threads as Thread[]);
       } catch (err) {
         console.error("Failed to fetch threads", err);
       }
@@ -106,8 +106,8 @@ export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
   const messagesValue = useMemo<MessagesValue>(
     () => ({
-      dmThreads,
-      setDmThreads,
+      inbox,
+      setInbox,
       projectMessages,
       setProjectMessages,
       deletedMessageIds: deletedMessageIdsRef.current,
@@ -115,7 +115,7 @@ export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
       clearDeletedMessageId,
       toggleReaction,
     }),
-    [dmThreads, projectMessages]
+    [inbox, projectMessages]
   );
 
   return (

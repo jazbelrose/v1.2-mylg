@@ -202,18 +202,18 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
     isAdmin,
     setUserData,
     setDmReadStatus,
-    setDmThreads,
+    setInbox,
     deletedMessageIds,
     markMessageDeleted,
     toggleReaction,
-    dmThreads,
+    inbox,
   } = useData() as unknown as {
     userData: AppUser;
     allUsers: AppUser[];
     isAdmin: boolean;
-    dmThreads: Thread[];
+    inbox: Thread[];
     setUserData: React.Dispatch<React.SetStateAction<AppUser>>;
-    setDmThreads: React.Dispatch<React.SetStateAction<Thread[]>>;
+    setInbox: React.Dispatch<React.SetStateAction<Thread[]>>;
     setDmReadStatus: React.Dispatch<React.SetStateAction<Record<string, string>>>;
     deletedMessageIds: Set<string>;
     markMessageDeleted: (id: string) => void;
@@ -254,11 +254,11 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
   // map for unread badge
   const threadMap = useMemo<Record<string, boolean>>(
     () =>
-      dmThreads.reduce((acc, t) => {
+      inbox.reduce((acc, t) => {
         acc[t.conversationId] = t.read === false;
         return acc;
       }, {} as Record<string, boolean>),
-    [dmThreads]
+    [inbox]
   );
 
   // Local state
@@ -365,7 +365,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
     if (isMobile) setShowConversation(true);
 
     // mark read locally
-    setDmThreads((prev) =>
+    setInbox((prev) =>
       prev.map((t) => (t.conversationId === conversationId ? { ...t, read: true } : t))
     );
     markConversationAsRead(conversationId);
@@ -373,7 +373,7 @@ const Messages: React.FC<MessagesProps> = ({ initialUserSlug = null }) => {
 
   const handleMarkRead = (conversationId: string | null) => {
     if (!conversationId) return;
-    setDmThreads((prev) =>
+    setInbox((prev) =>
       prev.map((t) => (t.conversationId === conversationId ? { ...t, read: true } : t))
     );
     markConversationAsRead(conversationId);
@@ -623,7 +623,7 @@ const fetchMessages = async () => {
         }
 
         // update thread list
-        setDmThreads((prev) => {
+        setInbox((prev) => {
           const idx = prev.findIndex((t) => t.conversationId === selectedConversation);
           if (idx !== -1) {
             const updated = [...prev];
@@ -787,7 +787,7 @@ const fetchMessages = async () => {
           }).catch((err) => console.error("Thread update failed:", err));
         }
 
-        setDmThreads((prev) => {
+        setInbox((prev) => {
           const idx = prev.findIndex((t) => t.conversationId === selectedConversation);
           if (idx !== -1) {
             const updated = [...prev];
@@ -904,7 +904,7 @@ const fetchMessages = async () => {
       const newSnippet = lastMsg?.text || "";
       const newTs = String(lastMsg?.timestamp || new Date().toISOString());
 
-      setDmThreads((prev) =>
+      setInbox((prev) =>
         prev.map((t) =>
           t.conversationId === selectedConversation
             ? { ...t, snippet: newSnippet, lastMsgTs: newTs, read: true }

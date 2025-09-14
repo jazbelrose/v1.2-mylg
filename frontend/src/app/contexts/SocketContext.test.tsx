@@ -67,7 +67,7 @@ describe("SocketContext collaborator updates", () => {
 
     (useData as ReturnType<typeof vi.fn>).mockReturnValue({
       setUserData: vi.fn(),
-      setDmThreads: vi.fn(),
+      setInbox: vi.fn(),
       userId: "u1",
       setProjects: vi.fn(),
       setUserProjects: vi.fn(),

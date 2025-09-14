@@ -14,7 +14,7 @@ type InboxProps = {
 };
 
 export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
-  const { userId, allUsers, dmThreads, setDmThreads } = useData();
+  const { userId, allUsers, inbox, setInbox } = useData();
 
   const { ws } = useSocket() as { ws?: WebSocket | null };
 
@@ -30,22 +30,22 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
       // Optional: sanity check in dev
       console.debug("[Inbox] fetched threads:", data);
       const threads = Array.isArray(data) ? data : data?.inbox || [];
-      setDmThreads(threads as Thread[]);
+      setInbox(threads as Thread[]);
     } catch (err) {
       console.error("❌ inbox refresh failed", err);
-      setDmThreads([]); // keep UI consistent on error
+      setInbox([]); // keep UI consistent on error
     }
-  }, [userId, setDmThreads]); // :contentReference[oaicite:1]{index=1}
+  }, [userId, setInbox]); // :contentReference[oaicite:1]{index=1}
 
-  const inbox = useMemo<Thread[]>(
+  const sortedInbox = useMemo<Thread[]>(
     () =>
-      [...(dmThreads || [])].sort((a, b) => {
+      [...(inbox || [])].sort((a, b) => {
         const ta = Date.parse(a?.lastMsgTs as string);
         const tb = Date.parse(b?.lastMsgTs as string);
         // Fallback to 0 if invalid date
         return (isNaN(tb) ? 0 : tb) - (isNaN(ta) ? 0 : ta);
       }),
-    [dmThreads]
+    [inbox]
   );
 
   const handleNavigation = useCallback(
@@ -67,12 +67,12 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
   // 2) (Updates pushed via SocketContext elsewhere)
 
   // 3) helpers
-  const totalUnread = inbox.filter((item) => !item.read).length;
+  const totalUnread = sortedInbox.filter((item) => !item.read).length;
 
   const markReadAndNav = useCallback(
     async (otherUserId: string, convId: string) => {
       // 1) locally mark read
-      setDmThreads((prev) =>
+      setInbox((prev) =>
         prev.map((m) =>
           m.conversationId === convId ? { ...m, read: true } : m
         )
@@ -123,7 +123,7 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
       setActiveView,
       setDmUserSlug,
       allUsers,
-      setDmThreads,
+      setInbox,
     ]
   );
 
@@ -142,11 +142,11 @@ export default function Inbox({ setActiveView, setDmUserSlug }: InboxProps) {
         </div>
       </div>
 
-      {inbox.length === 0 ? (
+      {sortedInbox.length === 0 ? (
         <div className="progress-text">No messages</div>
       ) : (
         <div className="unread-dm-list">
-          {inbox.map((item) => {
+          {sortedInbox.map((item) => {
             const user = allUsers.find((u) => u.userId === item.otherUserId);
             const name = user?.firstName
               ? `${user.firstName} ${user.lastName ?? ""}`.trim()

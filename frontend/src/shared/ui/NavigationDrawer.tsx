@@ -23,12 +23,12 @@ const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
   setActiveView,
 }) => {
   const { setIsAuthenticated, setCognitoUser } = useAuth();
-  const { dmThreads } = useData();
+  const { inbox } = useData();
   const { notifications } = useNotifications() as { notifications: Array<{ read?: boolean }>; };
   const navigate = useNavigate();
 
   const unreadNotifications = notifications.filter((n) => !n.read).length;
-  const unreadMessages = dmThreads.filter((t) => t.read === false).length;
+  const unreadMessages = inbox.filter((t) => t.read === false).length;
 
   const handleNavigation = (view: string) => {
     setActiveView(view);

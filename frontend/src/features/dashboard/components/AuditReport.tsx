@@ -56,7 +56,53 @@ interface AuditReportData {
       lastHealthCheck: string;
     };
   };
-  details?: any;
+  details?: {
+    projects?: Array<{
+      projectId: string;
+      title: string;
+      status: string;
+      createdAt: string;
+      updatedAt: string;
+      teamSize: number;
+      budget: number;
+    }>;
+    budgets?: Array<{
+      budgetItemId: string;
+      projectId: string;
+      category: string;
+      amount: number;
+      spent: number;
+      description: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    userActivity?: Array<{
+      userId: string;
+      email: string;
+      role: string;
+      createdAt: string;
+      lastActiveAt: string;
+      projectCount: number;
+    }>;
+    events?: {
+      events: Array<{
+        eventId: string;
+        projectId: string;
+        description: string;
+        date: string;
+        hours: number;
+        budgetItemId: string;
+      }>;
+      tasks: Array<{
+        taskId: string;
+        projectId: string;
+        title: string;
+        status: string;
+        dueDate: string;
+        assignedTo: string;
+      }>;
+    };
+  };
 }
 
 const AuditReport: React.FC = () => {
@@ -72,10 +118,10 @@ const AuditReport: React.FC = () => {
     
     try {
       const dateStr = selectedDate.format('YYYY-MM-DD');
-      const params = new URLSearchParams({
-        date: dateStr,
-        details: includeDetails.toString()
-      });
+      // const params = new URLSearchParams({
+      //   date: dateStr,
+      //   details: includeDetails.toString()
+      // });
 
       // In a real implementation, this would call the actual API
       // For now, we'll simulate the API call
@@ -169,6 +215,7 @@ const AuditReport: React.FC = () => {
 
   useEffect(() => {
     fetchAuditReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDateChange = (date: dayjs.Dayjs | null) => {

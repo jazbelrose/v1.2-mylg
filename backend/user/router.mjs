@@ -166,6 +166,37 @@ async function batchGetUsersByIds(ids) {
 const withFirstNameFallback = (u) =>
   u ? { ...u, firstName: u.firstName || u.cognitoAttributes?.given_name || "" } : u;
 
+async function upsertUserDirectory(user) {
+  if (!user?.userId) return;
+  const item = withFirstNameFallback(user);
+  try {
+    await ddb.update({
+      TableName: USER_DIRECTORY_TABLE,
+      Key: { directoryId: "1" },
+      UpdateExpression:
+        "SET #u = if_not_exists(#u, :e), #u.#id = :v",
+      ExpressionAttributeNames: { "#u": "users", "#id": item.userId },
+      ExpressionAttributeValues: { ":e": {}, ":v": item },
+    });
+  } catch (err) {
+    console.error("Failed to update UserDirectory", err);
+  }
+}
+
+async function removeUserFromDirectory(userId) {
+  if (!userId) return;
+  try {
+    await ddb.update({
+      TableName: USER_DIRECTORY_TABLE,
+      Key: { directoryId: "1" },
+      UpdateExpression: "REMOVE #u.#id",
+      ExpressionAttributeNames: { "#u": "users", "#id": userId },
+    });
+  } catch (err) {
+    console.error("Failed to remove user from UserDirectory", err);
+  }
+}
+
 /* ---------- handlers ---------- */
 
 // health
@@ -252,6 +283,7 @@ async function putUserProfile(event, C) {
   }
 
   await ddb.put({ TableName: table, Item: item });
+  await upsertUserDirectory(item);
   return json(200, C, { ok: true, Item: withFirstNameFallback(item) });
 }
 
@@ -268,6 +300,7 @@ async function patchUserProfile(event, C, { userId }) {
     ...upd,
     ReturnValues: "ALL_NEW",
   });
+  await upsertUserDirectory(r.Attributes);
   return json(200, C, withFirstNameFallback(r.Attributes));
 }
 
@@ -275,6 +308,7 @@ async function patchUserProfile(event, C, { userId }) {
 async function deleteUserProfile(_e, C, { userId }) {
   if (!userId) return json(400, C, { error: "userId required" });
   await ddb.delete({ TableName: USER_PROFILES_TABLE, Key: { userId } });
+  await removeUserFromDirectory(userId);
   return json(204, C, "");
 }
 

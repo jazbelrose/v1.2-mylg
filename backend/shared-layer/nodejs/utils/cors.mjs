@@ -113,7 +113,7 @@ export function preflightFromEvent(event) {
 // Handy JSON response helper (keeps things consistent)
 export function json(statusCode, headers, body) {
   const response = {
-    statusCode: String(statusCode),
+    statusCode,
     headers: { ...headers, "Content-Type": "application/json" },
     body: typeof body === "string" ? body : JSON.stringify(body ?? ""),
   };

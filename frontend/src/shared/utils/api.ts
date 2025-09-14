@@ -150,7 +150,7 @@ const FILE_CDN = import.meta.env.VITE_FILE_CDN || import.meta.env.VITE_S3_PUBLIC
 
 export function getFileUrl(keyOrUrl: string): string {
   if (!keyOrUrl || typeof keyOrUrl !== 'string') return keyOrUrl;
-  
+
   // If it's already a full URL, extract the key
   if (keyOrUrl.startsWith('http')) {
     try {
@@ -161,7 +161,18 @@ export function getFileUrl(keyOrUrl: string): string {
       // If parsing fails, use as-is
     }
   }
-  
+
+  // Normalize project thumbnail paths:
+  // older data may omit the `public/` prefix and/or include a `thumbnail-` filename
+  // which no longer exists. Convert such keys to the canonical public path.
+  if (keyOrUrl.startsWith('project-thumbnails/')) {
+    keyOrUrl = `public/${keyOrUrl}`;
+  }
+  keyOrUrl = keyOrUrl.replace(
+    /(project-thumbnails\/[^/]+\/)(thumbnail-)(.+)/,
+    (_m, prefix, _thumb, name) => `${prefix}${name}`
+  );
+
   const base = FILE_CDN || `https://${FILE_BUCKET}.s3.${FILE_REGION}.amazonaws.com`;
   return `${base.replace(/\/$/, '')}/${keyOrUrl}`;
 }

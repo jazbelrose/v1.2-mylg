@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Map from "../../../shared/ui/Map";
 import { toast, ToastContainer } from "react-toastify";
 import Modal from "../../../shared/ui/ModalWithStack";
-import { NOMINATIM_SEARCH_URL, apiFetch } from "../../../shared/utils/api";
+import { NOMINATIM_SEARCH_URL, apiFetch, getFileUrl } from "../../../shared/utils/api";
 import { useData } from "../../../app/contexts/useData";
 import { useSocket } from "../../../app/contexts/useSocket";
 import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
@@ -111,7 +111,7 @@ const LocationComponent: React.FC<LocationComponentProps> = ({
                 lat: data.location.lat,
                 lng: data.location.lng,
                 accuracy: data.location.accuracy,
-                thumbnail: data.thumbnail,
+                thumbnail: data.thumbnail ? getFileUrl(data.thumbnail) : undefined,
               },
             ];
           });
@@ -260,7 +260,7 @@ const LocationComponent: React.FC<LocationComponentProps> = ({
           action: "userLocation",
           userId: user.userId,
           location: loc,
-          thumbnail: user?.thumbnail,
+          thumbnail: user?.thumbnail ? getFileUrl(user.thumbnail) : undefined,
         })
       );
     }
@@ -284,8 +284,12 @@ const LocationComponent: React.FC<LocationComponentProps> = ({
         dragging={isInteractive}
         touchZoom={isInteractive}
         showUserLocation
-        userThumbnail={user?.thumbnail}
-        projectThumbnail={activeProject?.thumbnails?.[0]}
+        userThumbnail={user?.thumbnail ? getFileUrl(user.thumbnail) : undefined}
+        projectThumbnail={
+          activeProject?.thumbnails?.[0]
+            ? getFileUrl(activeProject.thumbnails[0])
+            : undefined
+        }
         otherUsers={connectedUsers}
         onUserLocation={handleUserLocation}
       />
@@ -353,8 +357,12 @@ const LocationComponent: React.FC<LocationComponentProps> = ({
             dragging
             touchZoom
             showUserLocation
-            userThumbnail={user?.thumbnail}
-            projectThumbnail={activeProject?.thumbnails?.[0]}
+            userThumbnail={user?.thumbnail ? getFileUrl(user.thumbnail) : undefined}
+            projectThumbnail={
+              activeProject?.thumbnails?.[0]
+                ? getFileUrl(activeProject.thumbnails[0])
+                : undefined
+            }
             isEditable
             onLocationChange={handleModalLocationChange}
           />

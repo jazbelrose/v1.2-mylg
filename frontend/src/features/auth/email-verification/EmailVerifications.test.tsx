@@ -19,9 +19,10 @@ vi.mock('aws-amplify/auth', () => ({
   }),
 }));
 
-vi.mock('../../../app/contexts/DataProvider', () => ({
+vi.mock('../../../app/contexts/useData', () => ({
   useData: () => ({ opacity: 1 }),
 }));
+
 
 vi.mock('../../../app/contexts/AuthContext', () => ({
   useAuth: () => ({ validateAndSetUserSession: vi.fn() }),

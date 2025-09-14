@@ -8,6 +8,7 @@ import {
   fetchUserProfilesBatch,
 } from '../../../shared/utils/api';
 import { message } from 'antd';
+import { vi } from 'vitest';
 
 vi.mock('../../../shared/utils/api', () => ({
   __esModule: true,
@@ -16,6 +17,10 @@ vi.mock('../../../shared/utils/api', () => ({
   updateTask: vi.fn((t) => Promise.resolve(t)),
   deleteTask: vi.fn(() => Promise.resolve({})),
   fetchUserProfilesBatch: vi.fn(() => Promise.resolve([]))
+}));
+vi.mock('antd', () => ({
+  Form: { useForm: vi.fn(() => [{}]) },
+  // other antd components if needed
 }));
 
 const mockUseBudget = vi.fn(() => ({ budgetItems: [] }));

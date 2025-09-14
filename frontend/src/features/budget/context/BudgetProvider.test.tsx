@@ -8,7 +8,7 @@ vi.mock("@/app/contexts/SocketContext", () => ({
   useSocket: () => ({ ws: null, isConnected: false }),
 }));
 
-vi.mock("@/app/contexts/DataProvider", () => ({
+vi.mock("@/app/contexts/useData", () => ({
   useData: () => ({ user: { firstName: "Test" }, userId: "test-user" }),
 }));
 

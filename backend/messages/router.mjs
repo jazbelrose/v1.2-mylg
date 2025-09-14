@@ -175,30 +175,30 @@ const listNotifications = async (e, C) => {
 
 /* ------------ Routes ------------ */
 const routes = [
-  { m: "GET",   r: /^\/health$/i,                               h: health },
+  { m: "GET", r: /^\/messages\/health$/i, h: health },
 
   // inbox & conversations
-  { m: "GET",   r: /^\/inbox$/i,                                 h: getInbox },
-  { m: "GET",   r: /^\/threads$/i,                               h: listThreads },
-  { m: "GET",   r: /^\/threads\/(?<conversationId>[^/]+)$/i,     h: getConversation },
+  { m: "GET", r: /^\/messages\/inbox$/i, h: getInbox },
+  { m: "GET", r: /^\/messages\/threads$/i, h: listThreads },
+  { m: "GET", r: /^\/messages\/threads\/(?<conversationId>[^/]+)$/i, h: getConversation },
 
   // conversation messages
-  { m: "GET",   r: /^\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: listConversationMessages },
+  { m: "GET", r: /^\/messages\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: listConversationMessages },
 
   // project messages (query param)
-  { m: "GET",   r: /^\/$/i,                                        h: listProjectMessages },
+  { m: "GET", r: /^\/messages\/$/i, h: listProjectMessages },
 
   // project-scoped
-  { m: "GET",   r: /^\/project\/(?<projectId>[^/]+)$/i,          h: listProjectMessages },
+  { m: "GET", r: /^\/messages\/project\/(?<projectId>[^/]+)$/i, h: listProjectMessages },
 
   // notifications (v1.2)
-  { m: "GET",   r: /^\/notifications$/i,                         h: listNotifications },
+  { m: "GET", r: /^\/messages\/notifications$/i, h: listNotifications },
 
-  // v1.1 compat aliases
-  { m: "GET",   r: /^\/getDirectMessages$/i,                                h: listConversationMessages },
-  { m: "GET",   r: /^\/getDmInbox$/i,                                       h: getInbox },
-  { m: "GET",   r: /^\/getProjectMessages$/i,                               h: listProjectMessages },
-  { m: "GET",   r: /^\/getNotifications$/i,                                h: listNotifications },
+  // v1.1 compat aliases (keep them working, but prefixed)
+  { m: "GET", r: /^\/messages\/getDirectMessages$/i, h: listConversationMessages },
+  { m: "GET", r: /^\/messages\/getDmInbox$/i, h: getInbox },
+  { m: "GET", r: /^\/messages\/getProjectMessages$/i, h: listProjectMessages },
+  { m: "GET", r: /^\/messages\/getNotifications$/i, h: listNotifications },
 ];
 
 export async function handler(event) {

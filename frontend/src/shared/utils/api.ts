@@ -184,7 +184,7 @@ export function getFileUrl(keyOrUrl: string): string {
   );
 
   const base = FILE_CDN || `https://${FILE_BUCKET}.s3.${FILE_REGION}.amazonaws.com`;
-  return `${base.replace(/\/$/, '')}/${keyOrUrl}`;
+  return `${base.replace(/\/$/, '')}/${encodeURIComponent(keyOrUrl)}`;
 }
 
 export function normalizeFileUrl(urlOrKey: string): string {

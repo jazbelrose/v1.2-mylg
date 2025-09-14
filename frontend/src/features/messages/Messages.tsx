@@ -45,6 +45,11 @@ import { getUserDisplayName, getUserThumbnail } from "./utils/userHelpers";
 import { renderFilePreview } from "./utils/filePreview";
 import "@/features/messages/project-messages-thread.css";
 
+// Helper function to sanitize conversationId for file keys (replace # with _)
+const sanitizeConversationIdForFileKey = (conversationId: string): string => {
+  return conversationId.replace(/#/g, "_");
+};
+
 // Accessibility binding
 if (typeof document !== "undefined") {
   Modal.setAppElement("#root");
@@ -489,7 +494,8 @@ const fetchMessages = async () => {
     conversationId: string,
     file: File
   ): Promise<DMFile | undefined> => {
-    const filename = `dms/${conversationId}/${FOLDER_KEY}/${file.name}`;
+    const sanitizedConversationId = sanitizeConversationIdForFileKey(conversationId);
+    const filename = `dms/${sanitizedConversationId}/${FOLDER_KEY}/${file.name}`;
     try {
       const uploadTask = uploadData({
         key: filename,
@@ -500,7 +506,7 @@ const fetchMessages = async () => {
       // small delay for availability
       await new Promise((resolve) => setTimeout(resolve, FILE_UPLOAD_DELAY));
       const fileUrl = getFileUrl(
-        `dms/${encodeURIComponent(conversationId)}/${FOLDER_KEY}/${encodeURIComponent(file.name)}`
+        `dms/${sanitizedConversationId}/${FOLDER_KEY}/${encodeURIComponent(file.name)}`
       );
       return { fileName: file.name, url: normalizeFileUrl(fileUrl), key: filename };
     } catch (error) {
@@ -519,7 +525,8 @@ const fetchMessages = async () => {
       const optimisticId = `${Date.now()}-${file.name}`;
       const timestamp = new Date().toISOString();
       const normalizedConversationId = normalizeDMConversationId(selectedConversation);
-      const key = `dms/${normalizedConversationId}/${FOLDER_KEY}/${file.name}`;
+      const sanitizedConversationId = sanitizeConversationIdForFileKey(normalizedConversationId);
+      const key = `dms/${sanitizedConversationId}/${FOLDER_KEY}/${file.name}`;
 
       const websocketMessage = {
         action: "sendMessage",

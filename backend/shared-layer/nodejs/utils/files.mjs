@@ -3,9 +3,9 @@ export function getFileUrl(key) {
   const region = process.env.AWS_REGION || 'us-west-2';
   const cloudfront = process.env.FILE_CDN;
   if (cloudfront) {
-    return `${cloudfront.replace(/\/$/, '')}/${key}`;
+    return `${cloudfront.replace(/\/$/, '')}/${encodeURIComponent(key)}`;
   }
-  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+  return `https://${bucket}.s3.${region}.amazonaws.com/${encodeURIComponent(key)}`;
 }
 
 export function normalizeFileUrl(urlOrKey) {

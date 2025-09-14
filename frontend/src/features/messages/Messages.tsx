@@ -30,7 +30,6 @@ import PromptModal from "@/shared/ui/PromptModal";
 import { slugify, findUserBySlug } from "@/shared/utils/slug";
 import {
   MESSAGES_THREADS_URL,
-  DELETE_FILE_FROM_S3_URL,
   apiFetch,
   getFileUrl,
   normalizeFileUrl,
@@ -683,86 +682,43 @@ const fetchMessages = async () => {
     const id = message.messageId || message.optimisticId;
     if (!id || !selectedConversation) return;
 
-    try {
-      // delete file (if any)
-      const fileKey =
-        message.attachments?.[0]?.key ||
-        (message.file?.url
-          ? fileUrlsToKeys([message.file.url])[0]
-          : message.attachments?.[0]?.url
-          ? fileUrlsToKeys([message.attachments[0].url])[0]
-          : undefined);
-      if (fileKey) {
-        try {
-          await apiFetch(DELETE_FILE_FROM_S3_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              projectId: selectedConversation,
-              field: FOLDER_KEY,
-              fileKeys: [fileKey],
-            }),
-          });
-        } catch (err) {
-          console.error("Failed to delete file from S3", err);
-        }
-      }
+    // Optimistic UI update
+    setUserData((prev) => {
+      const prevMsgs = Array.isArray(prev.messages) ? prev.messages : [];
+      const updatedMsgs = prevMsgs.filter(
+        (m) => (m.messageId || m.optimisticId) !== id
+      );
+      return { ...(prev as AppUser), messages: updatedMsgs };
+    });
+    markMessageDeleted(id);
 
-      // delete from store/server (defensive for Response vs JSON)
-      // Note: Message deletion now handled via WebSocket only
-      const prevMsgs = Array.isArray(userData?.messages) ? userData.messages! : [];
-      const updatedMsgs = prevMsgs.filter((m) => (m.messageId || m.optimisticId) !== id);
-      setUserData((prev) => (prev ? { ...(prev as AppUser), messages: updatedMsgs } : prev));
-
-      // track deletion locally
-      markMessageDeleted(id);
-
-      // recompute snippet
-      const convoMsgs = updatedMsgs
-        .filter((m) => m.conversationId === selectedConversation)
-        .sort((a, b) => +new Date(b.timestamp) - +new Date(a.timestamp));
-      const lastMsg = convoMsgs[0];
+    // Update thread snippet
+    setInbox((prev) => {
+      const convoMsgs = (userData.messages || []).filter(
+        (m) => m.conversationId === selectedConversation && m.messageId !== id
+      );
+      const lastMsg = convoMsgs.sort(
+        (a, b) => +new Date(b.timestamp) - +new Date(a.timestamp)
+      )[0];
       const newSnippet = lastMsg?.text || "";
       const newTs = String(lastMsg?.timestamp || new Date().toISOString());
 
-      setInbox((prev) =>
-        prev.map((t) =>
-          t.conversationId === selectedConversation
-            ? { ...t, snippet: newSnippet, lastMsgTs: newTs, read: true }
-            : t
-        )
+      return prev.map((t) =>
+        t.conversationId === selectedConversation
+          ? { ...t, snippet: newSnippet, lastMsgTs: newTs, read: true }
+          : t
       );
+    });
 
-      if (message.messageId) {
-        const [a, b] = selectedConversation.replace("dm#", "").split("___");
-        const recipientId = a === userData.userId ? b : a;
-        if (MESSAGES_THREADS_URL) {
-          await apiFetch(MESSAGES_THREADS_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              conversationId: selectedConversation,
-              senderId: userData.userId,
-              recipientId,
-              snippet: newSnippet,
-              timestamp: newTs,
-              preserveRead: true,
-            }),
-          });
-        }
-      }
-
-      if (ws && ws.readyState === WebSocket.OPEN && message.messageId) {
-        const deletePayload = {
-          action: "deleteMessage",
-          conversationType: "dm" as const,
-          conversationId: selectedConversation,
-          messageId: message.messageId,
-        };
-        ws.send(JSON.stringify(normalizeMessage(deletePayload, "deleteMessage")));
-      }
-    } catch (err) {
-      console.error("Failed to delete message", err);
+    // 🔥 WebSocket delete (no REST)
+    if (ws && ws.readyState === WebSocket.OPEN && message.messageId) {
+      const deletePayload = {
+        action: "deleteMessage",
+        conversationType: "dm" as const,
+        conversationId: selectedConversation,
+        messageId: message.messageId,
+      };
+      ws.send(JSON.stringify(normalizeMessage(deletePayload, "deleteMessage")));
     }
   };
 

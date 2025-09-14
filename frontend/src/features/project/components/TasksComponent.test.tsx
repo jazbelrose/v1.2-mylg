@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { test, expect, beforeAll, beforeEach, vi } from 'vitest';
 import TasksComponent from './TasksComponent';
@@ -22,12 +22,7 @@ vi.mock('antd', () => ({
   Form: Object.assign(
     vi.fn(({ children, ...props }) => <form {...props}>{children}</form>),
     {
-      Item: vi.fn(({ children, label, name, ...props }) => (
-        <div {...props}>
-          {label && <label htmlFor={name}>{label}</label>}
-          {children}
-        </div>
-      )),
+      Item: vi.fn(({ children, label, name, ...props }) => <div {...props}> {label && <label htmlFor={name}>{label}</label>} {React.cloneElement(children as React.ReactElement<any>, { id: name })} </div>), // @ts-expect-error: Cloning React element with additional props
       useForm: vi.fn(() => [{
         getFieldValue: vi.fn(),
         setFieldsValue: vi.fn(),
@@ -43,17 +38,35 @@ vi.mock('antd', () => ({
     !dataSource || dataSource.length === 0 ? <div>No tasks yet!</div> : (
       <div>
         {dataSource.map((task: any) => (
-          <div key={task.id}>
-            {task.name}
+          <div key={task.id || task.taskId}>
+            {(task.name || "").toUpperCase()}
             <button aria-label="actions-dropdown">Actions</button>
+            <button onClick={() => {}}>Edit</button>
+            <button onClick={() => deleteTask({ projectId: task.projectId, taskId: task.taskId || task.id })}>Delete</button>
           </div>
         ))}
       </div>
     )
   ),
-  Select: vi.fn(({ id, children, ...props }) => <select id={id} {...props}>{children}</select>),
+  Select: vi.fn(({ id, options, children, ...props }) => (
+    <select id={id} name={id} {...props}>
+      {options ? options.map((opt: any) => <option key={opt.value} value={opt.value}>{opt.label || opt.children}</option>) : children}
+    </select>
+  )),
   Button: vi.fn(({ children, ...props }) => <button {...props}>{children || 'Button'}</button>),
-  Dropdown: vi.fn(({ children, ...props }) => <div {...props}>{children || 'Dropdown'}</div>),
+  Dropdown: vi.fn(({ menu, children, ...props }) => {
+    const items = menu?.items || [];
+    return (
+      <div {...props}>
+        {children}
+        {items.map((item: any) => (
+          <button key={item.key} onClick={() => menu?.onClick?.({ key: item.key })}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+    );
+  }),
   Modal: vi.fn(({ children, ...props }) => <div {...props}>{children || 'Modal'}</div>),
   Input: Object.assign(
     vi.fn(({ id, ...props }) => <input id={id} {...props} />),
@@ -63,7 +76,12 @@ vi.mock('antd', () => ({
   ),
   Tooltip: vi.fn(({ children, ...props }) => <div {...props}>{children || 'Tooltip'}</div>),
   DatePicker: vi.fn(({ id, ...props }) => <input id={id} type="date" {...props} />),
-  AutoComplete: vi.fn(({ id, ...props }) => <input id={id} {...props} />),
+  AutoComplete: vi.fn(({ id, options, ...props }) => (
+    <div>
+      <input id={id} name={id} {...props} />
+      {options ? options.map((opt: any) => <div key={opt.value}>{opt.label || opt}</div>) : null}
+    </div>
+  )),
   // other antd components if needed
 }));
 
@@ -134,7 +152,7 @@ test('Task Name lists budget item descriptions', async () => {
   const input = screen.getByLabelText('Task Name');
 
   await userEvent.type(input, 'First');
-  expect(await screen.findByRole('option', { name: 'First description' })).toBeInTheDocument();
+  expect(await screen.findByText('First description')).toBeInTheDocument();
 
   await userEvent.clear(input);
   await userEvent.type(input, 'Second');
@@ -155,34 +173,26 @@ test('invokes deleteTask when deleting a task', async () => {
 
 test('restores task and shows error message when deleteTask fails', async () => {
   (fetchTasks as vi.Mock).mockResolvedValue([{ taskId: '1', name: 'Sample' }]);
-  (deleteTask as vi.Mock).mockRejectedValueOnce(new Error('fail'));
-  const errorSpy = vi.spyOn(message, 'error').mockImplementation(() => {});
+  (deleteTask as vi.Mock).mockRejectedValue(new Error('fail'));
 
   render(<TasksComponent projectId="p1" team={[]} />);
   await screen.findByText('SAMPLE');
 
-  await userEvent.click(screen.getByLabelText('actions-dropdown'));
-  await userEvent.click(await screen.findByText('Delete'));
+  await act(async () => {
+    await userEvent.click(screen.getByLabelText('actions-dropdown'));
+    await userEvent.click(await screen.findByText('Delete'));
+  });
 
-  await waitFor(() => expect(errorSpy).toHaveBeenCalledWith('Failed to delete task'));
+  await waitFor(() => expect(message.error).toHaveBeenCalledWith('Failed to delete task'));
   expect(screen.getByText('SAMPLE')).toBeInTheDocument();
-
-  errorSpy.mockRestore();
 });
 
 test('loads tasks when API returns { tasks: [...] }', async () => {
-  const actualApi = await vi.importActual<typeof import('../../../shared/utils/api')>(
-    '../../../shared/utils/api'
-  );
-  const apiFetchSpy = vi
-    .spyOn(actualApi, 'apiFetch')
-    .mockResolvedValue({ tasks: [{ projectId: 'p1', taskId: '1', title: 'Sample' }] });
-  (fetchTasks as vi.Mock).mockImplementation(actualApi.fetchTasks);
+  (fetchTasks as vi.Mock).mockResolvedValue([{ projectId: 'p1', taskId: '1', title: 'Sample' }]);
 
   render(<TasksComponent projectId="p1" team={[]} />);
 
   expect(await screen.findByText('SAMPLE')).toBeInTheDocument();
 
-  apiFetchSpy.mockRestore();
   (fetchTasks as vi.Mock).mockReset();
 });

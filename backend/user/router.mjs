@@ -464,6 +464,7 @@ const routes = [
 export async function handler(event) {
   if (M(event) === "OPTIONS") return preflightFromEvent(event);
   const CORS = corsHeadersFromEvent(event);
+  console.log("CORS headers:", CORS);
   const method = M(event);
   const path   = P(event);
 

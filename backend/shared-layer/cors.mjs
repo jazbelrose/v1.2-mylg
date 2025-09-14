@@ -87,7 +87,7 @@ export function corsHeaders(origin) {
     "Access-Control-Allow-Origin": allowOrigin,
     "Vary": "Origin",
     "Access-Control-Allow-Headers":
-      "Content-Type, Authorization, X-Requested-With, X-CSRF-Token, X-Amz-Date, X-Amz-Security-Token, X-Amz-User-Agent",
+      "Content-Type, Authorization, authorization, X-Requested-With, X-CSRF-Token, X-Amz-Date, X-Amz-Security-Token, X-Amz-User-Agent",
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     "Access-Control-Expose-Headers": "Authorization,x-amzn-RequestId,x-amz-apigw-id",
     "Access-Control-Max-Age": "600",
@@ -112,9 +112,11 @@ export function preflightFromEvent(event) {
 
 // Handy JSON response helper (keeps things consistent)
 export function json(statusCode, headers, body) {
-  return {
+  const response = {
     statusCode: String(statusCode),
     headers: { ...headers, "Content-Type": "application/json" },
     body: typeof body === "string" ? body : JSON.stringify(body ?? ""),
   };
+  console.log("Response headers:", response.headers);
+  return response;
 }

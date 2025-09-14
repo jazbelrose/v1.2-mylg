@@ -189,7 +189,7 @@ const Notifications: React.FC<NotificationsProps> = ({
                     value={selectedProjects}
                     onChange={handleProjectFilterChange}
                     options={projectOptions}
-                    popupClassName="project-select-dropdown"
+                    classNames={{ popup: { root: 'project-select-dropdown' } }}
                   />
                 </div>
               )}

@@ -13,6 +13,7 @@ env:
 
   # ---- Users & invites
   USER_PROFILES_TABLE: UserProfiles
+  USER_DIRECTORY_TABLE: UserDirectory
   INVITES_TABLE: ProjectInvitations          # or CollabInvites if that’s the one live
   INVITES_BY_SENDER_INDEX: senderId-index
   INVITES_BY_RECIPIENT_INDEX: recipientId-index

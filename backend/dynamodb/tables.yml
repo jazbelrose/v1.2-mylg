@@ -377,3 +377,20 @@ Resources:
         SSEEnabled: true
         SSEType: KMS
         KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
+  UserDirectory:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    Properties:
+      TableName: UserDirectory
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: directoryId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: directoryId
+          AttributeType: S
+      TableClass: STANDARD
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7

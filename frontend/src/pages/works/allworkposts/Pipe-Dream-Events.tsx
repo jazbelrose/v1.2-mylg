@@ -6,9 +6,9 @@ import ReactModal from "react-modal";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useScrollContext } from "../../../app/contexts/useScrollContext";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 gsap.registerPlugin(ScrollTrigger); // Register ScrollTrigger plugin
 
@@ -289,13 +289,13 @@ const PipedDreamEvents = () => {
         </div>
 
         <div className="workpage-heading">
-          <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/pipedreameventsheader.svg" onReady={() => setSvgReady(true)} />
+          <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/pipedreameventsheader.svg" onReady={() => setSvgReady(true)} />
         </div>
         <div className="rendering-layout">
-            <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row1.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
+            <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row1.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
 
-            <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row2.svg" className="rendering-row" />
-            <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row3.svg" className="rendering-row" />
+            <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row2.svg" className="rendering-row" />
+            <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row3.svg" className="rendering-row" />
 
           <div className="rendering-row-video">
             <div className="bb-video-container">
@@ -317,7 +317,7 @@ const PipedDreamEvents = () => {
             </div>
           </div>
 
-            <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row4.svg" className="rendering-row" />
+            <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row4.svg" className="rendering-row" />
 
           <div className="rendering-row-video">
             <div className="bb-video-container">
@@ -378,7 +378,7 @@ const PipedDreamEvents = () => {
             </div>
           </div>
 
-            <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row5.svg" className="rendering-row" />
+            <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row5.svg" className="rendering-row" />
 
           <div className="rendering-row-video">
             <div className="bb-video-container">
@@ -431,7 +431,7 @@ const PipedDreamEvents = () => {
             </div>
           </div>
 
-            <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row6.svg" className="rendering-row" />
+            <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/row6.svg" className="rendering-row" />
 
           <div className="rendering-row-img">
             <div className="img-container ">

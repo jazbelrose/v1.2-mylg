@@ -8,13 +8,13 @@ import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 
-import Ticker from "../../../shared/ui/ticker";
+import Ticker from "../../../shared/ui/Ticker";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 const ElfMakeUpHollywoodBowl = () => {
@@ -331,7 +331,7 @@ const ElfMakeUpHollywoodBowl = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup-hollywood-bowl/elfmakeuphollywoodbowlheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup-hollywood-bowl/elfmakeuphollywoodbowlheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             
             <div className="rendering-layout">
@@ -342,8 +342,8 @@ const ElfMakeUpHollywoodBowl = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup-hollywood-bowl/row0.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup-hollywood-bowl/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup-hollywood-bowl/row0.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup-hollywood-bowl/row1.svg" className="rendering-row" />
 
                 <div className="rendering-row-img">
 
@@ -411,7 +411,7 @@ const ElfMakeUpHollywoodBowl = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup-hollywood-bowl/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup-hollywood-bowl/row2.svg" className="rendering-row" />
 
 
 

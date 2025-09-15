@@ -5,10 +5,10 @@ import { gsap } from "gsap";
 import "./workpage.css";
 
 import works from '../works.json';
-import BlogPostButton from "../../../shared/ui/blogpostbutton";
+import BlogPostButton from "../../../shared/ui/BlogPostButton";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import SingleTicker from "../../../shared/ui/SingleTicker";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 interface WorkItem {
     id: number | string;
@@ -154,7 +154,7 @@ const Logitech = () => {
 
             <div className="works">
                 <div className="workpage-heading">
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/logitechheader.svg" onReady={() => setSvgReady(true)} />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/logitechheader.svg" onReady={() => setSvgReady(true)} />
                 </div>
                 <div className="rendering-layout">
 
@@ -163,8 +163,8 @@ const Logitech = () => {
 
 
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row0.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row1.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row0.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row1.svg" className="rendering-row" />
 
                     <div className="rendering-row-img">
 
@@ -221,7 +221,7 @@ const Logitech = () => {
 
                     </div>
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row2.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row2.svg" className="rendering-row" />
 
 
 
@@ -239,7 +239,7 @@ const Logitech = () => {
                     </div>
 
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row3.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row3.svg" className="rendering-row" />
                     <div className="rendering-row-img">
 
                         <div className="img-container ">
@@ -305,7 +305,7 @@ const Logitech = () => {
 
 
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row4.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/logitech/row4.svg" className="rendering-row" />
 
 
 

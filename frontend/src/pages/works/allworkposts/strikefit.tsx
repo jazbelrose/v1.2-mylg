@@ -6,9 +6,9 @@ import "./workpage.css";
 import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 
 
@@ -312,7 +312,7 @@ const StrikeFit = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/strikefit-header.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/strikefit-header.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -320,7 +320,7 @@ const StrikeFit = () => {
 
 
 
-                <InlineSvg
+                <InlineSVG
                     src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row1.svg"
                     className="rendering-row"
                     onClick={() => openModal(9)}
@@ -349,14 +349,14 @@ const StrikeFit = () => {
                 </div>
 
 
-                <InlineSvg
+                <InlineSVG
                     src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row3.svg"
                     className="rendering-row"
                 />
 
 
 
-                <InlineSvg
+                <InlineSVG
                     src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row4.svg"
                     className="rendering-row"
                     onClick={() => openModal(12)}
@@ -386,9 +386,9 @@ const StrikeFit = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row5.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row6.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row7.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row5.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row6.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row7.svg" className="rendering-row" />
 
 
                 <div className="rendering-row-img">
@@ -429,7 +429,7 @@ const StrikeFit = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row9.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row9.svg" className="rendering-row" />
 
 
 
@@ -477,7 +477,7 @@ const StrikeFit = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row10.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/strikefit/row10.svg" className="rendering-row" />
 
 
 

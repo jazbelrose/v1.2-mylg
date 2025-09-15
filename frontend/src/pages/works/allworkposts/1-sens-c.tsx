@@ -9,11 +9,11 @@ import senscData from './1-sens-c.json';
 
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal"; // Import ReactModal
 import { useScrollContext } from "@/app/contexts/useScrollContext";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -271,7 +271,7 @@ const SensC = () => {
 
 
         <div className="workpage-heading">
-                    <InlineSvg
+                    <InlineSVG
             src="https://d2qb21tb4meex0.cloudfront.net/svg/1sensc/1senscheader.svg"
             onReady={() => setSvgReady(true)}
           />

@@ -10,12 +10,12 @@ import { useScrollContext } from "../../../app/contexts/useScrollContext";
 
 
 
-import Ticker from "../../../shared/ui/ticker";
+import Ticker from "../../../shared/ui/Ticker";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 const GhostCircusApparel = () => {
 
@@ -338,7 +338,7 @@ const GhostCircusApparel = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/ghostcircusapparelheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/ghostcircusapparelheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -355,7 +355,7 @@ const GhostCircusApparel = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row1.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row1.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
 
 
 
@@ -416,7 +416,7 @@ const GhostCircusApparel = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row2.svg" className="rendering-row" />
 
                 <div className="rendering-row-img">
 
@@ -492,8 +492,8 @@ const GhostCircusApparel = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row3.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row4.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row3.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row4.svg" className="rendering-row" />
 
                 <div className="rendering-row-img" style={{ paddingTop: "5vw" }}>
 
@@ -505,7 +505,7 @@ const GhostCircusApparel = () => {
 
 
                 </div>
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row5.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row5.svg" className="rendering-row" />
 
 
 
@@ -555,8 +555,8 @@ const GhostCircusApparel = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row6.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row7.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row6.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/ghostcircusapparel/row7.svg" className="rendering-row" />
 
 
 

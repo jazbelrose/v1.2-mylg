@@ -8,11 +8,11 @@ import jewelieStarkData from './Jewelie-Stark.json';
 
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal"; // Import ReactModal
 import { useScrollContext } from "@/app/contexts/useScrollContext";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 const JewelieStark = () => {
@@ -268,7 +268,7 @@ const JewelieStark = () => {
 
 
         <div className="workpage-heading">
-          <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/jeweliestark.svg" onReady={() => setSvgReady(true)} />
+          <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/jeweliestark.svg" onReady={() => setSvgReady(true)} />
         </div>
 
         <div className="container-restricted">

@@ -8,15 +8,15 @@ import ReactModal from "react-modal";
 import { useScrollContext } from "../../../app/contexts/useScrollContext";
 
 import works from '../works.json';
-import BlogPostButton from "../../../shared/ui/blogpostbutton";
+import BlogPostButton from "../../../shared/ui/BlogPostButton";
 
 
-import Ticker from "../../../shared/ui/ticker";
+import Ticker from "../../../shared/ui/Ticker";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -330,7 +330,7 @@ const { opacity } = useData();
 
             
                 <div className="workpage-heading">
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/gucci/gucciheader.svg" onReady={() => setSvgReady(true)} />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/gucci/gucciheader.svg" onReady={() => setSvgReady(true)} />
                 </div>
                 <div className="rendering-layout">
 
@@ -339,8 +339,8 @@ const { opacity } = useData();
 
 
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/gucci/row0.svg" className="rendering-row" />
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/gucci/row1.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/gucci/row0.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/gucci/row1.svg" className="rendering-row" />
 
 
                     <div className="rendering-row-img">

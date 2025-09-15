@@ -7,12 +7,12 @@ import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 import works from '../works.json';
-import BlogPostButton from "../../../shared/ui/blogpostbutton";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import BlogPostButton from "../../../shared/ui/BlogPostButton";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 import { useData } from "@/app/contexts/useData";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 
 
@@ -284,7 +284,7 @@ const KmTour = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/kmtourheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/kmtourheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -293,8 +293,8 @@ const KmTour = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row0.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row0.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row1.svg" className="rendering-row" />
 
 
 
@@ -357,7 +357,7 @@ const KmTour = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row2.svg" className="rendering-row" />
 
                 <div className="rendering-row-img">
 
@@ -375,7 +375,7 @@ const KmTour = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row3.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row3.svg" className="rendering-row" />
 
                 <div className="rendering-row-img">
 
@@ -456,7 +456,7 @@ const KmTour = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row4.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/kmtour/row4.svg" className="rendering-row" />
 
 
 

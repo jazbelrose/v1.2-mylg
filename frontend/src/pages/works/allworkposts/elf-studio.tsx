@@ -8,12 +8,12 @@ import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 
 
-import Ticker from "../../../shared/ui/ticker";
+import Ticker from "../../../shared/ui/Ticker";
 import Slideshow from "../../../shared/ui/slideShow";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 const Elfstudio = () => {
 
@@ -347,7 +347,7 @@ useEffect(() => {
 
             
                 <div className="workpage-heading">
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/elf-studio-header.svg" onReady={() => setSvgReady(true)} />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/elf-studio-header.svg" onReady={() => setSvgReady(true)} />
                 </div>
                 <div className="rendering-layout">
                     <div className="rendering-row-img">
@@ -357,11 +357,11 @@ useEffect(() => {
                     </div>
 
                     <div className="img-container ">
-                        <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/row1.svg" className="rendering-row" />
+                        <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/row1.svg" className="rendering-row" />
                     </div>
 
                     <div className="img-container ">
-                        <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/row2.svg" className="rendering-row" style={{ padding: '10px' }} />
+                        <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/row2.svg" className="rendering-row" style={{ padding: '10px' }} />
                     </div>
 
                     <div className="img-container yt-container">
@@ -385,7 +385,7 @@ useEffect(() => {
                     </div>
 
                     <div className="img-container ">
-                        <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/row3.svg" className="rendering-row" style={{ padding: '10px' }} />
+                        <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/row3.svg" className="rendering-row" style={{ padding: '10px' }} />
                     </div>
 
                     <div className="rendering-row-img">
@@ -442,7 +442,7 @@ useEffect(() => {
 
                 <div className="rendering-layout">
                     <div className="img-container ">
-                        <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/row4.svg" className="rendering-row" style={{ padding: '10px' }} />
+                        <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-studio/row4.svg" className="rendering-row" style={{ padding: '10px' }} />
                     </div>
 
                     <div className="rendering-row-img">

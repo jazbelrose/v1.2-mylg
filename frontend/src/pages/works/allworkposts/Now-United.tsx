@@ -9,7 +9,7 @@ import { Helmet } from "react-helmet-async";
 
 
 import works from '../works.json';
-import BlogPostButton from "../../../shared/ui/blogpostbutton";
+import BlogPostButton from "../../../shared/ui/BlogPostButton";
 
 
 import { useData } from "@/app/contexts/useData";
@@ -18,8 +18,8 @@ import { useData } from "@/app/contexts/useData";
 
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import SingleTicker from "../../../shared/ui/SingleTicker";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -367,7 +367,7 @@ const Barebells = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/Now-united-header.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/Now-united-header.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout" style={{ overflow: 'visible' }}>
 
@@ -388,9 +388,9 @@ const Barebells = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row1.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row2.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row3.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row3.svg" className="rendering-row" />
 
                 <div className="masonry-wrapper">
                     <div className="masonry-nu">
@@ -484,7 +484,7 @@ const Barebells = () => {
                     </div>
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row4.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row4.svg" className="rendering-row" />
 
                 <div className="rendering-row-img">
 
@@ -498,7 +498,7 @@ const Barebells = () => {
 
 
                 </div>
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row5.svg" className="rendering-row" style={{ paddingTop: '20px', paddingLeft: '5px' }} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row5.svg" className="rendering-row" style={{ paddingTop: '20px', paddingLeft: '5px' }} />
 
                 <div className="rendering-row-img">
 
@@ -588,7 +588,7 @@ const Barebells = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row6.svg" className="rendering-row" style={{ paddingTop: '20px', paddingLeft: '5px' }} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row6.svg" className="rendering-row" style={{ paddingTop: '20px', paddingLeft: '5px' }} />
 
 
                 <div className="rendering-row-img">
@@ -657,7 +657,7 @@ const Barebells = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row7.svg" className="rendering-row" style={{ paddingTop: '20px', paddingLeft: '5px' }} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Now-United/row7.svg" className="rendering-row" style={{ paddingTop: '20px', paddingLeft: '5px' }} />
 
                 <div className="rendering-row-img">
 

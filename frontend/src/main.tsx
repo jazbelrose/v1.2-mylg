@@ -7,6 +7,7 @@ import { ConfigProvider } from 'antd';
 
 import awsConfig from './aws-exports'; // Ensure aws-exports.js exists and is typed
 import App from './app/App';
+import { initSquircleObserver } from './shared/ui/squircle';
 
 import 'antd/dist/reset.css';
 
@@ -23,6 +24,9 @@ const rootElement = document.getElementById('root')!;
 Modal.setAppElement(rootElement);
 
 const root = ReactDOM.createRoot(rootElement);
+
+// Initialize squircle observer for CSS class utilities
+initSquircleObserver();
 
 root.render(
   <React.StrictMode>

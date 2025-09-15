@@ -220,7 +220,7 @@ export function Login() {
       <div className={`${opacityClass} ${styles.authPage}`}>
         {isLoading && <SpinnerOverlay />}
 
-        <div className={styles.authCard}>
+        <div className={`${styles.authCard} squircle`}>
           <div className={styles.wordmark}>*MYLG!*</div>
           <h1 className={styles.authTitle}>Sign in</h1>
           <p className={styles.authSubtitle}>

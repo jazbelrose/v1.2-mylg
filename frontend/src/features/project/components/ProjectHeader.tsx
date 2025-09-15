@@ -12,6 +12,7 @@ import "./project-header.css";
 import Cropper, { Area } from "react-easy-crop";
 import "react-easy-crop/react-easy-crop.css";
 import Modal from "@/shared/ui/ModalWithStack";
+import { Squircle } from "@/shared/ui/squircle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faPen } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -1241,11 +1242,11 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           <div
             style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
           >
-            <div
+            <Squircle
+              radius={20}
               style={{
                 width: "150px",
                 height: "150px",
-                borderRadius: "20px",
                 border: thumbnailPreview
                   ? "none"
                   : `2px dashed ${isThumbDragging ? "#FA3356" : "#ccc"}`,
@@ -1303,7 +1304,6 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                     alignItems: "center",
                     justifyContent: "center",
                     pointerEvents: "none",
-                    borderRadius: "20px",
                   }}
                 >
                   Drop to upload
@@ -1322,7 +1322,6 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: "20px",
                   }}
                 >
                   <div className="dot-loader">
@@ -1332,7 +1331,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                   </div>
                 </div>
               )}
-            </div>
+            </Squircle>
 
             {thumbnailPreview && (
               <input

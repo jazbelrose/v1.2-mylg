@@ -30,6 +30,9 @@
 
 @import './components/blog-row-layouts.css';
 
+/* Squircle Utilities */
+@import '../ui/squircle/squircle.css';
+
 /* Marketing Page Styles */
 @import './marketing/index.css';
 

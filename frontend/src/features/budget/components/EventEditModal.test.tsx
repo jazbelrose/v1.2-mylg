@@ -3,6 +3,32 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, test, expect, beforeAll } from "vitest";
 import EventEditModal from "./EventEditModal";
 import Modal from "../../../shared/ui/ModalWithStack";
+import { BudgetProvider } from "../context/BudgetProvider";
+
+// Mock the hooks that BudgetProvider depends on
+vi.mock("../../../app/contexts/useSocket", () => ({
+  useSocket: vi.fn(() => ({
+    ws: null,
+  })),
+}));
+
+vi.mock("../../../app/contexts/useData", () => ({
+  useData: vi.fn(() => ({
+    user: { firstName: "Test User" },
+    userId: "test-user-id",
+  })),
+}));
+
+vi.mock("../context/useBudget", () => ({
+  default: vi.fn(() => ({
+    budgetHeader: { projectTitle: "Test Project", revision: 1 },
+    budgetItems: [],
+    setBudgetHeader: vi.fn(),
+    setBudgetItems: vi.fn(),
+    refresh: vi.fn(() => Promise.resolve(null)),
+    loading: false,
+  })),
+}));
 
 beforeAll(() => {
   const root = document.createElement("div");
@@ -13,15 +39,17 @@ beforeAll(() => {
 
 test("uses last event date as default after adding", () => {
   render(
-    <EventEditModal
-      isOpen={true}
-      onRequestClose={() => {}}
-      projectId="p1"
-      budgetItemId="LINE-1"
-      events={[]}
-      defaultDate="2024-05-01"
-      defaultDescription=""
-    />
+    <BudgetProvider projectId="p1">
+      <EventEditModal
+        isOpen={true}
+        onRequestClose={() => {}}
+        projectId="p1"
+        budgetItemId="LINE-1"
+        events={[]}
+        defaultDate="2024-05-01"
+        defaultDescription=""
+      />
+    </BudgetProvider>
   );
 
   const dateInput = screen.getByLabelText(/event date/i) as HTMLInputElement;
@@ -43,17 +71,19 @@ test("uses last event date as default after adding", () => {
 
 test("displays event description for existing events", () => {
   render(
-    <EventEditModal
-      isOpen={true}
-      onRequestClose={() => {}}
-      projectId="p1"
-      budgetItemId="LINE-1"
-      events={[
-        { id: "1", date: "2024-05-01", hours: 2, description: "Setup" },
-      ]}
-      defaultDate="2024-05-01"
-      defaultDescription=""
-    />
+    <BudgetProvider projectId="p1">
+      <EventEditModal
+        isOpen={true}
+        onRequestClose={() => {}}
+        projectId="p1"
+        budgetItemId="LINE-1"
+        events={[
+          { id: "1", date: "2024-05-01", hours: 2, description: "Setup" },
+        ]}
+        defaultDate="2024-05-01"
+        defaultDescription=""
+      />
+    </BudgetProvider>
   );
 
   expect(screen.getByText("Setup")).toBeInTheDocument();

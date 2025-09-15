@@ -4,11 +4,6 @@ import Modal from 'react-modal';
 import '@/features/dashboard/pages/dashboard-styles.css';
 import useModalStack from '@/shared/utils/useModalStack';
 
-if (typeof document !== 'undefined') {
-  const el = document.getElementById('root');
-  if (el) Modal.setAppElement(el);
-}
-
 type ClassState = {
   base: string;
   afterOpen: string;

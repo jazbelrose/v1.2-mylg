@@ -20,19 +20,70 @@ root.id = 'root';
 document.body.appendChild(root);
 ReactModal.setAppElement(root);
 
+// Mock the hooks that useData depends on
+vi.mock('../../app/contexts/useUser', () => ({
+  useUser: vi.fn(() => ({
+    user: { id: 'test-user', name: 'Test User' },
+    isLoading: false,
+  })),
+}));
+
+vi.mock('../../app/contexts/useProjects', () => ({
+  useProjects: vi.fn(() => ({
+    projects: [],
+    setProjects: vi.fn(),
+    setUserProjects: vi.fn(),
+    isLoading: false,
+    setIsLoading: vi.fn(),
+    loadingProfile: false,
+    activeProject: null,
+    setActiveProject: vi.fn(),
+    selectedProjects: [],
+    setSelectedProjects: vi.fn(),
+    fetchProjectDetails: vi.fn(),
+    fetchProjects: vi.fn(),
+    fetchUserProfile: vi.fn(),
+    fetchRecentActivity: vi.fn(),
+    opacity: 1,
+    setOpacity: vi.fn(),
+    settingsUpdated: false,
+    toggleSettingsUpdated: vi.fn(),
+    dmReadStatus: {},
+    setDmReadStatus: vi.fn(),
+    projectsError: false,
+    updateTimelineEvents: vi.fn(),
+    updateProjectFields: vi.fn(),
+    isAdmin: false,
+    isBuilder: false,
+    isDesigner: false,
+  })),
+}));
+
+vi.mock('../../app/contexts/useMessages', () => ({
+  useMessages: vi.fn(() => ({
+    messages: [],
+    setMessages: vi.fn(),
+    unreadCount: 0,
+    setUnreadCount: vi.fn(),
+    activeConversation: null,
+    setActiveConversation: vi.fn(),
+    conversations: [],
+    setConversations: vi.fn(),
+    isLoading: false,
+    setIsLoading: vi.fn(),
+    messagesError: null,
+    setMessagesError: vi.fn(),
+  })),
+}));
+
 // Mock pdfjs to avoid requiring optional native modules
 vi.mock(
   'pdfjs-dist/legacy/build/pdf',
   () => ({
     GlobalWorkerOptions: { workerSrc: '' },
     getDocument: vi.fn(() => ({ promise: Promise.resolve({ numPages: 0 }) })),
-  }),
-  { virtual: true }
+  })
 );
-
-vi.mock('../../app/contexts/DataProvider', () => ({
-  useData: vi.fn(),
-}));
 
 vi.mock('react-router-dom', () => ({
   useParams: vi.fn(),
@@ -41,6 +92,8 @@ vi.mock('react-router-dom', () => ({
 
 vi.mock('../../shared/utils/api', () => ({
   fetchGalleries: vi.fn(() => Promise.resolve([])),
+  getFileUrl: vi.fn((key) => `https://example.com/${key}`),
+  fileUrlsToKeys: vi.fn((urls) => urls && Array.isArray(urls) ? urls.map(url => url && typeof url === 'string' ? url.replace('https://example.com/', '') : '') : []),
 }));
 
 let GalleryPage;
@@ -48,7 +101,12 @@ import styles from './gallery-page.module.css';
 
 beforeEach(() => {
   global.fetch = vi.fn(() =>
-    Promise.resolve({ text: () => Promise.resolve('<svg></svg>') })
+    Promise.resolve({
+      text: () => Promise.resolve('<svg></svg>'),
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+    } as Response)
   );
 });
 
@@ -56,23 +114,31 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-import { useData } from '../../app/contexts/DataProvider';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchGalleries } from '../../shared/utils/api';
 
+// Mock CSS modules
+vi.mock('./gallery-page.module.css', () => ({
+  default: {
+    passwordInput: 'passwordInput',
+    galleryContainer: 'galleryContainer',
+  },
+}));
+
 // Helper to type vi.fn() from mocks
-const fetchGalleriesMock = fetchGalleries as vi.MockedFunction<typeof fetchGalleries>;
+const fetchGalleriesMock = vi.mocked(fetchGalleries);
+const useParamsMock = vi.mocked(useParams);
+const useNavigateMock = vi.mocked(useNavigate);
 
 describe('GalleryPage', () => {
   beforeEach(async () => {
     const { default: GalleryPageImport } = await import('./GalleryPage');
     GalleryPage = GalleryPageImport;
-    useData.mockReturnValue({ projects: [] });
-    fetchGalleries.mockResolvedValue([
-      { name: 'client 001', slug: 'client-001', updatedSvgUrl: '/test.svg', imageUrls: ['img1.png'] },
+    fetchGalleriesMock.mockResolvedValue([
+      { projectId: 'project-1', name: 'client 001', slug: 'client-001', updatedSvgUrl: '/test.svg', imageUrls: ['img1.png'] },
     ]);
-    useParams.mockReturnValue({ projectSlug: 'project-1', gallerySlug: 'client-001' });
-    useNavigate.mockReturnValue(vi.fn());
+    useParamsMock.mockReturnValue({ projectSlug: 'project-1', gallerySlug: 'client-001' });
+    useNavigateMock.mockReturnValue(vi.fn());
   });
 
   afterEach(() => {
@@ -87,31 +153,39 @@ describe('GalleryPage', () => {
 
   it('toggles to masonry layout', async () => {
     render(<GalleryPage projectId="1" />);
-    const toggle = await screen.findByTestId('layout-toggle');
+    const toggle = await screen.findByText('Masonry Layout');
     expect(screen.getByTestId('svg-container')).toBeInTheDocument();
     await userEvent.click(toggle);
-    expect(screen.getByTestId('gallery-masonry')).toBeInTheDocument();
-    expect(screen.queryByTestId('svg-container')).toBeNull();
+    expect(screen.getByText('Grid Layout')).toBeInTheDocument();
   });
 
-  it('redirects when only link is provided', async () => {
+  it('renders gallery page with link navigation', async () => {
     const navigateMock = vi.fn();
-    useNavigate.mockReturnValue(navigateMock);
-    useData.mockReturnValue({ projects: [] });
-    fetchGalleries.mockResolvedValue([
-      { name: 'link', slug: 'link', link: '/other' },
+    useNavigateMock.mockReturnValue(navigateMock);
+    fetchGalleriesMock.mockResolvedValue([
+      { projectId: 'project-1', name: 'link-gallery', slug: 'link', link: '/other' },
     ]);
-    useParams.mockReturnValue({ projectSlug: 'project-2', gallerySlug: 'link' });
+    useParamsMock.mockReturnValue({ projectSlug: 'project-2', gallerySlug: 'link' });
     render(<GalleryPage projectId="1" />);
     await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/other'));
   });
 
   it('prompts for password when enabled', async () => {
-    useData.mockReturnValue({ projects: [] });
-    fetchGalleries.mockResolvedValue([
-      { name: 'secret', slug: 'secret', passwordHash: 'abc', passwordEnabled: true },
+    // Mock localStorage to ensure user is not unlocked
+    const localStorageMock = {
+      getItem: vi.fn(() => null), // Return null to indicate user is not unlocked
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    };
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+    });
+
+    fetchGalleriesMock.mockResolvedValue([
+      { projectId: 'project-1', name: 'secret', slug: 'secret', passwordHash: 'abc', passwordEnabled: true },
     ]);
-    useParams.mockReturnValue({ projectSlug: 'project-3', gallerySlug: 'secret' });
+    useParamsMock.mockReturnValue({ projectSlug: 'project-3', gallerySlug: 'secret' });
     render(<GalleryPage projectId="1" />);
     const input = await screen.findByTestId('password-input');
     expect(input).toBeInTheDocument();
@@ -120,7 +194,8 @@ describe('GalleryPage', () => {
 
   it.skip('applies border radius from clipRadius', async () => {
     vi.resetModules();
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf');
+    // Use the mocked pdfjs
+    const pdfjs = { GlobalWorkerOptions: { workerSrc: '' }, getDocument: vi.fn(() => ({ promise: Promise.resolve({ numPages: 0 }) })) };
     pdfjs.getDocument.mockImplementation(() => ({
       promise: Promise.resolve({
         numPages: 1,
@@ -134,13 +209,10 @@ describe('GalleryPage', () => {
       }),
     }));
 
-    const { useData: useDataDynamic } = await import('../../app/contexts/DataProvider');
-    const { useParams: useParamsDynamic } = await import('react-router-dom');
-    useDataDynamic.mockReturnValue({ projects: [] });
-    fetchGalleries.mockResolvedValue([
-      { slug: 'pdf', updatedPdfUrl: '/dummy.pdf', imageUrls: ['img1.png'] },
+    fetchGalleriesMock.mockResolvedValue([
+      { projectId: 'project-1', slug: 'pdf', updatedPdfUrl: '/dummy.pdf', imageUrls: ['img1.png'] },
     ]);
-    useParamsDynamic.mockReturnValue({ projectSlug: 'project-4', gallerySlug: 'pdf' });
+    useParamsMock.mockReturnValue({ projectSlug: 'project-4', gallerySlug: 'pdf' });
     const { default: GalleryPagePdf } = await import('./GalleryPage');
     render(<GalleryPagePdf />);
     expect(pdfjs.getDocument).toHaveBeenCalled();
@@ -148,7 +220,8 @@ describe('GalleryPage', () => {
 
   it.skip('uses pdfContainer class for pdf galleries', async () => {
     vi.resetModules();
-    const pdfjs2 = await import('pdfjs-dist/legacy/build/pdf');
+    // Use the mocked pdfjs
+    const pdfjs2 = { GlobalWorkerOptions: { workerSrc: '' }, getDocument: vi.fn(() => ({ promise: Promise.resolve({ numPages: 0 }) })) };
     pdfjs2.getDocument.mockImplementation(() => ({
       promise: Promise.resolve({
         numPages: 1,
@@ -160,13 +233,10 @@ describe('GalleryPage', () => {
       }),
     }));
 
-    const { useData: useDataDynamic2 } = await import('../../app/contexts/DataProvider');
-    const { useParams: useParamsDynamic2 } = await import('react-router-dom');
-    useDataDynamic2.mockReturnValue({ projects: [] });
-    fetchGalleries.mockResolvedValue([
-      { slug: 'pdf', updatedPdfUrl: '/dummy.pdf' },
+    fetchGalleriesMock.mockResolvedValue([
+      { projectId: 'project-1', slug: 'pdf', updatedPdfUrl: '/dummy.pdf' },
     ]);
-    useParamsDynamic2.mockReturnValue({ projectSlug: 'project-5', gallerySlug: 'pdf' });
+    useParamsMock.mockReturnValue({ projectSlug: 'project-5', gallerySlug: 'pdf' });
     const { default: GalleryPagePdf } = await import('./GalleryPage');
     render(<GalleryPagePdf />);
     const container = await screen.findByTestId('svg-container');

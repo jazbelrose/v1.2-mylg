@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Search, X, FileText, FolderOpen, MessageSquare } from 'lucide-react';
+import { Search, X, FileText, FolderOpen, MessageSquare, User } from 'lucide-react';
 import { useData } from '@/app/contexts/useData';
 import { useNavigate } from 'react-router-dom';
 import { slugify } from '@/shared/utils/slug';
-import type { Project, Message } from '@/app/contexts/DataProvider';
+import type { Project, Message, UserLite } from '@/app/contexts/DataProvider';
 import { getFileUrl } from '@/shared/utils/api';
+import type { AppUser } from '@/features/messages/types';
+import { getUserDisplayName, getUserThumbnail } from '@/features/messages/utils/userHelpers';
 import SVGThumbnail from './SvgThumbnail';
 
 interface HighlightPart {
@@ -14,12 +16,13 @@ interface HighlightPart {
 
 interface SearchResult {
   id: string;
-  type: 'project' | 'message';
+  type: 'project' | 'message' | 'collaborator';
   title: string;
   subtitle?: string;
   description?: string;
   projectId?: string;
   messageId?: string;
+  userId?: string;
   snippet?: string;
   excerpt?: string;
   thumbnailUrl?: string;
@@ -202,6 +205,115 @@ const getProjectThumbnail = (project: Project) => {
   }
 };
 
+const normalizeLabel = (value?: string | null) => {
+  if (!value) return undefined;
+  return toSingleLine(
+    String(value)
+      .split(/[-_\s]+/)
+      .filter(Boolean)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+  ) || undefined;
+};
+
+const buildCollaboratorResults = (
+  rawQuery: string,
+  allUsers: UserLite[],
+  currentUser: UserLite | null | undefined,
+  isAdmin: boolean
+): SearchResult[] => {
+  if (!Array.isArray(allUsers) || allUsers.length === 0) {
+    return [];
+  }
+
+  const mentionQuery = rawQuery.replace(/^@+/, '').trim();
+  const normalizedMention = mentionQuery.toLowerCase();
+  const currentUserId = currentUser?.userId;
+  const collaboratorIds = new Set(
+    Array.isArray(currentUser?.collaborators)
+      ? currentUser.collaborators.filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+      : []
+  );
+
+  const eligibleMap = new Map<string, UserLite>();
+
+  for (const user of allUsers) {
+    if (!user || typeof user.userId !== 'string') continue;
+    if (user.userId === currentUserId) continue;
+
+    const normalizedRole = typeof user.role === 'string' ? user.role.toLowerCase() : '';
+    const canMessage =
+      isAdmin ||
+      collaboratorIds.has(user.userId) ||
+      normalizedRole === 'admin';
+
+    if (!canMessage) continue;
+
+    if (!eligibleMap.has(user.userId)) {
+      eligibleMap.set(user.userId, user);
+    }
+  }
+
+  const eligibleUsers = Array.from(eligibleMap.values()).filter(user => {
+    if (!normalizedMention) return true;
+
+    const displayName = getUserDisplayName(user as AppUser).toLowerCase();
+    const email = typeof user.email === 'string' ? user.email.toLowerCase() : '';
+    const username = typeof user.username === 'string' ? user.username.toLowerCase() : '';
+    const company = typeof user.company === 'string' ? user.company.toLowerCase() : '';
+    const occupation = typeof user.occupation === 'string' ? user.occupation.toLowerCase() : '';
+    const role = typeof user.role === 'string' ? user.role.toLowerCase() : '';
+
+    return (
+      displayName.includes(normalizedMention) ||
+      email.includes(normalizedMention) ||
+      username.includes(normalizedMention) ||
+      company.includes(normalizedMention) ||
+      occupation.includes(normalizedMention) ||
+      role.includes(normalizedMention)
+    );
+  });
+
+  eligibleUsers.sort((a, b) =>
+    getUserDisplayName(a as AppUser).localeCompare(getUserDisplayName(b as AppUser))
+  );
+
+  return eligibleUsers.map(user => {
+    const displayName = getUserDisplayName(user as AppUser);
+    const roleLabel = normalizeLabel(user.occupation) || normalizeLabel(user.role);
+    const company = typeof user.company === 'string' ? user.company.trim() : '';
+    const email = typeof user.email === 'string' ? user.email.trim() : '';
+    const detailParts = [roleLabel, company, email].filter(
+      (part, index, arr) => part && arr.indexOf(part) === index
+    ) as string[];
+
+    const thumbnailKey = getUserThumbnail(user as AppUser) || undefined;
+    let thumbnailUrl: string | undefined;
+
+    if (thumbnailKey) {
+      try {
+        thumbnailUrl = getFileUrl(thumbnailKey);
+      } catch (error) {
+        console.warn('Failed to resolve collaborator thumbnail URL', error);
+      }
+    }
+
+    const initial = displayName.trim().charAt(0).toUpperCase() || '#';
+
+    return {
+      id: `collaborator-${user.userId}`,
+      type: 'collaborator' as const,
+      title: displayName,
+      subtitle: 'Start a direct message',
+      snippet: detailParts.length > 0 ? detailParts.join(' · ') : undefined,
+      userId: user.userId,
+      thumbnailUrl,
+      thumbnailInitial: initial,
+      highlightParts: mentionQuery ? buildHighlightParts(displayName, mentionQuery) : undefined,
+    };
+  });
+};
+
 interface GlobalSearchProps {
   className?: string;
 }
@@ -226,6 +338,9 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
   const fetchProjectDetails = data?.fetchProjectDetails as
     | ((projectId: string) => Promise<unknown>)
     | undefined;
+  const userData = (data?.userData ?? null) as UserLite | null;
+  const allUsers = (Array.isArray(data?.allUsers) ? data.allUsers : []) as UserLite[];
+  const isAdmin = Boolean((data as { isAdmin?: boolean })?.isAdmin);
 
   // Close search when clicking outside
   useEffect(() => {
@@ -267,16 +382,30 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
 
   // Search function
   const performSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
+    const trimmedQuery = searchQuery.trim();
+    if (!trimmedQuery) {
       setResults([]);
       return;
     }
 
     setLoading(true);
     const searchResults: SearchResult[] = [];
-    const normalizedQuery = searchQuery.toLowerCase().trim();
+    const isMentionSearch = trimmedQuery.startsWith('@');
 
     try {
+      if (isMentionSearch) {
+        const collaboratorResults = buildCollaboratorResults(
+          trimmedQuery,
+          allUsers,
+          userData,
+          isAdmin
+        );
+        setResults(collaboratorResults.slice(0, 10));
+        return;
+      }
+
+      const normalizedQuery = trimmedQuery.toLowerCase();
+
       // Search projects
       if (projects && Array.isArray(projects)) {
         projects.forEach((project: Project) => {
@@ -306,7 +435,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
               statusClassName: statusMeta.statusClassName,
               dueDate: project.finishline,
               dueDateLabel: dueDateLabel,
-              highlightParts: buildHighlightParts(project.title || 'Untitled Project', searchQuery),
+              highlightParts: buildHighlightParts(project.title || 'Untitled Project', trimmedQuery),
             });
           }
         });
@@ -342,7 +471,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
                   snippet,
                   projectId,
                   messageId: message.messageId || message.optimisticId,
-                  highlightParts: buildHighlightParts(`Message in ${projectTitle}`, searchQuery),
+                  highlightParts: buildHighlightParts(`Message in ${projectTitle}`, trimmedQuery),
                 });
               }
             });
@@ -372,7 +501,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
     } finally {
       setLoading(false);
     }
-  }, [projects, projectMessages]);
+  }, [projects, projectMessages, allUsers, userData, isAdmin]);
 
   // Debounced search
   useEffect(() => {
@@ -416,6 +545,18 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
       } catch (error) {
         console.error('Error navigating to message:', error);
       }
+    } else if (result.type === 'collaborator' && result.userId) {
+      try {
+        const collaborator = allUsers.find(user => user.userId === result.userId);
+        const slugSource = collaborator
+          ? `${collaborator.firstName || ''}-${collaborator.lastName || ''}`.trim()
+          : '';
+        const fallback = collaborator?.userId || result.userId || 'conversation';
+        const slug = slugify(slugSource || fallback);
+        navigate(`/dashboard/messages/${slug}`);
+      } catch (error) {
+        console.error('Error navigating to collaborator conversation:', error);
+      }
     }
   };
 
@@ -430,16 +571,20 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
     inputRef.current?.focus();
   };
 
-  const getResultIcon = (type: string) => {
+  const getResultIcon = (type: 'project' | 'message' | 'collaborator' | string) => {
     switch (type) {
       case 'project':
         return <FolderOpen size={16} />;
       case 'message':
         return <MessageSquare size={16} />;
+      case 'collaborator':
+        return <User size={16} />;
       default:
         return <FileText size={16} />;
     }
   };
+
+  const isMentionMode = query.trim().startsWith('@');
 
   return (
     <div className={`global-search ${className}`} ref={searchBoxRef}>
@@ -485,9 +630,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
                 <Search size={16} />
               </div>
               <div className="global-search-result-content">
-                <div className="global-search-result-title">No results found</div>
+                <div className="global-search-result-title">
+                  {isMentionMode ? 'No collaborators found' : 'No results found'}
+                </div>
                 <div className="global-search-result-subtitle">
-                  Try searching for project names, descriptions, or message content
+                  {isMentionMode
+                    ? 'Invite teammates or check your spelling to start a conversation'
+                    : 'Try searching for project names, descriptions, or message content'}
                 </div>
               </div>
             </div>
@@ -495,16 +644,26 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
 
           {!loading && results.map((result, index) => {
             const isProject = result.type === 'project';
+            const isCollaborator = result.type === 'collaborator';
             const titleParts = result.highlightParts && result.highlightParts.length > 0
               ? result.highlightParts
               : [{ text: result.title, isMatch: false }];
+
+            const resultClasses = [
+              'global-search-result',
+              isProject ? 'project-result' : '',
+              isCollaborator ? 'collaborator-result' : '',
+              index === selectedIndex ? 'selected' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
 
             return (
               <button
                 key={result.id}
                 type="button"
                 onClick={() => handleResultClick(result)}
-                className={`global-search-result ${isProject ? 'project-result' : ''} ${index === selectedIndex ? 'selected' : ''}`}
+                className={resultClasses}
               >
                 {isProject ? (
                   <div className="global-search-thumbnail" aria-hidden>
@@ -522,6 +681,23 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
                         initial={result.thumbnailInitial || '#'}
                         className="global-search-thumbnail-placeholder"
                       />
+                    )}
+                  </div>
+                ) : isCollaborator ? (
+                  <div className="global-search-thumbnail collaborator-thumbnail" aria-hidden>
+                    {result.thumbnailUrl && !imageErrors[result.id] ? (
+                      <img
+                        src={result.thumbnailUrl}
+                        alt=""
+                        className="global-search-thumbnail-image"
+                        onError={() =>
+                          setImageErrors(prev => ({ ...prev, [result.id]: true }))
+                        }
+                      />
+                    ) : (
+                      <div className="global-search-avatar-fallback">
+                        {result.thumbnailInitial || '#'}
+                      </div>
                     )}
                   </div>
                 ) : (

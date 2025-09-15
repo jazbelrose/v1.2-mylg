@@ -69,11 +69,43 @@ const mockProjectMessages = {
   ]
 };
 
+const mockUsers = [
+  {
+    userId: 'current-user',
+    firstName: 'Current',
+    lastName: 'User',
+    email: 'current@example.com',
+    role: 'designer'
+  },
+  {
+    userId: 'user-2',
+    firstName: 'Jane',
+    lastName: 'Collaborator',
+    email: 'jane@example.com',
+    role: 'builder'
+  },
+  {
+    userId: 'user-3',
+    firstName: 'Alex',
+    lastName: 'Admin',
+    email: 'alex@example.com',
+    role: 'admin'
+  }
+] as const;
+
 const mockUseData = {
   projects: mockProjects,
   projectMessages: mockProjectMessages,
   fetchProjectDetails: vi.fn(),
-  allUsers: []
+  allUsers: [] as unknown[],
+  userData: {
+    userId: 'current-user',
+    firstName: 'Current',
+    lastName: 'User',
+    collaborators: ['user-2'],
+    role: 'designer'
+  },
+  isAdmin: false
 };
 
 describe('GlobalSearch', () => {
@@ -81,6 +113,15 @@ describe('GlobalSearch', () => {
     vi.clearAllMocks();
     mockUseData.projects = mockProjects.map(project => ({ ...project }));
     mockUseData.projectMessages = JSON.parse(JSON.stringify(mockProjectMessages));
+    mockUseData.userData = {
+      userId: 'current-user',
+      firstName: 'Current',
+      lastName: 'User',
+      collaborators: ['user-2'],
+      role: 'designer'
+    };
+    mockUseData.allUsers = mockUsers.map(user => ({ ...user }));
+    mockUseData.isAdmin = false;
     mockNavigate.mockReset();
   });
 
@@ -148,7 +189,7 @@ describe('GlobalSearch', () => {
   it('searches messages content', async () => {
     renderGlobalSearch();
     const input = screen.getByPlaceholderText('Search projects and messages...');
-    
+
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'features' } });
 
@@ -163,10 +204,56 @@ describe('GlobalSearch', () => {
     });
   });
 
+  it('lists collaborators when query starts with @', async () => {
+    renderGlobalSearch();
+    const input = screen.getByPlaceholderText('Search projects and messages...');
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '@' } });
+
+    await waitFor(() => {
+      const collaboratorElements = screen.getAllByText((content, element) => {
+        if (!element) return false;
+        const textContent = element.textContent || '';
+        return textContent.includes('Jane Collaborator');
+      });
+      expect(collaboratorElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('navigates to direct messages when collaborator result is selected', async () => {
+    renderGlobalSearch();
+    const input = screen.getByPlaceholderText('Search projects and messages...');
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '@Jane' } });
+
+    await waitFor(() => {
+      const collaboratorElements = screen.getAllByText((content, element) => {
+        if (!element) return false;
+        const textContent = element.textContent || '';
+        return textContent.includes('Jane Collaborator');
+      });
+      expect(collaboratorElements.length).toBeGreaterThan(0);
+    });
+
+    const collaboratorButton = screen.getAllByRole('button').find(button => {
+      const textContent = button.textContent || '';
+      return textContent.includes('Jane Collaborator');
+    }) as HTMLButtonElement | undefined;
+
+    expect(collaboratorButton).toBeDefined();
+    fireEvent.click(collaboratorButton!);
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/messages/jane-collaborator');
+    });
+  });
+
   it('shows no results when search returns empty', async () => {
     renderGlobalSearch();
     const input = screen.getByPlaceholderText('Search projects and messages...');
-    
+
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'nonexistent' } });
 

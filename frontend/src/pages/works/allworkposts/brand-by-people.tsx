@@ -11,7 +11,7 @@ import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal"; // Import ReactModal
 import { useScrollContext } from "@/app/contexts/useScrollContext";
-import InlineSVG from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 

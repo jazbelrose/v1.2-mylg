@@ -9,7 +9,7 @@ import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 
 import Ticker from "../../../shared/ui/Ticker";
-import Slideshow from "../../../shared/ui/slideShow";
+import Slideshow from "../../../shared/ui/SlideShow";
 import { InfoSection } from "../../../shared/ui";
 import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";

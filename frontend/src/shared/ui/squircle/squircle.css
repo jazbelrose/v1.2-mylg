@@ -1,0 +1,126 @@
+/**
+ * Squircle CSS utilities providing superellipse shapes as an alternative to border-radius
+ * Includes CSS variables for theming and graceful fallbacks for older browsers
+ */
+
+:root {
+  --shape-radius: 20px;
+  --shape-smoothing: 0.6;
+}
+
+/**
+ * Main squircle utility class
+ * Applies a superellipse mask to the element using CSS mask properties
+ * Falls back to border-radius for browsers that don't support CSS masks
+ */
+.squircle {
+  position: relative;
+  border-radius: 0;
+  
+  /* Fallback for browsers without mask support */
+  border-radius: var(--shape-radius);
+}
+
+/**
+ * Modern browsers with mask support
+ * Uses a pseudo-element to create the squircle mask
+ */
+@supports (mask: url()) or (-webkit-mask: url()) {
+  .squircle {
+    border-radius: 0;
+    mask: var(--squircle-mask, none);
+    -webkit-mask: var(--squircle-mask, none);
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+  }
+  
+  /* JavaScript will set the --squircle-mask custom property dynamically */
+}
+
+/**
+ * Reduced motion preference support
+ * Falls back to regular border-radius for users who prefer reduced motion/transparency
+ */
+@media (prefers-reduced-transparency: reduce) {
+  .squircle {
+    mask: none !important;
+    -webkit-mask: none !important;
+    border-radius: var(--shape-radius) !important;
+  }
+}
+
+/**
+ * Utility classes for common radius values
+ */
+.squircle-sm {
+  --shape-radius: 12px;
+}
+
+.squircle-md {
+  --shape-radius: 16px;
+}
+
+.squircle-lg {
+  --shape-radius: 20px;
+}
+
+.squircle-xl {
+  --shape-radius: 24px;
+}
+
+.squircle-2xl {
+  --shape-radius: 32px;
+}
+
+/**
+ * Smoothing variations
+ */
+.squircle-sharp {
+  --shape-smoothing: 0.3;
+}
+
+.squircle-smooth {
+  --shape-smoothing: 0.8;
+}
+
+/**
+ * Ensure squircle doesn't interfere with pointer events or layout
+ */
+.squircle::before,
+.squircle::after {
+  pointer-events: none;
+}
+
+/**
+ * Helper for images that need squircle clipping
+ */
+.squircle img,
+.squircle video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/**
+ * Debug mode to visualize the squircle boundary
+ */
+.squircle-debug {
+  outline: 2px dashed rgba(255, 0, 0, 0.5);
+  outline-offset: -1px;
+}
+
+.squircle-debug::before {
+  content: 'squircle';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 1000;
+}

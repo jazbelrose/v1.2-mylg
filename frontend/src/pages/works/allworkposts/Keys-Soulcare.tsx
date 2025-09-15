@@ -11,12 +11,12 @@ import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 
 
-import Ticker from "../../../shared/ui/ticker";
+import Ticker from "../../../shared/ui/Ticker";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 const KeysSoulcare = () => {
 
@@ -336,7 +336,7 @@ const KeysSoulcare = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/keyssoulcareheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/keyssoulcareheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -344,12 +344,12 @@ const KeysSoulcare = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row1.svg" className="rendering-row" />
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row2.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row3.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row3.svg" className="rendering-row" />
 
 
 
@@ -410,7 +410,7 @@ const KeysSoulcare = () => {
                 </div>
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row4.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row4.svg" className="rendering-row" />
 
 
 
@@ -444,7 +444,7 @@ const KeysSoulcare = () => {
                 <div className="rendering-row-img" style={{ display: 'flex', width: '100%' }}>
 
                     <div className="img-container" style={{ flex: '1' }}>
-                        <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row5.svg" className="rendering-row" />
+                        <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row5.svg" className="rendering-row" />
                     </div>
 
                     <div className="img-container" style={{ flex: '1' }}>
@@ -541,7 +541,7 @@ const KeysSoulcare = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row6.svg" className="rendering-row-svg" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row6.svg" className="rendering-row-svg" />
 
 
 
@@ -659,7 +659,7 @@ const KeysSoulcare = () => {
                 <div className="rendering-row-img" style={{ display: 'flex', width: '100%' }}>
 
                     <div className="img-container" style={{ flex: '1' }}>
-                        <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row7.svg" className="rendering-row" />
+                        <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/keyssoulcare/row7.svg" className="rendering-row" />
                     </div>
 
                     <div className="img-container" style={{ flex: '1' }}>

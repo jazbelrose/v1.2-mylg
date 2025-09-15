@@ -10,9 +10,9 @@ import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -295,11 +295,11 @@ const Ulta = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/ultaheader1.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/ultaheader1.svg" onReady={() => setSvgReady(true)} />
             </div>
             
             <div className="rendering-layout">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/ultatitle.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/ultatitle.svg" onReady={() => setSvgReady(true)} />
 
 
                 <div className="rendering-row-img">
@@ -332,7 +332,7 @@ const Ulta = () => {
 
                 <div className="rendering-row-img">
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/row11.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/row11.svg" className="rendering-row" />
                 </div>
 
 
@@ -340,7 +340,7 @@ const Ulta = () => {
 
                 <div className="rendering-row-img">
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/row2.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/row2.svg" className="rendering-row" />
                 </div>
 
                 <div className="rendering-row-img">
@@ -451,7 +451,7 @@ const Ulta = () => {
 
                 <div className="rendering-row-img">
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/row3.svg" className="rendering-row" style={{
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/row3.svg" className="rendering-row" style={{
                         paddingLeft: "5px"
                     }} />
                 </div>
@@ -624,7 +624,7 @@ const Ulta = () => {
 
                 <div className="rendering-heading">
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/row4.svg" className="rendering-row" style={{
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/Ulta/row4.svg" className="rendering-row" style={{
                         paddingLeft: "5px"
                     }} />
                 </div>

@@ -13,10 +13,10 @@ import { useData } from "@/app/contexts/useData";
 
 
 
-import Ticker from "../../../shared/ui/ticker";
+import Ticker from "../../../shared/ui/Ticker";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import SingleTicker from "../../../shared/ui/SingleTicker";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 const Nocco = () => {
@@ -321,7 +321,7 @@ const Nocco = () => {
 
             
                 <div className="workpage-heading">
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/nocco/noccoheader.svg" onReady={() => setSvgReady(true)} />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/nocco/noccoheader.svg" onReady={() => setSvgReady(true)} />
                 </div>
 
 
@@ -331,8 +331,8 @@ const Nocco = () => {
 
 
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/nocco/row1.svg" className="rendering-row" />
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/nocco/row2.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/nocco/row1.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/nocco/row2.svg" className="rendering-row" />
 
 
 
@@ -363,7 +363,7 @@ const Nocco = () => {
                 <div className="rendering-layout">
                     <div className="rendering-row">
 
-                        <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/nocco/row4.svg" />
+                        <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/nocco/row4.svg" />
 
                     </div>
                     <div className="rendering-row-video">

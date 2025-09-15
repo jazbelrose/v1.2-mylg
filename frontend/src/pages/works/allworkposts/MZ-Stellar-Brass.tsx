@@ -8,9 +8,9 @@ import "./workpage.css";
 import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 
 
@@ -380,7 +380,7 @@ const MZ = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/MZ/mz-header.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/MZ/mz-header.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -415,7 +415,7 @@ const MZ = () => {
 
                 </div>
 
-                <InlineSvg
+                <InlineSVG
                     src="https://d2qb21tb4meex0.cloudfront.net/svg/MZ/02.svg"
                     className="rendering-row"
                     onClick={() => openModal(2)}

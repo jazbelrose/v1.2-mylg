@@ -12,11 +12,11 @@ import works from '../works.json';
 import { useData } from "@/app/contexts/useData";
 
 
-import BlogPostButton from "../../../shared/ui/blogpostbutton";
+import BlogPostButton from "../../../shared/ui/BlogPostButton";
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import SingleTicker from "../../../shared/ui/SingleTicker";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -360,7 +360,7 @@ type WorkItem = {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/barebellsheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/barebellsheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -369,8 +369,8 @@ type WorkItem = {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/row0.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/row0.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/row1.svg" className="rendering-row" />
 
 
 
@@ -442,7 +442,7 @@ type WorkItem = {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/row2.svg" className="rendering-row" />
 
 
 
@@ -480,7 +480,7 @@ type WorkItem = {
                 </div>
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/row3.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/barebells/row3.svg" className="rendering-row" />
 
 
 

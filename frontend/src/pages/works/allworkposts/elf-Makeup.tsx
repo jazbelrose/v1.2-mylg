@@ -10,14 +10,14 @@ import { useScrollContext } from "@/app/contexts/useScrollContext";
 // import { usePreventScroll } from "@react-aria/overlays";
 
 import works from '../works.json';
-import BlogPostButton from "@/shared/ui/blogpostbutton";
+import BlogPostButton from "@/shared/ui/BlogPostButton";
 
 
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -406,7 +406,7 @@ const ElfMakeup = () => {
 
 
                 <div className="workpage-heading">
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup/elfmakeupheader.svg" onReady={() => setSvgReady(true)} />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup/elfmakeupheader.svg" onReady={() => setSvgReady(true)} />
                 </div>
                 <div className="rendering-layout">
 
@@ -414,7 +414,7 @@ const ElfMakeup = () => {
 
 
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup/row0.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup/row0.svg" className="rendering-row" />
 
 
                     <div className="rendering-row-img">
@@ -498,7 +498,7 @@ const ElfMakeup = () => {
 
                     </div>
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup/row1.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/elf-makeup/row1.svg" className="rendering-row" />
 
                     <div className="rendering-row-img">
 

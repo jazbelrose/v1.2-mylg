@@ -9,12 +9,12 @@ import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 
 
-import Ticker from "../../../shared/ui/ticker";
+import Ticker from "../../../shared/ui/Ticker";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 const Chevron = () => {
 
@@ -281,7 +281,7 @@ const Chevron = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/chevronheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/chevronheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -289,15 +289,15 @@ const Chevron = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row1.svg" className="rendering-row" />
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row2.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row3.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row4.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row5.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row6.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row3.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row4.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row5.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row6.svg" className="rendering-row" />
 
 
 
@@ -336,7 +336,7 @@ const Chevron = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row7.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row7.svg" className="rendering-row" />
 
 
                 <div className="rendering-row-video">
@@ -510,7 +510,7 @@ const Chevron = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row8.svg" className="rendering-row-svg" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/chevron/row8.svg" className="rendering-row-svg" />
 
 
 

@@ -13,10 +13,10 @@ import { useScrollContext } from "../../../app/contexts/useScrollContext";
 
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 const Goldru$h = () => {
 
@@ -336,7 +336,7 @@ const Goldru$h = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/goldru$h/goldru$h-header.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/goldru$h/goldru$h-header.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 

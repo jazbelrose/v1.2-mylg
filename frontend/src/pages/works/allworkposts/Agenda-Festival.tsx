@@ -7,13 +7,13 @@ import "./workpage.css";
 import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 
-import Ticker from "../../../shared/ui/ticker";
+import Ticker from "../../../shared/ui/Ticker";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 const AgendaFestival = () => {
@@ -314,15 +314,15 @@ const AgendaFestival = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/agendafestivalheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/agendafestivalheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             
             <div className="rendering-layout">
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/row0.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/row0.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/row1.svg" className="rendering-row" />
 
                 <div className="rendering-row-video">
 
@@ -344,7 +344,7 @@ const AgendaFestival = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/row2.svg" className="rendering-row" />
 
 
                 <div className="rendering-row-img">
@@ -434,7 +434,7 @@ const AgendaFestival = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/row3.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/agendafestival/row3.svg" className="rendering-row" />
 
 
 

@@ -6,9 +6,9 @@ import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -343,7 +343,7 @@ const BloomAndBliss = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/bloomandblissheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/bloomandblissheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -351,7 +351,7 @@ const BloomAndBliss = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row1.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row1.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
 
 
                 <div className="rendering-row-video">
@@ -374,7 +374,7 @@ const BloomAndBliss = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row2.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row2.svg" className="rendering-row" />
 
 
 
@@ -520,7 +520,7 @@ const BloomAndBliss = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row4.svg" className="rendering-row-svg" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row4.svg" className="rendering-row-svg" />
 
 
 
@@ -539,9 +539,9 @@ const BloomAndBliss = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row5.svg" className="rendering-row-svg" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row6.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row7.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row5.svg" className="rendering-row-svg" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row6.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/bloomandbliss/row7.svg" className="rendering-row" />
 
 
 

@@ -5,13 +5,13 @@ import "./workpage.css";
 
 import aFLowerBathData from "./A-Flower-Bath.json";
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 
 /** Inline remote SVG so GSAP can target its inner nodes */
-function InlineSvg({ src, className, onReady }) {
+function InlineSVG({ src, className, onReady }) {
   const hostRef = useRef(null);
   const [markup, setMarkup] = useState("");
 
@@ -267,7 +267,7 @@ const AFLowerBath = () => {
 
         {/* Remote SVG header (animated) */}
         <div className="workpage-heading">
-          <InlineSvg
+          <InlineSVG
             src="https://d2qb21tb4meex0.cloudfront.net/svg/aflowerbathheader.svg"
             className="header-svg"
             onReady={(el) => {

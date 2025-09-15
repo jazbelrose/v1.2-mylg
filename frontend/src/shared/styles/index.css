@@ -6,6 +6,7 @@
 @import './design-tokens/typography.css';
 @import './design-tokens/spacing.css';
 @import './design-tokens/breakpoints.css';
+@import './design-tokens/design-guide-utilities.css'; /* New design guide compliant utilities */
 
 /* Base Styles - Global resets and base elements */
 @import './base/reset.css';

@@ -10,7 +10,7 @@ import { useScrollContext } from "../../../app/contexts/useScrollContext";
 
 
 import works from '../works.json';
-import BlogPostButton from "../../../shared/ui/blogpostbutton";
+import BlogPostButton from "../../../shared/ui/BlogPostButton";
 
 import { useData } from "@/app/contexts/useData";
 
@@ -27,8 +27,8 @@ interface WorkItem {
     authorName: string;
 }
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import SingleTicker from "../../../shared/ui/SingleTicker";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -341,7 +341,7 @@ const MistifiVape = () => {
 
             
                 <div className="workpage-heading">
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/mistifivapeheader.svg" onReady={() => setSvgReady(true)} />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/mistifivapeheader.svg" onReady={() => setSvgReady(true)} />
                 </div>
                 <div className="rendering-layout">
 
@@ -350,8 +350,8 @@ const MistifiVape = () => {
 
 
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/row0.svg" className="rendering-row" />
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/row1.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/row0.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/row1.svg" className="rendering-row" />
 
 
 
@@ -431,7 +431,7 @@ const MistifiVape = () => {
 
                     </div>
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/row12.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/row12.svg" className="rendering-row" />
 
                     <div className="rendering-row-img">
                         <div className="img-container">
@@ -498,7 +498,7 @@ const MistifiVape = () => {
 
                     </div>
 
-                    <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/row2.svg" className="rendering-row" />
+                    <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/mistifivape/row2.svg" className="rendering-row" />
 
 
 

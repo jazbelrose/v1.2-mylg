@@ -6,9 +6,9 @@ import ReactModal from "react-modal";
 import { useScrollContext } from "../../../app/contexts/useScrollContext";
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -302,7 +302,7 @@ const TheOscars = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/theoscars/theoscarsheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/theoscars/theoscarsheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -324,7 +324,7 @@ const TheOscars = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/theoscars/row0.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/theoscars/row0.svg" className="rendering-row" onReady={() => setSvgReady(true)} />
 
                 <div className="rendering-row-img">
 
@@ -511,7 +511,7 @@ const TheOscars = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/theoscars/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/theoscars/row1.svg" className="rendering-row" />
 
             </div>
 

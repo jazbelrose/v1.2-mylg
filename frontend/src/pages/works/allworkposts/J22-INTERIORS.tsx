@@ -10,14 +10,14 @@ import ReactModal from "react-modal";
 import { useScrollContext } from "../../../app/contexts/useScrollContext";
 
 import works from '../works.json';
-import BlogPostButton from "../../../shared/ui/blogpostbutton";
+import BlogPostButton from "../../../shared/ui/BlogPostButton";
 
 import { InfoSection } from "../../../shared/ui";
-import SingleTicker from "../../../shared/ui/singleTicker";
+import SingleTicker from "../../../shared/ui/SingleTicker";
 
 
 import { useData } from "@/app/contexts/useData";
-import InlineSvg from "../../../shared/ui/inlinesvg";
+import InlineSVG from "../../../shared/ui/InlineSVG";
 
 
 
@@ -298,7 +298,7 @@ const J22Interiors = () => {
 
 
             <div className="workpage-heading">
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/j22interiorsheader.svg" onReady={() => setSvgReady(true)} />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/j22interiorsheader.svg" onReady={() => setSvgReady(true)} />
             </div>
             <div className="rendering-layout">
 
@@ -307,9 +307,9 @@ const J22Interiors = () => {
 
 
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/row0.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/row1.svg" className="rendering-row" />
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/row3.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/row0.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/row1.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/row3.svg" className="rendering-row" />
 
 
 
@@ -340,7 +340,7 @@ const J22Interiors = () => {
 
                 </div>
 
-                <InlineSvg src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/row5.svg" className="rendering-row" />
+                <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/j22interiors/row5.svg" className="rendering-row" />
 
                 <div className="rendering-row-img">
 

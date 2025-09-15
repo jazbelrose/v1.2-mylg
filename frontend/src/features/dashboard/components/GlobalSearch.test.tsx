@@ -6,7 +6,7 @@ import '@testing-library/jest-dom';
 
 // Mock the required hooks and modules
 vi.mock('@/app/contexts/useData', () => ({
-  useData: vi.fn()
+  useData: () => mockUseData
 }));
 
 vi.mock('@/shared/utils/slug', () => ({
@@ -15,7 +15,8 @@ vi.mock('@/shared/utils/slug', () => ({
 
 vi.mock('@/shared/utils/api', () => ({
   apiFetch: vi.fn(),
-  GET_PROJECT_MESSAGES_URL: 'http://test.com/messages'
+  GET_PROJECT_MESSAGES_URL: 'http://test.com/messages',
+  getFileUrl: vi.fn((value: string) => value)
 }));
 
 const mockNavigate = vi.fn();
@@ -33,13 +34,16 @@ const mockProjects = [
     projectId: 'project-1',
     title: 'Test Project One',
     description: 'A test project for searching',
-    status: 'in-progress'
+    status: 'in-progress',
+    finishline: '2024-01-10',
+    thumbnails: ['https://example.com/thumb-1.jpg']
   },
   {
     projectId: 'project-2',
     title: 'Demo Application',
     description: 'Another project to test search functionality',
-    status: 'completed'
+    status: 'completed',
+    finishline: '2024-03-15'
   }
 ];
 
@@ -75,6 +79,9 @@ const mockUseData = {
 describe('GlobalSearch', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseData.projects = mockProjects.map(project => ({ ...project }));
+    mockUseData.projectMessages = JSON.parse(JSON.stringify(mockProjectMessages));
+    mockNavigate.mockReset();
   });
 
   const renderGlobalSearch = () => {
@@ -196,6 +203,57 @@ describe('GlobalSearch', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(mockUseData.fetchProjectDetails).toHaveBeenCalledWith('project-1');
+  });
+
+  it('renders project metadata with status and due date', async () => {
+    renderGlobalSearch();
+    const input = screen.getByPlaceholderText('Search projects and messages...');
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'test' } });
+
+    const statusPill = await screen.findByText('In Progress');
+    expect(statusPill).toBeInTheDocument();
+
+    const dueLabel = await screen.findByText('Due');
+    expect(dueLabel.parentElement).toHaveTextContent(/Due.*2024/);
+  });
+
+  it('shows plain text excerpts for lexical descriptions', async () => {
+    const lexicalDescription = JSON.stringify({
+      root: {
+        children: [
+          {
+            type: 'paragraph',
+            children: [
+              { type: 'text', text: 'Lexical summary text' }
+            ]
+          }
+        ]
+      }
+    });
+
+    mockUseData.projects = [
+      {
+        projectId: 'project-lexical',
+        title: 'Lexical Project',
+        description: lexicalDescription,
+        status: 'pending',
+        finishline: '2024-06-01'
+      }
+    ];
+
+    renderGlobalSearch();
+    const input = screen.getByPlaceholderText('Search projects and messages...');
+
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'lexical' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Lexical summary text')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(lexicalDescription)).not.toBeInTheDocument();
   });
 
   it('closes search results on Escape key', async () => {

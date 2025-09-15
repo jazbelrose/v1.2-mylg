@@ -1,7 +1,9 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import Modal from "../../../../../../components/ModalWithStack";
+import { vi, it, expect, beforeAll } from "vitest";
+
+import Modal from "../../../shared/ui/ModalWithStack";
 
 let CreateLineItemModal: React.ComponentType<{
   isOpen: boolean;
@@ -20,7 +22,7 @@ beforeAll(async () => {
   CreateLineItemModal = CreateLineItemModalImport;
 });
 
-test("does not autosave when fields change", async () => {
+it("does not autosave when fields change", async () => {
   const onSubmit = vi.fn(() => Promise.resolve({}));
 
   render(
@@ -44,7 +46,7 @@ test("does not autosave when fields change", async () => {
   await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
 });
 
-test("closing with unsaved changes prompts to save for existing items", async () => {
+it("closing with unsaved changes prompts to save for existing items", async () => {
   const onSubmit = vi.fn(() => Promise.resolve({}));
   const onRequestClose = vi.fn();
 
@@ -76,7 +78,7 @@ test("closing with unsaved changes prompts to save for existing items", async ()
   expect(onRequestClose).toHaveBeenCalled();
 });
 
-test("closing with unsaved changes prompts to save for new items", async () => {
+it("closing with unsaved changes prompts to save for new items", async () => {
   const onSubmit = vi.fn(() => Promise.resolve({}));
   const onRequestClose = vi.fn();
 

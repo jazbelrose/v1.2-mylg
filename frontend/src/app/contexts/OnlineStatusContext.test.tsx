@@ -1,7 +1,7 @@
 import React from "react";
 import { act, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { vi, describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
 import { OnlineStatusProvider, useOnlineStatus } from "./OnlineStatusContext";
 
@@ -12,18 +12,7 @@ vi.mock("./useSocket", () => ({
 import { useSocket } from "./SocketContext";
 
 // Minimal global WebSocket so that WebSocket.OPEN exists
-let originalWebSocket: typeof WebSocket | undefined;
-
-beforeAll(() => {
-  originalWebSocket = (global as typeof globalThis & { WebSocket?: typeof WebSocket }).WebSocket;
-  (global as typeof globalThis & { WebSocket?: typeof WebSocket }).WebSocket = { OPEN: 1 } as typeof WebSocket;
-});
-
-afterAll(() => {
-  if (originalWebSocket) {
-    (global as typeof globalThis & { WebSocket?: typeof WebSocket }).WebSocket = originalWebSocket;
-  }
-});
+// Note: Global WebSocket is already mocked in setup.ts
 
 class MockWebSocket {
   listeners: Record<string, (e: Event) => void> = {};

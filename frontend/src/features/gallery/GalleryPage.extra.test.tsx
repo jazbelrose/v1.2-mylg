@@ -2,6 +2,16 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+
+// Mock ReactModal
+vi.mock('react-modal', () => {
+  const Modal = ({ children }: { children?: React.ReactNode }) => 
+    React.createElement('div', { 'data-testid': 'react-modal' }, children);
+  Modal.setAppElement = vi.fn();
+  return { default: Modal };
+});
+
 import ReactModal from 'react-modal';
 
 // Ensure a root element exists for ReactModal
@@ -29,12 +39,12 @@ vi.mock('react-router-dom', () => ({
   useNavigate: vi.fn(),
 }));
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../shared/utils/api', () => ({
   fetchGalleries: vi.fn(() => Promise.resolve([])),
 }));
 
 let GalleryPage;
-import styles from './GalleryPage.module.css';
+import styles from './gallery-page.module.css';
 
 beforeEach(() => {
   global.fetch = vi.fn(() =>
@@ -48,7 +58,10 @@ afterEach(() => {
 
 import { useData } from '../../app/contexts/DataProvider';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchGalleries } from '../../utils/api';
+import { fetchGalleries } from '../../shared/utils/api';
+
+// Helper to type vi.fn() from mocks
+const fetchGalleriesMock = fetchGalleries as vi.MockedFunction<typeof fetchGalleries>;
 
 describe('GalleryPage', () => {
   beforeEach(async () => {

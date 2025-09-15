@@ -6,11 +6,19 @@ import "@testing-library/jest-dom";
 import Modal from "react-modal";
 import { MemoryRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
 // ---- Mocks ----
 vi.mock("lucide-react", () => ({ GalleryVerticalEnd: () => <div /> }));
 
-vi.mock("../../app/contexts/DataProvider", () => ({
+vi.mock("react-modal", () => {
+  const Modal = ({ isOpen, children }: { isOpen?: boolean; children?: React.ReactNode }) =>
+    React.createElement('div', { 'data-testid': 'modal' }, children);
+  Modal.setAppElement = vi.fn();
+  return { default: Modal };
+});
+
+vi.mock("../../app/contexts/useData", () => ({
   useData: vi.fn(),
 }));
 
@@ -18,26 +26,52 @@ vi.mock("aws-amplify/storage", () => ({
   uploadData: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("../../utils/api", () => ({
+vi.mock("../../shared/utils/api", () => ({
   fetchGalleries: vi.fn(() => Promise.resolve([])),
   deleteGallery: vi.fn(() => Promise.resolve()),
   deleteGalleryFiles: vi.fn(() => Promise.resolve()),
   updateGallery: vi.fn(() => Promise.resolve()),
   apiFetch: vi.fn(() => Promise.resolve({})),
+  getFileUrl: vi.fn((key) => {
+    if (key && key.startsWith('http')) {
+      return key; // If it's already a URL, return as-is
+    }
+    return `https://mock-s3.com/${key}`;
+  }),
+  fetchProjectsFromApi: vi.fn(() => Promise.resolve([])),
   S3_PUBLIC_BASE: "https://mock-s3.com/public",
 }));
 
+// Mock the missing GalleryComponent
+// vi.mock("../dashboard/components/SingleProject/GalleryComponent", () => ({
+//   default: () => (
+//     <div>
+//       <button>Galleries</button>
+//       <button aria-label="Edit gallery">Edit</button>
+//       <button aria-label="Delete gallery">Delete</button>
+//       <input placeholder="Gallery Name" />
+//       <input placeholder="Password" type="password" />
+//       <button>Save</button>
+//       <button aria-label="Show password">Toggle</button>
+//       <div>Old</div>
+//       <div>New Name</div>
+//     </div>
+//   ),
+// }));
+
 // SUT
-import GalleryComponent from "../dashboard/components/SingleProject/GalleryComponent";
+import GalleryComponent from "../project/components/GalleryComponent";
 
 // pull mocked fns with types
-import { useData } from "../../app/contexts/DataProvider";
+import { useData } from "../../app/contexts/useData";
+const mockUseData = useData as vi.MockedFunction<typeof useData>;
 import {
   deleteGallery,
   deleteGalleryFiles,
   updateGallery,
   S3_PUBLIC_BASE,
-} from "../../utils/api";
+} from "../../shared/utils/api";
+import { flushQueue } from "../../shared/utils/requestQueue";
 
 // ensure root element exists for React Modal
 const root = document.createElement("div");
@@ -46,17 +80,40 @@ document.body.appendChild(root);
 Modal.setAppElement(root);
 
 describe("GalleryComponent admin edit", () => {
-  let updateProjectFields: vi.Mock;
+  let updateProjectFields: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     updateProjectFields = vi.fn();
-    useData.mockReturnValue({
+    mockUseData.mockReturnValue({
+      projects: [],
+      setProjects: vi.fn(),
+      setUserProjects: vi.fn(),
+      isLoading: false,
+      setIsLoading: vi.fn(),
+      loadingProfile: false,
       activeProject: {
         projectId: "1",
         galleries: [{ id: "g1", name: "Old", slug: "old", url: "http://a.com" }],
       },
+      setActiveProject: vi.fn(),
+      selectedProjects: [],
+      setSelectedProjects: vi.fn(),
+      fetchProjectDetails: vi.fn(),
+      fetchProjects: vi.fn(),
+      fetchUserProfile: vi.fn(),
+      fetchRecentActivity: vi.fn(),
+      opacity: 1,
+      setOpacity: vi.fn(),
+      settingsUpdated: false,
+      toggleSettingsUpdated: vi.fn(),
+      dmReadStatus: {},
+      setDmReadStatus: vi.fn(),
+      projectsError: false,
+      updateTimelineEvents: vi.fn(),
       updateProjectFields,
       isAdmin: true,
+      isBuilder: false,
+      isDesigner: false,
     });
   });
 
@@ -74,11 +131,23 @@ describe("GalleryComponent admin edit", () => {
     await userEvent.click(screen.getByText("Galleries"));
     await userEvent.click(screen.getByLabelText(/Edit .* gallery/));
 
+    // Debug: Check if we're in edit mode
+    expect(screen.getByPlaceholderText("Gallery Name")).toBeInTheDocument();
+
     const nameInput = screen.getByPlaceholderText("Gallery Name");
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, "New Name");
-    await userEvent.click(screen.getByText("Save"));
 
+    // Debug: Check if Save button is present
+    const saveButton = screen.getByText("Save");
+    expect(saveButton).toBeInTheDocument();
+
+    await userEvent.click(saveButton);
+
+    // Flush the queue to ensure updateProjectFields is called
+    await flushQueue();
+
+    expect(updateProjectFields).toHaveBeenCalled();
     const [projectId, fields] = updateProjectFields.mock.calls[0];
     expect(projectId).toBe("1");
     expect(Object.keys(fields)).toContain("galleries");
@@ -86,13 +155,36 @@ describe("GalleryComponent admin edit", () => {
   });
 
   it('supports editing when project uses "galleries"', async () => {
-    useData.mockReturnValue({
+    mockUseData.mockReturnValue({
+      projects: [],
+      setProjects: vi.fn(),
+      setUserProjects: vi.fn(),
+      isLoading: false,
+      setIsLoading: vi.fn(),
+      loadingProfile: false,
       activeProject: {
         projectId: "2",
         galleries: [{ id: "g2", name: "Old2", slug: "old2", url: "http://b.com" }],
       },
+      setActiveProject: vi.fn(),
+      selectedProjects: [],
+      setSelectedProjects: vi.fn(),
+      fetchProjectDetails: vi.fn(),
+      fetchProjects: vi.fn(),
+      fetchUserProfile: vi.fn(),
+      fetchRecentActivity: vi.fn(),
+      opacity: 1,
+      setOpacity: vi.fn(),
+      settingsUpdated: false,
+      toggleSettingsUpdated: vi.fn(),
+      dmReadStatus: {},
+      setDmReadStatus: vi.fn(),
+      projectsError: false,
+      updateTimelineEvents: vi.fn(),
       updateProjectFields,
       isAdmin: true,
+      isBuilder: false,
+      isDesigner: false,
     });
 
     render(
@@ -106,6 +198,10 @@ describe("GalleryComponent admin edit", () => {
     await userEvent.type(screen.getByPlaceholderText("Gallery Name"), "X");
     await userEvent.click(screen.getByText("Save"));
 
+    // Flush the queue to ensure updateProjectFields is called
+    await flushQueue();
+
+    expect(updateProjectFields).toHaveBeenCalled();
     const [projectId, fields] = updateProjectFields.mock.calls[0];
     expect(projectId).toBe("2");
     expect(Object.keys(fields)).toContain("galleries");
@@ -150,7 +246,13 @@ describe("GalleryComponent admin edit", () => {
   });
 
   it("updates password enabled field", async () => {
-    useData.mockReturnValue({
+    mockUseData.mockReturnValue({
+      projects: [],
+      setProjects: vi.fn(),
+      setUserProjects: vi.fn(),
+      isLoading: false,
+      setIsLoading: vi.fn(),
+      loadingProfile: false,
       activeProject: {
         projectId: "3",
         galleries: [
@@ -163,8 +265,25 @@ describe("GalleryComponent admin edit", () => {
           },
         ],
       },
+      setActiveProject: vi.fn(),
+      selectedProjects: [],
+      setSelectedProjects: vi.fn(),
+      fetchProjectDetails: vi.fn(),
+      fetchProjects: vi.fn(),
+      fetchUserProfile: vi.fn(),
+      fetchRecentActivity: vi.fn(),
+      opacity: 1,
+      setOpacity: vi.fn(),
+      settingsUpdated: false,
+      toggleSettingsUpdated: vi.fn(),
+      dmReadStatus: {},
+      setDmReadStatus: vi.fn(),
+      projectsError: false,
+      updateTimelineEvents: vi.fn(),
       updateProjectFields,
       isAdmin: true,
+      isBuilder: false,
+      isDesigner: false,
     });
 
     render(
@@ -181,7 +300,7 @@ describe("GalleryComponent admin edit", () => {
     await userEvent.click(screen.getByText("Save"));
 
     await waitFor(() => expect(updateGallery).toHaveBeenCalled());
-    const [galleryId, fields] = updateGallery.mock.calls[0];
+    const [galleryId, fields] = vi.mocked(updateGallery).mock.calls[0];
     expect(galleryId).toBe("gid");
     expect(fields.passwordEnabled).toBe(false);
   });
@@ -205,12 +324,18 @@ describe("GalleryComponent admin edit", () => {
     await userEvent.upload(fileInput as HTMLInputElement, file);
 
     await waitFor(() => expect(updateGallery).toHaveBeenCalled());
-    const [galleryId] = updateGallery.mock.calls[0];
+    const [galleryId] = vi.mocked(updateGallery).mock.calls[0];
     expect(galleryId).toBe("g1");
   });
 
   it("selects existing cover image from modal", async () => {
-    useData.mockReturnValue({
+    mockUseData.mockReturnValue({
+      projects: [],
+      setProjects: vi.fn(),
+      setUserProjects: vi.fn(),
+      isLoading: false,
+      setIsLoading: vi.fn(),
+      loadingProfile: false,
       activeProject: {
         projectId: "1",
         galleries: [
@@ -222,8 +347,25 @@ describe("GalleryComponent admin edit", () => {
           },
         ],
       },
+      setActiveProject: vi.fn(),
+      selectedProjects: [],
+      setSelectedProjects: vi.fn(),
+      fetchProjectDetails: vi.fn(),
+      fetchProjects: vi.fn(),
+      fetchUserProfile: vi.fn(),
+      fetchRecentActivity: vi.fn(),
+      opacity: 1,
+      setOpacity: vi.fn(),
+      settingsUpdated: false,
+      toggleSettingsUpdated: vi.fn(),
+      dmReadStatus: {},
+      setDmReadStatus: vi.fn(),
+      projectsError: false,
+      updateTimelineEvents: vi.fn(),
       updateProjectFields,
       isAdmin: true,
+      isBuilder: false,
+      isDesigner: false,
     });
 
     render(
@@ -239,7 +381,7 @@ describe("GalleryComponent admin edit", () => {
     await userEvent.click(option);
 
     await waitFor(() => expect(updateGallery).toHaveBeenCalled());
-    const [galleryId, fields] = updateGallery.mock.calls[0];
+    const [galleryId, fields] = vi.mocked(updateGallery).mock.calls[0];
     expect(galleryId).toBe("g1");
     expect(fields.coverImageUrl).toBe("https://img1");
   });
@@ -283,10 +425,33 @@ describe("GalleryComponent admin edit", () => {
 
     updateProjectFields = vi.fn();
 
-    useData.mockReturnValue({
+    mockUseData.mockReturnValue({
+      projects: [],
+      setProjects: vi.fn(),
+      setUserProjects: vi.fn(),
+      isLoading: false,
+      setIsLoading: vi.fn(),
+      loadingProfile: false,
       activeProject: { projectId: "1", gallery: [{ name: "Legacy", link: "/legacy" }] },
+      setActiveProject: vi.fn(),
+      selectedProjects: [],
+      setSelectedProjects: vi.fn(),
+      fetchProjectDetails: vi.fn(),
+      fetchProjects: vi.fn(),
+      fetchUserProfile: vi.fn(),
+      fetchRecentActivity: vi.fn(),
+      opacity: 1,
+      setOpacity: vi.fn(),
+      settingsUpdated: false,
+      toggleSettingsUpdated: vi.fn(),
+      dmReadStatus: {},
+      setDmReadStatus: vi.fn(),
+      projectsError: false,
+      updateTimelineEvents: vi.fn(),
       updateProjectFields,
       isAdmin: true,
+      isBuilder: false,
+      isDesigner: false,
     });
 
     render(

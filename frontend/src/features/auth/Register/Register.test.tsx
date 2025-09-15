@@ -1,9 +1,10 @@
 // Register.test.tsx
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import { Register } from './Register';
 import { signUp, resendSignUpCode } from '@aws-amplify/auth';
+import { DataProvider } from '../../../app/contexts/DataProvider';
 
 vi.mock('@aws-amplify/auth', () => ({
   signUp: vi.fn(),
@@ -15,8 +16,8 @@ vi.mock('../email-verification', () => ({
   default: () => <div data-testid="email-verification">verification</div>,
 }));
 
-vi.mock('../../../app/contexts/DataProvider', () => ({
-  useData: () => ({ opacity: 1 }),
+vi.mock('../../../app/contexts/useAuth', () => ({
+  useAuth: () => ({ userId: 'test-user-id' }),
 }));
 
 vi.mock('../../../utils/api', () => ({
@@ -26,6 +27,8 @@ vi.mock('../../../utils/api', () => ({
 
 vi.mock('react-router-dom', () => ({
   Link: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a>,
+  useNavigate: vi.fn(),
+  useLocation: vi.fn(() => ({ pathname: '/register' })),
 }));
 
 const mockedSignUp = signUp as ReturnType<typeof vi.fn>;
@@ -35,7 +38,11 @@ describe('Register', () => {
   it('resends code when user already exists and shows verification', async () => {
     mockedSignUp.mockRejectedValue({ name: 'UsernameExistsException' } as Error);
 
-    const { getByLabelText, getByText, getByTestId } = render(<Register />);
+    const { getByLabelText, getByText } = render(
+      <DataProvider>
+        <Register />
+      </DataProvider>
+    );
 
     fireEvent.change(getByLabelText('First Name'), { target: { value: 'John' } });
     fireEvent.change(getByLabelText('Last Name'), { target: { value: 'Doe' } });
@@ -48,7 +55,7 @@ describe('Register', () => {
 
     await waitFor(() => {
       expect(mockedResend).toHaveBeenCalledWith({ username: 'test@example.com' });
-      expect(getByTestId('email-verification')).toBeInTheDocument();
+      expect(screen.getByText('Verify your email')).toBeInTheDocument();
     });
   });
 });

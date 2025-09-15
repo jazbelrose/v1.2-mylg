@@ -1,10 +1,8 @@
 import React from "react";
 import { render, act } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
-import { SocketProvider } from "./SocketContext";
-import "@testing-library/jest-dom";
 
-// ---- Mock contexts ----
+// ---- Mock contexts BEFORE imports ----
 vi.mock("./useAuth", () => ({
   useAuth: vi.fn(),
 }));
@@ -15,34 +13,52 @@ vi.mock("./useDMConversation", () => ({
   useDMConversation: vi.fn(),
 }));
 
+// ---- Types ----
+interface MockWebSocket {
+  onmessage?: ((event: { data: string }) => void) | null;
+  onopen?: (() => void) | null;
+  onclose?: (() => void) | null;
+  onerror?: ((error: Event) => void) | null;
+  readyState: number;
+  send(): void;
+  close(): void;
+}
+
+declare global {
+  var mockWebSocket: MockWebSocket;
+}
+
+// Create a local mock WebSocket for this test
+const localMockWebSocket: MockWebSocket = {
+  onopen: null,
+  onmessage: null,
+  onclose: null,
+  onerror: null,
+  readyState: 1,
+  send: vi.fn(),
+  close: vi.fn(),
+};
+
+// Mock the WebSocket connection creation BEFORE imports
+vi.doMock("@/shared/utils/secureWebSocketAuth", () => ({
+  createSecureWebSocketConnection: vi.fn().mockImplementation(() => {
+    console.log('createSecureWebSocketConnection called');
+    return Promise.resolve(localMockWebSocket);
+  }),
+}));
+
+// ---- NOW import the mocked modules ----
+import { SocketProvider } from "./SocketContext";
+import "@testing-library/jest-dom";
 import { useAuth } from "./useAuth";
 import { useData } from "./useData";
 import { useDMConversation } from "./useDMConversation";
 
-// ---- Types ----
-type MockSocketHandler = ((event: { data: string }) => void) | null;
-
-class MockWebSocket {
-  public onmessage: MockSocketHandler = null;
-  public onopen: (() => void) | null = null;
-  public readyState = 1;
-
-  constructor() {
-    // expose for test access
-    (global as typeof globalThis & { mockSocket?: MockWebSocket }).mockSocket = this;
-  }
-  send() {}
-  close() {}
-}
-
 describe("SocketContext collaborator updates", () => {
-  let originalWebSocket: typeof WebSocket;
-
   beforeEach(() => {
     vi.useFakeTimers();
 
-    originalWebSocket = global.WebSocket;
-    global.WebSocket = MockWebSocket as unknown as typeof WebSocket;
+    console.log('globalThis.mockWebSocket exists:', !!globalThis.mockWebSocket);
 
     (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
       getAuthTokens: vi.fn().mockResolvedValue({ idToken: "token" }),
@@ -57,8 +73,6 @@ describe("SocketContext collaborator updates", () => {
     vi.useRealTimers();
     vi.clearAllTimers();
     vi.clearAllMocks();
-    global.WebSocket = originalWebSocket;
-    delete (global as typeof globalThis & { mockSocket?: MockWebSocket }).mockSocket;
   });
 
   it("debounces refreshUsers and fetchUserProfile calls", async () => {
@@ -82,6 +96,10 @@ describe("SocketContext collaborator updates", () => {
       refreshUsers,
     });
 
+    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
+      getAuthTokens: vi.fn().mockResolvedValue({ idToken: "token" }),
+    });
+
     render(
       <SocketProvider>
         <div />
@@ -92,7 +110,18 @@ describe("SocketContext collaborator updates", () => {
       await Promise.resolve();
     });
 
-    const socket: MockWebSocket = (global as typeof globalThis & { mockSocket?: MockWebSocket }).mockSocket!;
+    // Wait for useEffect to set up refs
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    const socket = localMockWebSocket;
+
+    // Simulate WebSocket connection
+    act(() => {
+      socket.readyState = 1; // OPEN
+      if (socket.onopen) socket.onopen();
+    });
 
     act(() => {
       socket.onmessage?.({ data: JSON.stringify({ type: "collaborators-updated" }) });
@@ -113,5 +142,5 @@ describe("SocketContext collaborator updates", () => {
 
     expect(refreshUsers).toHaveBeenCalledTimes(2);
     expect(fetchUserProfile).toHaveBeenCalledTimes(2);
-  });
+  }, 2000);
 });

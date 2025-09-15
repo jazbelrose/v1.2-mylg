@@ -1,7 +1,12 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { vi } from "vitest";
+import { vi, describe, it, expect } from "vitest";
+
+// Mock SVG imports to prevent data URL parsing errors
+vi.mock("@/assets/svg/user.svg?react", () => ({
+  default: () => React.createElement('svg', { 'data-testid': 'user-icon' })
+}));
 
 // Import the new components
 import ConversationSidebar from "./components/ConversationSidebar";

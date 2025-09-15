@@ -8,8 +8,15 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./vitest.setup.ts', './test/setupTests.ts'],
+    setupFiles: ['./src/test/setup.ts'],
     exclude: ['backend', 'node_modules', 'dist'], // ✅ Ignore backend tests
+    // On macOS, switching to forks can help stubborn worker threads exit:
+    pool: 'forks',
+    // Helpful defaults:
+    clearMocks: true,
+    restoreMocks: true,
+    // If something *still* lingers, Vitest won't wait forever:
+    teardownTimeout: 5000,
   },
   resolve: {
     alias: {

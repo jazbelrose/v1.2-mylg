@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { apiFetch } from './api';
+import { rateLimiter } from './securityUtils';
 
 vi.mock('./waitForAuthReady', () => ({
   waitForAuthReady: vi.fn().mockResolvedValue('test-token'),
@@ -11,30 +12,31 @@ vi.mock('./securityUtils', () => ({
   logSecurityEvent: vi.fn(),
 }));
 
-describe('apiFetch', () => {
+// Ensure mocks are restored between tests
+beforeEach(() => {
+  vi.restoreAllMocks();
+  // Ensure rate limiter always allows requests in tests
+  vi.mocked(rateLimiter.isAllowed).mockReturnValue(true);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});describe('apiFetch', () => {
   it('returns primitive JSON values without replacing them with empty objects', async () => {
-    const url = 'https://example.com/data';
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response('"hello"', {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response('"hello"', { headers: { 'Content-Type': 'application/json' } })
     );
 
-    const data = await apiFetch<string>(url);
+    const data = await apiFetch<string>('https://example.com/data');
     expect(data).toBe('hello');
   });
 
   it('returns null when server responds with JSON null', async () => {
-    const url = 'https://example.com/null';
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response('null', {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response('null', { headers: { 'Content-Type': 'application/json' } })
     );
 
-    const data = await apiFetch<null>(url);
+    const data = await apiFetch<null>('https://example.com/null');
     expect(data).toBeNull();
   });
 });

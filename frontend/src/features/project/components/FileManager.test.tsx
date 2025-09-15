@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface MockS3Item {
@@ -38,7 +39,7 @@ const root = document.createElement("div");
 root.id = "root";
 document.body.appendChild(root);
 
-vi.mock("../../../../app/contexts/DataProvider", () => ({
+vi.mock("../../../app/contexts/useData", () => ({
   useData: vi.fn(),
 }));
 
@@ -47,11 +48,11 @@ vi.mock("aws-amplify/storage", () => ({
   uploadData: vi.fn(),
 }));
 
-vi.mock("./PDFPreview", () => (props: { title: string }) => (
-  <canvas title={props.title} />
-));
+vi.mock("./PDFPreview", () => ({
+  default: (props: { title: string }) => <canvas title={props.title} />
+}));
 
-vi.mock("../../../../utils/api", () => ({
+vi.mock("../../../shared/utils/api", () => ({
   API_BASE_URL: "base",
   ZIP_FILES_URL: "zip",
   DELETE_FILE_FROM_S3_URL: "delete",
@@ -68,9 +69,9 @@ vi.mock("../../../../utils/api", () => ({
 
 // ── Imports that use the mocks ─────────────────────────────────────────────────
 import FileManagerComponent from "./FileManager";
-import { NotificationContainer } from "../../../../components/ToastNotifications";
-import { useData } from "@/app/contexts/useData";
-import { apiFetch } from "../../../utils/api";
+import { NotificationContainer } from "../../../shared/ui/ToastNotifications";
+import { useData } from "../../../app/contexts/useData";
+import { apiFetch } from "../../../shared/utils/api";
 
 // Helper to type vi.fn() from mocks
 const useDataMock = useData as vi.MockedFunction<typeof useData>;

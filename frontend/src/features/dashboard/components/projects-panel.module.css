@@ -14,6 +14,12 @@
   flex-direction: column;
 }
 
+.panelFullBleed {
+  width: 100%;
+  max-width: 100vw;
+  align-self: stretch;
+}
+
 .header {
   display: grid;
   grid-template-columns: 1fr auto;

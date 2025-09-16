@@ -8,6 +8,14 @@
   padding: 10px;
 }
 
+.week-widget--mobile {
+  width: 100%;
+  max-width: 100vw;
+  align-self: stretch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .week-widget-header {
   display: flex;
   justify-content: space-between;

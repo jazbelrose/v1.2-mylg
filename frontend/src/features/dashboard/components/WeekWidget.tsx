@@ -198,8 +198,16 @@ export default function WeekWidget({
     );
   }, [mobile, tooltipDate, items, anchor, showAll]);
 
+  const containerClass = [
+    "week-widget",
+    className,
+    mobile ? "week-widget--mobile" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={`week-widget ${className}`} style={{ position: "relative" }}>
+    <div className={containerClass} style={{ position: "relative" }}>
       <div className="week-widget-header">
         <button className="week-nav-btn" onClick={() => onPrevWeek?.(addDays(weekStart, -7))} aria-label="Previous week">
           ‹

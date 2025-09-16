@@ -37,11 +37,55 @@
 .welcome-header-extras {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3, 24px);
+  gap: clamp(16px, 2vw, 20px);
   width: 100%;
   margin-top: clamp(12px, 1.5vw, 18px);
   padding: 0 clamp(16px, 4vw, 28px) clamp(18px, 3vw, 28px);
   box-sizing: border-box;
+}
+
+.welcome-header-toc {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.welcome-header-toc a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.welcome-header-toc a:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.welcome-header-toc a:focus-visible {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.welcome-section-anchor {
+  width: 100%;
+  scroll-margin-top: clamp(84px, 14vw, 128px);
 }
 
 .welcome-header-week-card,
@@ -144,6 +188,16 @@
   .welcome-header-desktop {
     padding: 8px 12px;
     gap: 12px;
+  }
+
+  .welcome-header-toc {
+    gap: 10px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .welcome-header-toc a {
+    padding: 5px 10px;
   }
   .welcome-header__brand {
     width: 34px;

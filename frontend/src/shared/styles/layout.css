@@ -55,7 +55,7 @@
 
 .dashboard-home-grid {
   display: grid;
-  gap: var(--space-3, 24px);
+  gap: clamp(16px, 2vw, 20px);
 }
 
 .dashboard-home-grid > * {

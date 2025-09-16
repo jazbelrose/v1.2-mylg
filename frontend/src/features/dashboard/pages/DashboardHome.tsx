@@ -15,6 +15,7 @@ import Collaborators from "@/features/dashboard/components/Collaborators";
 import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
 import AllProjectsWeekWidget from "@/features/dashboard/components/AllProjectsWeekWidget";
+import TasksOverviewCard from "@/features/dashboard/components/TasksOverviewCard";
 import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import AppShell from "@/app/layout/AppShell";
@@ -151,9 +152,15 @@ const WelcomeScreen: React.FC = () => {
     if (isDesktop) {
       return (
         <div className="dashboard-home-grid">
-          <ProjectsPanelDesktop
-            onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
-          />
+          <section id="projects" className="welcome-section-anchor">
+            <ProjectsPanelDesktop
+              onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
+            />
+          </section>
+
+          <section id="tasks" className="welcome-section-anchor">
+            <TasksOverviewCard className="welcome-header-tasks-card" />
+          </section>
         </div>
       );
     }

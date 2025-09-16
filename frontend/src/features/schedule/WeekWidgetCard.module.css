@@ -96,6 +96,32 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0;
+  row-gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.badge:not(:last-of-type)::after {
+  content: "·";
+  margin-left: 12px;
+  margin-right: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .morePill {
   display: inline-flex;
   align-items: center;

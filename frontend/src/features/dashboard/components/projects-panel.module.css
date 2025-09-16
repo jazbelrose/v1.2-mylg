@@ -110,6 +110,13 @@
   margin: 4px 2px; /* compact */
 }
 
+.kpiGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
 .chip {
   border: 1px solid var(--chip-border, rgba(255, 255, 255, .16));
   border-radius: 999px;
@@ -125,6 +132,10 @@
   justify-content: center;
   will-change: transform;
   transform-origin: center;
+}
+
+.chipNoWrap {
+  white-space: nowrap;
 }
 
 .dot {

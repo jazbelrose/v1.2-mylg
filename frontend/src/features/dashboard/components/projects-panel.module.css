@@ -110,7 +110,8 @@
   gap: 8px;
   margin: 4px 2px; /* compact */
   min-width: 0;
-  overflow: hidden;
+  overflow-x: hidden; /* keep long labels from bleeding horizontally */
+  overflow-y: visible; /* allow hover animations to show without clipping */
 }
 
 .kpiGroup {

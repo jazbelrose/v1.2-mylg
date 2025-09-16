@@ -601,7 +601,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
-          placeholder="Search projects and messages..."
+          placeholder="Find anything..."
           className="global-search-input"
         />
         {query && (

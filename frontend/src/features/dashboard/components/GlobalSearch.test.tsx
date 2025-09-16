@@ -108,6 +108,8 @@ const mockUseData = {
   isAdmin: false
 };
 
+const PLACEHOLDER_TEXT = 'Microcopy: speak human';
+
 describe('GlobalSearch', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -135,12 +137,12 @@ describe('GlobalSearch', () => {
 
   it('renders search input', () => {
     renderGlobalSearch();
-    expect(screen.getByPlaceholderText('Search projects and messages...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(PLACEHOLDER_TEXT)).toBeInTheDocument();
   });
 
   it('shows search results when typing', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'test' } });
@@ -158,7 +160,7 @@ describe('GlobalSearch', () => {
 
   it('searches projects by title', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'demo' } });
@@ -176,7 +178,7 @@ describe('GlobalSearch', () => {
 
   it('searches projects by description', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'functionality' } });
@@ -188,7 +190,7 @@ describe('GlobalSearch', () => {
 
   it('searches messages content', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
 
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'features' } });
@@ -206,7 +208,7 @@ describe('GlobalSearch', () => {
 
   it('lists collaborators when query starts with @', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
 
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '@' } });
@@ -223,7 +225,7 @@ describe('GlobalSearch', () => {
 
   it('navigates to direct messages when collaborator result is selected', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
 
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '@Jane' } });
@@ -252,7 +254,7 @@ describe('GlobalSearch', () => {
 
   it('shows no results when search returns empty', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
 
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'nonexistent' } });
@@ -264,7 +266,7 @@ describe('GlobalSearch', () => {
 
   it('clears search when clear button is clicked', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...') as HTMLInputElement;
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT) as HTMLInputElement;
     
     fireEvent.change(input, { target: { value: 'test' } });
     
@@ -276,7 +278,7 @@ describe('GlobalSearch', () => {
 
   it('navigates to project when project result is clicked', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'test' } });
@@ -311,7 +313,7 @@ describe('GlobalSearch', () => {
 
   it('supports keyboard navigation', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'test' } });
@@ -338,7 +340,7 @@ describe('GlobalSearch', () => {
 
   it('renders project metadata with status and due date', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
 
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'test' } });
@@ -380,7 +382,7 @@ describe('GlobalSearch', () => {
     ];
 
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
 
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'lexical' } });
@@ -394,7 +396,7 @@ describe('GlobalSearch', () => {
 
   it('closes search results on Escape key', async () => {
     renderGlobalSearch();
-    const input = screen.getByPlaceholderText('Search projects and messages...');
+    const input = screen.getByPlaceholderText(PLACEHOLDER_TEXT);
     
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'test' } });

@@ -17,7 +17,8 @@ type DashboardNavPanelProps = UseDashboardNavigationArgs & {
 
 function renderNavItem(item: DashboardNavItem) {
   const hasBadge = typeof item.badgeCount === "number" && item.badgeCount > 0 && item.badgeLabel;
-  const className = ["nav-item", item.isAction ? "nav-item--action" : ""]
+  const keyClass = item.key ? `nav-item--${item.key}` : "";
+  const className = ["nav-item", keyClass, item.isAction ? "nav-item--action" : ""]
     .filter(Boolean)
     .join(" ");
   const inner = (

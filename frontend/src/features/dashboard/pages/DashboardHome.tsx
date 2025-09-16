@@ -223,7 +223,15 @@ const WelcomeScreen: React.FC = () => {
                 isFullWidthView ? "full-width" : ""
               }`}
             >
-              <div className="main-content">{renderActiveView()}</div>
+              <div
+                className={`main-content${
+                  activeView === "welcome" && isDesktop
+                    ? " main-content--welcome"
+                    : ""
+                }`}
+              >
+                {renderActiveView()}
+              </div>
             </div>
           </div>
         </div>

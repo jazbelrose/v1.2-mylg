@@ -28,6 +28,16 @@
   align-items: center;      /* Center calendar horizontally */
 }
 
+.main-content--welcome {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.main-content--welcome > * {
+  width: 100%;
+}
+
+
 /* Full-width view adjustments (e.g., Notifications) */
 .dashboard-content.full-width .main-content {
   justify-content: flex-start;

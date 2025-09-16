@@ -105,9 +105,20 @@
 .kpis {
   grid-column: 1 / -1;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
   margin: 4px 2px; /* compact */
+  min-width: 0;
+  overflow: hidden;
+}
+
+.kpiGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
 }
 
 .chip {
@@ -125,6 +136,21 @@
   justify-content: center;
   will-change: transform;
   transform-origin: center;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.chipNoWrap {
+  white-space: nowrap;
+}
+
+.chipNext {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dot {
@@ -134,6 +160,7 @@
   background: var(--chip-dot, #FA3356);
   align-self: center;
   opacity: .9;
+  flex-shrink: 0;
 }
 
 .list {

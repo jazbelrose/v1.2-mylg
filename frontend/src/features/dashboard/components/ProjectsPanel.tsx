@@ -18,6 +18,16 @@ const DEFAULT_PROJECT_ROWS = 3;
 
 type ProjectWithMeta = ProjectLike & { _activity: number; _created: number };
 
+const getMaxQuickProjectIcons = (width?: number): number => {
+  if (!width) return 5;
+  if (width <= 360) return 2;
+  if (width <= 400) return 3;
+  if (width <= 520) return 4;
+  if (width <= 680) return 5;
+  if (width <= 840) return 6;
+  return 7;
+};
+
 const formatShortDate = (iso?: string): string | undefined => {
   if (!iso) return undefined;
   const d = new Date(iso);
@@ -55,6 +65,11 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement | null>(null);
+  const [maxQuickIcons, setMaxQuickIcons] = useState(() =>
+    getMaxQuickProjectIcons(
+      typeof window === "undefined" ? undefined : window.innerWidth
+    )
+  );
 
   // Compact filter/sort options (mirrors AllProjects)
   type SortOption = "titleAsc" | "titleDesc" | "dateNewest" | "dateOldest";
@@ -69,6 +84,15 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
       fetchProjects();
     }
   }, [isLoading, projects.length, projectsError, fetchProjects]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleResize = () =>
+      setMaxQuickIcons(getMaxQuickProjectIcons(window.innerWidth));
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -173,6 +197,16 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
 
   const kpis = useProjectKpis(projects as ProjectLike[]);
 
+  const nextProjectLabel = (() => {
+    if (!kpis.nextProject) return "No upcoming projects";
+    const title = kpis.nextProject.title.trim() || "N/A";
+    const date = (kpis.nextProject.date || "").trim();
+    return `Next: ${title}${date ? ` ${date}` : ""}`;
+  })();
+
+  const nextProjectTitle =
+    nextProjectLabel !== "No upcoming projects" ? nextProjectLabel : undefined;
+
   const errorText = projectsError ? "Failed to load projects." : undefined;
 
   const handleOpen = (id: string) => onOpenProject(id);
@@ -205,9 +239,7 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
           {/* Icons strip: ultra-compact, icons only */}
           {(() => {
             const allProjects = projects as ProjectLike[];
-            const maxIcons = 7;
-
-            const shown = allProjects.slice(0, maxIcons);
+            const shown = allProjects.slice(0, maxQuickIcons);
             const more = Math.max(0, allProjects.length - shown.length);
 
             return (
@@ -339,33 +371,34 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
         </div>
 
         <div className={styles.kpis}>
-          <motion.span
-            className={styles.chip}
-            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
-            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
-            transition={reduceMotion ? undefined : SPRING_FAST}
-          >
-            {kpis.totalProjects} Projects
-          </motion.span>
+          <div className={styles.kpiGroup}>
+            <motion.span
+              className={`${styles.chip} ${styles.chipNoWrap}`}
+              whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+              whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+              transition={reduceMotion ? undefined : SPRING_FAST}
+            >
+              {kpis.totalProjects} Projects
+            </motion.span>
+            <span className={styles.dot} />
+            <motion.span
+              className={`${styles.chip} ${styles.chipNoWrap}`}
+              whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+              whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+              transition={reduceMotion ? undefined : SPRING_FAST}
+            >
+              {kpis.pendingProjects} Pending
+            </motion.span>
+          </div>
           <span className={styles.dot} />
           <motion.span
-            className={styles.chip}
+            className={`${styles.chip} ${styles.chipNext}`}
+            title={nextProjectTitle}
             whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             transition={reduceMotion ? undefined : SPRING_FAST}
           >
-            {kpis.pendingProjects} Pending
-          </motion.span>
-          <span className={styles.dot} />
-          <motion.span
-            className={styles.chip}
-            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
-            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
-            transition={reduceMotion ? undefined : SPRING_FAST}
-          >
-            {kpis.nextProject
-              ? `Next: ${kpis.nextProject.title} ${kpis.nextProject.date}`
-              : "No upcoming projects"}
+            {nextProjectLabel}
           </motion.span>
         </div>
       </header>

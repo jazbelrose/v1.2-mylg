@@ -97,33 +97,7 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
   };
 
   return (
-    <Squircle
-      as="section"
-      radius={CARD_RADIUS}
-      smoothing={0.6}
-      cornerRadii={CARD_CORNER_RADII}
-      className={`${styles.card} ${className ?? ""}`.trim()}
-      aria-label="Week overview"
-    >
-      <header className={styles.header}>
-        <div className={styles.titleWrap}>
-          <h3 className={styles.title}>This Week</h3>
-          <p className={styles.subtitle}>Timeline snapshots across your projects.</p>
-          <div className={styles.badges} aria-label="Week status badges">
-            <span className={styles.badge}>Overdue</span>
-            <span className={styles.badge}>Due Today</span>
-            <span className={styles.badge}>New</span>
-          </div>
-        </div>
-        {moreCount > 0 && (
-          <span
-            className={styles.morePill}
-            aria-label={`${moreCount} more active projects this week`}
-          >
-            +{moreCount} more
-          </span>
-        )}
-      </header>
+   
 
       <WeekWidget
         weekOf={weekOf}
@@ -136,7 +110,7 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
         getTooltipItems={getTooltipItems}
         isMobile
       />
-    </Squircle>
+  
   );
 };
 

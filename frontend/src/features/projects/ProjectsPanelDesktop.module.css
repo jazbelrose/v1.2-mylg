@@ -2,8 +2,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2, 16px);
-  padding: clamp(20px, 2.2vw, 28px);
+  gap: 16px;
+  padding: 16px;
   color: rgba(255, 255, 255, 0.95);
   background: var(--bg2, #111213); /* flat background only */
   border-radius: var(--radius-squircle, 24px);

@@ -27,6 +27,7 @@ import {
   LayoutDashboard,
   Coins,
   Calendar as CalendarIcon,
+  StickyNote,
 } from "lucide-react";
 import { uploadData } from "aws-amplify/storage";
 import { useData } from "@/app/contexts/useData";
@@ -1692,13 +1693,77 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
   const [transitionEnabled, setTransitionEnabled] = useState(false);
   const storageKey = `project-tabs-prev:${projectSlug}`;
 
+  const { user } = useData();
+  const isAdmin = user?.role === "admin";
+  const isDesigner = user?.role === "designer";
+  const showBudgetTab = isAdmin;
+  const showCalendarTab = isAdmin || isDesigner;
+  const showMoodboardTab = isAdmin || isDesigner;
+  const showEditorTab = isAdmin || isDesigner;
+
+  const basePath = `/dashboard/projects/${projectSlug}`;
+
+  const tabs = useMemo(
+    () =>
+      [
+        {
+          key: "overview",
+          label: "Overview",
+          icon: <LayoutDashboard size={16} />,
+          path: basePath,
+          visible: true,
+          matches: (pathname: string) => pathname === basePath,
+        },
+        {
+          key: "budget",
+          label: "Budget",
+          icon: <Coins size={16} />,
+          path: `${basePath}/budget`,
+          visible: showBudgetTab,
+          matches: (pathname: string) => pathname.startsWith(`${basePath}/budget`),
+        },
+        {
+          key: "calendar",
+          label: "Calendar",
+          icon: <CalendarIcon size={16} />,
+          path: `${basePath}/calendar`,
+          visible: showCalendarTab,
+          matches: (pathname: string) => pathname.startsWith(`${basePath}/calendar`),
+        },
+        {
+          key: "moodboard",
+          label: "Moodboard",
+          icon: <StickyNote size={16} />,
+          path: `${basePath}/moodboard`,
+          visible: showMoodboardTab,
+          matches: (pathname: string) => pathname.startsWith(`${basePath}/moodboard`),
+        },
+        {
+          key: "editor",
+          label: "Editor",
+          icon: <PenTool size={16} />,
+          path: `${basePath}/editor`,
+          visible: showEditorTab,
+          matches: (pathname: string) => pathname.startsWith(`${basePath}/editor`),
+        },
+      ].filter((tab) => tab.visible),
+    [
+      basePath,
+      showBudgetTab,
+      showCalendarTab,
+      showEditorTab,
+      showMoodboardTab,
+    ]
+  );
+
+  useEffect(() => {
+    tabRefs.current = tabRefs.current.slice(0, tabs.length);
+  }, [tabs.length]);
+
   const getActiveIndex = useCallback(() => {
-    const base = `/dashboard/projects/${projectSlug}`;
-    if (location.pathname.startsWith(`${base}/budget`)) return 1;
-    if (location.pathname.startsWith(`${base}/calendar`)) return 2;
-    if (location.pathname.startsWith(`${base}/editor`)) return 3;
-    return 0;
-  }, [location.pathname, projectSlug]);
+    const index = tabs.findIndex((tab) => tab.matches(location.pathname));
+    return index === -1 ? 0 : index;
+  }, [location.pathname, tabs]);
 
   const getFromIndex = useCallback(() => {
     if (location.state?.fromTab !== undefined) {
@@ -1754,13 +1819,6 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
     [navigate, getActiveIndex]
   );
 
-  const { user } = useData();
-  const isAdmin = user?.role === "admin";
-  const isDesigner = user?.role === "designer";
-  const showBudgetTab = isAdmin;
-  const showCalendarTab = isAdmin || isDesigner;
-  const showEditorTab = isAdmin || isDesigner;
-
   return (
     <div
       className="segmented-control with-slider"
@@ -1777,95 +1835,24 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
         aria-hidden="true"
       />
 
-      <button
-        type="button"
-        ref={(el) => {
-          if (el) tabRefs.current[0] = el;
-        }}
-        onClick={() => confirmNavigate(`/dashboard/projects/${projectSlug}`)}
-        className={
-          location.pathname === `/dashboard/projects/${projectSlug}` ? "active" : ""
-        }
-        aria-pressed={location.pathname === `/dashboard/projects/${projectSlug}`}
-      >
-        <LayoutDashboard size={16} />
-        <span>Overview</span>
-      </button>
-
-      {showBudgetTab && (
-        <button
-          type="button"
-          ref={(el) => {
-            if (el) tabRefs.current[1] = el;
-          }}
-          onClick={() =>
-            confirmNavigate(`/dashboard/projects/${projectSlug}/budget`)
-          }
-          className={
-            location.pathname.startsWith(
-              `/dashboard/projects/${projectSlug}/budget`
-            )
-              ? "active"
-              : ""
-          }
-          aria-pressed={location.pathname.startsWith(
-            `/dashboard/projects/${projectSlug}/budget`
-          )}
-        >
-          <Coins size={16} />
-          <span>Budget</span>
-        </button>
-      )}
-
-      {showCalendarTab && (
-        <button
-          type="button"
-          ref={(el) => {
-            if (el) tabRefs.current[2] = el;
-          }}
-          onClick={() =>
-            confirmNavigate(`/dashboard/projects/${projectSlug}/calendar`)
-          }
-          className={
-            location.pathname.startsWith(
-              `/dashboard/projects/${projectSlug}/calendar`
-            )
-              ? "active"
-              : ""
-          }
-          aria-pressed={location.pathname.startsWith(
-            `/dashboard/projects/${projectSlug}/calendar`
-          )}
-        >
-          <CalendarIcon size={16} />
-          <span>Calendar</span>
-        </button>
-      )}
-
-      {showEditorTab && (
-        <button
-          type="button"
-          ref={(el) => {
-            if (el) tabRefs.current[3] = el;
-          }}
-          onClick={() =>
-            confirmNavigate(`/dashboard/projects/${projectSlug}/editor`)
-          }
-          className={
-            location.pathname.startsWith(
-              `/dashboard/projects/${projectSlug}/editor`
-            )
-              ? "active"
-              : ""
-          }
-          aria-pressed={location.pathname.startsWith(
-            `/dashboard/projects/${projectSlug}/editor`
-          )}
-        >
-          <PenTool size={16} />
-          <span>Editor</span>
-        </button>
-      )}
+      {tabs.map((tab, index) => {
+        const isActive = tab.matches(location.pathname);
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            ref={(el) => {
+              if (el) tabRefs.current[index] = el;
+            }}
+            onClick={() => confirmNavigate(tab.path)}
+            className={isActive ? "active" : ""}
+            aria-pressed={isActive}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 };

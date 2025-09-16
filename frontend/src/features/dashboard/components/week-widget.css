@@ -3,7 +3,7 @@
   margin:  0;
   background: var(--bg2, #111111);
   border: 2px solid rgba(255, 255, 255, 0.10);
-  border-radius: 20px;
+  border-radius: var(--radius-squircle, var(--radius-lg, 24px));
   overflow: visible;
   padding: 10px;
 }

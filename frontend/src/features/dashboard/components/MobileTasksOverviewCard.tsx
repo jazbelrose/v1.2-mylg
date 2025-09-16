@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 import Squircle from "@/shared/ui/Squircle";
 
@@ -6,8 +6,15 @@ import { useTasksOverview } from "./useTasksOverview";
 import styles from "./MobileTasksOverviewCard.module.css";
 
 const CARD_RADIUS = 20;
+const MAX_COMPACT_GROUPS = 2;
+const MAX_COMPACT_ITEMS = 2;
 
-const MobileTasksOverviewCard: React.FC = () => {
+type Props = {
+  className?: string;
+  compact?: boolean;
+};
+
+const MobileTasksOverviewCard: React.FC<Props> = ({ className, compact = false }) => {
   const { loading, error, stats, groups, handleNavigateToPrimary, handleViewAll, canNavigateToProject } =
     useTasksOverview();
 
@@ -17,12 +24,24 @@ const MobileTasksOverviewCard: React.FC = () => {
     return value;
   };
 
+  const cardClassName = useMemo(
+    () => [styles.card, className || ""].filter(Boolean).join(" "),
+    [className]
+  );
+
+  const limitedGroups = useMemo(() => {
+    if (!compact) return groups;
+    return groups.slice(0, MAX_COMPACT_GROUPS);
+  }, [compact, groups]);
+
+  const hiddenGroupCount = compact ? Math.max(0, groups.length - limitedGroups.length) : 0;
+
   return (
     <Squircle
       as="section"
       radius={CARD_RADIUS}
       smoothing={0.6}
-      className={styles.card}
+      className={cardClassName}
       aria-label="Tasks overview"
     >
       <header className={styles.header}>
@@ -52,39 +71,56 @@ const MobileTasksOverviewCard: React.FC = () => {
 
       {error ? (
         <div className={styles.empty}>We couldn’t load tasks right now. Please try again later.</div>
-      ) : groups.length ? (
+      ) : limitedGroups.length ? (
         <div className={styles.groups}>
-          {groups.map((group) => (
-            <div key={group.id} className={styles.group}>
-              <div className={styles.groupHeader}>
-                <span className={styles.groupDay}>{group.dayLabel}</span>
-                <span className={styles.groupCount}>
-                  {group.items.length} {group.items.length === 1 ? "task" : "tasks"}
-                </span>
+          {limitedGroups.map((group) => {
+            const items = compact ? group.items.slice(0, MAX_COMPACT_ITEMS) : group.items;
+            const hiddenItems = compact
+              ? Math.max(0, group.items.length - items.length)
+              : 0;
+
+            return (
+              <div key={group.id} className={styles.group}>
+                <div className={styles.groupHeader}>
+                  <span className={styles.groupDay}>{group.dayLabel}</span>
+                  <span className={styles.groupCount}>
+                    {group.items.length} {group.items.length === 1 ? "task" : "tasks"}
+                  </span>
+                </div>
+                <ul className={styles.items}>
+                  {items.map((item) => (
+                    <li key={item.id} className={styles.item}>
+                      <span
+                        className={styles.itemDot}
+                        style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
+                        aria-hidden="true"
+                      />
+                      <div className={styles.itemBody}>
+                        <span className={styles.itemTitle}>{item.title}</span>
+                        {(item.time || item.project) && (
+                          <span className={styles.itemMeta}>
+                            {item.time}
+                            {item.time && item.project ? " · " : ""}
+                            {item.project}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                  {hiddenItems > 0 && (
+                    <li className={`${styles.item} ${styles.itemMore}`} aria-hidden>
+                      +{hiddenItems} more
+                    </li>
+                  )}
+                </ul>
               </div>
-              <ul className={styles.items}>
-                {group.items.map((item) => (
-                  <li key={item.id} className={styles.item}>
-                    <span
-                      className={styles.itemDot}
-                      style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
-                      aria-hidden="true"
-                    />
-                    <div className={styles.itemBody}>
-                      <span className={styles.itemTitle}>{item.title}</span>
-                      {(item.time || item.project) && (
-                        <span className={styles.itemMeta}>
-                          {item.time}
-                          {item.time && item.project ? " · " : ""}
-                          {item.project}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            );
+          })}
+          {hiddenGroupCount > 0 && (
+            <div className={styles.moreGroups} aria-hidden>
+              +{hiddenGroupCount} more days
             </div>
-          ))}
+          )}
         </div>
       ) : (
         <div className={styles.empty}>

@@ -584,7 +584,7 @@
   }
 
   /* Ensure text truncation works on iPhone Safari */
-  .name {
+.name {
     max-width: 100%;
     text-overflow: ellipsis;
     -webkit-text-overflow: ellipsis;
@@ -602,4 +602,36 @@
 }
 
 /* Removed mobile touch sizing to keep rows compact */
+
+:global(.home-dashboard-card--projects) .panel {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  padding: 14px;
+  margin: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+}
+
+:global(.home-dashboard-card--projects) .header {
+  margin-bottom: 4px;
+}
+
+:global(.home-dashboard-card--projects) .iconsStrip,
+:global(.home-dashboard-card--projects) .recentsWrap,
+:global(.home-dashboard-card--projects) .kpis {
+  display: none;
+}
+
+:global(.home-dashboard-card--projects) .list {
+  overflow: hidden;
+}
+
+:global(.home-dashboard-card--projects) .row {
+  padding: 0 4px;
+}
+
+:global(.home-dashboard-card--projects) .row + .row {
+  margin-top: 1px;
+}
 

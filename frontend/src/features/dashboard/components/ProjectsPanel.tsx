@@ -12,6 +12,7 @@ import { MICRO_WOBBLE_SCALE, SPRING_FAST } from "@/shared/ui/motionTokens";
 
 type Props = {
   onOpenProject: (projectId: string) => void;
+  className?: string;
 };
 
 const DEFAULT_PROJECT_ROWS = 3;
@@ -56,7 +57,7 @@ const getProjectActivityTs = (p: ProjectLike): number => {
   return timestamps.length ? Math.max(...timestamps) : 0;
 };
 
-const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
+const ProjectsPanel: React.FC<Props> = ({ onOpenProject, className }) => {
   const reduceMotion = useReducedMotion();
   const { projects, isLoading, projectsError, fetchProjects } = useData();
   const navigate = useNavigate();
@@ -232,11 +233,12 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
 
   const scopeLabel = scope === "recents" ? "Recents" : "All projects";
 
+  const panelClassName = [styles.panel, styles.panelFullBleed, className || ""]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <section
-      aria-label="Projects"
-      className={`${styles.panel} ${styles.panelFullBleed}`}
-    >
+    <section aria-label="Projects" className={panelClassName}>
       <header className={styles.header}>
         <div className={styles.titleWrap}>
           <h3 className={styles.title}>Projects</h3>

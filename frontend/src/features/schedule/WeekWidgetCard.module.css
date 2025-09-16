@@ -138,3 +138,21 @@
 .widget {
   margin-top: 8px;
 }
+
+:global(.home-dashboard-card--week) .card {
+  height: 100%;
+  min-height: 0;
+  gap: 14px;
+  padding: 16px;
+  overflow: hidden;
+}
+
+:global(.home-dashboard-card--week) .badge,
+:global(.home-dashboard-card--week) .morePill {
+  display: none;
+}
+
+:global(.home-dashboard-card--week) .widget {
+  flex: 1;
+  min-height: 0;
+}

@@ -14,13 +14,11 @@ import Settings from "@/features/dashboard/components/Settings";
 import Collaborators from "@/features/dashboard/components/Collaborators";
 import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
-import AllProjectsWeekWidget from "@/features/dashboard/components/AllProjectsWeekWidget";
-import TasksOverviewCard from "@/features/dashboard/components/TasksOverviewCard";
 import MobileTasksOverviewCard from "@/features/dashboard/components/MobileTasksOverviewCard";
 import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import AppShell from "@/app/layout/AppShell";
-import ProjectsPanelDesktop from "@/features/projects/ProjectsPanelDesktop";
+import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
 
 import "./dashboard-styles.css";
 
@@ -147,38 +145,63 @@ const WelcomeScreen: React.FC = () => {
   const isFullWidthView = ["projects", "notifications", "messages", "settings", "collaborators"].includes(
     activeView
   );
-  const showTopBar = !isFullWidthView && !isDesktop; // TODO: Remove legacy desktop bento tiles after mobile parity update.
+  const isWelcomeView = activeView === "welcome";
+  const showTopBar = !isFullWidthView && !isDesktop && !isWelcomeView; // Compact home layout hides legacy top bar.
+
+  const wrapperClassName = [
+    "dashboard-wrapper",
+    "welcome-screen",
+    "no-vertical-center",
+    isWelcomeView ? "home-dashboard" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const rowLayoutClassName = ["row-layout", isWelcomeView ? "row-layout--home" : ""]
+    .filter(Boolean)
+    .join(" ");
+
+  const dashboardContentClassName = [
+    "dashboard-content",
+    isFullWidthView ? "full-width" : "",
+    isWelcomeView ? "dashboard-content--home" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const mainContentClassName = [
+    "main-content",
+    isWelcomeView ? "main-content--welcome" : "",
+    isWelcomeView ? "main-content--home" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const renderWelcomeView = () => {
-    if (isDesktop) {
-      return (
-        <div className="dashboard-home-grid">
-          <section id="projects" className="welcome-section-anchor">
-            <ProjectsPanelDesktop
-              onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
-            />
-          </section>
-
-          <section id="tasks" className="welcome-section-anchor">
-            <TasksOverviewCard className="welcome-header-tasks-card" />
-          </section>
-        </div>
-      );
-    }
+    const handleOpenProject = (projectId?: string) => {
+      if (!projectId) return;
+      handleNavigateToProject({ projectId });
+    };
 
     return (
-      <div className="mobile-welcome-layout">
-        <div className="mobile-projects-section">
+      <div className="home-dashboard-stack" role="presentation">
+        <section className="home-dashboard-section home-dashboard-section--week">
+          <WeekWidgetCard className="home-dashboard-card home-dashboard-card--week" />
+        </section>
+
+        <section className="home-dashboard-section home-dashboard-section--projects">
           <ProjectsPanel
-            onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
+            className="home-dashboard-card home-dashboard-card--projects"
+            onOpenProject={(projectId) => handleOpenProject(projectId)}
           />
-        </div>
-        <div className="mobile-tasks-section">
-          <MobileTasksOverviewCard />
-        </div>
-        <div className="mobile-calendar-section">
-          <AllProjectsWeekWidget />
-        </div>
+        </section>
+
+        <section className="home-dashboard-section home-dashboard-section--tasks">
+          <MobileTasksOverviewCard
+            className="home-dashboard-card home-dashboard-card--tasks"
+            compact
+          />
+        </section>
       </div>
     );
   };
@@ -220,25 +243,15 @@ const WelcomeScreen: React.FC = () => {
         />
       )}
     >
-      <div className="dashboard-wrapper welcome-screen no-vertical-center">
+      <div className={wrapperClassName}>
         <WelcomeHeader userName={userName} setActiveView={setActiveView} />
 
-        <div className="row-layout">
+        <div className={rowLayoutClassName}>
           <div className="welcome-screen-details">
             {showTopBar && !isMobile && <TopBar setActiveView={setActiveView} />}
 
-            <div
-              className={`dashboard-content ${
-                isFullWidthView ? "full-width" : ""
-              }`}
-            >
-              <div
-                className={`main-content${
-                  activeView === "welcome" && isDesktop
-                    ? " main-content--welcome"
-                    : ""
-                }`}
-              >
+            <div className={dashboardContentClassName}>
+              <div className={mainContentClassName}>
                 {renderActiveView()}
               </div>
             </div>

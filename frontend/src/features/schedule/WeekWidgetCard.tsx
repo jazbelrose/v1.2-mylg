@@ -22,6 +22,7 @@ const MAX_VISIBLE_TRACKS = 3;
 
 type WeekWidgetCardProps = {
   className?: string;
+  variant?: "default" | "compact";
 };
 
 function toDay(d?: string | Date | number) {
@@ -29,15 +30,12 @@ function toDay(d?: string | Date | number) {
   const v = d instanceof Date ? d : new Date(d);
   return Number.isNaN(v.getTime()) ? null : new Date(v.getFullYear(), v.getMonth(), v.getDate());
 }
-
 function sameDay(a: Date | null, b: Date | null) {
-  return !!(a && b) &&
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
+  return !!(a && b) && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
+const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className, variant = "default" }) => {
+  const isCompact = variant === "compact";
   const { projects = [] } = useData() as { projects: Project[] };
   const [weekOf, setWeekOf] = useState<Date>(new Date());
 
@@ -96,28 +94,35 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
     return items;
   };
 
+  const cardClassName = [styles.card, isCompact ? styles.cardCompact : "", className ?? ""].filter(Boolean).join(" ");
+  const headerClassName = [styles.header, isCompact ? styles.headerCompact : ""].filter(Boolean).join(" ");
+  const subtitleClassName = [styles.subtitle, isCompact ? styles.subtitleCompact : ""].filter(Boolean).join(" ");
+  const widgetClassName = [styles.widget, isCompact ? styles.widgetCompact : ""].filter(Boolean).join(" ");
+
   return (
     <Squircle
       as="section"
       radius={CARD_RADIUS}
       smoothing={0.6}
       cornerRadii={CARD_CORNER_RADII}
-      className={`${styles.card} ${className ?? ""}`.trim()}
+      className={cardClassName}
       aria-label="Week overview"
     >
-      <header className={styles.header}>
+      <header className={headerClassName}>
         <div className={styles.titleWrap}>
           <h3 className={styles.title}>This Week</h3>
-          <p className={styles.subtitle}>Timeline snapshots across your projects.</p>
-          <div className={styles.badges} aria-label="Week status badges">
-            <span className={styles.badge}>Overdue</span>
-            <span className={styles.badge}>Due Today</span>
-            <span className={styles.badge}>New</span>
-          </div>
+          <p className={subtitleClassName}>Timeline snapshots across your projects.</p>
+          {!isCompact && (
+            <div className={styles.badges} aria-label="Week status badges">
+              <span className={styles.badge}>Overdue</span>
+              <span className={styles.badge}>Due Today</span>
+              <span className={styles.badge}>New</span>
+            </div>
+          )}
         </div>
         {moreCount > 0 && (
           <span
-            className={styles.morePill}
+            className={`${styles.morePill} ${isCompact ? styles.morePillCompact : ""}`}
             aria-label={`${moreCount} more active projects this week`}
           >
             +{moreCount} more
@@ -129,7 +134,7 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
         weekOf={weekOf}
         tracks={tracks}
         dots={dots}
-        className={styles.widget}
+        className={widgetClassName}
         onPrevWeek={(d) => setWeekOf(d)}
         onNextWeek={(d) => setWeekOf(d)}
         onSelectDate={(d) => setWeekOf(d)}

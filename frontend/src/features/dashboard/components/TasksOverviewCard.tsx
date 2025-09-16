@@ -69,8 +69,13 @@ type EventGroup = {
   items: EventChip[];
 };
 
+type TrimmedGroup = EventGroup & { hiddenItems: number };
+
 type TasksOverviewCardProps = {
   className?: string;
+  variant?: "default" | "compact";
+  maxGroups?: number;
+  maxItemsPerGroup?: number;
 };
 
 function parseDueDate(value?: unknown): Date | null {
@@ -139,7 +144,13 @@ function pickDue(raw: RawTask): { value: Date | null; key?: string; timeLabel?: 
   return { value: dueDate, key, timeLabel };
 }
 
-const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
+const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({
+  className,
+  variant = "default",
+  maxGroups,
+  maxItemsPerGroup,
+}) => {
+  const isCompact = variant === "compact";
   const { projects = [] } = useData() as { projects: Project[] };
   const navigate = useNavigate();
 
@@ -344,6 +355,44 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
     };
   }, [tasks]);
 
+  const groupLimit = isCompact ? maxGroups ?? 2 : undefined;
+  const itemsLimit = isCompact ? maxItemsPerGroup ?? 2 : undefined;
+
+  const {
+    visibleGroups,
+    hiddenGroupsCount,
+    hiddenTasksCount,
+  }: {
+    visibleGroups: TrimmedGroup[];
+    hiddenGroupsCount: number;
+    hiddenTasksCount: number;
+  } = useMemo(() => {
+    const limitGroups =
+      typeof groupLimit === "number" ? Math.max(groupLimit, 0) : groups.length;
+    const visibleSource = groups.slice(0, limitGroups);
+
+    let hiddenTasks = 0;
+
+    const mapped: TrimmedGroup[] = visibleSource.map((group) => {
+      if (typeof itemsLimit !== "number") {
+        return { ...group, hiddenItems: 0 };
+      }
+      const trimmedItems = group.items.slice(0, Math.max(itemsLimit, 0));
+      const hidden = Math.max(0, group.items.length - trimmedItems.length);
+      hiddenTasks += hidden;
+      return { ...group, items: trimmedItems, hiddenItems: hidden };
+    });
+
+    const remainingGroups = groups.slice(visibleSource.length);
+    hiddenTasks += remainingGroups.reduce((sum, group) => sum + group.items.length, 0);
+
+    return {
+      visibleGroups: mapped,
+      hiddenGroupsCount: Math.max(0, groups.length - visibleSource.length),
+      hiddenTasksCount: hiddenTasks,
+    };
+  }, [groups, groupLimit, itemsLimit]);
+
   const handleNavigateToPrimary = useCallback(() => {
     if (!primaryProjectId) {
       navigate("/dashboard/projects");
@@ -366,65 +415,124 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
     return value;
   };
 
+  const cardClassName = [
+    styles.card,
+    isCompact ? styles.cardCompact : "",
+    className ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const headerClassName = [
+    styles.header,
+    isCompact ? styles.headerCompact : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const subtitleClassName = [
+    styles.subtitle,
+    isCompact ? styles.subtitleCompact : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const statGridClassName = [
+    styles.statGrid,
+    isCompact ? styles.statGridCompact : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const groupsClassName = [
+    styles.groups,
+    isCompact ? styles.groupsCompact : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const chipsClassName = [
+    styles.chips,
+    isCompact ? styles.chipsCompact : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <Squircle
       as="section"
       radius={CARD_RADIUS}
       smoothing={0.6}
-      className={`${styles.card} ${className ?? ""}`.trim()}
+      className={cardClassName}
       aria-label="Tasks overview"
     >
-      <header className={styles.header}>
+      <header className={headerClassName}>
         <div className={styles.titleWrap}>
           <h3 className={styles.title}>Tasks</h3>
-          <p className={styles.subtitle}>Track progress and deadlines across your projects.</p>
+          <p className={subtitleClassName}>Track progress and deadlines across your projects.</p>
         </div>
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={`${styles.iconButton} ${styles.iconButtonPrimary}`}
-            onClick={handleNavigateToPrimary}
-            aria-label="Add or review tasks for the next project"
-            disabled={!canNavigateToProject}
-          >
-            <Plus size={18} strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={handleViewAll}
-            aria-label="View all projects"
-          >
-            <MoreHorizontal size={18} strokeWidth={2} />
-          </button>
-        </div>
+        {!isCompact && (
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={`${styles.iconButton} ${styles.iconButtonPrimary}`}
+              onClick={handleNavigateToPrimary}
+              aria-label="Add or review tasks for the next project"
+              disabled={!canNavigateToProject}
+            >
+              <Plus size={18} strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={handleViewAll}
+              aria-label="View all projects"
+            >
+              <MoreHorizontal size={18} strokeWidth={2} />
+            </button>
+          </div>
+        )}
       </header>
 
-      <div className={styles.statGrid}>
-        <div className={`${styles.stat} ${styles.statOk}`}>
+      <div className={statGridClassName}>
+        <div
+          className={`${styles.stat} ${isCompact ? styles.statCompact : ""} ${styles.statOk}`}
+        >
           <span className={styles.statLabel}>Completed</span>
-          <span className={styles.statValue}>{formatStatValue(completed)}</span>
+          <span className={`${styles.statValue} ${isCompact ? styles.statValueCompact : ""}`}>
+            {formatStatValue(completed)}
+          </span>
         </div>
-        <div className={`${styles.stat} ${styles.statDanger}`}>
+        <div
+          className={`${styles.stat} ${isCompact ? styles.statCompact : ""} ${styles.statDanger}`}
+        >
           <span className={styles.statLabel}>Overdue</span>
-          <span className={styles.statValue}>{formatStatValue(overdue)}</span>
+          <span className={`${styles.statValue} ${isCompact ? styles.statValueCompact : ""}`}>
+            {formatStatValue(overdue)}
+          </span>
         </div>
-        <div className={`${styles.stat} ${styles.statWarn}`}>
+        <div
+          className={`${styles.stat} ${isCompact ? styles.statCompact : ""} ${styles.statWarn}`}
+        >
           <span className={styles.statLabel}>Due</span>
-          <span className={styles.statValue}>{formatStatValue(dueSoon)}</span>
+          <span className={`${styles.statValue} ${isCompact ? styles.statValueCompact : ""}`}>
+            {formatStatValue(dueSoon)}
+          </span>
         </div>
       </div>
 
       {error ? (
         <div className={styles.empty}>We couldn’t load tasks right now. Please try again later.</div>
-      ) : groups.length ? (
-        <div className={styles.groups}>
-          {groups.map((group) => (
-            <div key={group.id} className={styles.group}>
-              <div className={styles.groupLabel}>{group.dayLabel}</div>
-              <div className={styles.chips}>
+      ) : visibleGroups.length ? (
+        <div className={groupsClassName}>
+          {visibleGroups.map((group) => (
+            <div key={group.id} className={`${styles.group} ${isCompact ? styles.groupCompact : ""}`}>
+              <div className={`${styles.groupLabel} ${isCompact ? styles.groupLabelCompact : ""}`}>
+                {group.dayLabel}
+              </div>
+              <div className={chipsClassName}>
                 {group.items.map((item) => (
-                  <div key={item.id} className={styles.chip}>
+                  <div key={item.id} className={`${styles.chip} ${isCompact ? styles.chipCompact : ""}`}>
                     <span
                       className={styles.chipDot}
                       style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
@@ -432,7 +540,9 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
                     />
                     <span className={styles.chipTitle}>{item.title}</span>
                     {(item.time || item.project) && (
-                      <span className={styles.chipMeta}>
+                      <span
+                        className={`${styles.chipMeta} ${isCompact ? styles.chipMetaCompact : ""}`}
+                      >
                         {item.time}
                         {item.time && item.project ? " · " : ""}
                         {item.project}
@@ -440,6 +550,9 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
                     )}
                   </div>
                 ))}
+                {group.hiddenItems > 0 && (
+                  <span className={styles.chipOverflow}>+{group.hiddenItems}</span>
+                )}
               </div>
             </div>
           ))}
@@ -449,6 +562,27 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
           {loading ? "Loading tasks…" : "No open tasks are due this week. You’re all caught up!"}
         </div>
       )}
+
+      {isCompact &&
+        !error &&
+        !loading &&
+        (hiddenGroupsCount > 0 || hiddenTasksCount > 0) && (
+          <div className={styles.compactOverflow}>
+            {hiddenGroupsCount > 0 && (
+              <span>
+                +{hiddenGroupsCount} more day{hiddenGroupsCount === 1 ? "" : "s"}
+              </span>
+            )}
+            {hiddenGroupsCount > 0 && hiddenTasksCount > 0 && (
+              <span className={styles.compactOverflowDot}>·</span>
+            )}
+            {hiddenTasksCount > 0 && (
+              <span>
+                +{hiddenTasksCount} task{hiddenTasksCount === 1 ? "" : "s"}
+              </span>
+            )}
+          </div>
+        )}
     </Squircle>
   );
 };

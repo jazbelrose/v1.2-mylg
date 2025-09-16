@@ -23,9 +23,20 @@ const PANEL_RADIUS = 24;
 const PANEL_CORNER_RADII = Object.freeze({ top: PANEL_RADIUS + 2, bottom: PANEL_RADIUS - 2 });
 
 const DEFAULT_DESKTOP_ROWS = 6;
+const DEFAULT_COMPACT_ROWS = 4;
+const MIN_COMPACT_ROWS = 2;
+
+const getCompactRowTarget = (height: number): number => {
+  if (!Number.isFinite(height)) return DEFAULT_COMPACT_ROWS;
+  if (height < 680) return MIN_COMPACT_ROWS;
+  if (height < 820) return 3;
+  return DEFAULT_COMPACT_ROWS;
+};
 
 export type ProjectsPanelDesktopProps = {
   onOpenProject?: (projectId: string) => void;
+  variant?: "default" | "compact";
+  maxRows?: number;
 };
 
 type SortOption = "titleAsc" | "titleDesc" | "dateNewest" | "dateOldest";
@@ -69,7 +80,12 @@ function sanitizeId(raw: string) {
   return raw.replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
-const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProject }) => {
+const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({
+  onOpenProject,
+  variant = "default",
+  maxRows,
+}) => {
+  const isCompact = variant === "compact";
   const reduceMotion = useReducedMotion();
   const {
     projects = [],
@@ -92,6 +108,33 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement | null>(null);
   const filtersIdRef = useRef(`projects-filters-${sanitizeId(Math.random().toString(36).slice(2))}`);
+
+  const [compactRowEstimate, setCompactRowEstimate] = useState(() => {
+    if (!isCompact) return DEFAULT_COMPACT_ROWS;
+    if (typeof window === "undefined") return DEFAULT_COMPACT_ROWS;
+    return getCompactRowTarget(window.innerHeight);
+  });
+
+  useEffect(() => {
+    if (!isCompact) return;
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => {
+      const next = getCompactRowTarget(window.innerHeight);
+      setCompactRowEstimate((prev) => (prev === next ? prev : next));
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isCompact]);
+
+  const compactRowLimit = isCompact
+    ? Math.max(
+        MIN_COMPACT_ROWS,
+        Math.min(maxRows ?? DEFAULT_COMPACT_ROWS, compactRowEstimate)
+      )
+    : undefined;
 
   const [sortOption, setSortOption] = useState<SortOption>("dateNewest");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -146,7 +189,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     }
   }, [projects]);
 
-  const items = useMemo(() => {
+  const { items, hiddenCount }: { items: ProjectWithMeta[]; hiddenCount: number } = useMemo(() => {
     const list: ProjectWithMeta[] = (projects as ProjectLike[]).map((p) => ({
       ...(p as ProjectWithMeta),
       _activity: getProjectActivityTs(p),
@@ -191,11 +234,27 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
         break;
     }
 
-    if (scope === "recents") {
-      return ordered.slice(0, DEFAULT_DESKTOP_ROWS);
-    }
-    return ordered;
-  }, [projects, scope, query, statusFilter, sortOption]);
+    const limit = isCompact
+      ? compactRowLimit ?? DEFAULT_COMPACT_ROWS
+      : scope === "recents"
+        ? DEFAULT_DESKTOP_ROWS
+        : undefined;
+
+    const limited =
+      typeof limit === "number" ? ordered.slice(0, Math.max(limit, 0)) : ordered;
+    const hidden =
+      typeof limit === "number" ? Math.max(0, ordered.length - limited.length) : 0;
+
+    return { items: limited, hiddenCount: hidden };
+  }, [
+    projects,
+    scope,
+    query,
+    statusFilter,
+    sortOption,
+    isCompact,
+    compactRowLimit,
+  ]);
 
   const kpis = useProjectKpis(projects as ProjectLike[]);
 
@@ -252,6 +311,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   };
 
   const renderIconsStrip = () => {
+    if (isCompact) return null;
     const allProjects = projects as ProjectLike[];
     const maxIcons = 7;
     const shown = allProjects.slice(0, maxIcons);
@@ -461,6 +521,120 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   );
 
   const errorText = projectsError ? "Failed to load projects." : undefined;
+  const totalFiltered = items.length + hiddenCount;
+  const summaryLabel = `Showing ${items.length}${
+    hiddenCount > 0 ? ` of ${totalFiltered}` : ""
+  }`;
+  const pendingLabel = `${kpis.pendingProjects} pending`;
+  const nextProjectSummary = kpis.nextProject
+    ? `Next: ${kpis.nextProject.title ?? ""}${
+        kpis.nextProject.date ? ` · ${kpis.nextProject.date}` : ""
+      }`
+    : undefined;
+
+  if (isCompact) {
+    return (
+      <Squircle
+        as="section"
+        aria-label="Projects overview"
+        className={`${desktopStyles.card} ${desktopStyles.cardCompact}`}
+        radius={PANEL_RADIUS}
+        smoothing={0.6}
+        cornerRadii={PANEL_CORNER_RADII}
+      >
+        <header className={`${desktopStyles.header} ${desktopStyles.headerCompact}`}>
+          <div className={desktopStyles.compactTitleWrap}>
+            <div className={mobileStyles.titleWrap}>
+              <h3 className={mobileStyles.title}>Projects</h3>
+            </div>
+            <p className={desktopStyles.compactSubtitle}>{`${summaryLabel} • ${pendingLabel}`}</p>
+            {nextProjectSummary && (
+              <p className={desktopStyles.compactMetaLine}>{nextProjectSummary}</p>
+            )}
+          </div>
+          {hiddenCount > 0 && (
+            <span className={desktopStyles.compactOverflowPill}>+{hiddenCount}</span>
+          )}
+        </header>
+
+        {errorText ? (
+          <div className={desktopStyles.errorState}>{errorText}</div>
+        ) : isLoading ? (
+          <div className={desktopStyles.emptyState}>Loading projects…</div>
+        ) : items.length === 0 ? (
+          <div className={desktopStyles.emptyState}>No projects match filters.</div>
+        ) : (
+          <ul className={desktopStyles.compactList} role="list">
+            {items.map((p) => {
+              const id = p.projectId;
+              const title = (p.title || "Untitled project").trim();
+              const thumb =
+                Array.isArray(p.thumbnails) && p.thumbnails[0] ? p.thumbnails[0] : undefined;
+              const deadline = formatShortDate(p.finishline);
+              const status = p.status ? String(p.status) : "—";
+              const unread = Number.isFinite(p.unreadCount as number)
+                ? Number(p.unreadCount)
+                : Number((p as { unreadCount?: number }).unreadCount ?? 0);
+              const owner = getOwnerName(p);
+
+              return (
+                <li key={id} className={desktopStyles.compactRow} role="listitem">
+                  <button
+                    type="button"
+                    className={desktopStyles.compactRowButton}
+                    onClick={() => handleOpen(id)}
+                    aria-label={`Open project ${title}`}
+                  >
+                    <span className={desktopStyles.compactRowMain}>
+                      <span className={desktopStyles.thumbCompact} aria-hidden>
+                        {thumb && !imgError[id] ? (
+                          <img
+                            className={desktopStyles.thumbCompactImg}
+                            src={getFileUrl(thumb)}
+                            alt=""
+                            onError={() => setImgError((m) => ({ ...m, [id]: true }))}
+                          />
+                        ) : (
+                          <SVGThumbnail
+                            initial={title.charAt(0).toUpperCase() || "#"}
+                            className={desktopStyles.thumbCompactImg}
+                          />
+                        )}
+                      </span>
+                      <span className={desktopStyles.compactText}>
+                        <span className={desktopStyles.compactTitle}>{title}</span>
+                        <span className={desktopStyles.compactMeta}>
+                          {owner}
+                          {owner && status ? " · " : ""}
+                          {status}
+                        </span>
+                      </span>
+                    </span>
+                    <span className={desktopStyles.compactMetaWrap}>
+                      <span className={desktopStyles.compactDeadline}>{deadline ?? "—"}</span>
+                      {unread > 0 && (
+                        <span className={desktopStyles.compactUnread}>{unread}</span>
+                      )}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <div className={`${desktopStyles.footer} ${desktopStyles.footerCompact}`}>
+          <button
+            type="button"
+            className={desktopStyles.footerButton}
+            onClick={() => navigate("/dashboard/projects")}
+          >
+            See all projects
+          </button>
+        </div>
+      </Squircle>
+    );
+  }
 
   return (
     <Squircle

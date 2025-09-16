@@ -20,6 +20,7 @@ import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import AppShell from "@/app/layout/AppShell";
 import ProjectsPanelDesktop from "@/features/projects/ProjectsPanelDesktop";
+import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
 
 import "./dashboard-styles.css";
 
@@ -151,16 +152,24 @@ const WelcomeScreen: React.FC = () => {
   const renderWelcomeView = () => {
     if (isDesktop) {
       return (
-        <div className="dashboard-home-grid">
-          <section id="projects" className="welcome-section-anchor">
-            <ProjectsPanelDesktop
-              onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
-            />
-          </section>
+        <div className="dashboard-home-viewport">
+          <div className="dashboard-home-desktop" role="region" aria-label="Home overview">
+            <section id="projects" className="welcome-section-anchor dashboard-home-desktop__projects">
+              <ProjectsPanelDesktop
+                variant="compact"
+                onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
+              />
+            </section>
 
-          <section id="tasks" className="welcome-section-anchor">
-            <TasksOverviewCard className="welcome-header-tasks-card" />
-          </section>
+            <div className="dashboard-home-desktop__side">
+              <section id="week" className="welcome-section-anchor">
+                <WeekWidgetCard variant="compact" />
+              </section>
+              <section id="tasks" className="welcome-section-anchor">
+                <TasksOverviewCard variant="compact" />
+              </section>
+            </div>
+          </div>
         </div>
       );
     }
@@ -219,7 +228,11 @@ const WelcomeScreen: React.FC = () => {
       <div className="dashboard-wrapper welcome-screen no-vertical-center">
         <WelcomeHeader userName={userName} setActiveView={setActiveView} />
 
-        <div className="row-layout">
+        <div
+          className={`row-layout${
+            activeView === "welcome" && isDesktop ? " row-layout--fixed" : ""
+          }`}
+        >
           <div className="welcome-screen-details">
             {showTopBar && !isMobile && <TopBar setActiveView={setActiveView} />}
 
@@ -231,7 +244,11 @@ const WelcomeScreen: React.FC = () => {
               <div
                 className={`main-content${
                   activeView === "welcome" && isDesktop
-                    ? " main-content--welcome"
+                    ? " main-content--welcome main-content--fixed"
+                    : ""
+                }${
+                  activeView === "welcome" && isDesktop
+                    ? " main-content--home"
                     : ""
                 }`}
               >

@@ -71,11 +71,21 @@
   z-index: 1;
 }
 
+.cardCompact {
+  padding: clamp(16px, 1.8vw, 24px);
+  gap: clamp(12px, 1.4vw, 18px);
+  height: 100%;
+}
+
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-2, 16px);
+}
+
+.headerCompact {
+  gap: clamp(10px, 1.1vw, 16px);
 }
 
 .titleWrap {
@@ -94,6 +104,11 @@
   margin: 0;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
+}
+
+.subtitleCompact {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .badges {
@@ -135,6 +150,15 @@
   white-space: nowrap;
 }
 
+.morePillCompact {
+  padding: 5px 10px;
+  background: rgba(250, 51, 86, 0.15);
+}
+
 .widget {
   margin-top: 8px;
+}
+
+.widgetCompact {
+  margin-top: 4px;
 }

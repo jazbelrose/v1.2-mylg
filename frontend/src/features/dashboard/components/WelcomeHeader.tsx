@@ -239,15 +239,6 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
         </div>
       </div>
 
-      {showWelcomeCards && (
-        <div className="welcome-header-extras" role="region" aria-label="Dashboard welcome overview">
-       
-
-          <div id="week" className="welcome-section-anchor">
-            <WeekWidgetCard className="welcome-header-week-card" />
-          </div>
-        </div>
-      )}
 
       <NotificationsDrawer
         open={notificationsOpen}

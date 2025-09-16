@@ -61,7 +61,9 @@ const WelcomeScreen: React.FC = () => {
 
   const { view: initialView, userSlug: initialDMUserSlug } = parsePath();
   const [activeView, setActiveView] = useState<string>(initialView);
-  const [dmUserSlug, setDmUserSlug] = useState<string | null>(initialDMUserSlug);
+  const [dmUserSlug, setDmUserSlug] = useState<string | null>(
+    initialDMUserSlug
+  );
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
@@ -90,15 +92,22 @@ const WelcomeScreen: React.FC = () => {
     }
   }, [isDesktop]);
 
-  const handleNavigateToProject = async ({ projectId }: { projectId?: string }) => {
+  const handleNavigateToProject = async ({
+    projectId,
+  }: {
+    projectId?: string;
+  }) => {
     if (!projectId) return;
 
     const hasUnsaved =
-      (typeof window.hasUnsavedChanges === "function" && window.hasUnsavedChanges()) ||
+      (typeof window.hasUnsavedChanges === "function" &&
+        window.hasUnsavedChanges()) ||
       window.unsavedChanges === true;
 
     if (hasUnsaved) {
-      const confirmLeave = window.confirm("You have unsaved changes, continue?");
+      const confirmLeave = window.confirm(
+        "You have unsaved changes, continue?"
+      );
       if (!confirmLeave) return;
     }
 
@@ -107,7 +116,10 @@ const WelcomeScreen: React.FC = () => {
     const path = `/dashboard/projects/${slug}`;
 
     if (location.pathname !== path) {
-      await Promise.all([fetchProjectDetails(projectId), prefetchBudgetData(projectId)]);
+      await Promise.all([
+        fetchProjectDetails(projectId),
+        prefetchBudgetData(projectId),
+      ]);
       navigate(path);
     }
   };
@@ -129,7 +141,8 @@ const WelcomeScreen: React.FC = () => {
       userData
     ) {
       const sorted = [...inbox].sort(
-        (a, b) => new Date(b.lastMsgTs).getTime() - new Date(a.lastMsgTs).getTime()
+        (a, b) =>
+          new Date(b.lastMsgTs).getTime() - new Date(a.lastMsgTs).getTime()
       );
       const lastThread = sorted[0];
 
@@ -143,7 +156,9 @@ const WelcomeScreen: React.FC = () => {
 
         if (otherId) {
           const user = allUsers.find((u: UserLite) => u.userId === otherId);
-          const slug = user ? slugify(`${user.firstName}-${user.lastName}`) : otherId;
+          const slug = user
+            ? slugify(`${user.firstName}-${user.lastName}`)
+            : otherId;
           setDmUserSlug(slug);
           navigate(`/dashboard/messages/${slug}`, { replace: true });
         }
@@ -155,18 +170,27 @@ const WelcomeScreen: React.FC = () => {
   if (userData?.pending) return <PendingApprovalScreen />;
 
   // Hide TopBar and QuickStats for these views
-  const isFullWidthView = ["projects", "notifications", "messages", "settings", "collaborators"].includes(
-    activeView
-  );
+  const isFullWidthView = [
+    "projects",
+    "notifications",
+    "messages",
+    "settings",
+    "collaborators",
+  ].includes(activeView);
   const showTopBar = !isFullWidthView && !isDesktop; // TODO: Remove legacy desktop bento tiles after mobile parity update.
 
   const renderWelcomeView = () => {
     if (isDesktop) {
       return (
         <div className="dashboard-home-grid">
+          <div className="mobile-calendar-section">
+            <AllProjectsWeekWidget />
+          </div>
           <section id="projects" className="welcome-section-anchor">
             <ProjectsPanelDesktop
-              onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
+              onOpenProject={(projectId) =>
+                handleNavigateToProject({ projectId })
+              }
             />
           </section>
 
@@ -179,16 +203,18 @@ const WelcomeScreen: React.FC = () => {
 
     return (
       <div className="mobile-welcome-layout">
+        <div className="mobile-calendar-section">
+          <AllProjectsWeekWidget />
+        </div>
         <div className="mobile-projects-section">
           <ProjectsPanel
-            onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
+            onOpenProject={(projectId) =>
+              handleNavigateToProject({ projectId })
+            }
           />
         </div>
         <div className="mobile-tasks-section">
           <MobileTasksOverviewCard />
-        </div>
-        <div className="mobile-calendar-section">
-          <AllProjectsWeekWidget />
         </div>
       </div>
     );
@@ -236,7 +262,9 @@ const WelcomeScreen: React.FC = () => {
 
         <div className="row-layout">
           <div className="welcome-screen-details">
-            {showTopBar && !isMobile && <TopBar setActiveView={setActiveView} />}
+            {showTopBar && !isMobile && (
+              <TopBar setActiveView={setActiveView} />
+            )}
 
             <div
               className={`dashboard-content ${
@@ -263,7 +291,10 @@ const WelcomeScreen: React.FC = () => {
     return (
       <div className="dashboard-root">
         <aside>
-          <DashboardNavPanel variant="persistent" setActiveView={setActiveView} />
+          <DashboardNavPanel
+            variant="persistent"
+            setActiveView={setActiveView}
+          />
         </aside>
         {mainContent}
       </div>

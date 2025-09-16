@@ -40,7 +40,7 @@
     align-items: flex-start;
     grid-template-columns: var(--sidebar-w, 268px) minmax(0, 1fr);
     gap: clamp(12px, 2vw, 21px);
-    padding: clamp(24px, 4vw, 48px);
+    padding: clamp(12px, 2vw, 24px);
   }
 
   .app-shell__drawer {

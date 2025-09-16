@@ -1,5 +1,6 @@
 import React from "react";
 import { X } from "lucide-react";
+import { Link } from "react-router-dom";
 import NavBadge from "./NavBadge";
 import useDashboardNavigation, {
   type DashboardNavItem,
@@ -67,7 +68,8 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
   className,
 }) => {
   const { navItems, bottomItems } = useDashboardNavigation({ setActiveView, onClose });
-  const showClose = variant === "overlay";
+  const isOverlay = variant === "overlay";
+  const isPersistent = variant === "persistent";
 
   const containerClass = [
     "dashboard-nav-panel",
@@ -79,9 +81,8 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
 
   return (
     <div className={containerClass}>
-      {showClose ? (
-        <div className="navigation-drawer-header">
-          <span className="navigation-drawer-title">Menu</span>
+      {isOverlay ? (
+        <div className="navigation-drawer-header navigation-drawer-header--overlay">
           <button
             type="button"
             className="close-button"
@@ -94,6 +95,19 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
       ) : null}
 
       <div className="navigation-drawer-content">
+        {isPersistent ? (
+          <div className="dashboard-nav-panel__brand-row">
+            <Link
+              to="/"
+              className="dashboard-nav-panel__brand-button"
+              aria-label="Go to marketing home"
+            >
+              <span className="dashboard-nav-panel__brand-mark">M!</span>
+              <span className="dashboard-nav-panel__brand-text">MYLG</span>
+            </Link>
+          </div>
+        ) : null}
+
         <ul className="nav-list nav-list--primary">
           {navItems.map((item) => renderNavItem(item))}
         </ul>

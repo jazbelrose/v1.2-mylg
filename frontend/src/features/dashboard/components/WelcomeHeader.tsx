@@ -35,7 +35,9 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
 
   const baseDrawerId = appShell?.drawerId;
   const isDrawerOpen = appShell?.isDrawerOpen ?? false;
-  const showHamburger = !!setActiveView && !!appShell && !appShell.isDesktop;
+  const isDesktopShell = appShell?.isDesktop ?? false;
+  const showHamburger = Boolean(setActiveView && appShell && !appShell.isDesktop);
+  const showBrandInHeader = !isDesktopShell;
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -95,16 +97,18 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
       <div className="welcome-header-desktop">
         {/* Left: Logo + Hamburger */}
         <div className="welcome-header-left">
-          <div
-            className="header-icon-btn welcome-header__brand-button"
-            onClick={handleHomeClick}
-            role="button"
-            tabIndex={0}
-            aria-label="Go to Home"
-            onKeyDown={handleLogoKeyDown}
-          >
-            <span className={brandClassName}>M!</span>
-          </div>
+          {showBrandInHeader ? (
+            <div
+              className="header-icon-btn welcome-header__brand-button"
+              onClick={handleHomeClick}
+              role="button"
+              tabIndex={0}
+              aria-label="Go to Home"
+              onKeyDown={handleLogoKeyDown}
+            >
+              <span className={brandClassName}>M!</span>
+            </div>
+          ) : null}
 
           {showHamburger && (
             <button

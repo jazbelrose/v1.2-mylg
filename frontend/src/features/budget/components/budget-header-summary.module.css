@@ -48,10 +48,13 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(255,255,255,0.2);
+  background: var(--tag-bg, rgba(255,255,255,0.2));
   font-size: 0.6rem;
   padding: 2px 6px;
   border-radius: 4px;
+  color: var(--tag-color, inherit);
+  border: 1px solid var(--tag-border, transparent);
+  box-shadow: var(--tag-shadow, none);
 }
 .cardTitle {
   font-size: 0.8rem;

@@ -32,6 +32,8 @@ import { useBudget } from "@/features/budget/context/BudgetContext";
 import { useData } from "@/app/contexts/useData";
 import type { Project, TimelineEvent } from "@/app/contexts/DataProvider";
 import { findProjectBySlug, slugify } from "@/shared/utils/slug";
+import { useProjectPalette } from "@/features/project/hooks/useProjectPalette";
+import { resolveProjectCoverUrl } from "@/features/project/utils/theme";
 import {
   fetchBudgetHeaders,
   updateBudgetItem,
@@ -86,6 +88,9 @@ const BudgetPageContent = () => {
   const [areaGroups, setAreaGroups] = useState([]);
   const [invoiceGroups, setInvoiceGroups] = useState([]);
   const [clients, setClients] = useState([]);
+
+  const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
+  const projectPalette = useProjectPalette(coverImage);
 
   useLayoutEffect(() => {
     const updateTableHeight = () => {
@@ -470,6 +475,7 @@ const BudgetPageContent = () => {
       `}</style>
       <ProjectPageLayout
         projectId={activeProject?.projectId}
+        theme={projectPalette}
         header={
           <ProjectHeader
             activeProject={activeProject as Project}

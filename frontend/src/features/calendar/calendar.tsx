@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ProjectPageLayout from '../project/components/ProjectPageLayout';
 import ProjectHeader from '@/features/project/components/ProjectHeader';
 import TimelineChart from '../project/components/TimelineChart';
@@ -12,6 +12,8 @@ import { findProjectBySlug, slugify } from '../../shared/utils/slug';
 import { BudgetProvider } from '@/features/budget/context/BudgetProvider';
 import type { Project } from '../../app/contexts/DataProvider';
 import type { QuickLinksRef } from '@/features/project/components/QuickLinksComponent';
+import { useProjectPalette } from '@/features/project/hooks/useProjectPalette';
+import { resolveProjectCoverUrl } from '@/features/project/utils/theme';
 
 type TimelineMode = 'overview' | 'agenda';
 
@@ -127,9 +129,13 @@ const CalendarPage: React.FC = () => {
     navigate(`/dashboard/projects/${projectSlug}`);
   };
 
+  const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
+  const projectPalette = useProjectPalette(coverImage);
+
   return (
     <ProjectPageLayout
       projectId={activeProject?.projectId}
+      theme={projectPalette}
       header={
         <ProjectHeader
           activeProject={activeProject}

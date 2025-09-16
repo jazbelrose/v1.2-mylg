@@ -156,6 +156,48 @@
   color: var(--text-color-3);
 }
 
+[data-project-theme] .timeline-track .milestone-pill.active {
+  background-color: var(--accent-weak, var(--text-color-3));
+  color: var(--accent-on-color, #fff);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-strong, #FA3356) 55%,
+    transparent
+  );
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--accent-strong, #FA3356) 32%, transparent);
+}
+
+[data-project-theme] .timeline-track .milestone-pill.active .percentage-pill {
+  background-color: var(--accent-strong, #FA3356);
+  color: var(--accent-on-color, #fff);
+}
+
+[data-project-theme] .timeline-track .milestone-pill.upcoming {
+  border-color: color-mix(
+    in srgb,
+    var(--accent-weak, rgba(255, 255, 255, 0.32)) 40%,
+    transparent
+  );
+}
+
+[data-project-theme] .timeline-track .milestone-pill.passed {
+  border-color: color-mix(
+    in srgb,
+    var(--accent-strong, #FA3356) 28%,
+    transparent
+  );
+}
+
+[data-project-theme] .timeline-track .milestone-pill.passed .percentage-pill {
+  background-color: color-mix(
+    in srgb,
+    var(--accent-strong, #FA3356) 30%,
+    #0d0d0d 70%
+  );
+  color: #fff;
+}
+
 .milestone-pill.upcoming {
   background-color: var(--primary-color);
   color: rgba(255, 255, 255, 0.7);

@@ -1,11 +1,13 @@
 import React from "react";
 import ProjectMessagesThread from "../../messages/ProjectMessagesThread";
 import ChatPanel from "./ChatPanel";
+import type { ProjectAccentPalette } from "@/features/project/hooks/useProjectPalette";
 
 type ProjectPageLayoutProps = {
-  projectId: string;
+  projectId?: string;
   header: React.ReactNode;
   children: React.ReactNode;
+  theme?: ProjectAccentPalette;
 };
 
 // Minimal prop typings for local components (adjust if your real components differ)
@@ -33,10 +35,38 @@ const MOBILE_BREAKPOINT = 768;
 const MIN_THREAD_WIDTH = 350;
 const MAX_THREAD_WIDTH = 800;
 
-const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({ projectId, header, children }) => {
+const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
+  projectId,
+  header,
+  children,
+  theme,
+}) => {
   const projectHeaderRef = React.useRef<HTMLDivElement | null>(null);
   const layoutRef = React.useRef<HTMLDivElement | null>(null);
   const resizingRef = React.useRef<boolean>(false);
+
+  const themeStyle = React.useMemo<React.CSSProperties | undefined>(() => {
+    if (!theme) return undefined;
+    return {
+      "--accent": theme.accent,
+      "--accent-weak": theme.accentWeak,
+      "--accent-strong": theme.accentStrong,
+      "--accent-on-color": "#ffffff",
+      "--chip-bg": theme.accentWeak,
+      "--chip-border": theme.accentStrong,
+      "--chip-color": "#ffffff",
+      "--chip-dot": theme.accentStrong,
+      "--chip-shadow": "0 0 0 1px color-mix(in srgb, var(--accent-strong, #FA3356) 35%, transparent)",
+      "--tag-bg": theme.accentWeak,
+      "--tag-color": "#ffffff",
+      "--tag-border": theme.accentStrong,
+      "--tag-shadow": "0 0 0 1px color-mix(in srgb, var(--accent-strong, #FA3356) 25%, transparent)",
+      "--progress-accent": theme.accentStrong,
+      "--progress-accent-weak": theme.accentWeak,
+    } as React.CSSProperties;
+  }, [theme]);
+
+  const safeProjectId = projectId ?? "";
 
   const [threadWidth, setThreadWidth] = React.useState<number>(MIN_THREAD_WIDTH);
   const [headerHeights, setHeaderHeights] = React.useState<{ global: number; project: number }>({
@@ -122,7 +152,11 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({ projectId, header
   const contentHeight = `calc(100vh - ${headerHeights.global + headerHeights.project}px)`;
 
   return (
-    <div className="dashboard-wrapper active-project-details">
+    <div
+      className="dashboard-wrapper active-project-details"
+      data-project-theme={theme ? "" : undefined}
+      style={themeStyle}
+    >
       <div
         ref={projectHeaderRef}
         style={{ position: "sticky", top: 0, zIndex: 5, backgroundColor: "#0c0c0c" }}
@@ -175,7 +209,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({ projectId, header
               }}
             >
               <_ProjectMessagesThread
-                projectId={projectId}
+                projectId={safeProjectId}
                 open
                 setOpen={() => {}}
                 floating={false}
@@ -190,7 +224,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({ projectId, header
 
       {floatingThread && (
         <_ChatPanel
-          projectId={projectId}
+          projectId={safeProjectId}
           initialFloating
           onFloatingChange={setFloatingThread}
         />

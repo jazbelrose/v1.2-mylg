@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import ProjectPageLayout from "@/features/project/components/ProjectPageLayout";
@@ -14,6 +14,8 @@ import { Project } from "../../../app/contexts/DataProvider";
 import { useSocket } from "../../../app/contexts/useSocket";
 import { findProjectBySlug, slugify } from "../../../shared/utils/slug";
 import { notify } from "@/shared/ui/ToastNotifications";
+import { useProjectPalette } from "@/features/project/hooks/useProjectPalette";
+import { resolveProjectCoverUrl } from "@/features/project/utils/theme";
 
 const EditorPage: React.FC = () => {
   const { projectSlug } = useParams<{ projectSlug: string }>();
@@ -38,6 +40,8 @@ const EditorPage: React.FC = () => {
   const [filesOpen, setFilesOpen] = useState(false);
   const [briefToolbarActions, setBriefToolbarActions] = useState<Record<string, unknown>>({});
   const quickLinksRef = useRef<QuickLinksRef>(null);
+  const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
+  const projectPalette = useProjectPalette(coverImage);
   const designerRef = useRef<DesignerRef>(null);
   const [briefContent, setBriefContent] = useState<string>("");
   const [isBriefDirty, setIsBriefDirty] = useState(false);
@@ -198,6 +202,7 @@ const EditorPage: React.FC = () => {
   return (
     <ProjectPageLayout
       projectId={activeProject?.projectId}
+      theme={projectPalette}
       header={
         <ProjectHeader
           activeProject={activeProject}

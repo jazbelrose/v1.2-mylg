@@ -19,6 +19,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { findProjectBySlug, slugify } from "@/shared/utils/slug";
 import type { Project } from "@/app/contexts/DataProvider";
+import { useProjectPalette } from "@/features/project/hooks/useProjectPalette";
+import { resolveProjectCoverUrl } from "@/features/project/utils/theme";
 
 interface QuickLinksRef {
   openModal: () => void;
@@ -61,6 +63,9 @@ const SingleProject: React.FC = () => {
     const num = parseFloat(str.replace("%", ""));
     return Number.isNaN(num) ? 0 : num;
   }, []);
+
+  const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
+  const projectPalette = useProjectPalette(coverImage);
 
   const showWelcome = useCallback(() => {
     navigate("/dashboard");
@@ -162,6 +167,7 @@ const SingleProject: React.FC = () => {
   return (
     <ProjectPageLayout
       projectId={activeProject?.projectId}
+      theme={projectPalette}
       header={
         <ProjectHeader
           activeProject={activeProject}

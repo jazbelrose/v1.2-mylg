@@ -938,11 +938,13 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                   rx="160"
                   ry="160"
                   fill="none"
-                  stroke="#fff"
                   strokeWidth="15"
                   strokeDasharray={`${
                     (parseStatusToNumber(localActiveProject.status) / 100) * 1002
                   }, 1004`}
+                  style={{
+                    stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
+                  }}
                 >
                   {parseStatusToNumber(localActiveProject.status) < 100 && (
                     <animate

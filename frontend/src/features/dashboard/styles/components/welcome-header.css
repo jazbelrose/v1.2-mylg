@@ -22,7 +22,8 @@
 .welcome-header-center {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
+  flex: 1 1 100%;
   width: auto;
   max-width: none;
   min-width: 0;

@@ -123,6 +123,7 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({
 
   const themeStyle = useMemo<React.CSSProperties>(() => {
     const [r, g, b] = hexToRgbTuple(accent);
+    const accentRgb: [number, number, number] = [r, g, b];
     const weakRgb = hexToRgbTuple(accentWeak);
     const strongRgb = hexToRgbTuple(accentStrong);
 
@@ -138,8 +139,8 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({
     const canvasGrid = tupleToRgba(mixRgbTuples(weakRgb, WHITE_RGB, 0.32), 0.18);
     const canvasBorder = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.48), 0.58);
     const canvasShadow = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.28), 0.22);
-    const overlayTint = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.35), 0.72);
-    const raisedSurface = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.18), 0.96);
+    const overlayBase = mixRgbTuples(accentRgb, BRAND_BG_RGB, 0.72);
+    const overlayTint = tupleToRgba(overlayBase, 0.78);
     const raisedBorder = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.34), 0.42);
 
     return {
@@ -162,7 +163,7 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({
       "--moodboard-canvas-border": canvasBorder,
       "--moodboard-canvas-shadow": canvasShadow,
       "--moodboard-overlay": overlayTint,
-      "--moodboard-surface-raised": raisedSurface,
+      "--moodboard-surface-raised": PROJECT_BRAND_BG,
       "--moodboard-surface-raised-border": raisedBorder,
     } as React.CSSProperties;
   }, [accent, accentStrong, accentWeak]);

@@ -21,6 +21,8 @@
   border-radius: 20px;
   padding: 14px;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
 }
 
 @media (min-width: 1024px) {
@@ -42,7 +44,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 0px 0;
+  padding: 0 08px 0;
 }
 
 .dashboard-nav-panel__brand-button {
@@ -107,7 +109,59 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px 18px;
+  padding: 16px 32px;
+  position: relative;
+  isolation: isolate;
+}
+
+/* subtle sweep + top highlight; tweak opacities as you like */
+.navigation-drawer::before,
+.app-drawer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    /* soft accent wash from top */
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--accent, #FA3356) 12%, transparent) 0%,
+      transparent 42%
+    ),
+    /* top vignette / highlight */
+    radial-gradient(120% 80% at 50% -20%,
+      rgba(255,255,255,.08) 0%,
+      rgba(255,255,255,0) 60%
+    );
+  mix-blend-mode: soft-light;
+  opacity: .9;
+  z-index: 0;
+}
+@supports not (color: color-mix(in oklab, white 50%, black 50%)) {
+  .navigation-drawer::before,
+  .app-drawer::before {
+    background:
+      linear-gradient(180deg, rgba(250,51,86,.10) 0%, transparent 42%),
+      radial-gradient(120% 80% at 50% -20%, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 60%);
+  }
+}
+
+/* heavier, richer grain on shell */
+.navigation-drawer::after,
+.app-drawer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    /* coarse */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' stitchTiles='stitch'/></filter><rect width='120' height='120' filter='url(%23n)' opacity='.06'/></svg>"),
+    /* fine */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='1' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='.05'/></svg>");
+  background-size: 280px 280px, 120px 120px;   /* coarse / fine */
+  background-repeat: repeat;
+  mix-blend-mode: soft-light;
+  opacity: .18;                                 /* overall grain strength */
 }
 
 .navigation-drawer-header {
@@ -162,8 +216,7 @@
   flex-direction: column;
   gap: 24px;
   overflow-y: auto;
-  padding-block: 8px;
-  padding-inline-end: 4px;
+
   position: relative;
   color: rgba(255, 255, 255, 0.95);
   background: var(--bg2, #111213); /* flat background only */
@@ -174,19 +227,33 @@
   isolation: isolate;
   padding: 16px;
   margin: 16px 0;
+  margin-left: 16px;
 }
 
-/* keep only subtle grain */
+/* keep content area's grain, but lighten so layers don't stack too hard */
 .navigation-drawer-content::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='1' stitchTiles='stitch'/></filter><rect width='128' height='128' filter='url(%23n)' opacity='.05'/></svg>");
-  background-size: 240px 240px; /* large for smooth noise */
+  background-size: 300px 300px;
   mix-blend-mode: soft-light;
-  opacity: 0.1; /* tweak down or up for taste */
+  opacity: .08; /* tweak down or up for taste */
 }
+
+/* Respect high-contrast / print / low-power */
+@media print, (prefers-contrast: more) {
+  .navigation-drawer::before,
+  .navigation-drawer::after,
+  .app-drawer::before,
+  .app-drawer::after,
+  .navigation-drawer-content::after { display: none; }
+}
+/* manual kill-switch if needed */
+[data-noise="off"] .navigation-drawer::after,
+[data-noise="off"] .app-drawer::after,
+[data-noise="off"] .navigation-drawer-content::after { display: none; }
 
 @media (prefers-reduced-transparency: reduce) {
   .navigation-drawer-content {

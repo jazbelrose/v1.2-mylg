@@ -12,7 +12,23 @@ import { getFileUrl } from '../../../shared/utils/api';
 import { useAppShell } from '@/app/layout/AppShell';
 import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
 
-const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string) => void }> = ({ userName: propUserName, setActiveView }) => {
+interface WelcomeHeaderProps {
+  userName?: string;
+  setActiveView?: (view: string) => void;
+  onToggleNavigation?: () => void;
+  isNavigationOpen?: boolean;
+  navigationDrawerId?: string;
+  isDesktopLayout?: boolean;
+}
+
+const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
+  userName: propUserName,
+  setActiveView,
+  onToggleNavigation,
+  isNavigationOpen,
+  navigationDrawerId,
+  isDesktopLayout,
+}) => {
   const { userData } = useData();
   const { isOnline } = useOnlineStatus(); // <-- only need this now
   const navigate = useNavigate();
@@ -34,10 +50,11 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
   // online status (derived from presenceChanged events via OnlineStatusContext)
   const isUserOnline = !!userId && isOnline(String(userId));
 
-  const baseDrawerId = appShell?.drawerId;
-  const isDrawerOpen = appShell?.isDrawerOpen ?? false;
-  const isDesktopShell = appShell?.isDesktop ?? false;
-  const showHamburger = Boolean(setActiveView && appShell && !appShell.isDesktop);
+  const baseDrawerId = appShell?.drawerId ?? navigationDrawerId;
+  const isDrawerOpen = appShell?.isDrawerOpen ?? isNavigationOpen ?? false;
+  const isDesktopShell = appShell?.isDesktop ?? isDesktopLayout ?? false;
+  const hasNavigationToggle = Boolean(appShell || onToggleNavigation);
+  const showHamburger = Boolean(setActiveView && hasNavigationToggle && !isDesktopShell);
   const showBrandInHeader = !isDesktopShell;
 
   const [isMobile, setIsMobile] = useState(false);
@@ -54,6 +71,8 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
   const handleNavigationToggle = () => {
     if (appShell && !appShell.isDesktop) {
       appShell.openDrawer();
+    } else if (onToggleNavigation) {
+      onToggleNavigation();
     }
   };
 
@@ -133,9 +152,11 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
               aria-label="Toggle navigation"
               aria-controls={
                 baseDrawerId
-                  ? appShell?.isDesktop
-                    ? baseDrawerId
-                    : `${baseDrawerId}-overlay`
+                  ? appShell
+                    ? appShell.isDesktop
+                      ? baseDrawerId
+                      : `${baseDrawerId}-overlay`
+                    : baseDrawerId
                   : undefined
               }
               aria-expanded={isDrawerOpen}

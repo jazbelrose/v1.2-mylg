@@ -2,3 +2,26 @@
 @import '../styles/index.css';
 @import './overrides.css';
 
+.dashboard-root {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100dvh;
+}
+
+.dashboard-main {
+  min-width: 0;
+  overflow: auto;
+}
+
+.dashboard-wrapper {
+  padding: clamp(12px, 2vw, 24px);
+}
+
+.dashboard-wrapper.welcome-screen {
+  padding: clamp(12px, 2vw, 24px);
+}
+
+.dashboard-wrapper.welcome-screen.no-vertical-center {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom) + 56px);
+}
+

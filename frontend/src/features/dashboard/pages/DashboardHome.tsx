@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useData } from "@/app/contexts/useData";
 import { UserLite } from "@/app/contexts/DataProvider";
@@ -19,7 +19,6 @@ import TasksOverviewCard from "@/features/dashboard/components/TasksOverviewCard
 import MobileTasksOverviewCard from "@/features/dashboard/components/MobileTasksOverviewCard";
 import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
-import AppShell from "@/app/layout/AppShell";
 import ProjectsPanelDesktop from "@/features/projects/ProjectsPanelDesktop";
 
 import "./dashboard-styles.css";
@@ -65,6 +64,12 @@ const WelcomeScreen: React.FC = () => {
   const [dmUserSlug, setDmUserSlug] = useState<string | null>(initialDMUserSlug);
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const rawDrawerId = useId();
+  const drawerId = React.useMemo(
+    () => `dashboard-nav-${rawDrawerId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+    [rawDrawerId]
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -78,6 +83,12 @@ const WelcomeScreen: React.FC = () => {
       return () => window.removeEventListener("resize", handleResize);
     }
   }, []);
+
+  useEffect(() => {
+    if (isDesktop) {
+      setIsNavigationOpen(false);
+    }
+  }, [isDesktop]);
 
   const handleNavigateToProject = async ({ projectId }: { projectId?: string }) => {
     if (!projectId) return;
@@ -208,20 +219,20 @@ const WelcomeScreen: React.FC = () => {
     }
   };
 
-  return (
-    <AppShell
-      drawer={<DashboardNavPanel variant="persistent" setActiveView={setActiveView} />}
-      renderOverlayDrawer={({ open, onClose, drawerId }) => (
-        <NavigationDrawer
-          open={open}
-          onClose={onClose}
-          setActiveView={setActiveView}
-          drawerId={drawerId}
-        />
-      )}
-    >
+  const handleOpenNavigation = () => setIsNavigationOpen(true);
+  const handleCloseNavigation = () => setIsNavigationOpen(false);
+
+  const mainContent = (
+    <main className="dashboard-main">
       <div className="dashboard-wrapper welcome-screen no-vertical-center">
-        <WelcomeHeader userName={userName} setActiveView={setActiveView} />
+        <WelcomeHeader
+          userName={userName}
+          setActiveView={setActiveView}
+          onToggleNavigation={!isDesktop ? handleOpenNavigation : undefined}
+          isNavigationOpen={!isDesktop ? isNavigationOpen : undefined}
+          navigationDrawerId={!isDesktop ? drawerId : undefined}
+          isDesktopLayout={isDesktop}
+        />
 
         <div className="row-layout">
           <div className="welcome-screen-details">
@@ -245,7 +256,30 @@ const WelcomeScreen: React.FC = () => {
           </div>
         </div>
       </div>
-    </AppShell>
+    </main>
+  );
+
+  if (isDesktop) {
+    return (
+      <div className="dashboard-root">
+        <aside>
+          <DashboardNavPanel variant="persistent" setActiveView={setActiveView} />
+        </aside>
+        {mainContent}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <NavigationDrawer
+        open={isNavigationOpen}
+        onClose={handleCloseNavigation}
+        setActiveView={setActiveView}
+        drawerId={drawerId}
+      />
+      {mainContent}
+    </>
   );
 };
 

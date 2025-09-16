@@ -19,7 +19,6 @@ import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import AppShell from "@/app/layout/AppShell";
 import ProjectsPanelDesktop from "@/features/projects/ProjectsPanelDesktop";
-import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
 
 import "./dashboard-styles.css";
 
@@ -155,7 +154,6 @@ const WelcomeScreen: React.FC = () => {
           <ProjectsPanelDesktop
             onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
           />
-          <WeekWidgetCard />
         </div>
       );
     }

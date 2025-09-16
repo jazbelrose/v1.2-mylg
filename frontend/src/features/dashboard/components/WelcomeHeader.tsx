@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Bell, Menu } from "lucide-react";
 import { useData } from '@/app/contexts/useData';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import NotificationsDrawer from '../../../shared/ui/NotificationsDrawer';
 import { useNotifications } from "../../../app/contexts/useNotifications";
@@ -11,11 +11,14 @@ import GlobalSearch from './GlobalSearch';
 import './GlobalSearch.css';
 import { getFileUrl } from '../../../shared/utils/api';
 import { useAppShell } from '@/app/layout/AppShell';
+import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
+import TasksOverviewCard from "./TasksOverviewCard";
 
 const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string) => void }> = ({ userName: propUserName, setActiveView }) => {
   const { userData } = useData();
   const { isOnline } = useOnlineStatus(); // <-- only need this now
   const navigate = useNavigate();
+  const location = useLocation();
   const appShell = useAppShell();
 
   const userName = propUserName || userData?.firstName || userData?.email || 'User';
@@ -91,6 +94,20 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
   ]
     .filter(Boolean)
     .join(' ');
+
+  const activeView = React.useMemo(() => {
+    const segments = location.pathname.split('/').filter(Boolean);
+    const idx = segments.indexOf('dashboard');
+    if (idx === -1) return null;
+
+    let view = segments[idx + 1] ?? 'welcome';
+    if (view === 'welcome') {
+      view = segments[idx + 2] ?? 'welcome';
+    }
+    return view;
+  }, [location.pathname]);
+
+  const showWelcomeCards = Boolean(isDesktopShell && activeView === 'welcome');
 
   return (
     <>
@@ -213,6 +230,13 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
           </div>
         </div>
       </div>
+
+      {showWelcomeCards && (
+        <div className="welcome-header-extras" role="region" aria-label="This week overview">
+          <WeekWidgetCard className="welcome-header-week-card" />
+          <TasksOverviewCard className="welcome-header-tasks-card" />
+        </div>
+      )}
 
       <NotificationsDrawer
         open={notificationsOpen}

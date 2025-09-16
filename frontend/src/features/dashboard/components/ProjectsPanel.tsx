@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { Kebab } from "@/shared/icons/Kebab";
 import { useData } from "@/app/contexts/useData";
 import SVGThumbnail from "./SvgThumbnail";
@@ -292,6 +292,15 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
             );
           })()}
         </div>
+        <button
+          type="button"
+          className={styles.createButton}
+          onClick={() => navigate('/dashboard/new')}
+          title="New project"
+        >
+          <Plus size={16} strokeWidth={2.25} aria-hidden />
+          <span>New project</span>
+        </button>
         <div className={styles.recentsWrap} ref={filtersRef}>
           <button
             type="button"

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { User, Bell, Menu, Plus } from "lucide-react";
 import { useData } from '@/app/contexts/useData';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -48,6 +48,37 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleStartSomething = useCallback(() => {
+    navigate('/dashboard/new');
+  }, [navigate]);
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      const key = event.key.toLowerCase();
+      if ((event.metaKey || event.ctrlKey) && key === 'n') {
+        const target = event.target as HTMLElement | null;
+        if (target) {
+          const tag = target.tagName.toLowerCase();
+          const isFormField =
+            tag === 'input' ||
+            tag === 'textarea' ||
+            target.isContentEditable ||
+            target.getAttribute('role') === 'textbox';
+          if (isFormField) {
+            return;
+          }
+        }
+
+        event.preventDefault();
+        handleStartSomething();
+      }
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [handleStartSomething]);
 
   const handleHomeClick = () => navigate('/');
   const handleNotificationsToggle = () => setNotificationsOpen(!notificationsOpen);
@@ -108,6 +139,8 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
 
   const showWelcomeCards = Boolean(isDesktopShell && activeView === 'welcome');
 
+  const showMobileCreate = !isDesktopShell;
+
   return (
     <>
       <div className="welcome-header-desktop">
@@ -155,13 +188,19 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
 
         {/* Right: Create, Notifications, Avatar (+ online dot) */}
         <div className="welcome-header-right">
-          <div
-            className="nav-item-style"
-            onClick={() => navigate("/dashboard/new")}
-            title="Start something"
-          >
-            <Plus size={isMobile ? 20 : 26} color="white" />
-          </div>
+          {showMobileCreate && (
+            <button
+              type="button"
+              className="welcome-header__create-button"
+              onClick={handleStartSomething}
+              title="Start something"
+              aria-label="Start something"
+              aria-haspopup="menu"
+              aria-expanded={false}
+            >
+              <Plus size={isMobile ? 18 : 20} strokeWidth={2.25} />
+            </button>
+          )}
 
           <div
             className="nav-icon-wrapper nav-icon-style"
@@ -169,6 +208,7 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
             role="button"
             tabIndex={0}
             aria-label="Open notifications"
+            title="Notifications"
             onKeyDown={handleNotificationKeyDown}
           >
             <Bell size={isMobile ? 24 : 26} color="white" />

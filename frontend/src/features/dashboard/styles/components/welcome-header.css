@@ -36,6 +36,34 @@
   gap: 8px;
 }
 
+.welcome-header__create-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.welcome-header__create-button:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.welcome-header__create-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.welcome-header__create-button:active {
+  transform: translateY(0);
+}
+
 .welcome-header-extras {
   display: flex;
   flex-direction: column;
@@ -108,6 +136,32 @@
 
 /* Notification/nav badges used in header */
 .nav-icon-wrapper { position: relative; display: inline-block; }
+.nav-icon-style {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.nav-icon-style:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-icon-style:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.nav-icon-style:active {
+  transform: translateY(0);
+}
 .nav-bar-badge {
   position: absolute;
   top: -4px;
@@ -151,6 +205,12 @@
     width: 34px;
     height: 34px;
     font-size: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .welcome-header__create-button {
+    display: none;
   }
 }
 

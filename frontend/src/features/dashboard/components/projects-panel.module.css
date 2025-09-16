@@ -16,7 +16,7 @@
 
 .header {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 8px;
   margin-bottom: 6px; /* compact */
@@ -27,6 +27,7 @@
   align-items: center;
   gap: 6px; /* fit icons tightly next to title */
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .title {
@@ -81,6 +82,37 @@
 }
 
 .recentsWrap { position: relative; }
+
+.createButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  background: rgba(255, 255, 255, .08);
+  color: var(--text-color, #fff);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.createButton:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, .12);
+}
+
+.createButton:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, .6);
+  outline-offset: 2px;
+}
+
+.createButton:active {
+  transform: translateY(0);
+}
 
 .recents {
   display: inline-flex;
@@ -545,6 +577,18 @@
   height: 12px;
   border-radius: 6px;
   background: rgba(255, 255, 255, .08);
+}
+
+@media (max-width: 480px) {
+  .header {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+  }
+
+  .createButton,
+  .recentsWrap {
+    justify-self: flex-start;
+  }
 }
 
 /* iPhone compact widths */

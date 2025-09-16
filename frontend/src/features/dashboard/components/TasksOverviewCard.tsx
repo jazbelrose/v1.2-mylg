@@ -382,18 +382,20 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
         <div className={styles.actions}>
           <button
             type="button"
-            className={`${styles.iconButton} ${styles.iconButtonPrimary}`}
+            className={styles.createButton}
             onClick={handleNavigateToPrimary}
-            aria-label="Add or review tasks for the next project"
+            title="Add task"
             disabled={!canNavigateToProject}
           >
-            <Plus size={18} strokeWidth={2} />
+            <Plus size={18} strokeWidth={2} aria-hidden />
+            <span>Add task</span>
           </button>
           <button
             type="button"
             className={styles.iconButton}
             onClick={handleViewAll}
             aria-label="View all projects"
+            title="View all projects"
           >
             <MoreHorizontal size={18} strokeWidth={2} />
           </button>

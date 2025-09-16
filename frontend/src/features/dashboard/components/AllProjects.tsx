@@ -17,6 +17,7 @@ import {
   Search,
   MoreVertical,
   Pin,
+  Plus,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileUrl } from '../../../shared/utils/api';
@@ -551,6 +552,15 @@ const AllProjects: React.FC = () => {
       <div className="projects-header">
         <div className="projects-title">Projects</div>
         <div className="project-pills">
+          <button
+            type="button"
+            className="projects-create-button"
+            onClick={() => navigate('/dashboard/new')}
+            title="New project"
+          >
+            <Plus size={18} strokeWidth={2} aria-hidden />
+            <span>New project</span>
+          </button>
           {[{ key: 'all', label: `All Projects (${projects.length})` },
             ...statusOptions.map((s) => ({
               key: s,

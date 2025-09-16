@@ -181,38 +181,47 @@
 }
 
 .nav-item {
+  --nav-item-inline-padding: 14px;
+  --nav-item-background: var(--bg3, #181a1b);
+  --nav-item-outline-color: var(--line, rgba(255, 255, 255, 0.06));
+  --nav-item-shadow: inset 0 0 0 1px var(--nav-item-outline-color);
+
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr);
   align-items: center;
   column-gap: 12px;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--nav-item-inline-padding);
   border-radius: 12px;
-  border: 1px solid var(--line, rgba(255, 255, 255, 0.06));
-  background-color: var(--bg3, #181a1b);
+  border: none;
+  box-sizing: border-box;
+  background: var(--nav-item-background);
   color: var(--text, #eaecee);
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   appearance: none;
-  transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out,
-    transform 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  box-shadow: var(--nav-item-shadow);
+  transition: background 0.15s ease-in-out, box-shadow 0.15s ease-in-out,
+    transform 0.15s ease-in-out;
   text-align: left;
   outline: none;
 }
 
 .nav-item:hover,
 .nav-item:focus-visible {
-  background-color: var(--bg2, #111213);
-  box-shadow: inset 0 0 0 1px rgba(250, 51, 86, 0.08), 0 10px 24px rgba(0, 0, 0, 0.32);
+  --nav-item-background: var(--bg2, #111213);
+  --nav-item-outline-color: rgba(250, 51, 86, 0.08);
+  --nav-item-shadow: inset 0 0 0 1px var(--nav-item-outline-color),
+    0 10px 24px rgba(0, 0, 0, 0.32);
   transform: translateY(-1px);
 }
 
 @supports (color: color-mix(in srgb, white 50%, black 50%)) {
   .nav-item:hover,
   .nav-item:focus-visible {
-    background-color: color-mix(
+    --nav-item-background: color-mix(
       in srgb,
       var(--bg3, #181a1b) 88%,
       color-mix(in srgb, #FA3356 20%, transparent 80%) 12%
@@ -226,18 +235,22 @@
 }
 
 .nav-item--action {
-  background: linear-gradient(135deg, rgba(250, 51, 86, 0.16), rgba(250, 51, 86, 0.06));
-  border-color: color-mix(in oklab, var(--accent, #FA3356) 40%, var(--line, rgba(255, 255, 255, 0.06)) 60%);
+  --nav-item-background: linear-gradient(135deg, rgba(250, 51, 86, 0.16), rgba(250, 51, 86, 0.06));
+  --nav-item-outline-color: color-mix(
+    in oklab,
+    var(--accent, #FA3356) 40%,
+    var(--line, rgba(255, 255, 255, 0.06)) 60%
+  );
 }
 
 @supports not (color: color-mix(in oklab, white 50%, black 50%)) {
   .nav-item--action {
-    border-color: var(--accent, #FA3356);
+    --nav-item-outline-color: var(--accent, #FA3356);
   }
 }
 
 .nav-item--action:hover {
-  background: linear-gradient(135deg, rgba(250, 51, 86, 0.2), rgba(250, 51, 86, 0.1));
+  --nav-item-background: linear-gradient(135deg, rgba(250, 51, 86, 0.2), rgba(250, 51, 86, 0.1));
 }
 
 .nav-item__icon {
@@ -357,11 +370,6 @@
   .nav-item--notifications:focus-visible .nav-item__badge {
     animation: none;
   }
-}
-
-button.nav-item {
-  background-color: var(--bg3, #181a1b);
-  border: 1px solid var(--line, rgba(255, 255, 255, 0.06));
 }
 
 button.nav-item:disabled {

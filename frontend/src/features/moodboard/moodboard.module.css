@@ -7,6 +7,17 @@
   background: radial-gradient(circle at top, rgba(255, 255, 255, 0.02), transparent 55%),
     #0f1014;
   color: #f8fafc;
+  --moodboard-brand: var(--brand, #fa3356);
+  --moodboard-brand-rgb: 250, 51, 86;
+  --moodboard-brand-soft: rgba(var(--moodboard-brand-rgb), 0.12);
+  --moodboard-brand-soft-strong: rgba(var(--moodboard-brand-rgb), 0.25);
+  --moodboard-brand-border: rgba(var(--moodboard-brand-rgb), 0.4);
+  --moodboard-brand-border-strong: rgba(var(--moodboard-brand-rgb), 0.65);
+  --moodboard-brand-focus: rgba(var(--moodboard-brand-rgb), 0.35);
+  --moodboard-brand-shadow: rgba(var(--moodboard-brand-rgb), 0.45);
+  --moodboard-brand-shadow-strong: rgba(var(--moodboard-brand-rgb), 0.55);
+  --moodboard-brand-gradient-end: #ff6b8a;
+  --moodboard-brand-text-soft: rgba(255, 228, 233, 0.95);
 }
 
 .toolbar {
@@ -93,7 +104,7 @@
 }
 
 .canvas:focus-visible {
-  box-shadow: inset 0 0 0 2px rgba(96, 165, 250, 0.35);
+  box-shadow: inset 0 0 0 2px var(--moodboard-brand-focus);
 }
 
 .emptyState {
@@ -143,12 +154,12 @@
 }
 
 .stickerSelected {
-  box-shadow: 0 16px 34px rgba(59, 130, 246, 0.45), 0 0 0 2px rgba(96, 165, 250, 0.35);
+  box-shadow: 0 16px 34px var(--moodboard-brand-shadow), 0 0 0 2px var(--moodboard-brand-focus);
 }
 
 .stickerDragging {
   opacity: 0.92;
-  box-shadow: 0 18px 40px rgba(59, 130, 246, 0.55);
+  box-shadow: 0 18px 40px var(--moodboard-brand-shadow-strong);
 }
 
 .noteSticker {
@@ -182,9 +193,9 @@
 }
 
 .linkSticker {
-  background: rgba(96, 165, 250, 0.15);
-  border: 1px solid rgba(96, 165, 250, 0.4);
-  color: rgba(191, 219, 254, 0.95);
+  background: var(--moodboard-brand-soft);
+  border: 1px solid var(--moodboard-brand-border);
+  color: var(--moodboard-brand-text-soft);
 }
 
 .linkSticker a {
@@ -266,9 +277,9 @@
 }
 
 .typeButton[aria-pressed="true"] {
-  background: rgba(96, 165, 250, 0.25);
-  border-color: rgba(96, 165, 250, 0.65);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4);
+  background: var(--moodboard-brand-soft-strong);
+  border-color: var(--moodboard-brand-border-strong);
+  box-shadow: 0 0 0 1px var(--moodboard-brand-border);
 }
 
 .typeButton:hover,
@@ -335,14 +346,14 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.8), rgba(129, 140, 248, 0.85));
+  background: linear-gradient(135deg, rgba(var(--moodboard-brand-rgb), 0.85), var(--moodboard-brand-gradient-end));
   color: #0b1120;
-  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 12px 32px var(--moodboard-brand-shadow);
 }
 
 .primaryButton:hover,
 .primaryButton:focus-visible {
-  box-shadow: 0 14px 36px rgba(59, 130, 246, 0.45);
+  box-shadow: 0 14px 36px var(--moodboard-brand-shadow-strong);
   transform: translateY(-1px);
 }
 

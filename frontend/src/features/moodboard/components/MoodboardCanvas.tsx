@@ -11,12 +11,51 @@ import QuickInsertPalette from "./QuickInsertPalette";
 import { useMoodboardStore } from "../hooks/useMoodboardStore";
 import type { Sticker, StickerDraft } from "../types";
 import styles from "../moodboard.module.css";
+import type { ProjectAccentPalette } from "@/features/project/hooks/useProjectPalette";
+
+const DEFAULT_ACCENT = "#FA3356";
+const DEFAULT_RGB: [number, number, number] = [250, 51, 86];
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max);
+
+const hexToRgbTuple = (hex?: string): [number, number, number] => {
+  if (!hex) return DEFAULT_RGB;
+  let cleaned = hex.trim();
+  if (!cleaned) return DEFAULT_RGB;
+  if (cleaned.startsWith("#")) cleaned = cleaned.slice(1);
+  if (cleaned.length === 3) {
+    cleaned = cleaned
+      .split("")
+      .map((char) => char + char)
+      .join("");
+  }
+  if (cleaned.length !== 6) return DEFAULT_RGB;
+  const r = Number.parseInt(cleaned.slice(0, 2), 16);
+  const g = Number.parseInt(cleaned.slice(2, 4), 16);
+  const b = Number.parseInt(cleaned.slice(4, 6), 16);
+  if ([r, g, b].some((channel) => Number.isNaN(channel))) {
+    return DEFAULT_RGB;
+  }
+  return [r, g, b];
+};
+
+const mixWithWhite = (hex: string, amount = 0.82, alpha = 0.95): string => {
+  const [r, g, b] = hexToRgbTuple(hex);
+  const mix = clamp(amount, 0, 1);
+  const blend = (channel: number) =>
+    Math.round(channel + (255 - channel) * mix);
+  const blended = [blend(r), blend(g), blend(b)];
+  const clampedAlpha = clamp(alpha, 0, 1);
+  return `rgba(${blended[0]}, ${blended[1]}, ${blended[2]}, ${clampedAlpha})`;
+};
 
 const GRID_STEP = 8;
 
 export interface MoodboardCanvasProps {
   projectId?: string;
   userId?: string;
+  palette?: ProjectAccentPalette;
 }
 
 type DragState = {
@@ -25,7 +64,11 @@ type DragState = {
   stickerStart: { x: number; y: number };
 };
 
-const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({ projectId, userId }) => {
+const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({
+  projectId,
+  userId,
+  palette,
+}) => {
   const { stickers, addSticker, updateSticker, removeSticker, bringToFront, clear } =
     useMoodboardStore({ projectId, userId });
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -33,6 +76,19 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({ projectId, userId }) 
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
+
+  const accent = palette?.accent ?? DEFAULT_ACCENT;
+  const accentStrong = palette?.accentStrong ?? accent;
+
+  const themeStyle = useMemo<React.CSSProperties>(() => {
+    const [r, g, b] = hexToRgbTuple(accent);
+    return {
+      "--moodboard-brand": accent,
+      "--moodboard-brand-rgb": `${r}, ${g}, ${b}`,
+      "--moodboard-brand-gradient-end": accentStrong,
+      "--moodboard-brand-text-soft": mixWithWhite(accent),
+    } as React.CSSProperties;
+  }, [accent, accentStrong]);
 
   const selectedSticker = useMemo<Sticker | null>(() => {
     if (!selectedId) return null;
@@ -180,7 +236,7 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({ projectId, userId }) 
   const showEmptyState = stickers.length === 0;
 
   return (
-    <div className={styles.moodboardPage}>
+    <div className={styles.moodboardPage} style={themeStyle}>
       <div className={styles.toolbar}>
         <div className={styles.toolbarButtons}>
           <button

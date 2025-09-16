@@ -4,18 +4,19 @@ import { useData } from '@/app/contexts/useData';
 import { useNavigate } from 'react-router-dom';
 import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import NotificationsDrawer from '../../../shared/ui/NotificationsDrawer';
-import NavigationDrawer from '../../../shared/ui/NavigationDrawer';
 import { useNotifications } from "../../../app/contexts/useNotifications";
 import NavBadge from "../../../shared/ui/NavBadge";
 import { GridPlus } from "../../../shared/icons/GridPlus";
 import GlobalSearch from './GlobalSearch';
 import './GlobalSearch.css';
 import { getFileUrl } from '../../../shared/utils/api';
+import { useAppShell } from '@/app/layout/AppShell';
 
 const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string) => void }> = ({ userName: propUserName, setActiveView }) => {
   const { userData } = useData();
   const { isOnline } = useOnlineStatus(); // <-- only need this now
   const navigate = useNavigate();
+  const appShell = useAppShell();
 
   const userName = propUserName || userData?.firstName || userData?.email || 'User';
   const userThumbnail = userData?.thumbnail;
@@ -25,15 +26,16 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsPinned, setNotificationsPinned] = useState(false);
 
-  // navigation drawer
-  const [navigationOpen, setNavigationOpen] = useState(false);
-
   // notifications count
   const { notifications } = useNotifications();
   const unreadNotifications = notifications.filter((n) => !n.read).length;
 
   // online status (derived from presenceChanged events via OnlineStatusContext)
   const isUserOnline = !!userId && isOnline(String(userId));
+
+  const drawerId = appShell?.drawerId;
+  const isDrawerOpen = appShell?.isDrawerOpen ?? false;
+  const showHamburger = !!setActiveView && !!appShell && !appShell.isDesktop;
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -46,7 +48,11 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
   const handleHomeClick = () => navigate('/');
   const handleNotificationsToggle = () => setNotificationsOpen(!notificationsOpen);
   const handleNotificationsPinToggle = () => setNotificationsPinned(!notificationsPinned);
-  const handleNavigationToggle = () => setNavigationOpen(!navigationOpen);
+  const handleNavigationToggle = () => {
+    if (appShell && !appShell.isDesktop) {
+      appShell.openDrawer();
+    }
+  };
 
   const handleAvatarKeyDown: React.KeyboardEventHandler<HTMLDivElement | SVGElement | HTMLImageElement> = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -108,17 +114,20 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
             </div>
           </div>
 
-          <div
-            className="header-icon-btn"
-            onClick={handleNavigationToggle}
-            role="button"
-            tabIndex={0}
-            aria-label="Open navigation menu"
-            onKeyDown={handleMenuKeyDown}
-            style={{ cursor: 'pointer' }}
-          >
-            <Menu size={isMobile ? 20 : 24} color="white" />
-          </div>
+          {showHamburger && (
+            <button
+              type="button"
+              className="header-icon-btn"
+              onClick={handleNavigationToggle}
+              aria-label="Open navigation menu"
+              aria-controls={drawerId}
+              aria-expanded={isDrawerOpen}
+              onKeyDown={handleMenuKeyDown}
+              style={{ cursor: 'pointer' }}
+            >
+              <Menu size={isMobile ? 20 : 24} color="white" />
+            </button>
+          )}
         </div>
 
         {/* Center: Global Search */}
@@ -209,14 +218,6 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
         pinned={notificationsPinned}
         onTogglePin={handleNotificationsPinToggle}
       />
-
-      {setActiveView && (
-        <NavigationDrawer
-          open={navigationOpen}
-          onClose={() => setNavigationOpen(false)}
-          setActiveView={setActiveView}
-        />
-      )}
     </>
   );
 };

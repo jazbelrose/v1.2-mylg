@@ -5,9 +5,7 @@ import { UserLite } from "@/app/contexts/DataProvider";
 import { slugify } from "@/shared/utils/slug";
 import { prefetchBudgetData } from "@/features/budget/context/useBudget";
 import WelcomeHeader from "@/features/dashboard/components/WelcomeHeader";
-import WelcomeWidget from "@/features/dashboard/components/WelcomeWidget";
 import TopBar from "@/features/dashboard/components/TopBar";
-
 import AllProjects from "@/features/dashboard/components/AllProjects";
 import ProjectsPanel from "@/features/dashboard/components/ProjectsPanel";
 import NotificationsPage from "@/features/dashboard/components/NotificationsPage";
@@ -16,8 +14,12 @@ import Settings from "@/features/dashboard/components/Settings";
 import Collaborators from "@/features/dashboard/components/Collaborators";
 import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
-import AllProjectsCalendar from "@/features/dashboard/components/AllProjectsCalendar";
 import AllProjectsWeekWidget from "@/features/dashboard/components/AllProjectsWeekWidget";
+import NavigationDrawer from "@/shared/ui/NavigationDrawer";
+import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
+import AppShell from "@/app/layout/AppShell";
+import ProjectsPanelDesktop from "@/features/projects/ProjectsPanelDesktop";
+import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
 
 import "./dashboard-styles.css";
 
@@ -61,9 +63,14 @@ const WelcomeScreen: React.FC = () => {
   const [activeView, setActiveView] = useState<string>(initialView);
   const [dmUserSlug, setDmUserSlug] = useState<string | null>(initialDMUserSlug);
   const [isMobile, setIsMobile] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsDesktop(width >= 1280);
+    };
     if (typeof window !== "undefined") {
       handleResize();
       window.addEventListener("resize", handleResize);
@@ -139,66 +146,84 @@ const WelcomeScreen: React.FC = () => {
   const isFullWidthView = ["projects", "notifications", "messages", "settings", "collaborators"].includes(
     activeView
   );
-  const showTopBar = !isFullWidthView;
+  const showTopBar = !isFullWidthView && !isDesktop; // TODO: Remove legacy desktop bento tiles after mobile parity update.
+
+  const renderWelcomeView = () => {
+    if (isDesktop) {
+      return (
+        <div className="dashboard-home-grid">
+          <ProjectsPanelDesktop
+            onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
+          />
+          <WeekWidgetCard />
+        </div>
+      );
+    }
+
+    return (
+      <div className="mobile-welcome-layout">
+        <div className="mobile-projects-section">
+          <ProjectsPanel
+            onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
+          />
+        </div>
+        <div className="mobile-calendar-section">
+          <AllProjectsWeekWidget />
+        </div>
+      </div>
+    );
+  };
+
+  const renderActiveView = () => {
+    switch (activeView) {
+      case "welcome":
+        return renderWelcomeView();
+      case "projects":
+        return <AllProjects />;
+      case "notifications":
+        return (
+          <NotificationsPage
+            onNavigateToProject={(projectId: string) =>
+              handleNavigateToProject({ projectId })
+            }
+          />
+        );
+      case "messages":
+        return <Messages initialUserSlug={dmUserSlug || undefined} />;
+      case "settings":
+        return <Settings />;
+      case "collaborators":
+        return <Collaborators />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="dashboard-wrapper welcome-screen no-vertical-center">
-      <WelcomeHeader userName={userName} setActiveView={setActiveView} />
+    <AppShell
+      drawer={<DashboardNavPanel variant="persistent" setActiveView={setActiveView} />}
+      renderOverlayDrawer={({ open, onClose }) => (
+        <NavigationDrawer open={open} onClose={onClose} setActiveView={setActiveView} />
+      )}
+    >
+      <div className="dashboard-wrapper welcome-screen no-vertical-center">
+        <WelcomeHeader userName={userName} setActiveView={setActiveView} />
 
-      <div className="row-layout">
-        <div className="welcome-screen-details">
-          {showTopBar && !isMobile && <TopBar setActiveView={setActiveView} />}
+        <div className="row-layout">
+          <div className="welcome-screen-details">
+            {showTopBar && !isMobile && <TopBar setActiveView={setActiveView} />}
 
-          <div
-            className={`dashboard-content ${
-              isFullWidthView ? "full-width" : ""
-            }`}
-          >
-            {!isFullWidthView && (
-              <div className="quickstats-sidebar">
-                <WelcomeWidget
-                  setActiveView={setActiveView}
-                  setDmUserSlug={setDmUserSlug}
-                />
-              </div>
-            )}
-
-            <div className="main-content">
-              {{
-                welcome: isMobile ? (
-                  <>
-                    {/* DashboardHome.tsx (mobile welcome layout) */}
-                    <div className="mobile-welcome-layout">
-                      <div className="mobile-projects-section">
-                        <ProjectsPanel onOpenProject={(projectId) => handleNavigateToProject({ projectId })} />
-                      </div>
-                      <div className="mobile-calendar-section">
-                        <AllProjectsWeekWidget />
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <AllProjectsCalendar />
-                ),
-                projects: <AllProjects />,
-                notifications: (
-                  <NotificationsPage
-                    onNavigateToProject={(projectId: string) =>
-                      handleNavigateToProject({ projectId })
-                    }
-                  />
-                ),
-                messages: (
-                  <Messages initialUserSlug={dmUserSlug || undefined} />
-                ),
-                settings: <Settings />,
-                collaborators: <Collaborators />,
-              }[activeView] || null}
+            <div
+              className={`dashboard-content ${
+                isFullWidthView ? "full-width" : ""
+              }`}
+            >
+              <div className="main-content">{renderActiveView()}</div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 };
 

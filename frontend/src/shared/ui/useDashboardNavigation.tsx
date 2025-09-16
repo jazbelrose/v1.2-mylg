@@ -73,35 +73,30 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     }
   }, [setIsAuthenticated, setCognitoUser, navigate, close]);
 
-  const handleLogoClick = useCallback(() => {
-    navigate("/");
-    close();
-  }, [navigate, close]);
-
   const navItems: DashboardNavItem[] = useMemo(
     () => [
       {
         key: "create",
-        icon: <GridPlus size={24} color="white" />, // icon colors handled in CSS
+        icon: <GridPlus size={24} />, // icon colors handled in CSS
         label: "Create New Project",
         onClick: handleCreateProject,
         isAction: true,
       },
       {
         key: "home",
-        icon: <Home size={24} color="white" />,
+        icon: <Home size={24} />,
         label: "Home",
         onClick: () => handleNavigation("welcome"),
       },
       {
         key: "projects",
-        icon: <Folder size={24} color="white" />,
+        icon: <Folder size={24} />,
         label: "Projects",
         onClick: () => handleNavigation("projects"),
       },
       {
         key: "notifications",
-        icon: <Bell size={24} color="white" />,
+        icon: <Bell size={24} />,
         label: "Notifications",
         onClick: () => handleNavigation("notifications"),
         badgeCount: unreadNotifications,
@@ -109,7 +104,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
       },
       {
         key: "messages",
-        icon: <MessageSquare size={24} color="white" />,
+        icon: <MessageSquare size={24} />,
         label: "Messages",
         onClick: () => handleNavigation("messages"),
         badgeCount: unreadMessages,
@@ -117,7 +112,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
       },
       {
         key: "collaborators",
-        icon: <Users size={24} color="white" />,
+        icon: <Users size={24} />,
         label: "Collaborators",
         onClick: () => handleNavigation("collaborators"),
       },
@@ -129,7 +124,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     () => [
       {
         key: "terms",
-        icon: <Shield size={24} color="white" />,
+        icon: <Shield size={24} />,
         label: "Terms & Privacy",
         href: "/terms-and-privacy",
         external: true,
@@ -137,13 +132,13 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
       },
       {
         key: "settings",
-        icon: <Settings size={24} color="white" />,
+        icon: <Settings size={24} />,
         label: "Settings",
         onClick: () => handleNavigation("settings"),
       },
       {
         key: "sign-out",
-        icon: <LogOut size={24} color="white" />,
+        icon: <LogOut size={24} />,
         label: "Sign Out",
         onClick: handleSignOut,
       },
@@ -154,7 +149,6 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   return {
     navItems,
     bottomItems,
-    handleLogoClick,
   };
 }
 

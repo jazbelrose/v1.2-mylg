@@ -49,7 +49,13 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
   const handleNotificationsToggle = () => setNotificationsOpen(!notificationsOpen);
   const handleNotificationsPinToggle = () => setNotificationsPinned(!notificationsPinned);
   const handleNavigationToggle = () => {
-    if (appShell && !appShell.isDesktop) {
+    if (!appShell || appShell.isDesktop) {
+      return;
+    }
+
+    if (appShell.isDrawerOpen) {
+      appShell.closeDrawer();
+    } else {
       appShell.openDrawer();
     }
   };
@@ -119,7 +125,7 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
               type="button"
               className="header-icon-btn"
               onClick={handleNavigationToggle}
-              aria-label="Open navigation menu"
+              aria-label="Toggle navigation"
               aria-controls={drawerId}
               aria-expanded={isDrawerOpen}
               onKeyDown={handleMenuKeyDown}

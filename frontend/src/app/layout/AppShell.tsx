@@ -10,7 +10,7 @@ import React, {
   type PropsWithChildren,
 } from "react";
 
-const DESKTOP_QUERY = "(min-width: 1280px)";
+const DESKTOP_QUERY = "(min-width: 1024px)";
 
 type AppShellContextValue = {
   isDesktop: boolean;
@@ -26,22 +26,14 @@ export function useAppShell() {
   return useContext(AppShellContext);
 }
 
-type OverlayRenderArgs = {
-  open: boolean;
-  onClose: () => void;
-  drawerId: string;
-};
-
 type AppShellProps = PropsWithChildren<{
   drawer?: React.ReactNode;
-  renderOverlayDrawer?: (args: OverlayRenderArgs) => React.ReactNode;
   className?: string;
   contentClassName?: string;
 }>;
 
 const AppShell: React.FC<AppShellProps> = ({
   drawer,
-  renderOverlayDrawer,
   className,
   contentClassName,
   children,
@@ -87,30 +79,69 @@ const AppShell: React.FC<AppShellProps> = ({
     [isDesktop, drawerOpen, openDrawer, closeDrawer, drawerId]
   );
 
-  const overlay = !isDesktop && renderOverlayDrawer
-    ? renderOverlayDrawer({ open: drawerOpen, onClose: closeDrawer, drawerId })
-    : null;
+  useEffect(() => {
+    if (!drawerOpen || isDesktop) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeDrawer();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawerOpen, isDesktop, closeDrawer]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    if (!isDesktop && drawerOpen) {
+      const { overflow } = document.body.style;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = overflow;
+      };
+    }
+
+    return undefined;
+  }, [drawerOpen, isDesktop]);
 
   const rootClass = ["app-shell", className].filter(Boolean).join(" ");
-  const mainClass = ["app-shell__main", contentClassName].filter(Boolean).join(" ");
+  const bodyClass = [
+    "app-body",
+    !isDesktop && drawerOpen ? "nav-open" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const mainClass = ["app-content", contentClassName].filter(Boolean).join(" ");
+  const showScrim = !isDesktop && drawerOpen;
 
   return (
     <AppShellContext.Provider value={contextValue}>
-      <div className={rootClass}>
-        <div className="app-shell__inner">
+      <div className={rootClass} data-nav-open={showScrim ? "true" : "false"}>
+        <div className={bodyClass}>
           <aside
             id={drawerId}
-            className="app-shell__drawer"
-            aria-label="Main navigation"
-            aria-hidden={!isDesktop}
-            data-state={isDesktop ? "open" : "closed"}
+            className="app-drawer"
+            aria-label="Primary navigation"
+            aria-hidden={!isDesktop && !drawerOpen}
+            data-state={isDesktop || drawerOpen ? "open" : "closed"}
           >
             {drawer}
           </aside>
 
-          <div className={mainClass}>{children}</div>
+          <main className={mainClass}>
+            <div className="content-max">{children}</div>
+          </main>
         </div>
-        {overlay}
+        {showScrim ? (
+          <button
+            type="button"
+            className="app-drawer-scrim"
+            aria-label="Close navigation"
+            onClick={closeDrawer}
+          />
+        ) : null}
       </div>
     </AppShellContext.Provider>
   );

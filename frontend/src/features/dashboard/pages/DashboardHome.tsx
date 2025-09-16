@@ -15,7 +15,6 @@ import Collaborators from "@/features/dashboard/components/Collaborators";
 import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
 import AllProjectsWeekWidget from "@/features/dashboard/components/AllProjectsWeekWidget";
-import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import AppShell from "@/app/layout/AppShell";
 import ProjectsPanelDesktop from "@/features/projects/ProjectsPanelDesktop";
@@ -200,12 +199,7 @@ const WelcomeScreen: React.FC = () => {
   };
 
   return (
-    <AppShell
-      drawer={<DashboardNavPanel variant="persistent" setActiveView={setActiveView} />}
-      renderOverlayDrawer={({ open, onClose }) => (
-        <NavigationDrawer open={open} onClose={onClose} setActiveView={setActiveView} />
-      )}
-    >
+    <AppShell drawer={<DashboardNavPanel setActiveView={setActiveView} />}>
       <div className="dashboard-wrapper welcome-screen no-vertical-center">
         <WelcomeHeader userName={userName} setActiveView={setActiveView} />
 

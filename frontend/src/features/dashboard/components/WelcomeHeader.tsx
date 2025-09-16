@@ -231,11 +231,7 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
 
       {showWelcomeCards && (
         <div className="welcome-header-extras" role="region" aria-label="Dashboard welcome overview">
-          <nav className="welcome-header-toc" aria-label="Quick jumps">
-            <a href="#week">This Week</a>
-            <a href="#projects">Projects</a>
-            <a href="#tasks">Tasks</a>
-          </nav>
+       
 
           <div id="week" className="welcome-section-anchor">
             <WeekWidgetCard className="welcome-header-week-card" />

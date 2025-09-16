@@ -11,9 +11,13 @@ import QuickInsertPalette from "./QuickInsertPalette";
 import { useMoodboardStore } from "../hooks/useMoodboardStore";
 import type { Sticker, StickerDraft } from "../types";
 import styles from "../moodboard.module.css";
-import type { ProjectAccentPalette } from "@/features/project/hooks/useProjectPalette";
+import {
+  PROJECT_BRAND_ACCENT,
+  PROJECT_BRAND_BG,
+  type ProjectAccentPalette,
+} from "@/features/project/hooks/useProjectPalette";
 
-const DEFAULT_ACCENT = "#FA3356";
+const DEFAULT_ACCENT = PROJECT_BRAND_ACCENT;
 const DEFAULT_RGB: [number, number, number] = [250, 51, 86];
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -39,6 +43,42 @@ const hexToRgbTuple = (hex?: string): [number, number, number] => {
   }
   return [r, g, b];
 };
+
+const tupleToHex = ([r, g, b]: [number, number, number]): string => {
+  const toHex = (channel: number) =>
+    Math.round(clamp(channel, 0, 255))
+      .toString(16)
+      .padStart(2, "0")
+      .toUpperCase();
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
+const mixRgbTuples = (
+  source: [number, number, number],
+  target: [number, number, number],
+  amount: number
+): [number, number, number] => {
+  const mix = clamp(amount, 0, 1);
+  const inv = 1 - mix;
+  return [
+    Math.round(source[0] * inv + target[0] * mix),
+    Math.round(source[1] * inv + target[1] * mix),
+    Math.round(source[2] * inv + target[2] * mix),
+  ];
+};
+
+const tupleToRgba = (
+  [r, g, b]: [number, number, number],
+  alpha = 1
+): string => `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, ${clamp(alpha, 0, 1)})`;
+
+const mixHexColors = (source: string, target: string, amount: number): string =>
+  tupleToHex(mixRgbTuples(hexToRgbTuple(source), hexToRgbTuple(target), amount));
+
+const DEFAULT_ACCENT_WEAK = mixHexColors(DEFAULT_ACCENT, PROJECT_BRAND_BG, 0.65);
+const BRAND_BG_RGB = hexToRgbTuple(PROJECT_BRAND_BG);
+
+const WHITE_RGB: [number, number, number] = [255, 255, 255];
 
 const mixWithWhite = (hex: string, amount = 0.82, alpha = 0.95): string => {
   const [r, g, b] = hexToRgbTuple(hex);
@@ -79,16 +119,53 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({
 
   const accent = palette?.accent ?? DEFAULT_ACCENT;
   const accentStrong = palette?.accentStrong ?? accent;
+  const accentWeak = palette?.accentWeak ?? DEFAULT_ACCENT_WEAK;
 
   const themeStyle = useMemo<React.CSSProperties>(() => {
     const [r, g, b] = hexToRgbTuple(accent);
+    const weakRgb = hexToRgbTuple(accentWeak);
+    const strongRgb = hexToRgbTuple(accentStrong);
+
+    const pageBackground = tupleToHex(mixRgbTuples(BRAND_BG_RGB, weakRgb, 0.22));
+    const toolbarSurface = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.38), 0.86);
+    const toolbarSurfaceHover = tupleToRgba(mixRgbTuples(weakRgb, strongRgb, 0.28), 0.92);
+    const toolbarBorder = tupleToRgba(mixRgbTuples(weakRgb, strongRgb, 0.35), 0.48);
+    const toolbarBorderStrong = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.2), 0.72);
+    const mutedText = tupleToRgba(mixRgbTuples(weakRgb, WHITE_RGB, 0.68), 0.82);
+    const keyboardBg = tupleToRgba(mixRgbTuples(weakRgb, strongRgb, 0.18), 0.28);
+    const keyboardBorder = tupleToRgba(mixRgbTuples(strongRgb, BRAND_BG_RGB, 0.35), 0.5);
+    const canvasBackground = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.52), 0.88);
+    const canvasGrid = tupleToRgba(mixRgbTuples(weakRgb, WHITE_RGB, 0.32), 0.18);
+    const canvasBorder = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.48), 0.58);
+    const canvasShadow = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.28), 0.22);
+    const overlayTint = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.35), 0.72);
+    const raisedSurface = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.18), 0.96);
+    const raisedBorder = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.34), 0.42);
+
     return {
       "--moodboard-brand": accent,
       "--moodboard-brand-rgb": `${r}, ${g}, ${b}`,
       "--moodboard-brand-gradient-end": accentStrong,
       "--moodboard-brand-text-soft": mixWithWhite(accent),
+      "--moodboard-brand-weak": accentWeak,
+      "--moodboard-brand-weak-rgb": `${weakRgb[0]}, ${weakRgb[1]}, ${weakRgb[2]}`,
+      "--moodboard-page-bg": pageBackground,
+      "--moodboard-toolbar-surface": toolbarSurface,
+      "--moodboard-toolbar-surface-hover": toolbarSurfaceHover,
+      "--moodboard-toolbar-border": toolbarBorder,
+      "--moodboard-toolbar-border-strong": toolbarBorderStrong,
+      "--moodboard-text-muted": mutedText,
+      "--moodboard-keyboard-kbd-bg": keyboardBg,
+      "--moodboard-keyboard-kbd-border": keyboardBorder,
+      "--moodboard-canvas-bg": canvasBackground,
+      "--moodboard-canvas-grid": canvasGrid,
+      "--moodboard-canvas-border": canvasBorder,
+      "--moodboard-canvas-shadow": canvasShadow,
+      "--moodboard-overlay": overlayTint,
+      "--moodboard-surface-raised": raisedSurface,
+      "--moodboard-surface-raised-border": raisedBorder,
     } as React.CSSProperties;
-  }, [accent, accentStrong]);
+  }, [accent, accentStrong, accentWeak]);
 
   const selectedSticker = useMemo<Sticker | null>(() => {
     if (!selectedId) return null;

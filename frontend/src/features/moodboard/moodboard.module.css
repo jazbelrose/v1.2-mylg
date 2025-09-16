@@ -5,7 +5,7 @@
   padding: 1.5rem;
   min-height: 100%;
   background: radial-gradient(circle at top, rgba(255, 255, 255, 0.02), transparent 55%),
-    #0f1014;
+    var(--moodboard-page-bg, #0f1014);
   color: #f8fafc;
   --moodboard-brand: var(--brand, #fa3356);
   --moodboard-brand-rgb: 250, 51, 86;
@@ -18,6 +18,22 @@
   --moodboard-brand-shadow-strong: rgba(var(--moodboard-brand-rgb), 0.55);
   --moodboard-brand-gradient-end: #ff6b8a;
   --moodboard-brand-text-soft: rgba(255, 228, 233, 0.95);
+  --moodboard-brand-weak: var(--moodboard-brand);
+  --moodboard-brand-weak-rgb: var(--moodboard-brand-rgb);
+  --moodboard-toolbar-surface: rgba(15, 16, 20, 0.9);
+  --moodboard-toolbar-surface-hover: rgba(30, 41, 59, 0.85);
+  --moodboard-toolbar-border: rgba(148, 163, 184, 0.4);
+  --moodboard-toolbar-border-strong: rgba(148, 163, 184, 0.8);
+  --moodboard-text-muted: rgba(226, 232, 240, 0.72);
+  --moodboard-keyboard-kbd-bg: rgba(148, 163, 184, 0.15);
+  --moodboard-keyboard-kbd-border: rgba(148, 163, 184, 0.25);
+  --moodboard-canvas-border: rgba(51, 65, 85, 0.4);
+  --moodboard-canvas-grid: rgba(226, 232, 240, 0.04);
+  --moodboard-canvas-bg: rgba(15, 23, 42, 0.65);
+  --moodboard-canvas-shadow: rgba(148, 163, 184, 0.1);
+  --moodboard-overlay: rgba(15, 23, 42, 0.72);
+  --moodboard-surface-raised: rgba(15, 16, 20, 0.98);
+  --moodboard-surface-raised-border: rgba(148, 163, 184, 0.35);
 }
 
 .toolbar {
@@ -40,8 +56,8 @@
   justify-content: center;
   padding: 0.5rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(15, 16, 20, 0.9);
+  border: 1px solid var(--moodboard-toolbar-border, rgba(148, 163, 184, 0.4));
+  background: var(--moodboard-toolbar-surface, rgba(15, 16, 20, 0.9));
   color: inherit;
   gap: 0.5rem;
   font-weight: 600;
@@ -51,8 +67,8 @@
 
 .iconButton:hover,
 .iconButton:focus-visible {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(148, 163, 184, 0.8);
+  background: var(--moodboard-toolbar-surface-hover, rgba(30, 41, 59, 0.85));
+  border-color: var(--moodboard-toolbar-border-strong, rgba(148, 163, 184, 0.8));
 }
 
 .iconButton:active {
@@ -69,14 +85,14 @@
   display: flex;
   gap: 0.75rem;
   font-size: 0.85rem;
-  color: rgba(226, 232, 240, 0.72);
+  color: var(--moodboard-text-muted, rgba(226, 232, 240, 0.72));
 }
 
 .keyboardHint kbd {
   padding: 0.25rem 0.5rem;
   border-radius: 6px;
-  background: rgba(148, 163, 184, 0.15);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: var(--moodboard-keyboard-kbd-bg, rgba(148, 163, 184, 0.15));
+  border: 1px solid var(--moodboard-keyboard-kbd-border, rgba(148, 163, 184, 0.25));
   font-family: "JetBrains Mono", "Fira Mono", monospace;
   font-size: 0.75rem;
   color: inherit;
@@ -88,12 +104,19 @@
   min-height: 520px;
   border-radius: 24px;
   overflow: hidden;
-  border: 1px solid rgba(51, 65, 85, 0.4);
-  background-image: linear-gradient(rgba(226, 232, 240, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(226, 232, 240, 0.04) 1px, transparent 1px);
+  border: 1px solid var(--moodboard-canvas-border, rgba(51, 65, 85, 0.4));
+  background-image: linear-gradient(
+      var(--moodboard-canvas-grid, rgba(226, 232, 240, 0.04)) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      var(--moodboard-canvas-grid, rgba(226, 232, 240, 0.04)) 1px,
+      transparent 1px
+    );
   background-size: 8px 8px;
-  background-color: rgba(15, 23, 42, 0.65);
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.1);
+  background-color: var(--moodboard-canvas-bg, rgba(15, 23, 42, 0.65));
+  box-shadow: inset 0 0 0 1px var(--moodboard-canvas-shadow, rgba(148, 163, 184, 0.1));
 }
 
 .canvas {
@@ -193,8 +216,8 @@
 }
 
 .linkSticker {
-  background: var(--moodboard-brand-soft);
-  border: 1px solid var(--moodboard-brand-border);
+  background: rgba(var(--moodboard-brand-weak-rgb, 250, 51, 86), 0.24);
+  border: 1px solid rgba(var(--moodboard-brand-weak-rgb, 250, 51, 86), 0.45);
   color: var(--moodboard-brand-text-soft);
 }
 
@@ -220,7 +243,7 @@
 .paletteOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--moodboard-overlay, rgba(15, 23, 42, 0.72));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -230,10 +253,10 @@
 
 .palette {
   width: min(520px, 100%);
-  background: rgba(15, 16, 20, 0.98);
+  background: var(--moodboard-surface-raised, rgba(15, 16, 20, 0.98));
   border-radius: 24px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.55);
+  border: 1px solid var(--moodboard-surface-raised-border, rgba(148, 163, 184, 0.35));
+  box-shadow: 0 30px 60px var(--moodboard-brand-shadow, rgba(15, 23, 42, 0.55));
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -268,8 +291,8 @@
   flex: 1;
   border-radius: 14px;
   padding: 0.75rem 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid var(--moodboard-toolbar-border, rgba(148, 163, 184, 0.35));
+  background: var(--moodboard-toolbar-surface, rgba(30, 41, 59, 0.55));
   color: inherit;
   cursor: pointer;
   font-weight: 600;
@@ -284,8 +307,8 @@
 
 .typeButton:hover,
 .typeButton:focus-visible {
-  background: rgba(148, 163, 184, 0.25);
-  border-color: rgba(148, 163, 184, 0.55);
+  background: var(--moodboard-toolbar-surface-hover, rgba(148, 163, 184, 0.25));
+  border-color: var(--moodboard-toolbar-border-strong, rgba(148, 163, 184, 0.55));
 }
 
 .fieldGroup {
@@ -335,14 +358,14 @@
 }
 
 .secondaryButton {
-  background: rgba(15, 23, 42, 0.75);
-  border-color: rgba(148, 163, 184, 0.35);
+  background: var(--moodboard-toolbar-surface, rgba(15, 23, 42, 0.75));
+  border-color: var(--moodboard-toolbar-border, rgba(148, 163, 184, 0.35));
 }
 
 .secondaryButton:hover,
 .secondaryButton:focus-visible {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(148, 163, 184, 0.55);
+  background: var(--moodboard-toolbar-surface-hover, rgba(30, 41, 59, 0.85));
+  border-color: var(--moodboard-toolbar-border-strong, rgba(148, 163, 184, 0.55));
 }
 
 .primaryButton {

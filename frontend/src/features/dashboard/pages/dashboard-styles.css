@@ -6,6 +6,8 @@
   display: grid;
   grid-template-columns: 280px 1fr;
   height: 100dvh;
+  max-width: 1920px;
+  margin: 0 auto;
 }
 
 .dashboard-main {

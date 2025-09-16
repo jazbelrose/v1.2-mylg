@@ -1,15 +1,15 @@
 /* Global Search Component Styles */
 .global-search {
   position: relative;
-  flex: 0 1 auto;
-  width: clamp(220px, 28vw, 320px);
+  flex: 1 1 auto;
+  width: 100%;
   max-width: 100%;
-  margin-left: auto;
-  transition: width 0.24s ease, max-width 0.24s ease;
+  min-width: 0;
+  margin-left: 0;
 }
 
 .global-search--active {
-  width: clamp(260px, 36vw, 420px);
+  width: 100%;
   max-width: 100%;
 }
 
@@ -17,12 +17,12 @@
   position: relative;
   display: flex;
   align-items: center;
-  --shape-radius: 22px;
   min-height: 44px;
-  padding-inline: 4px;
+  padding-inline: 8px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+  border-radius: 9999px;
   transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 

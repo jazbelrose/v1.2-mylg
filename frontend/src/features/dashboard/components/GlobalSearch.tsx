@@ -8,7 +8,6 @@ import { getFileUrl } from '@/shared/utils/api';
 import type { AppUser } from '@/features/messages/types';
 import { getUserDisplayName, getUserThumbnail } from '@/features/messages/utils/userHelpers';
 import SVGThumbnail from './SvgThumbnail';
-import Squircle from '@/shared/ui/Squircle';
 
 interface HighlightPart {
   text: string;
@@ -593,7 +592,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
 
   return (
     <div className={rootClassName} ref={searchBoxRef}>
-      <Squircle as="div" radius={20} smoothing={0.6} className="global-search-input-container">
+      <div className="global-search-input-container">
         <Search size={16} className="global-search-icon" />
         <input
           ref={inputRef}
@@ -614,7 +613,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
             <X size={14} />
           </button>
         )}
-      </Squircle>
+      </div>
 
       {isOpen && (query || results.length > 0) && (
         <div className="global-search-results">

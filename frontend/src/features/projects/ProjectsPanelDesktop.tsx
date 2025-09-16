@@ -13,6 +13,7 @@ import { useProjectKpis, type ProjectLike } from "@/features/dashboard/hooks/use
 import SVGThumbnail from "@/features/dashboard/components/SvgThumbnail";
 import { Kebab } from "@/shared/icons/Kebab";
 import { getFileUrl } from "@/shared/utils/api";
+import { getColor } from "@/shared/utils/colorUtils";
 import Squircle from "@/shared/ui/Squircle";
 import desktopStyles from "./ProjectsPanelDesktop.module.css";
 import mobileStyles from "@/features/dashboard/components/projects-panel.module.css";
@@ -193,6 +194,19 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     }
     return ordered;
   }, [projects, scope, query, statusFilter, sortOption]);
+
+  const accentColor = useMemo(() => {
+    const first = items[0] as (ProjectWithMeta & {
+      color?: string;
+      accentColor?: string;
+    }) | undefined;
+    if (!first) return undefined;
+    const paletteColor = first.accentColor || first.color;
+    if (paletteColor && typeof paletteColor === "string") {
+      return paletteColor;
+    }
+    return getColor(first.projectId);
+  }, [items]);
 
   const kpis = useProjectKpis(projects as ProjectLike[]);
 
@@ -464,6 +478,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
       as="section"
       aria-label="Projects overview"
       className={desktopStyles.card}
+      style={accentColor ? ({ "--panel-accent": accentColor } as React.CSSProperties) : undefined}
       radius={PANEL_RADIUS}
       smoothing={0.6}
       cornerRadii={PANEL_CORNER_RADII}

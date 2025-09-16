@@ -58,6 +58,8 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
       .filter(Boolean) as Track[];
   }, [projects, colorMap]);
 
+  const accentColor = tracks[0]?.color;
+
   const dots: Dot[] = useMemo(() => {
     const out: Dot[] = [];
     for (const p of projects) {
@@ -103,6 +105,7 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
       smoothing={0.6}
       cornerRadii={CARD_CORNER_RADII}
       className={`${styles.card} ${className ?? ""}`.trim()}
+      style={accentColor ? ({ "--panel-accent": accentColor } as React.CSSProperties) : undefined}
       aria-label="Week overview"
     >
       <header className={styles.header}>

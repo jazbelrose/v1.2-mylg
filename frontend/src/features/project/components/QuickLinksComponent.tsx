@@ -127,7 +127,7 @@ const QuickLinksComponent = forwardRef<QuickLinksRef, QuickLinksProps>(
           activeProject.projectId,
           { quickLinks: updatedLinks }
         );
-        toast.success("Quick Links saved");
+        toast.success("Saved. Nice.");
       } catch (err) {
         console.error("Error updating Quick Links:", err);
         setError("Failed to update Quick Links.");

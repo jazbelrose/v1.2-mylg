@@ -580,7 +580,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
         setNewMessage("");
       } catch (error) {
         console.error("Error sending WS message:", error);
-        setSendError("Failed to send message.");
+        setSendError("Can’t reach the server—your edits are safe; we’ll retry.");
       }
     };
     trySend();
@@ -932,7 +932,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
               <div
                 style={{ color: "#aaa", fontSize: "16px", textAlign: "center" }}
               >
-                No messages yet.
+                Looks quiet. Drop your first idea here.
               </div>
             ) : (
               displayMessages.map((msg, index) => (
@@ -972,7 +972,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
               className="message-input"
             />
             <button onClick={sendMessage} className="send-button">
-              Send
+              Send it
             </button>
           </div>
         )}

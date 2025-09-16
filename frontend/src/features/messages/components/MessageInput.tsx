@@ -91,7 +91,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           cursor: "pointer",
         }}
       >
-        Send
+        Send it
       </button>
     </div>
   );

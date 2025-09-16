@@ -291,7 +291,7 @@ const NewProject: React.FC = () => {
   return (
     <HelmetProvider>
       <Helmet>
-        <title>Create New Project | *MYLG!*</title>
+        <title>Start something | *MYLG!*</title>
         <meta
           name="description"
           content="Create a new project with *MYLG!* - Set budget, timeline, and upload files to get started."
@@ -310,7 +310,7 @@ const NewProject: React.FC = () => {
             >
               <FaArrowLeft />
             </button>
-            <h1 className={styles.newProjectTitle}>Create New Project</h1>
+            <h1 className={styles.newProjectTitle}>Start something</h1>
             <p className={styles.newProjectSubtitle}>
               Set up your project details, budget, and timeline to get started
             </p>
@@ -394,10 +394,10 @@ const NewProject: React.FC = () => {
                               fill="none"
                             />
                           </svg>
-                          Creating Project...
+                          Starting...
                         </div>
                       ) : (
-                        "Create Project"
+                        "Start something"
                       )}
                     </button>
 

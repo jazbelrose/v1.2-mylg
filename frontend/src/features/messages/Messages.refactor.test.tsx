@@ -59,6 +59,6 @@ describe("Refactored Messages Components", () => {
 
     render(<MessageInput {...mockProps} />);
     expect(screen.getByPlaceholderText("Type a message...")).toBeInTheDocument();
-    expect(screen.getByText("Send")).toBeInTheDocument();
+    expect(screen.getByText("Send it")).toBeInTheDocument();
   });
 });

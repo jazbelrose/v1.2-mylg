@@ -78,7 +78,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
       {
         key: "create",
         icon: <GridPlus size={24} color="white" />, // icon colors handled in CSS
-        label: "Create New Project",
+        label: "Start something",
         onClick: handleCreateProject,
         isAction: true,
       },

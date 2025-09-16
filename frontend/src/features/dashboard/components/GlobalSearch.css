@@ -1,30 +1,42 @@
 /* Global Search Component Styles */
 .global-search {
   position: relative;
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
+  flex: 0 1 auto;
+  width: clamp(220px, 28vw, 320px);
+  max-width: 100%;
+  margin-left: auto;
+  transition: width 0.24s ease, max-width 0.24s ease;
+}
+
+.global-search--active {
+  width: clamp(260px, 36vw, 420px);
+  max-width: 100%;
 }
 
 .global-search-input-container {
   position: relative;
   display: flex;
   align-items: center;
+  --shape-radius: 22px;
+  min-height: 44px;
+  padding-inline: 4px;
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .global-search-input-container:focus-within {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 32px rgba(12, 14, 22, 0.38);
 }
 
 .global-search-icon {
   position: absolute;
-  left: 12px;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   color: rgba(255, 255, 255, 0.6);
   pointer-events: none;
   z-index: 1;
@@ -32,12 +44,13 @@
 
 .global-search-input {
   width: 100%;
-  padding: 10px 40px 10px 40px;
+  padding: 12px 56px 12px 48px;
+  min-height: 44px;
   background: transparent;
   border: none;
   outline: none;
   color: white;
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
 }
 
@@ -47,8 +60,10 @@
 
 .global-search-clear {
   position: absolute;
-  right: 8px;
-  padding: 4px;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px;
   background: none;
   border: none;
   cursor: pointer;
@@ -72,12 +87,12 @@
   right: 0;
   background: #1a1a1a;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  margin-top: 4px;
+  border-radius: 16px;
+  margin-top: 8px;
   max-height: 400px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
 }
 
 .global-search-result {
@@ -305,21 +320,30 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .global-search {
-    max-width: 300px;
+  .global-search,
+  .global-search.global-search--active {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
   }
-  
+
+  .global-search-input-container {
+    min-height: 40px;
+    padding-inline: 2px;
+  }
+
   .global-search-input {
-    padding: 8px 36px 8px 36px;
-    font-size: 13px;
+    padding: 10px 44px 10px 38px;
+    min-height: 40px;
+    font-size: 14px;
   }
-  
+
   .global-search-icon {
-    left: 10px;
+    left: 12px;
   }
-  
+
   .global-search-clear {
-    right: 6px;
+    right: 10px;
   }
   
   .global-search-result {

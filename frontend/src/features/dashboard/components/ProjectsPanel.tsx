@@ -233,7 +233,10 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
   const scopeLabel = scope === "recents" ? "Recents" : "All projects";
 
   return (
-    <section aria-label="Projects" className={styles.panel}>
+    <section
+      aria-label="Projects"
+      className={`${styles.panel} ${styles.panelFullBleed}`}
+    >
       <header className={styles.header}>
         <div className={styles.titleWrap}>
           <h3 className={styles.title}>Projects</h3>

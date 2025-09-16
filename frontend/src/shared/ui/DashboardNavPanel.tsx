@@ -16,46 +16,47 @@ type DashboardNavPanelProps = UseDashboardNavigationArgs & {
 
 function renderNavItem(item: DashboardNavItem) {
   const hasBadge = typeof item.badgeCount === "number" && item.badgeCount > 0 && item.badgeLabel;
+  const className = ["nav-item", item.isAction ? "nav-item--action" : ""]
+    .filter(Boolean)
+    .join(" ");
   const inner = (
     <>
-      <div className="nav-drawer-icon" aria-hidden>
+      <span className="nav-item__icon" aria-hidden>
         {item.icon}
         {hasBadge ? (
           <NavBadge
             count={item.badgeCount ?? 0}
             label={item.badgeLabel ?? "item"}
-            className="nav-drawer-badge"
+            className="nav-item__badge"
           />
         ) : null}
-      </div>
-      <span className="nav-drawer-label">{item.label}</span>
+      </span>
+      <span className="nav-item__label">{item.label}</span>
     </>
   );
 
   if (item.href) {
     return (
-      <a
-        key={item.key}
-        className={`nav-drawer-item ${item.isAction ? "nav-drawer-action" : ""}`.trim()}
-        href={item.href}
-        target={item.external ? "_blank" : undefined}
-        rel={item.external ? "noopener noreferrer" : undefined}
-        onClick={item.onClick}
-      >
-        {inner}
-      </a>
+      <li key={item.key}>
+        <a
+          className={className}
+          href={item.href}
+          target={item.external ? "_blank" : undefined}
+          rel={item.external ? "noopener noreferrer" : undefined}
+          onClick={item.onClick}
+        >
+          {inner}
+        </a>
+      </li>
     );
   }
 
   return (
-    <button
-      key={item.key}
-      type="button"
-      className={`nav-drawer-item ${item.isAction ? "nav-drawer-action" : ""}`.trim()}
-      onClick={item.onClick}
-    >
-      {inner}
-    </button>
+    <li key={item.key}>
+      <button type="button" className={className} onClick={item.onClick}>
+        {inner}
+      </button>
+    </li>
   );
 }
 
@@ -65,7 +66,7 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
   variant = "persistent",
   className,
 }) => {
-  const { navItems, bottomItems, handleLogoClick } = useDashboardNavigation({ setActiveView, onClose });
+  const { navItems, bottomItems } = useDashboardNavigation({ setActiveView, onClose });
   const showClose = variant === "overlay";
 
   const containerClass = [
@@ -78,16 +79,9 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
 
   return (
     <div className={containerClass}>
-      <div className="navigation-drawer-header">
-        <button
-          type="button"
-          className="dashboard-nav-panel__logo"
-          onClick={handleLogoClick}
-          aria-label="Go to Home"
-        >
-          M!
-        </button>
-        {showClose && (
+      {showClose ? (
+        <div className="navigation-drawer-header">
+          <span className="navigation-drawer-title">Menu</span>
           <button
             type="button"
             className="close-button"
@@ -96,16 +90,16 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
           >
             <X size={24} color="white" />
           </button>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       <div className="navigation-drawer-content">
-        <div className="navigation-items">
+        <ul className="nav-list nav-list--primary">
           {navItems.map((item) => renderNavItem(item))}
-        </div>
-        <div className="navigation-items-bottom">
+        </ul>
+        <ul className="nav-list nav-list--secondary">
           {bottomItems.map((item) => renderNavItem(item))}
-        </div>
+        </ul>
       </div>
     </div>
   );

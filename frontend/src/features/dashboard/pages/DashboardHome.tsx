@@ -69,7 +69,7 @@ const WelcomeScreen: React.FC = () => {
     const handleResize = () => {
       const width = window.innerWidth;
       setIsMobile(width < 768);
-      setIsDesktop(width >= 1280);
+      setIsDesktop(width >= 1024);
     };
     if (typeof window !== "undefined") {
       handleResize();
@@ -202,8 +202,13 @@ const WelcomeScreen: React.FC = () => {
   return (
     <AppShell
       drawer={<DashboardNavPanel variant="persistent" setActiveView={setActiveView} />}
-      renderOverlayDrawer={({ open, onClose }) => (
-        <NavigationDrawer open={open} onClose={onClose} setActiveView={setActiveView} />
+      renderOverlayDrawer={({ open, onClose, drawerId }) => (
+        <NavigationDrawer
+          open={open}
+          onClose={onClose}
+          setActiveView={setActiveView}
+          drawerId={drawerId}
+        />
       )}
     >
       <div className="dashboard-wrapper welcome-screen no-vertical-center">

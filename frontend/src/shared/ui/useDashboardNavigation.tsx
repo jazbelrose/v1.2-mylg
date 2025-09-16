@@ -1,12 +1,11 @@
 import { useCallback, useMemo, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Folder, Bell, MessageSquare, Settings, LogOut, Shield, Users } from "lucide-react";
+import { Home, Folder, Bell, MessageSquare, Settings, LogOut, Shield, Users, Plus } from "lucide-react";
 import { signOut } from "aws-amplify/auth";
 import Cookies from "js-cookie";
 import { useAuth } from "@/app/contexts/useAuth";
 import { useData } from "@/app/contexts/useData";
 import { useNotifications } from "@/app/contexts/useNotifications";
-import { GridPlus } from "@/shared/icons/GridPlus";
 
 export type DashboardNavItem = {
   key: string;
@@ -77,7 +76,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     () => [
       {
         key: "create",
-        icon: <GridPlus size={24} color="white" />, // icon colors handled in CSS
+        icon: <Plus size={24} color="white" />, // icon colors handled in CSS
         label: "Start something",
         onClick: handleCreateProject,
         isAction: true,

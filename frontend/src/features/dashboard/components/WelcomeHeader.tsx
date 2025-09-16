@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { User, Bell, Menu } from "lucide-react";
+import { User, Bell, Menu, Plus } from "lucide-react";
 import { useData } from '@/app/contexts/useData';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import NotificationsDrawer from '../../../shared/ui/NotificationsDrawer';
 import { useNotifications } from "../../../app/contexts/useNotifications";
 import NavBadge from "../../../shared/ui/NavBadge";
-import { GridPlus } from "../../../shared/icons/GridPlus";
 import GlobalSearch from './GlobalSearch';
 import './GlobalSearch.css';
 import { getFileUrl } from '../../../shared/utils/api';
@@ -161,7 +160,7 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
             onClick={() => navigate("/dashboard/new")}
             title="Start something"
           >
-            <GridPlus size={isMobile ? 20 : 26} color="white" />
+            <Plus size={isMobile ? 20 : 26} color="white" />
           </div>
 
           <div

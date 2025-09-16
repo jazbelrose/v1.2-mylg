@@ -15,6 +15,7 @@ import Collaborators from "@/features/dashboard/components/Collaborators";
 import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
 import AllProjectsWeekWidget from "@/features/dashboard/components/AllProjectsWeekWidget";
+import AllProjectsWeekWidgetDesktop from "@/features/dashboard/components/AllProjectsWeekWidgetDesktop";
 import TasksOverviewCard from "@/features/dashboard/components/TasksOverviewCard";
 import MobileTasksOverviewCard from "@/features/dashboard/components/MobileTasksOverviewCard";
 import NavigationDrawer from "@/shared/ui/NavigationDrawer";
@@ -184,7 +185,7 @@ const WelcomeScreen: React.FC = () => {
       return (
         <div className="dashboard-home-grid">
           <div className="mobile-calendar-section">
-            <AllProjectsWeekWidget />
+            <AllProjectsWeekWidgetDesktop />
           </div>
           <section id="projects" className="welcome-section-anchor">
             <ProjectsPanelDesktop

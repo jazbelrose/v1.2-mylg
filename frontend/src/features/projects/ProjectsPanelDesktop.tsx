@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { useData } from "@/app/contexts/useData";
@@ -16,6 +17,7 @@ import { getFileUrl } from "@/shared/utils/api";
 import Squircle from "@/shared/ui/Squircle";
 import desktopStyles from "./ProjectsPanelDesktop.module.css";
 import mobileStyles from "@/features/dashboard/components/projects-panel.module.css";
+import { MICRO_WOBBLE_SCALE, SPRING_FAST } from "@/shared/ui/motionTokens";
 
 const PANEL_RADIUS = 24;
 const PANEL_CORNER_RADII = Object.freeze({ top: PANEL_RADIUS + 2, bottom: PANEL_RADIUS - 2 });
@@ -68,6 +70,7 @@ function sanitizeId(raw: string) {
 }
 
 const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProject }) => {
+  const reduceMotion = useReducedMotion();
   const {
     projects = [],
     isLoading,
@@ -576,15 +579,34 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
         </div>
 
         <div className={mobileStyles.kpis}>
-          <span className={mobileStyles.chip}>{kpis.totalProjects} Projects</span>
+          <motion.span
+            className={mobileStyles.chip}
+            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
+            {kpis.totalProjects} Projects
+          </motion.span>
           <span className={mobileStyles.dot} />
-          <span className={mobileStyles.chip}>{kpis.pendingProjects} Pending</span>
+          <motion.span
+            className={mobileStyles.chip}
+            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
+            {kpis.pendingProjects} Pending
+          </motion.span>
           <span className={mobileStyles.dot} />
-          <span className={mobileStyles.chip}>
+          <motion.span
+            className={mobileStyles.chip}
+            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
             {kpis.nextProject
               ? `Next: ${kpis.nextProject.title} ${kpis.nextProject.date}`
               : "No upcoming projects"}
-          </span>
+          </motion.span>
         </div>
       </header>
 

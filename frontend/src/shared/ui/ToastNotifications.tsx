@@ -1,9 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ToastContainer, toast, Slide, Id } from 'react-toastify';
 import { FaCheckCircle, FaTimesCircle, FaInfoCircle, FaExclamationTriangle } from 'react-icons/fa';
 import styles from './Notification.module.css';
 import 'react-toastify/dist/ReactToastify.css';
+import { MICRO_WOBBLE_SCALE, SPRING_SOFT } from './motionTokens';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -17,9 +19,28 @@ const icons: Record<ToastType, () => React.ReactNode> = {
 
 const TOAST_CONTAINER_ID = 'global';
 
+const ToastMessage: React.FC<{ message: string }> = ({ message }) => {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      className={styles.body}
+      initial={reduceMotion ? false : { opacity: 0, y: -6, scale: 0.94 }}
+      animate={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+      whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+      whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+      transition={reduceMotion ? undefined : SPRING_SOFT}
+    >
+      {message}
+    </motion.div>
+  );
+};
+
+const renderToast = (message: string) => () => <ToastMessage message={message} />;
+
 export const notify = (type: ToastType, message: string) => {
   toast.dismiss();
-  return toast(message, {
+  return toast(renderToast(message), {
     type,
     icon: icons[type],
     className: styles.toast,
@@ -29,7 +50,7 @@ export const notify = (type: ToastType, message: string) => {
 
 export const notifyLoading = (message: string) => {
   toast.dismiss();
-  return toast.loading(message, {
+  return toast.loading(renderToast(message), {
     className: styles.toast,
     containerId: TOAST_CONTAINER_ID,
   });
@@ -37,7 +58,7 @@ export const notifyLoading = (message: string) => {
 
 export const updateNotification = (id: Id, type: ToastType, message: string) => {
   toast.update(id, {
-    render: message,
+    render: renderToast(message),
     type,
     icon: icons[type],
     className: styles.toast,

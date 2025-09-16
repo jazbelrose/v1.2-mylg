@@ -120,6 +120,11 @@
   background: var(--chip-bg, transparent);
   color: var(--chip-color, inherit);
   box-shadow: var(--chip-shadow, none);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+  transform-origin: center;
 }
 
 .dot {

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { Kebab } from "@/shared/icons/Kebab";
@@ -7,6 +8,7 @@ import SVGThumbnail from "./SvgThumbnail";
 import styles from "./projects-panel.module.css";
 import { useProjectKpis, type ProjectLike } from "../hooks/useProjectKpis";
 import { getFileUrl } from "../../../shared/utils/api";
+import { MICRO_WOBBLE_SCALE, SPRING_FAST } from "@/shared/ui/motionTokens";
 
 type Props = {
   onOpenProject: (projectId: string) => void;
@@ -45,6 +47,7 @@ const getProjectActivityTs = (p: ProjectLike): number => {
 };
 
 const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
+  const reduceMotion = useReducedMotion();
   const { projects, isLoading, projectsError, fetchProjects } = useData();
   const navigate = useNavigate();
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
@@ -336,15 +339,34 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
         </div>
 
         <div className={styles.kpis}>
-          <span className={styles.chip}>{kpis.totalProjects} Projects</span>
+          <motion.span
+            className={styles.chip}
+            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
+            {kpis.totalProjects} Projects
+          </motion.span>
           <span className={styles.dot} />
-          <span className={styles.chip}>{kpis.pendingProjects} Pending</span>
+          <motion.span
+            className={styles.chip}
+            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
+            {kpis.pendingProjects} Pending
+          </motion.span>
           <span className={styles.dot} />
-          <span className={styles.chip}>
+          <motion.span
+            className={styles.chip}
+            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
             {kpis.nextProject
               ? `Next: ${kpis.nextProject.title} ${kpis.nextProject.date}`
               : "No upcoming projects"}
-          </span>
+          </motion.span>
         </div>
       </header>
 

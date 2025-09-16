@@ -10,4 +10,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  will-change: transform;
+  transform-origin: center;
 }

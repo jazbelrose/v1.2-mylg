@@ -34,6 +34,21 @@
   gap: 8px;
 }
 
+.welcome-header-extras {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 24px);
+  width: 100%;
+  margin-top: clamp(12px, 1.5vw, 18px);
+  padding: 0 clamp(16px, 4vw, 28px) clamp(18px, 3vw, 28px);
+  box-sizing: border-box;
+}
+
+.welcome-header-week-card,
+.welcome-header-tasks-card {
+  width: 100%;
+}
+
 /* Small, consistent icon button hit area */
 .header-icon-btn {
   display: inline-flex;

@@ -201,11 +201,47 @@
 .project-list-thumb {
   width: 48px;  /* align to 48px avatar size */
   height: 48px;
-  border-radius: 8px;
-  object-fit: cover;
-  display: block;
-  background: #0c0c0c;
-  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: stretch;
+  justify-content: stretch;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-list-thumb.project-thumb {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.96) 0%, rgba(8, 8, 8, 0.94) 100%);
+  box-shadow: none;
+  transition: border-color 0.3s ease;
+}
+
+.project-list-thumb.project-thumb:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.project-list-thumb.project-thumb:hover .project-thumb__image,
+.project-list-thumb.project-thumb:hover .project-thumb__placeholder {
+  transform: none;
+}
+
+.project-list-thumb .project-thumb__label {
+  display: none;
+}
+
+.project-list-thumb .project-thumb__grain {
+  opacity: 0.018;
+}
+
+.project-list-thumb .project-thumb__smudges {
+  opacity: 0.55;
+}
+
+.project-list-thumb .project-thumb__vignette {
+  box-shadow: inset 0 0 48px rgba(0, 0, 0, 0.2);
 }
 
 .project-list-info {

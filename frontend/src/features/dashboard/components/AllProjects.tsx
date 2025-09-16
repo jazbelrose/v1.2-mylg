@@ -4,7 +4,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import SVGThumbnail from './SvgThumbnail';
+import ProjectThumb, { type ProjectThumbVariant } from './ProjectThumb';
 import { useData } from '@/app/contexts/useData';
 import Spinner from '../../../shared/ui/Spinner';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +30,7 @@ interface Project {
   title?: string; // <-- make optional
   description?: string;
   status?: string;
+  version?: string;
   thumbnails?: string[];
   dateCreated?: string;
   date?: string;
@@ -100,7 +101,6 @@ const AllProjects: React.FC = () => {
   const { projects, isLoading, fetchProjectDetails, projectsError, fetchProjects, allUsers } = useData();
   const navigate = useNavigate();
   const [filterQuery, setFilterQuery] = useState<string>('');
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [sortOption, setSortOption] = useState<SortOption>('titleAsc');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
@@ -128,16 +128,6 @@ const AllProjects: React.FC = () => {
       console.error('Error loading project', err);
     }
   };
-
-  // Preload project thumbnails
-  useEffect(() => {
-    projects.forEach((p: Project) => {
-      if (p.thumbnails && p.thumbnails[0]) {
-        const img = new Image();
-        img.src = p.thumbnails[0];
-      }
-    });
-  }, [projects]);
 
   // Quick map for user lookups (thumbnails/names)
   const usersById = useMemo(() => {
@@ -196,6 +186,73 @@ const AllProjects: React.FC = () => {
     const num = Number(cleaned);
     return cleaned !== '' && !Number.isNaN(num) && num >= 0 && num <= 100;
   };
+
+  const resolveProjectThumbSrc = (project: Project): string | undefined => {
+    const candidate = project.thumbnails && project.thumbnails[0];
+    if (!candidate) return undefined;
+    return getFileUrl(candidate);
+  };
+
+  const resolveProjectThumbLabel = (project: Project): string | undefined => {
+    if (project.version && project.version.trim()) {
+      return project.version.trim();
+    }
+    const rawStatus = project.status?.trim();
+    if (rawStatus && !isPercentageStatus(rawStatus)) {
+      return rawStatus;
+    }
+    return undefined;
+  };
+
+  const resolveProjectThumbVariant = (
+    project: Project,
+    label?: string,
+  ): ProjectThumbVariant => {
+    const text = (label || project.version || project.status || '').toLowerCase();
+    if (!text) return 'default';
+
+    const normalized = text.replace(/[-_/]/g, ' ');
+    if (
+      /\bwip\b/.test(normalized) ||
+      /\bin\s*progress\b/.test(normalized) ||
+      /\bprogress\b/.test(normalized) ||
+      /\bbuilding\b/.test(normalized) ||
+      /\bdrafting\b/.test(normalized) ||
+      /\bmaking\b/.test(normalized)
+    ) {
+      return 'wip';
+    }
+    if (
+      /\bprototype\b/.test(normalized) ||
+      /\bproto\b/.test(normalized) ||
+      /\bbeta\b/.test(normalized) ||
+      /\balpha\b/.test(normalized) ||
+      /\bconcept\b/.test(normalized) ||
+      /\bexploration\b/.test(normalized) ||
+      /\bdraft\b/.test(normalized)
+    ) {
+      return 'prototype';
+    }
+    if (
+      /\barchive(?:d)?\b/.test(normalized) ||
+      /\bpaused\b/.test(normalized) ||
+      /\bon\s*hold\b/.test(normalized) ||
+      /\bretired\b/.test(normalized)
+    ) {
+      return 'archived';
+    }
+    return 'default';
+  };
+
+  useEffect(() => {
+    projects.forEach((p: Project) => {
+      const src = resolveProjectThumbSrc(p);
+      if (src) {
+        const img = new Image();
+        img.src = src;
+      }
+    });
+  }, [projects]);
 
   const statusOptions = useMemo(() => {
     const statuses = projects
@@ -323,51 +380,42 @@ const AllProjects: React.FC = () => {
           isSingleProject ? 'single-item' : ''
         }`}
       >
-        {sortedProjects.map((project: Project) => (
-          <div
-            key={project.projectId}
-            className={`project-container-welcome ${
-              isSingleProject ? 'single-item' : ''
-            }`}
-            role="button"
-            tabIndex={0}
-            onClick={() => handleProjectClick(project)}
-            onKeyDown={(e) => handleKeyDown(e, project)}
-            aria-label={`Open project ${
-              project.title?.trim() || 'Untitled project'
-            }`}
-          >
-            {!imageErrors[project.projectId] &&
-            project.thumbnails &&
-            project.thumbnails.length > 0 ? (
-              <img
-                src={getFileUrl(project.thumbnails[0])}
+        {sortedProjects.map((project: Project) => {
+          const thumbSrc = resolveProjectThumbSrc(project);
+          const thumbLabel = resolveProjectThumbLabel(project);
+          const thumbVariant = resolveProjectThumbVariant(project, thumbLabel);
+          const fallbackInitial =
+            project.title?.trim()?.charAt(0)?.toUpperCase() || '#';
+          return (
+            <div
+              key={project.projectId}
+              className={`project-container-welcome ${
+                isSingleProject ? 'single-item' : ''
+              }`}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleProjectClick(project)}
+              onKeyDown={(e) => handleKeyDown(e, project)}
+              aria-label={`Open project ${
+                project.title?.trim() || 'Untitled project'
+              }`}
+            >
+              <ProjectThumb
+                className="project-thumbnail"
+                src={thumbSrc}
                 alt={`Thumbnail of ${
                   project.title?.trim() || 'Untitled project'
                 }`}
-                className="project-thumbnail"
-                loading="lazy"
-                decoding="async"
-                onError={() =>
-                  setImageErrors((prev) => ({
-                    ...prev,
-                    [project.projectId]: true,
-                  }))
-                }
+                label={thumbLabel}
+                variant={thumbVariant}
+                fallbackInitial={fallbackInitial}
               />
-            ) : (
-              <SVGThumbnail
-                initial={
-                  project.title?.trim()?.charAt(0)?.toUpperCase() || '#'
-                }
-                className="project-thumbnail"
-              />
-            )}
-            <h6 className="project-title">
-              {project.title?.trim() || 'Untitled project'}
-            </h6>
-          </div>
-        ))}
+              <h6 className="project-title">
+                {project.title?.trim() || 'Untitled project'}
+              </h6>
+            </div>
+          );
+        })}
       </div>
     );
   } else {
@@ -422,6 +470,11 @@ const AllProjects: React.FC = () => {
             !Number.isNaN(progress) && progress >= 0 && progress <= 100;
           const dateLabel = formatShortDate(project.dateCreated || project.date);
           const isMenuOpen = menuOpenId === project.projectId;
+          const thumbSrc = resolveProjectThumbSrc(project);
+          const thumbLabel = resolveProjectThumbLabel(project);
+          const thumbVariant = resolveProjectThumbVariant(project, thumbLabel);
+          const fallbackInitial =
+            project.title?.trim()?.charAt(0)?.toUpperCase() || '#';
           return (
             <li
               key={project.projectId}
@@ -434,32 +487,15 @@ const AllProjects: React.FC = () => {
                 project.title?.trim() || 'Untitled project'
               }`}
             >
-              {!imageErrors[project.projectId] &&
-              project.thumbnails &&
-              project.thumbnails.length > 0 ? (
-                <img
-                  src={getFileUrl(project.thumbnails[0])}
-                  alt={`Thumbnail of ${
-                    project.title?.trim() || 'Untitled project'
-                  }`}
-                  className="project-list-thumb"
-                  loading="lazy"
-                  decoding="async"
-                  onError={() =>
-                    setImageErrors((prev) => ({
-                      ...prev,
-                      [project.projectId]: true,
-                    }))
-                  }
-                />
-              ) : (
-                <SVGThumbnail
-                  initial={
-                    project.title?.trim()?.charAt(0)?.toUpperCase() || '#'
-                  }
-                  className="project-list-thumb"
-                />
-              )}
+              <ProjectThumb
+                className="project-list-thumb"
+                src={thumbSrc}
+                alt={`Thumbnail of ${
+                  project.title?.trim() || 'Untitled project'
+                }`}
+                variant={thumbVariant}
+                fallbackInitial={fallbackInitial}
+              />
               <div className="project-list-info">
                 <div className="project-title-row">
                   <span className="project-list-title">

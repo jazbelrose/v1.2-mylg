@@ -47,6 +47,7 @@ export interface Project {
   team?: TeamMember[];
   timelineEvents?: TimelineEvent[];
   thumbnails?: string[];
+  version?: string;
   color?: string;
   finishline?: string;
   productionStart?: string;

@@ -25,6 +25,9 @@
 
   /* Overlay */
   --overlay-color: rgb(12 12 12 / 63%);
+  --thumb-grain-opacity: 0.024; /* 0.02 → 0.03 sweet spot */
+  --thumb-vignette: inset 0 0 120px rgba(0, 0, 0, 0.18);
+  --thumb-label-bg: #0c0c0c;
 
   /* Borders */
   --border-color: #2a2a2a;

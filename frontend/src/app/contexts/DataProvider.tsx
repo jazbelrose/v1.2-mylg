@@ -58,6 +58,7 @@ export interface Project {
   finishline?: string;
   productionStart?: string;
   dateCreated?: string;
+  version?: string;
   invoiceBrandName?: string;
   invoiceBrandAddress?: string;
   invoiceBrandPhone?: string;

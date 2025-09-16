@@ -73,11 +73,6 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     }
   }, [setIsAuthenticated, setCognitoUser, navigate, close]);
 
-  const handleLogoClick = useCallback(() => {
-    navigate("/");
-    close();
-  }, [navigate, close]);
-
   const navItems: DashboardNavItem[] = useMemo(
     () => [
       {
@@ -154,7 +149,6 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   return {
     navItems,
     bottomItems,
-    handleLogoClick,
   };
 }
 

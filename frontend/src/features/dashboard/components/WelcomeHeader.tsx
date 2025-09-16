@@ -33,7 +33,7 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
   // online status (derived from presenceChanged events via OnlineStatusContext)
   const isUserOnline = !!userId && isOnline(String(userId));
 
-  const drawerId = appShell?.drawerId;
+  const baseDrawerId = appShell?.drawerId;
   const isDrawerOpen = appShell?.isDrawerOpen ?? false;
   const showHamburger = !!setActiveView && !!appShell && !appShell.isDesktop;
 
@@ -82,36 +82,28 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
     }
   };
 
+  const brandClassName = [
+    'welcome-header__brand',
+    'squircle',
+    isMobile ? 'welcome-header__brand--compact' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <>
       <div className="welcome-header-desktop">
         {/* Left: Logo + Hamburger */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="welcome-header-left">
           <div
-            className="header-icon-btn"
+            className="header-icon-btn welcome-header__brand-button"
             onClick={handleHomeClick}
             role="button"
             tabIndex={0}
             aria-label="Go to Home"
             onKeyDown={handleLogoKeyDown}
           >
-            <div
-              style={{
-                width: isMobile ? '32px' : '40px',
-                height: isMobile ? '32px' : '40px',
-                borderRadius: '50%',
-                border: '1px solid white',
-                backgroundColor: 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: isMobile ? '14px' : '18px',
-              }}
-            >
-              M!
-            </div>
+            <span className={brandClassName}>M!</span>
           </div>
 
           {showHamburger && (
@@ -119,8 +111,14 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
               type="button"
               className="header-icon-btn"
               onClick={handleNavigationToggle}
-              aria-label="Open navigation menu"
-              aria-controls={drawerId}
+              aria-label="Toggle navigation"
+              aria-controls={
+                baseDrawerId
+                  ? appShell?.isDesktop
+                    ? baseDrawerId
+                    : `${baseDrawerId}-overlay`
+                  : undefined
+              }
               aria-expanded={isDrawerOpen}
               onKeyDown={handleMenuKeyDown}
               style={{ cursor: 'pointer' }}

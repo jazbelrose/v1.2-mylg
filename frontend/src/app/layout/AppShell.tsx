@@ -10,7 +10,7 @@ import React, {
   type PropsWithChildren,
 } from "react";
 
-const DESKTOP_QUERY = "(min-width: 1280px)";
+const DESKTOP_QUERY = "(min-width: 1024px)";
 
 type AppShellContextValue = {
   isDesktop: boolean;
@@ -88,27 +88,35 @@ const AppShell: React.FC<AppShellProps> = ({
   );
 
   const overlay = !isDesktop && renderOverlayDrawer
-    ? renderOverlayDrawer({ open: drawerOpen, onClose: closeDrawer, drawerId })
+    ? renderOverlayDrawer({
+        open: drawerOpen,
+        onClose: closeDrawer,
+        drawerId: `${drawerId}-overlay`,
+      })
     : null;
 
   const rootClass = ["app-shell", className].filter(Boolean).join(" ");
-  const mainClass = ["app-shell__main", contentClassName].filter(Boolean).join(" ");
+  const mainClass = ["app-shell__main", contentClassName]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <AppShellContext.Provider value={contextValue}>
-      <div className={rootClass}>
+      <div className={rootClass} data-desktop={isDesktop}>
         <div className="app-shell__inner">
-          <aside
-            id={drawerId}
-            className="app-shell__drawer"
-            aria-label="Main navigation"
-            aria-hidden={!isDesktop}
-            data-state={isDesktop ? "open" : "closed"}
-          >
-            {drawer}
-          </aside>
+          <div className={mainClass} data-layout={isDesktop ? "desktop" : "mobile"}>
+            <aside
+              id={drawerId}
+              className="app-shell__drawer app-drawer"
+              aria-label="Primary navigation"
+              aria-hidden={!isDesktop}
+              data-state={isDesktop ? "open" : "closed"}
+            >
+              {drawer}
+            </aside>
 
-          <div className={mainClass}>{children}</div>
+            <div className="app-shell__content">{children}</div>
+          </div>
         </div>
         {overlay}
       </div>

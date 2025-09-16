@@ -7,19 +7,21 @@
 
   /* Backgrounds */
   --bg: #0c0c0c;
-  --bg2: #111111; /* your JAJ pref */
-  --bg3: #1a1a1a;
+  --bg2: #111213;
+  --bg3: #181a1b;
   --bg-color: var(--bg);
   --primary-color: #0d0d0d;
   --bg-secondary: rgba(255, 255, 255, 0.02);
 
   /* Text */
-  --text-color: #fff;
-  --text-color-2: #fff;
+  --text: #eaecee;
+  --text-color: var(--text);
+  --text-color-2: var(--text);
   --text-color-3: var(--brand); /* emphasis */
-  --secondary-color: #fff;
+  --secondary-color: var(--text);
   --text-color-secondary: #666;
-  --text-color-muted: #777;
+  --text-color-muted: #9aa0a6;
+  --muted: #9aa0a6;
 
   /* Overlay */
   --overlay-color: rgb(12 12 12 / 63%);
@@ -28,6 +30,7 @@
   --border-color: #2a2a2a;
   --border-color-light: #3a3a3a;
   --border-color-dark: #1d1d1d;
+  --line: rgba(255, 255, 255, 0.06);
 
   /* Status (keep neutral) */
   --color-success: #4caf50;
@@ -39,6 +42,7 @@
   --color-hover: #ff4b70;    /* slightly brighter brand */
   --color-active: #ffffff;
   --color-focus: var(--brand);  /* 🔴 was purple; now brand */
+  --accent: var(--brand);
 
   /* Code/Editor */
   --code-bg: #0f0f10;
@@ -49,4 +53,8 @@
   --brand-08: rgba(250, 51, 86, 0.08);
   --brand-12: rgba(250, 51, 86, 0.12);
   --brand-20: rgba(250, 51, 86, 0.20);
+
+  /* Layout */
+  --sidebar-w: 268px;
+  --topbar-h: 64px;
 }

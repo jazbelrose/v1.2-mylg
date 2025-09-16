@@ -7,12 +7,14 @@ interface NavigationDrawerProps {
   open: boolean;
   onClose: () => void;
   setActiveView: (view: string) => void;
+  drawerId?: string;
 }
 
 const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
   open,
   onClose,
   setActiveView,
+  drawerId,
 }) => (
   <AnimatePresence>
     {open && (
@@ -26,6 +28,7 @@ const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
         />
 
         <motion.div
+          id={drawerId}
           className="navigation-drawer"
           initial={{ x: "-100%" }}
           animate={{ x: 0 }}
@@ -33,7 +36,7 @@ const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           role="dialog"
           aria-modal="true"
-          aria-label="Navigation"
+          aria-label="Primary navigation"
         >
           <DashboardNavPanel
             variant="overlay"

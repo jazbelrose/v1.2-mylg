@@ -34,6 +34,8 @@
 /* Card component */
 .card {
   padding: 2em;
+  border-radius: 14px 14px 17px 17px;
+  /* Keep forms/modals/buttons symmetric via component-specific selectors */
 }
 
 /* Documentation text */
@@ -98,4 +100,21 @@
   background-color: #00ff00;
   border: 2px solid var(--bg-color);
   border-radius: 50%;
+}
+
+/* Noise layer toggles */
+@media print {
+  .noise-surface::after {
+    display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .noise-surface::after {
+    display: none;
+  }
+}
+
+[data-noise="off"] .noise-surface::after {
+  display: none;
 }

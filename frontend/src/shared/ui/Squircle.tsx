@@ -26,7 +26,7 @@ const supportsMask = (): boolean => {
 
 const useIsomorphicLayoutEffect = hasWindow ? React.useLayoutEffect : React.useEffect;
 
-type ElementType = keyof JSX.IntrinsicElements | React.ComponentType<any>;
+type ElementType = React.ElementType;
 
 export type SquircleProps<T extends React.ElementType = 'div'> = {
   as?: T;
@@ -153,16 +153,16 @@ const SquircleInner = <T extends React.ElementType = 'div'>(
     };
 
     if ('addEventListener' in mediaQuery) {
-      mediaQuery.addEventListener('change', listener);
+      (mediaQuery as MediaQueryList).addEventListener('change', listener);
     } else {
-      mediaQuery.addListener(listener);
+      (mediaQuery as MediaQueryList & { addListener: (listener: (event: MediaQueryListEvent) => void) => void }).addListener(listener);
     }
 
     return () => {
       if ('removeEventListener' in mediaQuery) {
-        mediaQuery.removeEventListener('change', listener);
+        (mediaQuery as MediaQueryList).removeEventListener('change', listener);
       } else {
-        mediaQuery.removeListener(listener);
+        (mediaQuery as MediaQueryList & { removeListener: (listener: (event: MediaQueryListEvent) => void) => void }).removeListener(listener);
       }
     };
   }, []);

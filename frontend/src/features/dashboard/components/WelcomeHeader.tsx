@@ -9,7 +9,6 @@ import NavBadge from "../../../shared/ui/NavBadge";
 import GlobalSearch from './GlobalSearch';
 import './GlobalSearch.css';
 import { getFileUrl } from '../../../shared/utils/api';
-import { useAppShell } from '@/app/layout/AppShell';
 import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
 
 interface WelcomeHeaderProps {
@@ -33,7 +32,6 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
   const { isOnline } = useOnlineStatus(); // <-- only need this now
   const navigate = useNavigate();
   const location = useLocation();
-  const appShell = useAppShell();
 
   const userName = propUserName || userData?.firstName || userData?.email || 'User';
   const userThumbnail = userData?.thumbnail;
@@ -50,10 +48,10 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
   // online status (derived from presenceChanged events via OnlineStatusContext)
   const isUserOnline = !!userId && isOnline(String(userId));
 
-  const baseDrawerId = appShell?.drawerId ?? navigationDrawerId;
-  const isDrawerOpen = appShell?.isDrawerOpen ?? isNavigationOpen ?? false;
-  const isDesktopShell = appShell?.isDesktop ?? isDesktopLayout ?? false;
-  const hasNavigationToggle = Boolean(appShell || onToggleNavigation);
+  const baseDrawerId = navigationDrawerId;
+  const isDrawerOpen = isNavigationOpen ?? false;
+  const isDesktopShell = isDesktopLayout ?? false;
+  const hasNavigationToggle = Boolean(onToggleNavigation);
   const showHamburger = Boolean(setActiveView && hasNavigationToggle && !isDesktopShell);
   const showBrandInHeader = !isDesktopShell;
 
@@ -69,9 +67,7 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
   const handleNotificationsToggle = () => setNotificationsOpen(!notificationsOpen);
   const handleNotificationsPinToggle = () => setNotificationsPinned(!notificationsPinned);
   const handleNavigationToggle = () => {
-    if (appShell && !appShell.isDesktop) {
-      appShell.openDrawer();
-    } else if (onToggleNavigation) {
+    if (onToggleNavigation) {
       onToggleNavigation();
     }
   };
@@ -97,7 +93,7 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
     }
   };
 
-  const handleMenuKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+  const handleMenuKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleNavigationToggle();
@@ -150,15 +146,7 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
               className="header-icon-btn"
               onClick={handleNavigationToggle}
               aria-label="Toggle navigation"
-              aria-controls={
-                baseDrawerId
-                  ? appShell
-                    ? appShell.isDesktop
-                      ? baseDrawerId
-                      : `${baseDrawerId}-overlay`
-                    : baseDrawerId
-                  : undefined
-              }
+              aria-controls={baseDrawerId}
               aria-expanded={isDrawerOpen}
               onKeyDown={handleMenuKeyDown}
               style={{ cursor: 'pointer' }}

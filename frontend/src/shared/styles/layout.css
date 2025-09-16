@@ -18,12 +18,12 @@
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 2vw, 16px);
-  padding: 0;
+
 }
 
 .app-shell__drawer {
   display: none;
+  
 }
 
 .app-shell__content {

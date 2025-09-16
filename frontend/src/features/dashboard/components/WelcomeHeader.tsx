@@ -11,7 +11,6 @@ import './GlobalSearch.css';
 import { getFileUrl } from '../../../shared/utils/api';
 import { useAppShell } from '@/app/layout/AppShell';
 import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
-import TasksOverviewCard from "./TasksOverviewCard";
 
 const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string) => void }> = ({ userName: propUserName, setActiveView }) => {
   const { userData } = useData();
@@ -231,9 +230,16 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
       </div>
 
       {showWelcomeCards && (
-        <div className="welcome-header-extras" role="region" aria-label="This week overview">
-          <WeekWidgetCard className="welcome-header-week-card" />
-          <TasksOverviewCard className="welcome-header-tasks-card" />
+        <div className="welcome-header-extras" role="region" aria-label="Dashboard welcome overview">
+          <nav className="welcome-header-toc" aria-label="Quick jumps">
+            <a href="#week">This Week</a>
+            <a href="#projects">Projects</a>
+            <a href="#tasks">Tasks</a>
+          </nav>
+
+          <div id="week" className="welcome-section-anchor">
+            <WeekWidgetCard className="welcome-header-week-card" />
+          </div>
         </div>
       )}
 

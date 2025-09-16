@@ -109,6 +109,11 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
         <div className={styles.titleWrap}>
           <h3 className={styles.title}>This Week</h3>
           <p className={styles.subtitle}>Timeline snapshots across your projects.</p>
+          <div className={styles.badges} aria-label="Week status badges">
+            <span className={styles.badge}>Overdue</span>
+            <span className={styles.badge}>Due Today</span>
+            <span className={styles.badge}>New</span>
+          </div>
         </div>
         {moreCount > 0 && (
           <span

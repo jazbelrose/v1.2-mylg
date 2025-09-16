@@ -157,12 +157,13 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
         </div>
 
         {/* Center: Global Search */}
-        <div className="welcome-header-center">
-          <GlobalSearch />
-        </div>
+
 
         {/* Right: Create, Notifications, Avatar (+ online dot) */}
         <div className="welcome-header-right">
+                  <div className="welcome-header-center">
+          <GlobalSearch />
+        </div>
           <div
             className="nav-item-style"
             onClick={() => navigate("/dashboard/new")}

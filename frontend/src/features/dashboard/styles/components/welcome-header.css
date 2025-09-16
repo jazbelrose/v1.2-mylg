@@ -3,13 +3,12 @@
 .welcome-header-desktop {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  width: auto;
+  justify-content: space-between;
+  width: 100%;
   gap: 16px;
   min-height: var(--topbar-h, 64px);
   padding: 16px;
   margin-bottom: 0;
-  margin-left: auto;
  
 }
 
@@ -32,7 +31,6 @@
 .welcome-header-right {
   display: flex;
   align-items: center;
-  margin-left: auto;
   gap: 8px;
 }
 

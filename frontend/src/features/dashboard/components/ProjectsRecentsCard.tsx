@@ -4,7 +4,11 @@ import { ChevronDown } from "lucide-react";
 import { Kebab } from "@/shared/icons/Kebab";
 import { useData } from "@/app/contexts/useData";
 import { ProjectCard } from "@/shared/icons/ProjectCard";
+import Squircle from "@/shared/ui/Squircle";
 import { getFileUrl } from "../../../shared/utils/api";
+
+const CARD_RADIUS = 18;
+const CARD_CORNER_RADII = Object.freeze({ top: CARD_RADIUS + 2, bottom: CARD_RADIUS - 2 });
 
 type ProjectLike = {
   projectId: string;
@@ -113,7 +117,14 @@ const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
   };
 
   return (
-    <section aria-label="Projects" className="projects-recents-card">
+    <Squircle
+      as="section"
+      aria-label="Projects"
+      className="projects-recents-card"
+      radius={CARD_RADIUS}
+      smoothing={0.6}
+      cornerRadii={CARD_CORNER_RADII}
+    >
       <div className="prc-header">
         <h3 className="prc-title">Projects</h3>
         <button
@@ -224,7 +235,7 @@ const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
       >
         See all projects
       </button>
-    </section>
+    </Squircle>
   );
 };
 

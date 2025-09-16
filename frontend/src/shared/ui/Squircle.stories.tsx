@@ -63,3 +63,47 @@ export const RadiusSmoothingMatrix: Story = {
     </div>
   ),
 };
+
+export const AsymmetricExamples: Story = {
+  render: () => (
+    <div
+      style={{
+        display: 'flex',
+        gap: '1.5rem',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+      }}
+    >
+      <Squircle
+        radius={24}
+        cornerRadii={{ top: 26, bottom: 22 }}
+        style={{
+          width: 220,
+          padding: '1.5rem',
+          background:
+            'linear-gradient(135deg, rgba(250, 51, 86, 0.25), rgba(94, 72, 255, 0.25))',
+          color: '#fff',
+          fontWeight: 600,
+        }}
+      >
+        Asymmetric card
+      </Squircle>
+      <Squircle
+        as="button"
+        radius={14}
+        smoothing={0.75}
+        cornerRadii={{ top: 16, bottom: 12 }}
+        style={{
+          padding: '0.6rem 1.5rem',
+          border: 'none',
+          background: 'rgba(235, 93, 250, 0.2)',
+          color: '#fff',
+          fontWeight: 600,
+          cursor: 'pointer',
+        }}
+      >
+        Pill action
+      </Squircle>
+    </div>
+  ),
+};

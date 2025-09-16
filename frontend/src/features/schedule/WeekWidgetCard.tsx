@@ -2,7 +2,11 @@ import React, { useMemo, useState } from "react";
 import WeekWidget, { type Track, type Dot } from "@/features/dashboard/components/WeekWidget";
 import { useData } from "@/app/contexts/useData";
 import { getColor } from "@/shared/utils/colorUtils";
+import Squircle from "@/shared/ui/Squircle";
 import styles from "./WeekWidgetCard.module.css";
+
+const CARD_RADIUS = 24;
+const CARD_CORNER_RADII = Object.freeze({ top: CARD_RADIUS + 2, bottom: CARD_RADIUS - 2 });
 
 type TimelineEvent = { date?: string; description?: string; [k: string]: unknown };
 type Project = {
@@ -93,7 +97,14 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
   };
 
   return (
-    <section className={`${styles.card} ${className ?? ""}`.trim()} aria-label="Week overview">
+    <Squircle
+      as="section"
+      radius={CARD_RADIUS}
+      smoothing={0.6}
+      cornerRadii={CARD_CORNER_RADII}
+      className={`${styles.card} ${className ?? ""}`.trim()}
+      aria-label="Week overview"
+    >
       <header className={styles.header}>
         <div className={styles.titleWrap}>
           <h3 className={styles.title}>This Week</h3>
@@ -120,7 +131,7 @@ const WeekWidgetCard: React.FC<WeekWidgetCardProps> = ({ className }) => {
         getTooltipItems={getTooltipItems}
         isMobile
       />
-    </section>
+    </Squircle>
   );
 };
 

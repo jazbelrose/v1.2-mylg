@@ -13,8 +13,12 @@ import { useProjectKpis, type ProjectLike } from "@/features/dashboard/hooks/use
 import SVGThumbnail from "@/features/dashboard/components/SvgThumbnail";
 import { Kebab } from "@/shared/icons/Kebab";
 import { getFileUrl } from "@/shared/utils/api";
+import Squircle from "@/shared/ui/Squircle";
 import desktopStyles from "./ProjectsPanelDesktop.module.css";
 import mobileStyles from "@/features/dashboard/components/projects-panel.module.css";
+
+const PANEL_RADIUS = 24;
+const PANEL_CORNER_RADII = Object.freeze({ top: PANEL_RADIUS + 2, bottom: PANEL_RADIUS - 2 });
 
 const DEFAULT_DESKTOP_ROWS = 6;
 
@@ -456,7 +460,14 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   const errorText = projectsError ? "Failed to load projects." : undefined;
 
   return (
-    <section aria-label="Projects overview" className={desktopStyles.card}>
+    <Squircle
+      as="section"
+      aria-label="Projects overview"
+      className={desktopStyles.card}
+      radius={PANEL_RADIUS}
+      smoothing={0.6}
+      cornerRadii={PANEL_CORNER_RADII}
+    >
       <header className={desktopStyles.header}>
         <div className={desktopStyles.headerTop}>
           <div className={mobileStyles.titleWrap}>
@@ -619,7 +630,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
           See all projects
         </button>
       </div>
-    </section>
+    </Squircle>
   );
 };
 

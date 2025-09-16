@@ -20,6 +20,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileUrl } from '../../../shared/utils/api';
+import Squircle from '@/shared/ui/Squircle';
+
+const PILL_RADIUS = 14;
+const PILL_CORNER_RADII = Object.freeze({ top: PILL_RADIUS + 2, bottom: PILL_RADIUS - 2 });
 
 interface Project {
   projectId: string;
@@ -556,9 +560,14 @@ const AllProjects: React.FC = () => {
             const active =
               (p.key === 'all' && !statusFilter) || statusFilter === p.key;
             return (
-              <button
+              <Squircle
                 key={p.key}
+                as="button"
+                type="button"
                 className={`pill ${active ? 'active' : ''}`}
+                radius={PILL_RADIUS}
+                smoothing={0.75}
+                cornerRadii={PILL_CORNER_RADII}
                 onClick={() =>
                   setStatusFilter(p.key === 'all' ? '' : p.key.toString())
                 }
@@ -570,13 +579,17 @@ const AllProjects: React.FC = () => {
                     className="pill-underline"
                   />
                 )}
-              </button>
+              </Squircle>
             );
           })}
           <div className="sort-wrapper" ref={sortRef}>
-            <button
+            <Squircle
+              as="button"
               type="button"
               className={`pill sort-pill ${sortOpen ? 'active' : ''}`}
+              radius={PILL_RADIUS}
+              smoothing={0.75}
+              cornerRadii={PILL_CORNER_RADII}
               onClick={() => setSortOpen((o) => !o)}
             >
               {`Sort (${sortLabels[sortOption]})`}
@@ -586,7 +599,7 @@ const AllProjects: React.FC = () => {
                   className="pill-underline"
                 />
               )}
-            </button>
+            </Squircle>
             {sortOpen && (
               <div className="sort-menu" role="menu">
                 {Object.entries(sortLabels).map(([value, label]) => (
@@ -618,14 +631,18 @@ const AllProjects: React.FC = () => {
                   placeholder="Search"
                 />
               ) : (
-                <motion.button
+                <Squircle
                   key="button"
+                  as={motion.button}
                   type="button"
                   className="pill icon-pill"
+                  radius={PILL_RADIUS}
+                  smoothing={0.75}
+                  cornerRadii={PILL_CORNER_RADII}
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search size={14} />
-                </motion.button>
+                </Squircle>
               )}
             </AnimatePresence>
           </div>

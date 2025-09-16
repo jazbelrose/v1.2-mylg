@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { getSquirclePath } from './squircle/getSquirclePath';
+import { getSquirclePath, type SquircleCornerRadii } from './squircle/getSquirclePath';
 
 const hasWindow = typeof window !== 'undefined';
 const hasResizeObserver = hasWindow && 'ResizeObserver' in window;
@@ -32,6 +32,7 @@ export type SquircleProps<T extends React.ElementType = 'div'> = {
   as?: T;
   radius?: number;
   smoothing?: number;
+  cornerRadii?: SquircleCornerRadii;
   className?: string;
   style?: React.CSSProperties;
   children?: React.ReactNode;
@@ -60,6 +61,7 @@ const SquircleInner = <T extends React.ElementType = 'div'>(
     as,
     radius = 20,
     smoothing = 0.6,
+    cornerRadii,
     className,
     style,
     children,
@@ -173,15 +175,51 @@ const SquircleInner = <T extends React.ElementType = 'div'>(
       return null;
     }
 
-    const path = getSquirclePath(size.width, size.height, radius, smoothing);
+    const path = getSquirclePath(size.width, size.height, radius, smoothing, cornerRadii);
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}" viewBox="0 0 ${size.width} ${size.height}"><path fill="white" d="${path}" /></svg>`;
     const dataUrl = `url("data:image/svg+xml,${encodeSvg(svg)}")`;
     return dataUrl;
-  }, [canMask, radius, size.height, size.width, smoothing]);
+  }, [canMask, cornerRadii, radius, size.height, size.width, smoothing]);
+
+  const fallbackBorderRadius = React.useMemo(() => {
+    if (!cornerRadii) {
+      return radius;
+    }
+
+    const pickCorner = (specific?: number, shared?: number): number => {
+      if (typeof specific === 'number' && Number.isFinite(specific)) {
+        return specific;
+      }
+      if (typeof shared === 'number' && Number.isFinite(shared)) {
+        return shared;
+      }
+      return radius;
+    };
+
+    const topLeft = pickCorner(cornerRadii.topLeft, cornerRadii.top);
+    const topRight = pickCorner(cornerRadii.topRight, cornerRadii.top);
+    const bottomRight = pickCorner(cornerRadii.bottomRight, cornerRadii.bottom);
+    const bottomLeft = pickCorner(cornerRadii.bottomLeft, cornerRadii.bottom);
+
+    const values = [topLeft, topRight, bottomRight, bottomLeft];
+    const [first, ...restValues] = values;
+    const allEqual = restValues.every((value) => Math.abs(value - first) < 0.001);
+
+    if (allEqual) {
+      return first;
+    }
+
+    const formatCssNumber = (value: number) => {
+      const safe = Math.max(0, value);
+      return `${Number.parseFloat(safe.toFixed(2))}px`;
+    };
+
+    return values.map(formatCssNumber).join(' ');
+  }, [cornerRadii, radius]);
 
   const mergedStyle = React.useMemo(() => {
     const next: React.CSSProperties = {
-      borderRadius: canMask ? 0 : radius,
+      borderRadius: canMask ? 0 : fallbackBorderRadius,
       ...(style ?? {}),
     };
 
@@ -197,7 +235,7 @@ const SquircleInner = <T extends React.ElementType = 'div'>(
     }
 
     return next;
-  }, [canMask, maskValue, radius, style]);
+  }, [canMask, fallbackBorderRadius, maskValue, style]);
 
   if (Component === React.Fragment) {
     console.warn('Squircle cannot render as a React.Fragment. Falling back to a div.');

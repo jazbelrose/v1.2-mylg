@@ -35,4 +35,12 @@ describe('getSquirclePath', () => {
 
     expect(pathA).toBe(pathB);
   });
+
+  it('supports asymmetric top and bottom radii', () => {
+    const path = getSquirclePath(200, 120, 20, 0.6, { top: 24, bottom: 18 });
+
+    expect(path).toMatchInlineSnapshot(
+      '"M 20 0 L 176 0 C 191.4183 0 200 8.5817 200 24 L 200 96 C 200 111.4183 191.4183 120 176 120 L 24 120 C 8.5817 120 0 111.4183 0 96 L 0 24 C 0 8.5817 8.5817 0 24 0 Z"',
+    );
+  });
 });

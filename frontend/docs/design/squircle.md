@@ -12,6 +12,7 @@ The squircle utilities provide a consistent corner treatment across the app that
   - `as`: host element/component. Defaults to `div`.
   - `radius`: numeric radius in pixels (default `20`).
   - `smoothing`: 0–1 float that controls how square the corner becomes (default `0.6`).
+  - `cornerRadii`: optional overrides for each corner. Use `top`/`bottom` (or explicit `topLeft`, etc.) to introduce subtle asymmetry for cards and pills. Leave undefined for forms, modals, and buttons so they stay symmetric.
   - `className`, `style`, and `children` pass straight through to the host.
 - **Fallbacks:** When masks or `ResizeObserver` are unavailable, the wrapper falls back to `border-radius` with `overflow: hidden` so older browsers still render rounded corners.
 - **Usage:**
@@ -22,6 +23,19 @@ The squircle utilities provide a consistent corner treatment across the app that
   <Squircle as="button" radius={24} smoothing={0.5} className="primary-button">
     Action
   </Squircle>;
+  ```
+
+  For card surfaces and pill toggles, pass a slightly larger `top` radius and a slightly smaller `bottom` radius (2–4px difference works well):
+
+  ```tsx
+  <Squircle
+    as="section"
+    radius={24}
+    cornerRadii={{ top: 26, bottom: 22 }}
+    className="dashboard-card"
+  >
+    ...
+  </Squircle>
   ```
 
 ### CSS helper class

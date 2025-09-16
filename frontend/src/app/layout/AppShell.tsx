@@ -26,22 +26,14 @@ export function useAppShell() {
   return useContext(AppShellContext);
 }
 
-type OverlayRenderArgs = {
-  open: boolean;
-  onClose: () => void;
-  drawerId: string;
-};
-
 type AppShellProps = PropsWithChildren<{
   drawer?: React.ReactNode;
-  renderOverlayDrawer?: (args: OverlayRenderArgs) => React.ReactNode;
   className?: string;
   contentClassName?: string;
 }>;
 
 const AppShell: React.FC<AppShellProps> = ({
   drawer,
-  renderOverlayDrawer,
   className,
   contentClassName,
   children,
@@ -87,30 +79,48 @@ const AppShell: React.FC<AppShellProps> = ({
     [isDesktop, drawerOpen, openDrawer, closeDrawer, drawerId]
   );
 
-  const overlay = !isDesktop && renderOverlayDrawer
-    ? renderOverlayDrawer({ open: drawerOpen, onClose: closeDrawer, drawerId })
-    : null;
-
+  const hasDrawer = Boolean(drawer);
+  const isNavOpen = hasDrawer && !isDesktop && drawerOpen;
   const rootClass = ["app-shell", className].filter(Boolean).join(" ");
-  const mainClass = ["app-shell__main", contentClassName].filter(Boolean).join(" ");
+  const bodyClass = [
+    "app-body",
+    !hasDrawer ? "app-body--no-drawer" : null,
+    isNavOpen ? "nav-open" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const mainClass = ["app-content", contentClassName].filter(Boolean).join(" ");
+  const drawerState = hasDrawer && (isDesktop || drawerOpen) ? "open" : "closed";
+  const drawerHidden = hasDrawer && !isDesktop && !drawerOpen;
 
   return (
     <AppShellContext.Provider value={contextValue}>
       <div className={rootClass}>
-        <div className="app-shell__inner">
-          <aside
-            id={drawerId}
-            className="app-shell__drawer"
-            aria-label="Main navigation"
-            aria-hidden={!isDesktop}
-            data-state={isDesktop ? "open" : "closed"}
-          >
-            {drawer}
-          </aside>
+        <div className={bodyClass}>
+          {hasDrawer ? (
+            <aside
+              id={drawerId}
+              className="app-drawer"
+              aria-label="Primary navigation"
+              aria-hidden={drawerHidden}
+              data-state={drawerState}
+            >
+              {drawer}
+            </aside>
+          ) : null}
 
-          <div className={mainClass}>{children}</div>
+          <main className={mainClass}>
+            <div className="content-max">{children}</div>
+          </main>
         </div>
-        {overlay}
+        {isNavOpen ? (
+          <button
+            type="button"
+            className="app-drawer-backdrop"
+            aria-label="Close navigation overlay"
+            onClick={closeDrawer}
+          />
+        ) : null}
       </div>
     </AppShellContext.Provider>
   );

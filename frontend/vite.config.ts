@@ -52,6 +52,8 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),
+        "@dnd-kit/core": path.resolve(__dirname, "src/lib/dnd-kit/core.tsx"),
+        "@dnd-kit/utilities": path.resolve(__dirname, "src/lib/dnd-kit/utilities.ts"),
       },
     },
     define: { ...(isDev && { 'process.env': {} }) },

@@ -12,6 +12,7 @@ import QuickLinksComponent from "@/features/project/components/QuickLinksCompone
 import LocationComponent from "@/features/project/components/LocationComponent";
 import FileManagerComponent from "@/features/project/components/FileManager";
 import TasksComponent from "@/features/project/components/TasksComponent";
+import StickerBoard from "@/features/project/components/StickerBoard";
 import { BudgetProvider } from "@/features/budget/context/BudgetProvider";
 import { useData } from "@/app/contexts/useData";
 import { useSocket } from "@/app/contexts/useSocket";
@@ -205,6 +206,8 @@ const SingleProject: React.FC = () => {
                   <BudgetOverviewCard projectId={activeProject?.projectId} />
 
                   <GalleryComponent />
+
+                  <StickerBoard />
                 </div>
                 <div className="calendar-column">
                   <ProjectCalendar

@@ -46,6 +46,22 @@ export interface QuickLink {
   [k: string]: unknown;
 }
 
+export interface MoodboardSticker {
+  id: string;
+  type: "note" | "photo" | "link";
+  title?: string;
+  subtitle?: string;
+  body?: string;
+  url?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  accentColor?: string;
+  textColor?: string;
+  x: number;
+  y: number;
+  rotation?: number;
+}
+
 export interface Project {
   projectId: string;
   title?: string;
@@ -67,6 +83,7 @@ export interface Project {
   clientEmail?: string;
   previewUrl?: string;
   quickLinks?: QuickLink[];
+  moodboardStickers?: MoodboardSticker[];
   [k: string]: unknown;
 }
 

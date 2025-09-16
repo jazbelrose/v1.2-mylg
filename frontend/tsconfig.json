@@ -7,7 +7,9 @@
     "jsx": "react-jsx",
     "baseUrl": "src",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["*"],
+      "@dnd-kit/core": ["lib/dnd-kit/core"],
+      "@dnd-kit/utilities": ["lib/dnd-kit/utilities"]
     },
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

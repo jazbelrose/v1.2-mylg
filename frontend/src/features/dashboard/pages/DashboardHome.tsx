@@ -16,6 +16,7 @@ import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
 import AllProjectsWeekWidget from "@/features/dashboard/components/AllProjectsWeekWidget";
 import TasksOverviewCard from "@/features/dashboard/components/TasksOverviewCard";
+import MobileTasksOverviewCard from "@/features/dashboard/components/MobileTasksOverviewCard";
 import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import AppShell from "@/app/layout/AppShell";
@@ -171,6 +172,9 @@ const WelcomeScreen: React.FC = () => {
           <ProjectsPanel
             onOpenProject={(projectId) => handleNavigateToProject({ projectId })}
           />
+        </div>
+        <div className="mobile-tasks-section">
+          <MobileTasksOverviewCard />
         </div>
         <div className="mobile-calendar-section">
           <AllProjectsWeekWidget />

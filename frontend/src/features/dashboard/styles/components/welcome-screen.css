@@ -31,6 +31,7 @@
   max-width: 100vw;
   overflow: visible; /* allow children (CTA) to be fully visible */
   align-items: stretch;
+  gap: 20px;
 }
 
 .mobile-projects-section {
@@ -41,6 +42,13 @@
   background: transparent;
   width: 100%;
   max-width: 100vw;
+}
+
+.mobile-tasks-section {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100vw;
+  overflow: visible;
 }
 
 .mobile-calendar-section {
@@ -58,6 +66,7 @@
 }
 
 .mobile-projects-section > *,
+.mobile-tasks-section > *,
 .mobile-calendar-section > * {
   width: 100%;
   max-width: 100vw;

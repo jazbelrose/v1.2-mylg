@@ -73,7 +73,7 @@
   align-items: flex-start;
  
   
-  padding-bottom: calc(16px + env(safe-area-inset-bottom) + 56px);
+
   display: flex;
   flex-direction: column;
   min-height: 100svh;

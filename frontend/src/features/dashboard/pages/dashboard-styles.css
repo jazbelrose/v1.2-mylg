@@ -23,7 +23,3 @@
   padding: clamp(12px, 2vw, 24px);
 }
 
-.dashboard-wrapper.welcome-screen.no-vertical-center {
-  padding-bottom: calc(16px + env(safe-area-inset-bottom) + 56px);
-}
-

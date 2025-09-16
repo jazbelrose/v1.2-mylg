@@ -46,4 +46,5 @@ export { default as Slideshow } from "./SlideShow";
 export { default as SmoothScroll } from "./SmoothScroll";
 export { default as Spinner } from "./Spinner";
 export { default as Ticker } from "./Ticker";
+export { default as Squircle } from "./Squircle";
 

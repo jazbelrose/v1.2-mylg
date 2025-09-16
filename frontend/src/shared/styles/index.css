@@ -27,6 +27,7 @@
 @import './components/video-containers.css';
 @import './components/grid-layouts.css';
 @import './components/work-layouts.css';
+@import '../ui/squircle/squircle.css';
 
 @import './components/blog-row-layouts.css';
 

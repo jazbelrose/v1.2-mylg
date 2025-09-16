@@ -127,20 +127,47 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({
     const strongRgb = hexToRgbTuple(accentStrong);
 
     const pageBackground = tupleToHex(mixRgbTuples(BRAND_BG_RGB, weakRgb, 0.22));
-    const toolbarSurface = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.38), 0.86);
-    const toolbarSurfaceHover = tupleToRgba(mixRgbTuples(weakRgb, strongRgb, 0.28), 0.92);
-    const toolbarBorder = tupleToRgba(mixRgbTuples(weakRgb, strongRgb, 0.35), 0.48);
-    const toolbarBorderStrong = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.2), 0.72);
+    const tintedBase = mixRgbTuples(BRAND_BG_RGB, weakRgb, 0.32);
+    const tintedStrong = mixRgbTuples(BRAND_BG_RGB, strongRgb, 0.22);
+
+    const brandSoft = tupleToRgba(mixRgbTuples(weakRgb, WHITE_RGB, 0.12), 0.2);
+    const brandSoftStrong = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.22), 0.32);
+    const brandBorder = tupleToRgba(mixRgbTuples(tintedStrong, BRAND_BG_RGB, 0.32), 0.48);
+    const brandBorderStrong = tupleToRgba(mixRgbTuples(strongRgb, tintedBase, 0.25), 0.68);
+    const brandFocus = tupleToRgba(mixRgbTuples(strongRgb, WHITE_RGB, 0.18), 0.52);
+    const brandFocusOuter = tupleToRgba(mixRgbTuples(strongRgb, BRAND_BG_RGB, 0.35), 0.32);
+    const brandShadow = tupleToRgba(mixRgbTuples(tintedBase, BRAND_BG_RGB, 0.32), 0.45);
+    const brandShadowStrong = tupleToRgba(mixRgbTuples(tintedStrong, BRAND_BG_RGB, 0.35), 0.6);
+
+    const toolbarSurface = tupleToRgba(tintedBase, 0.86);
+    const toolbarSurfaceHover = tupleToRgba(mixRgbTuples(tintedStrong, strongRgb, 0.2), 0.95);
+    const toolbarBorder = tupleToRgba(mixRgbTuples(tintedStrong, weakRgb, 0.28), 0.48);
+    const toolbarBorderStrong = tupleToRgba(mixRgbTuples(tintedStrong, strongRgb, 0.38), 0.72);
+
     const mutedText = tupleToRgba(mixRgbTuples(weakRgb, WHITE_RGB, 0.68), 0.82);
-    const keyboardBg = tupleToRgba(mixRgbTuples(weakRgb, strongRgb, 0.18), 0.28);
-    const keyboardBorder = tupleToRgba(mixRgbTuples(strongRgb, BRAND_BG_RGB, 0.35), 0.5);
-    const canvasBackground = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.52), 0.88);
+    const keyboardBg = tupleToRgba(mixRgbTuples(tintedBase, strongRgb, 0.12), 0.28);
+    const keyboardBorder = tupleToRgba(mixRgbTuples(tintedStrong, BRAND_BG_RGB, 0.2), 0.5);
+
+    const canvasBase = mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.52);
+    const canvasBackground = tupleToRgba(canvasBase, 0.88);
+    const canvasSurface = tupleToRgba(mixRgbTuples(canvasBase, BRAND_BG_RGB, 0.1), 0.9);
     const canvasGrid = tupleToRgba(mixRgbTuples(weakRgb, WHITE_RGB, 0.32), 0.18);
-    const canvasBorder = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.48), 0.58);
-    const canvasShadow = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.28), 0.22);
-    const overlayTint = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.35), 0.72);
-    const raisedSurface = tupleToRgba(mixRgbTuples(weakRgb, BRAND_BG_RGB, 0.18), 0.96);
-    const raisedBorder = tupleToRgba(mixRgbTuples(strongRgb, weakRgb, 0.34), 0.42);
+    const canvasBorder = tupleToRgba(mixRgbTuples(tintedStrong, weakRgb, 0.34), 0.6);
+    const canvasBorderStrong = tupleToRgba(mixRgbTuples(strongRgb, tintedBase, 0.3), 0.72);
+    const canvasShadow = tupleToRgba(mixRgbTuples(tintedBase, BRAND_BG_RGB, 0.2), 0.22);
+    const canvasGlow = tupleToRgba(mixRgbTuples(tintedBase, strongRgb, 0.22), 0.28);
+
+    const overlayTint = tupleToRgba(mixRgbTuples(tintedBase, BRAND_BG_RGB, 0.24), 0.76);
+    const overlayStrong = tupleToRgba(mixRgbTuples(tintedStrong, BRAND_BG_RGB, 0.12), 0.88);
+    const overlayGlow = tupleToRgba(mixRgbTuples(weakRgb, WHITE_RGB, 0.65), 0.12);
+
+    const raisedSurface = tupleToRgba(mixRgbTuples(BRAND_BG_RGB, tintedBase, 0.18), 0.96);
+    const raisedBorder = tupleToRgba(mixRgbTuples(tintedStrong, BRAND_BG_RGB, 0.25), 0.5);
+    const raisedShadow = tupleToRgba(mixRgbTuples(tintedBase, BRAND_BG_RGB, 0.35), 0.45);
+
+    const linkSurface = tupleToRgba(mixRgbTuples(weakRgb, WHITE_RGB, 0.1), 0.32);
+    const linkBorder = tupleToRgba(mixRgbTuples(tintedStrong, strongRgb, 0.22), 0.58);
+    const linkText = mixWithWhite(accentStrong, 0.78, 0.98);
 
     return {
       "--moodboard-brand": accent,
@@ -149,6 +176,14 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({
       "--moodboard-brand-text-soft": mixWithWhite(accent),
       "--moodboard-brand-weak": accentWeak,
       "--moodboard-brand-weak-rgb": `${weakRgb[0]}, ${weakRgb[1]}, ${weakRgb[2]}`,
+      "--moodboard-brand-soft": brandSoft,
+      "--moodboard-brand-soft-strong": brandSoftStrong,
+      "--moodboard-brand-border": brandBorder,
+      "--moodboard-brand-border-strong": brandBorderStrong,
+      "--moodboard-brand-focus": brandFocus,
+      "--moodboard-brand-focus-outer": brandFocusOuter,
+      "--moodboard-brand-shadow": brandShadow,
+      "--moodboard-brand-shadow-strong": brandShadowStrong,
       "--moodboard-page-bg": pageBackground,
       "--moodboard-toolbar-surface": toolbarSurface,
       "--moodboard-toolbar-surface-hover": toolbarSurfaceHover,
@@ -158,12 +193,23 @@ const MoodboardCanvas: React.FC<MoodboardCanvasProps> = ({
       "--moodboard-keyboard-kbd-bg": keyboardBg,
       "--moodboard-keyboard-kbd-border": keyboardBorder,
       "--moodboard-canvas-bg": canvasBackground,
+      "--moodboard-canvas-surface": canvasSurface,
       "--moodboard-canvas-grid": canvasGrid,
       "--moodboard-canvas-border": canvasBorder,
+      "--moodboard-canvas-border-strong": canvasBorderStrong,
       "--moodboard-canvas-shadow": canvasShadow,
+      "--moodboard-canvas-glow": canvasGlow,
       "--moodboard-overlay": overlayTint,
+      "--moodboard-overlay-strong": overlayStrong,
+      "--moodboard-overlay-glow": overlayGlow,
       "--moodboard-surface-raised": raisedSurface,
       "--moodboard-surface-raised-border": raisedBorder,
+      "--moodboard-modal-surface": raisedSurface,
+      "--moodboard-modal-border": raisedBorder,
+      "--moodboard-modal-shadow": raisedShadow,
+      "--moodboard-link-surface": linkSurface,
+      "--moodboard-link-border": linkBorder,
+      "--moodboard-link-text": linkText,
     } as React.CSSProperties;
   }, [accent, accentStrong, accentWeak]);
 

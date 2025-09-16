@@ -7,6 +7,8 @@ import MoodboardCanvas from "../components/MoodboardCanvas";
 import { useData } from "@/app/contexts/useData";
 import { findProjectBySlug, slugify } from "@/shared/utils/slug";
 import type { Project } from "@/app/contexts/DataProvider";
+import { useProjectPalette } from "@/features/project/hooks/useProjectPalette";
+import { resolveProjectCoverUrl } from "@/features/project/utils/theme";
 
 const MoodboardPage: React.FC = () => {
   const { projectSlug = "" } = useParams<{ projectSlug: string }>();
@@ -21,6 +23,9 @@ const MoodboardPage: React.FC = () => {
   } = useData();
 
   const [activeProject, setActiveProject] = useState<Project | null>(initialProject ?? null);
+
+  const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
+  const projectPalette = useProjectPalette(coverImage);
 
   useEffect(() => {
     setActiveProject(initialProject ?? null);
@@ -92,16 +97,21 @@ const MoodboardPage: React.FC = () => {
           exit={{ opacity: 0, y: -24 }}
           transition={{ duration: 0.25 }}
         >
-          <MoodboardCanvas projectId={projectId} userId={currentUserId} />
+          <MoodboardCanvas
+            projectId={projectId}
+            userId={currentUserId}
+            palette={projectPalette}
+          />
         </motion.div>
       </AnimatePresence>
     ),
-    [currentUserId, projectId]
+    [currentUserId, projectId, projectPalette]
   );
 
   return (
     <ProjectPageLayout
       projectId={projectId}
+      theme={projectPalette}
       header={
         <ProjectHeader
           parseStatusToNumber={parseStatusToNumber}

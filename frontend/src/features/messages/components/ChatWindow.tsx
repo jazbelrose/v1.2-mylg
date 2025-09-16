@@ -122,7 +122,7 @@ const ChatWindow: React.FC<ChatWindowProps & {
       >
         {displayMessages.length === 0 && !isLoading ? (
           <div style={{ color: "#aaa", fontSize: 16, textAlign: "center" }}>
-            No messages yet.
+            Looks quiet. Drop your first idea here.
           </div>
         ) : (
           displayMessages.map((msg, index) => (

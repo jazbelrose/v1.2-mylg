@@ -20,7 +20,7 @@ export const InfoSection: React.FC<InfoSectionProps> = ({ style }) => {
     const email = emailInput?.value ?? '';
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
-      alert('Please enter a valid email address.');
+      alert('Hmm, that doesn’t look right—try email@site.com');
       return;
     }
 

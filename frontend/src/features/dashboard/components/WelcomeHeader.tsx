@@ -142,7 +142,7 @@ const WelcomeHeader: React.FC<{ userName?: string; setActiveView?: (view: string
           <div
             className="nav-item-style"
             onClick={() => navigate("/dashboard/new")}
-            title="Create New Project"
+            title="Start something"
           >
             <GridPlus size={isMobile ? 20 : 26} color="white" />
           </div>

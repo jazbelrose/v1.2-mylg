@@ -211,7 +211,7 @@ const Settings: React.FC = () => {
       setUserData(updatedUserData);
       toggleSettingsUpdated();
       setShowSavedWindow(true);
-      toast.success("Profile updated");
+      toast.success("Saved. Nice.");
       setIsFormDirty(false);
       setUploadedKey(null);
 
@@ -345,7 +345,7 @@ const Settings: React.FC = () => {
                 className="modal-submit-button settings primary"
                 disabled={isSaving || !isFormDirty}
               >
-                {isSaving ? "Saving..." : showSavedWindow ? "Saved" : "Save"}
+                {isSaving ? "Saving..." : showSavedWindow ? "Saved. Nice." : "Save"}
               </button>
             </div>
           </form>

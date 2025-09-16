@@ -28,7 +28,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = () => {
               role="button"
               tabIndex={0}
             />
-            <h2>Create New Project</h2>
+            <h2>Start something</h2>
           </div>
           <div className="right-side">
             <svg

@@ -479,7 +479,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
             className={styles.passwordInput}
           />
           <button type="submit" className={styles.button}>
-            Submit
+            Send it
           </button>
         </form>
       </div>

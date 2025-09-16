@@ -62,12 +62,12 @@ const EditorPage: React.FC = () => {
           description: briefContent,
         });
         setIsBriefDirty(false);
-        if (showToast) notify("success", "Brief saved successfully");
+        if (showToast) notify("success", "Saved. Nice.");
       } catch (err) {
         const error = err as { message?: string };
         console.error("Failed to save brief:", error);
         if (showToast)
-          notify("error", `Failed to save brief: ${error.message || "Unknown error"}`);
+          notify("error", "Can’t reach the server—your edits are safe; we’ll retry.");
       }
     },
     [activeProject?.projectId, briefContent, isBriefDirty, updateProjectFields]

@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
       case "/dashboard":
         return `Dashboard - Welcome, ${userName ?? "Guest"}`;
       case "/dashboard/new":
-        return "Dashboard - New Project";
+        return "Dashboard - Start something";
       case "/dashboard/projects":
         return "Dashboard - All Projects";
       case "/dashboard/settings":

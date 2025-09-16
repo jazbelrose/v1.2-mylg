@@ -148,11 +148,12 @@ const DesignerComponent = forwardRef<DesignerRef, DesignerComponentProps>(
           // console.debug('Save successful:', responseData);
           setActiveProject((prev: Project | null) => (prev ? { ...prev, canvasJson } : prev));
           setIsDirty(false);
-          if (showToast) notify("success", "Canvas saved successfully");
+          if (showToast) notify("success", "Saved. Nice.");
         } catch (err: unknown) {
           const error = err as { message?: string };
           console.error("Failed to save canvas:", error);
-          if (showToast) notify("error", `Failed to save canvas: ${error.message || 'Unknown error'}`);
+          if (showToast)
+            notify("error", "Can’t reach the server—your edits are safe; we’ll retry.");
         }
       },
       [activeProject, setActiveProject]

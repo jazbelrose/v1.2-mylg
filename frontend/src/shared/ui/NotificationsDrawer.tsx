@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import NotificationList, { formatNotification } from './NotificationList';
 import ProjectAvatar from './ProjectAvatar';
 import { Pin, PinOff, Check } from 'lucide-react';
@@ -13,6 +13,7 @@ import { useSocket } from '../../app/contexts/useSocket';
 import { MESSAGES_THREADS_URL, apiFetch } from '../utils/api';
 import type { Thread } from '@/app/contexts/DataProvider';
 import './notifications-drawer.css';
+import { MICRO_WOBBLE_SCALE, SPRING_FAST } from '@/shared/ui/motionTokens';
 
 interface NotificationsDrawerProps {
   open: boolean;
@@ -47,6 +48,7 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
   pinned,
   onTogglePin,
 }) => {
+  const reduceMotion = useReducedMotion();
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<'notifications' | 'inbox'>('notifications');
 
@@ -301,7 +303,14 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                 >
                   Notifications
                   {unreadNotificationsCount > 0 && (
-                    <span className="drawer-tab-badge">{formatCount(unreadNotificationsCount)}</span>
+                    <motion.span
+                      className="drawer-tab-badge"
+                      whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+                      whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+                      transition={reduceMotion ? undefined : SPRING_FAST}
+                    >
+                      {formatCount(unreadNotificationsCount)}
+                    </motion.span>
                   )}
                 </button>
                 <button
@@ -313,7 +322,14 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                 >
                   Inbox
                   {unreadThreadsCount > 0 && (
-                    <span className="drawer-tab-badge">{formatCount(unreadThreadsCount)}</span>
+                    <motion.span
+                      className="drawer-tab-badge"
+                      whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+                      whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+                      transition={reduceMotion ? undefined : SPRING_FAST}
+                    >
+                      {formatCount(unreadThreadsCount)}
+                    </motion.span>
                   )}
                 </button>
               </div>

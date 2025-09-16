@@ -13,7 +13,6 @@
 @import './base/reset.css';
 
 /* Layout Styles */
-@import './layout.css';
 @import './layouts/dashboard.css';
 @import './layouts/marketing.css';
 

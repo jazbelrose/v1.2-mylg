@@ -206,6 +206,7 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
 
   const nextProjectTitle =
     nextProjectLabel !== "No upcoming projects" ? nextProjectLabel : undefined;
+  const pendingLabel = `${kpis.pendingProjects} Pending`;
 
   const errorText = projectsError ? "Failed to load projects." : undefined;
 
@@ -371,26 +372,6 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
         </div>
 
         <div className={styles.kpis}>
-          <div className={styles.kpiGroup}>
-            <motion.span
-              className={`${styles.chip} ${styles.chipNoWrap}`}
-              whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
-              whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
-              transition={reduceMotion ? undefined : SPRING_FAST}
-            >
-              {kpis.totalProjects} Projects
-            </motion.span>
-            <span className={styles.dot} />
-            <motion.span
-              className={`${styles.chip} ${styles.chipNoWrap}`}
-              whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
-              whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
-              transition={reduceMotion ? undefined : SPRING_FAST}
-            >
-              {kpis.pendingProjects} Pending
-            </motion.span>
-          </div>
-          <span className={styles.dot} />
           <motion.span
             className={`${styles.chip} ${styles.chipNext}`}
             title={nextProjectTitle}
@@ -399,6 +380,15 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
             transition={reduceMotion ? undefined : SPRING_FAST}
           >
             {nextProjectLabel}
+          </motion.span>
+          <motion.span
+            className={`${styles.chip} ${styles.chipNoWrap}`}
+            title={pendingLabel}
+            whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
+            {pendingLabel}
           </motion.span>
         </div>
       </header>

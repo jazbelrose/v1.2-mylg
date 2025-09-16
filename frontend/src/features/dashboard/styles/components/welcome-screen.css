@@ -37,15 +37,19 @@
   overflow: visible;
   padding: 0; /* remove outer grey wrapper */
   background: transparent;
+  width: 100%;
+  min-width: 0;
 }
 
 .mobile-calendar-section {
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
   overflow: auto;
-  
+
   border-radius: 8px;
   padding: 0px;
+  width: 100%;
+  min-width: 0;
 }
 
 /* Ensure projects header is more compact on mobile */

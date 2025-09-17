@@ -81,7 +81,7 @@ export default function WeekWidgetDesktop({
   const overflowCount = Math.max(0, lanesUsed - MAX_VISIBLE_LANES);
   const visibleLaneCount = Math.min(lanesUsed, MAX_VISIBLE_LANES);
 
-  const laneHeight = 4;
+  const laneHeight = 6;
   const laneGap = 2;
   const railHeight = visibleLaneCount * laneHeight + Math.max(0, visibleLaneCount - 1) * laneGap;
 

@@ -140,7 +140,7 @@ export default function WeekWidgetDesktop({
     const TOOLTIP_W = 300;
     const TOOLTIP_H = 120; // rough initial height; clamped within viewport
     const left = clamp(anchor.x - TOOLTIP_W / 2, 8, (typeof window !== "undefined" ? window.innerWidth : 1000) - TOOLTIP_W - 8);
-    const top = clamp(anchor.y - TOOLTIP_H - 10, 8, (typeof window !== "undefined" ? window.innerHeight : 1000) - TOOLTIP_H - 8);
+    const top = clamp(anchor.y + 50, 8, (typeof window !== "undefined" ? window.innerHeight : 1000) - TOOLTIP_H - 8);
     const arrowX = anchor.x - left; // px within tooltip width
 
     const MAX_VISIBLE = 3;
@@ -160,6 +160,7 @@ export default function WeekWidgetDesktop({
             width: TOOLTIP_W,
             zIndex: 2147483647,
             pointerEvents: "auto",
+            padding: "16px",
             "--arrow-x": `${Math.round(arrowX)}px`,
           } as React.CSSProperties
         }

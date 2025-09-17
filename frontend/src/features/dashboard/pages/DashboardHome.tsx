@@ -5,7 +5,6 @@ import { UserLite } from "@/app/contexts/DataProvider";
 import { slugify } from "@/shared/utils/slug";
 import { prefetchBudgetData } from "@/features/budget/context/useBudget";
 import WelcomeHeader from "@/features/dashboard/components/WelcomeHeader";
-import TopBar from "@/features/dashboard/components/TopBar";
 import AllProjects from "@/features/dashboard/components/AllProjects";
 import ProjectsPanel from "@/features/dashboard/components/ProjectsPanel";
 import NotificationsPage from "@/features/dashboard/components/NotificationsPage";
@@ -249,15 +248,6 @@ const WelcomeScreen: React.FC = () => {
   if (loadingProfile) return <SpinnerScreen />;
   if (userData?.pending) return <PendingApprovalScreen />;
 
-  // Hide TopBar and QuickStats for these views
-  const isFullWidthView = [
-    "projects",
-    "notifications",
-    "messages",
-    "settings",
-    "collaborators",
-  ].includes(activeView);
-  const showTopBar = !isFullWidthView && !isDesktop; // TODO: Remove legacy desktop bento tiles after mobile parity update.
 
   const renderWelcomeView = () => {
     if (isDesktop) {
@@ -361,15 +351,7 @@ const WelcomeScreen: React.FC = () => {
 
         <div className="row-layout">
           <div className="welcome-screen-details">
-            {showTopBar && !isMobile && (
-              <TopBar setActiveView={setActiveView} />
-            )}
-
-            <div
-              className={`dashboard-content ${
-                isFullWidthView ? "full-width" : ""
-              }`}
-            >
+            <div className="dashboard-content">
               <div
                 className={`main-content${
                   activeView === "welcome" && isDesktop

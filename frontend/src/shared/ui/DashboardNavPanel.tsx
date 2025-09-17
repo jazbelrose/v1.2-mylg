@@ -2,15 +2,11 @@ import React from "react";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import NavBadge from "./NavBadge";
-import Squircle from "./Squircle";
 import useDashboardNavigation, {
   type DashboardNavItem,
   type UseDashboardNavigationArgs,
 } from "./useDashboardNavigation";
 import "./navigation-drawer.css";
-
-const PANEL_RADIUS = 24;
-const PANEL_CORNER_RADII = Object.freeze({ top: PANEL_RADIUS + 2, bottom: PANEL_RADIUS - 2 });
 
 type Variant = "persistent" | "overlay";
 
@@ -99,13 +95,7 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
         </div>
       ) : null}
 
-      <Squircle
-        as="div"
-        className="navigation-drawer-content"
-        radius={PANEL_RADIUS}
-        smoothing={0.6}
-        cornerRadii={PANEL_CORNER_RADII}
-      >
+      <div className="navigation-drawer-content">
         {isPersistent ? (
           <div className="dashboard-nav-panel__brand-row">
             <Link
@@ -125,7 +115,7 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
         <ul className="nav-list nav-list--secondary">
           {bottomItems.map((item) => renderNavItem(item))}
         </ul>
-      </Squircle>
+      </div>
     </div>
   );
 };

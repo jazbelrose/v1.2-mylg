@@ -359,7 +359,7 @@ const AllProjects: React.FC = () => {
               <SVGThumbnail
                 initial={
                   project.title?.trim()?.charAt(0)?.toUpperCase() || '#'
-                }
+                }roundness={1} 
                 className="project-thumbnail"
               />
             )}

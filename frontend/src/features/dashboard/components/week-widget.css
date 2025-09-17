@@ -78,6 +78,23 @@
   align-items: center;
   gap: 2px;
 }
+
+.week-widget--desktop .week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 12px 0 26px;
+}
+
+.week-widget--desktop .day-number {
+  margin-top: 0;
+}
+
+.week-widget--desktop .day-dots {
+  bottom: 6px;
+}
 .day-dot { font-size: 8px; }
 .day-dot--overlap{ filter:drop-shadow(0 1px 1px rgba(0,0,0,.45)); }
 .day-dot-more { font-size: 10px; color: rgba(255,255,255,0.6); }

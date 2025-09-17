@@ -246,7 +246,7 @@ export default function WeekWidgetDesktop({
               <div className="day-name">{day.toLocaleDateString(undefined, { weekday: "short" })}</div>
               <div className="day-number">{day.getDate()}</div>
 
-              <div className="day-dots" style={{ display: "flex", justifyContent: "center", alignItems: "center", position: "absolute", left: 0, right: 0, bottom: 2 }}>
+              <div className="day-dots">
                 {dayDots.slice(0, DOT_MAX_VISIBLE).map((c, i) => (
                   <svg
                     key={i}

@@ -536,10 +536,15 @@ const handleMarkRead = async ({ conversationType, conversationId, userId, read, 
           ":read": read,
           ...(lastMsgTs ? { ":ts": lastMsgTs } : {}),
         },
+        ConditionExpression: "attribute_exists(conversationId)",
       };
       await dynamoDb.send(new UpdateCommand(params));
     } catch (err) {
-      console.error("❌ Failed to update read status:", err);
+      if (err?.name === "ConditionalCheckFailedException") {
+        console.warn("⚠️ Skipping markRead for missing inbox thread", { userId, conversationId });
+      } else {
+        console.error("❌ Failed to update read status:", err);
+      }
     }
   }
 

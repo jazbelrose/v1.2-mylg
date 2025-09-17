@@ -31,6 +31,21 @@ const ddb = DynamoDBDocument.from(new DynamoDBClient({ region: REGION }), {
 const M = (e) => e?.requestContext?.http?.method?.toUpperCase?.() || e?.httpMethod?.toUpperCase?.() || "GET";
 const P = (e) => (e?.rawPath || e?.path || "/");
 const Q = (e) => e?.queryStringParameters || {};
+const B = (e) => {
+  if (!e) return {};
+  const body = e.body;
+  if (!body) return {};
+  try {
+    const raw = e.isBase64Encoded ? Buffer.from(body, "base64").toString("utf8") : body;
+    if (typeof raw === "string" && raw.trim().length) {
+      return JSON.parse(raw);
+    }
+    return typeof raw === "object" && raw !== null ? raw : {};
+  } catch (err) {
+    console.warn("⚠️ Failed to parse request body", err);
+    return {};
+  }
+};
 
 /**
  * Normalizes a DM conversation ID by sorting the user IDs
@@ -91,6 +106,55 @@ const getConversation = async (e, C, { conversationId }) => {
   if (!userId) return json(400, C, { error: "userId required" });
   const r = await ddb.get({ TableName: INBOX_TABLE, Key: { userId, conversationId } });
   return json(200, C, { conversation: r.Item || null });
+};
+
+/* PUT /messages/threads { userId, conversationId, read?, lastMsgTs? }
+   Persists read state updates for a user's inbox thread */
+const updateThread = async (e, C) => {
+  if (!INBOX_TABLE) return json(500, C, { error: "Inbox table not configured" });
+
+  const { userId, conversationId, read, lastMsgTs } = B(e);
+  if (!userId || !conversationId) {
+    return json(400, C, { error: "userId and conversationId required" });
+  }
+
+  const updateParts = [];
+  const ExpressionAttributeNames = {};
+  const ExpressionAttributeValues = {};
+
+  if (typeof read === "boolean") {
+    ExpressionAttributeNames["#read"] = "read";
+    ExpressionAttributeValues[":read"] = read;
+    updateParts.push("#read = :read");
+  }
+
+  if (lastMsgTs) {
+    ExpressionAttributeValues[":ts"] = lastMsgTs;
+    updateParts.push("lastMsgTs = :ts");
+  }
+
+  if (!updateParts.length) {
+    return json(400, C, { error: "No fields provided to update" });
+  }
+
+  try {
+    await ddb.update({
+      TableName: INBOX_TABLE,
+      Key: { userId, conversationId },
+      UpdateExpression: `SET ${updateParts.join(", ")}`,
+      ExpressionAttributeNames: Object.keys(ExpressionAttributeNames).length ? ExpressionAttributeNames : undefined,
+      ExpressionAttributeValues,
+      ConditionExpression: "attribute_exists(conversationId)",
+    });
+  } catch (err) {
+    const status = err?.name === "ConditionalCheckFailedException" ? 404 : 500;
+    const message =
+      status === 404 ? "Thread not found" : err?.message || "Failed to update thread";
+    console.error("❌ Failed to update inbox thread", { err, userId, conversationId });
+    return json(status, C, { error: message });
+  }
+
+  return json(200, C, { ok: true, userId, conversationId });
 };
 
 /* Messages in a conversation
@@ -181,6 +245,7 @@ const routes = [
   { m: "GET", r: /^\/messages\/inbox$/i, h: getInbox },
   { m: "GET", r: /^\/messages\/threads$/i, h: listThreads },
   { m: "GET", r: /^\/messages\/threads\/(?<conversationId>[^/]+)$/i, h: getConversation },
+  { m: "PUT", r: /^\/messages\/threads$/i, h: updateThread },
 
   // conversation messages
   { m: "GET", r: /^\/messages\/threads\/(?<conversationId>[^/]+)\/messages$/i, h: listConversationMessages },

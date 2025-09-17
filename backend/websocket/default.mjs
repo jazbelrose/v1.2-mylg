@@ -405,6 +405,16 @@ const handleSendMessage = async (payload) => {
   const [uid1, uid2] = finalConversationId.replace("dm#", "").split("___");
   const recipientId = senderId === uid1 ? uid2 : uid1;
 
+  if (conversationType === "dm" && !recipientId) {
+    console.warn("⚠️ Unable to resolve recipientId for DM", {
+      conversationId: conversationId,
+      finalConversationId,
+      senderId,
+      uid1,
+      uid2,
+    });
+  }
+
   // sanitize attachments before saving
   const cleanAttachments = (attachments || [])
     .filter(a => a && a.key)
@@ -435,6 +445,7 @@ const handleSendMessage = async (payload) => {
     optimisticId: payload.optimisticId || undefined,
     reactions: {},
     attachments: cleanAttachments,
+    ...(conversationType === "dm" && recipientId ? { recipientId } : {}),
   };
 
   if (conversationType === "project") {

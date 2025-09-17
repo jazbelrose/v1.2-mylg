@@ -514,5 +514,12 @@ button.nav-item,
     box-shadow: none;
     background: none;
     padding:0;
+    margin:0px 8px
+  }
+}
+
+@media (min-width: 481px) {
+  .navigation-drawer-header:not(.navigation-drawer-header--overlay) {
+    display: none;
   }
 }

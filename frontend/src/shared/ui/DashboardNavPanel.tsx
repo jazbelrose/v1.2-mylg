@@ -82,18 +82,16 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
 
   return (
     <div className={containerClass}>
-      {isOverlay ? (
-        <div className="navigation-drawer-header navigation-drawer-header--overlay">
-          <button
-            type="button"
-            className="close-button"
-            onClick={onClose}
-            aria-label="Close navigation"
-          >
-            <X size={24} color="white" />
-          </button>
-        </div>
-      ) : null}
+      <div className={`navigation-drawer-header ${isOverlay ? 'navigation-drawer-header--overlay' : ''}`}>
+        <button
+          type="button"
+          className="close-button"
+          onClick={onClose}
+          aria-label="Close navigation"
+        >
+          <X size={24} color="white" />
+        </button>
+      </div>
 
       <div className="navigation-drawer-content">
         {isPersistent ? (

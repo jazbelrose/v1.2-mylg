@@ -460,6 +460,43 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
 
   const errorText = projectsError ? "Failed to load projects." : undefined;
 
+  let bodyContent: React.ReactNode;
+
+  if (errorText) {
+    bodyContent = <div className={desktopStyles.errorState}>{errorText}</div>;
+  } else if (viewMode === "table") {
+    bodyContent = (
+      <div className={desktopStyles.tableWrap}>
+        {isLoading ? (
+          <div className={desktopStyles.emptyState}>Loading projects…</div>
+        ) : items.length === 0 ? (
+          <div className={desktopStyles.emptyState}>No projects match filters.</div>
+        ) : (
+          <table className={desktopStyles.table} aria-label="Projects table">
+            <thead>
+              <tr>
+                <th scope="col">Project</th>
+                <th scope="col">Status</th>
+                <th scope="col">Deadline</th>
+                <th scope="col">Owner</th>
+                <th scope="col">Unread</th>
+              </tr>
+            </thead>
+            <tbody>{tableRows}</tbody>
+          </table>
+        )}
+      </div>
+    );
+  } else {
+    bodyContent = isLoading ? (
+      <div className={desktopStyles.emptyState}>Loading projects…</div>
+    ) : items.length === 0 ? (
+      <div className={desktopStyles.emptyState}>No projects match filters.</div>
+    ) : (
+      renderGrid()
+    );
+  }
+
   return (
     <section
       aria-label="Projects overview"
@@ -604,38 +641,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
         </div>
       </header>
 
-      {errorText && <div className={desktopStyles.errorState}>{errorText}</div>}
-
-      {!errorText && viewMode === "table" && (
-        <div className={desktopStyles.tableWrap}>
-          {isLoading ? (
-            <div className={desktopStyles.emptyState}>Loading projects…</div>
-          ) : items.length === 0 ? (
-            <div className={desktopStyles.emptyState}>No projects match filters.</div>
-          ) : (
-            <table className={desktopStyles.table} aria-label="Projects table">
-              <thead>
-                <tr>
-                  <th scope="col">Project</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Deadline</th>
-                  <th scope="col">Owner</th>
-                  <th scope="col">Unread</th>
-                </tr>
-              </thead>
-              <tbody>{tableRows}</tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {!errorText && viewMode === "grid" && (isLoading ? (
-        <div className={desktopStyles.emptyState}>Loading projects…</div>
-      ) : items.length === 0 ? (
-        <div className={desktopStyles.emptyState}>No projects match filters.</div>
-      ) : (
-        renderGrid()
-      ))}
+      <div className={desktopStyles.content}>{bodyContent}</div>
 
       <div className={desktopStyles.footer}>
         <button

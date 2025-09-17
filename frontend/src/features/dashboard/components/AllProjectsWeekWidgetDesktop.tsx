@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import WeekWidget, { type Track, type Dot } from "./WeekWidget";
+import WeekWidgetDesktop, { type Track, type Dot } from "./WeekWidgetDesktop";
 import { useData } from "@/app/contexts/useData";
 import { getColor } from "@/shared/utils/colorUtils";
 
@@ -84,7 +84,7 @@ export default function AllProjectsWeekWidgetDesktop({ className = "" }: { class
   };
 
   return (
-    <WeekWidget
+    <WeekWidgetDesktop
       weekOf={weekOf}
       tracks={tracks}
       dots={dots}
@@ -93,7 +93,7 @@ export default function AllProjectsWeekWidgetDesktop({ className = "" }: { class
       onNextWeek={(d) => setWeekOf(d)}
       onSelectDate={(d) => setWeekOf(d)}
       getTooltipItems={getTooltipItems}   // ← pass real data
-      // Removed isMobile prop for desktop behavior
+      // Desktop-specific behavior
     />
   );
 }

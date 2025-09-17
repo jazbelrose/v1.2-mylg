@@ -262,25 +262,38 @@ const WelcomeScreen: React.FC = () => {
   const renderWelcomeView = () => {
     if (isDesktop) {
       return (
-        <div className="dashboard-home-grid">
-          <WeekWidgetDesktop
-            weekOf={weekOf}
-            tracks={tracks}
-            dots={dots}
-            onPrevWeek={(d) => setWeekOf(d)}
-            onNextWeek={(d) => setWeekOf(d)}
-            onSelectDate={(d) => setWeekOf(d)}
-            getTooltipItems={getTooltipItems}
-          />
-          <section id="projects" className="welcome-section-anchor">
-            <ProjectsPanelDesktop
-              onOpenProject={(projectId) =>
-                handleNavigateToProject({ projectId })
-              }
+        <div className="welcome-desktop-layout">
+          <section
+            id="calendar"
+            className="welcome-section-anchor welcome-desktop-header"
+          >
+            <WeekWidgetDesktop
+              weekOf={weekOf}
+              tracks={tracks}
+              dots={dots}
+              onPrevWeek={(d) => setWeekOf(d)}
+              onNextWeek={(d) => setWeekOf(d)}
+              onSelectDate={(d) => setWeekOf(d)}
+              getTooltipItems={getTooltipItems}
             />
           </section>
+          <section
+            id="projects"
+            className="welcome-section-anchor welcome-desktop-projects"
+          >
+            <div className="welcome-desktop-projects-scroll">
+              <ProjectsPanelDesktop
+                onOpenProject={(projectId) =>
+                  handleNavigateToProject({ projectId })
+                }
+              />
+            </div>
+          </section>
 
-          <section id="tasks" className="welcome-section-anchor">
+          <section
+            id="tasks"
+            className="welcome-section-anchor welcome-desktop-footer"
+          >
             <TasksOverviewCard className="welcome-header-tasks-card" />
           </section>
         </div>

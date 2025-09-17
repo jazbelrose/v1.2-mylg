@@ -5,21 +5,59 @@
 .dashboard-root {
   display: grid;
   grid-template-columns: 280px 1fr;
-  height: 100dvh;
+  height: 100vh;
   max-width: 1920px;
   margin: 0 auto;
+  overflow: hidden;
+}
+
+.dashboard-root > aside {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  display: flex;
+}
+
+.dashboard-root > aside > * {
+  flex: 1;
 }
 
 .dashboard-main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   min-width: 0;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .dashboard-wrapper {
-  padding: clamp(12px, 2vw, 24px);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 24px;
+  overflow: hidden;
 }
 
 .dashboard-wrapper.welcome-screen {
-  padding: clamp(12px, 2vw, 24px);
+  padding: 24px;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-root {
+    display: block;
+    height: auto;
+  }
+
+  .dashboard-main {
+    height: auto;
+    overflow: auto;
+  }
+
+  .dashboard-wrapper,
+  .dashboard-wrapper.welcome-screen {
+    padding: 16px;
+  }
 }
 

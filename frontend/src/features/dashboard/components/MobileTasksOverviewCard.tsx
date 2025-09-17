@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 import Squircle from "@/shared/ui/Squircle";
 
@@ -8,14 +8,33 @@ import styles from "./MobileTasksOverviewCard.module.css";
 const CARD_RADIUS = 20;
 
 const MobileTasksOverviewCard: React.FC = () => {
-  const { loading, error, stats, groups, handleNavigateToPrimary, handleViewAll, canNavigateToProject } =
-    useTasksOverview();
+  const { loading, error, stats, groups, handleViewAll } = useTasksOverview();
 
   const formatStatValue = (value: number): string | number => {
     if (error) return "—";
     if (loading) return "…";
     return value;
   };
+
+  const statusMessage = useMemo(() => {
+    if (error) return "Tasks unavailable. Try again soon.";
+    if (loading) return "Checking tasks…";
+
+    const hasOpenTasks = groups.some((group) => group.items.length > 0);
+    if (!hasOpenTasks) {
+      return "No open tasks this week.";
+    }
+
+    if (stats.overdue > 0) {
+      return `${stats.overdue} overdue ${stats.overdue === 1 ? "task" : "tasks"}.`;
+    }
+
+    if (stats.dueSoon > 0) {
+      return `${stats.dueSoon} due soon.`;
+    }
+
+    return "You're on track.";
+  }, [error, loading, groups, stats.overdue, stats.dueSoon]);
 
   return (
     <Squircle
@@ -26,10 +45,7 @@ const MobileTasksOverviewCard: React.FC = () => {
       aria-label="Tasks overview"
     >
       <header className={styles.header}>
-        <div className={styles.titleWrap}>
-          <h3 className={styles.title}>Tasks</h3>
-          <p className={styles.subtitle}>Stay on top of what’s due this week.</p>
-        </div>
+        <h3 className={styles.title}>Tasks</h3>
         <button type="button" className={styles.viewAllButton} onClick={handleViewAll}>
           View all
         </button>
@@ -50,58 +66,7 @@ const MobileTasksOverviewCard: React.FC = () => {
         </div>
       </div>
 
-      {error ? (
-        <div className={styles.empty}>We couldn’t load tasks right now. Please try again later.</div>
-      ) : groups.length ? (
-        <div className={styles.groups}>
-          {groups.map((group) => (
-            <div key={group.id} className={styles.group}>
-              <div className={styles.groupHeader}>
-                <span className={styles.groupDay}>{group.dayLabel}</span>
-                <span className={styles.groupCount}>
-                  {group.items.length} {group.items.length === 1 ? "task" : "tasks"}
-                </span>
-              </div>
-              <ul className={styles.items}>
-                {group.items.map((item) => (
-                  <li key={item.id} className={styles.item}>
-                    <span
-                      className={styles.itemDot}
-                      style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
-                      aria-hidden="true"
-                    />
-                    <div className={styles.itemBody}>
-                      <span className={styles.itemTitle}>{item.title}</span>
-                      {(item.time || item.project) && (
-                        <span className={styles.itemMeta}>
-                          {item.time}
-                          {item.time && item.project ? " · " : ""}
-                          {item.project}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className={styles.empty}>
-          {loading ? "Loading tasks…" : "No open tasks are due this week. You’re all caught up!"}
-        </div>
-      )}
-
-      <div className={styles.footerActions}>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={handleNavigateToPrimary}
-          disabled={!canNavigateToProject}
-        >
-          Review next project
-        </button>
-      </div>
+      {statusMessage ? <div className={styles.status}>{statusMessage}</div> : null}
     </Squircle>
   );
 };

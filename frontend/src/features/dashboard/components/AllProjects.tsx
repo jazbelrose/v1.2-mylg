@@ -251,7 +251,7 @@ const AllProjects: React.FC = () => {
 
   const isSingleProject = sortedProjects.length === 1;
 
-  let content: React.ReactElement;
+  let content: React.ReactNode;
 
   if (isLoading) {
     content = (
@@ -664,7 +664,7 @@ const AllProjects: React.FC = () => {
           </div>
         </div>
       </div>
-      {content}
+      <div className="projects-scrollable">{content}</div>
     </div>
   );
 };

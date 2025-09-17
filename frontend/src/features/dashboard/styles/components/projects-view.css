@@ -1,25 +1,35 @@
 /* Projects View Container Styles */
 
+.project-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh; /* safe viewport height */
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+}
+
 .welcome.project-view {
   border: 1px solid rgba(255,255,255,.12); /* subtle */
   border-radius: 12px;
-  display: flex;
-  flex-direction: column;
   align-items: stretch; /* allow children full width */
-  overflow-y: auto;
   background-color: #111;
-  min-height: 100vh; /* ensure full viewport height even with no content */
-  min-height: 100svh;
-  min-height: -webkit-fill-available;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
   flex: 1 0 auto;
+  overflow: hidden;
 }
 
-/* Full viewport height on mobile */
-@media (max-width: var(--breakpoint-sm)) {
-  .welcome.project-view {
-    min-height: 100svh;
-  }
+.projects-scrollable {
+  flex: 1 1 auto;
+  min-height: 0; /* required for flex scroll */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.project-view > .projects-header {
+  flex: 0 0 auto; /* keep header fixed height inside flex column */
 }
 
 /* Removed overly-broad span rule that affected all nested text inside

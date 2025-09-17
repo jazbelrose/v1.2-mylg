@@ -8,14 +8,26 @@ import styles from "./MobileTasksOverviewCard.module.css";
 const CARD_RADIUS = 20;
 
 const MobileTasksOverviewCard: React.FC = () => {
-  const { loading, error, stats, groups, handleNavigateToPrimary, handleViewAll, canNavigateToProject } =
-    useTasksOverview();
+  const { loading, error, stats, groups, handleViewAll } = useTasksOverview();
 
   const formatStatValue = (value: number): string | number => {
     if (error) return "—";
     if (loading) return "…";
     return value;
   };
+
+  const statusMessage = React.useMemo(() => {
+    if (error) return "We couldn’t load tasks right now.";
+    if (loading) return "Loading tasks…";
+    if (!groups.length) return "No open tasks this week.";
+
+    const nextGroup = groups[0];
+    if (!nextGroup) return "You're up to date.";
+
+    const count = nextGroup.items.length;
+    const noun = count === 1 ? "task" : "tasks";
+    return `${count} ${noun} due ${nextGroup.dayLabel}.`;
+  }, [error, loading, groups]);
 
   return (
     <Squircle
@@ -26,10 +38,7 @@ const MobileTasksOverviewCard: React.FC = () => {
       aria-label="Tasks overview"
     >
       <header className={styles.header}>
-        <div className={styles.titleWrap}>
-          <h3 className={styles.title}>Tasks</h3>
-          <p className={styles.subtitle}>Stay on top of what’s due this week.</p>
-        </div>
+        <h3 className={styles.title}>Tasks</h3>
         <button type="button" className={styles.viewAllButton} onClick={handleViewAll}>
           View all
         </button>
@@ -50,58 +59,7 @@ const MobileTasksOverviewCard: React.FC = () => {
         </div>
       </div>
 
-      {error ? (
-        <div className={styles.empty}>We couldn’t load tasks right now. Please try again later.</div>
-      ) : groups.length ? (
-        <div className={styles.groups}>
-          {groups.map((group) => (
-            <div key={group.id} className={styles.group}>
-              <div className={styles.groupHeader}>
-                <span className={styles.groupDay}>{group.dayLabel}</span>
-                <span className={styles.groupCount}>
-                  {group.items.length} {group.items.length === 1 ? "task" : "tasks"}
-                </span>
-              </div>
-              <ul className={styles.items}>
-                {group.items.map((item) => (
-                  <li key={item.id} className={styles.item}>
-                    <span
-                      className={styles.itemDot}
-                      style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
-                      aria-hidden="true"
-                    />
-                    <div className={styles.itemBody}>
-                      <span className={styles.itemTitle}>{item.title}</span>
-                      {(item.time || item.project) && (
-                        <span className={styles.itemMeta}>
-                          {item.time}
-                          {item.time && item.project ? " · " : ""}
-                          {item.project}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className={styles.empty}>
-          {loading ? "Loading tasks…" : "No open tasks are due this week. You’re all caught up!"}
-        </div>
-      )}
-
-      <div className={styles.footerActions}>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={handleNavigateToPrimary}
-          disabled={!canNavigateToProject}
-        >
-          Review next project
-        </button>
-      </div>
+      <p className={styles.status}>{statusMessage}</p>
     </Squircle>
   );
 };

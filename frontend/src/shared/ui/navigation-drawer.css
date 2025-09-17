@@ -226,7 +226,7 @@
   overflow: hidden;
   isolation: isolate;
   padding: 16px;
-  margin: 16px 16px;
+  margin: 16px 12px;
   margin-left: 16px;
   border-radius: 32px 32px 32px 32px;
      border: 2px solid rgba(255, 255, 255, 0.10);

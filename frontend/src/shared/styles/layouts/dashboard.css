@@ -2,10 +2,13 @@
 
 .dashboard-content {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: var(--space-5);
-  align-items: flex-start;
+  align-items: stretch;
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Row layout wrapper used in DashboardHome */
@@ -13,7 +16,8 @@
   display: flex;
   width: 100%;
   flex: 1;
-  overflow: auto; /* allow scrolling on iOS */
+  min-height: 0;
+  overflow: hidden;
   overscroll-behavior-y: contain;
 }
 
@@ -22,36 +26,33 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: auto; /* allow content to scroll; avoid clipping CTA */
-  min-height: 0;    /* Allow children to shrink when viewport is short */
-  justify-content: center; /* Center calendar vertically */
-  align-items: center;      /* Center calendar horizontally */
+  min-height: 0;
+  overflow: hidden;
+  justify-content: flex-start;
+  align-items: stretch;
 }
 
 .main-content--welcome {
-  align-items: stretch;
-  justify-content: flex-start;
+  gap: var(--space-5);
 }
 
 .main-content--welcome > * {
   width: 100%;
 }
 
-
 /* Full-width view adjustments (e.g., Notifications) */
 .dashboard-content.full-width .main-content {
-  justify-content: flex-start;
-  align-items: stretch;
+  gap: 0;
 }
 
 .dashboard-wrapper {
   position: relative;
+  display: flex;
   flex-direction: column;
-  
-  justify-content: center;
-  align-items: center;
-  min-height: 100svh;
-  min-height: -webkit-fill-available;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
   width: 100%;
   max-width: var(--container-max-width);
   margin: 0 auto;
@@ -61,8 +62,8 @@
 .dashboard-wrapper.welcome-screen {
   display: flex;
   flex-direction: column;
-  min-height: 100svh;
-  min-height: -webkit-fill-available;
+  flex: 1;
+  min-height: 0;
   background-color: var(--bg-color);
   margin: 0 auto;
   padding: 0;
@@ -70,16 +71,10 @@
 
 .dashboard-wrapper.welcome-screen.no-vertical-center {
   justify-content: flex-start;
-  align-items: flex-start;
- 
-  
-
-  display: flex;
-  flex-direction: column;
-  min-height: 100svh;
-  min-height: -webkit-fill-available;
-  height: 100svh;
-  height: -webkit-fill-available;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
   margin: 0 auto;
 }
 

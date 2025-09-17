@@ -15,7 +15,7 @@
 .dashboard-home-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 6px;
+  gap: 8px;
 }
 
 .welcome-screen-header {

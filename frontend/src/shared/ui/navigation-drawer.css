@@ -507,4 +507,12 @@ button.nav-item,
     width: min(100vw, 22rem);
     padding: 18px 16px;
   }
+
+  .navigation-drawer-content {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: none;
+    padding:0;
+  }
 }

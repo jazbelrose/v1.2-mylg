@@ -164,7 +164,7 @@ const Notifications: React.FC<NotificationsProps> = ({
   });
 
   return (
-    <div className="main-content">
+    
       <div className="notifications">
         {showHeader && (
           <div className="notifications-header">
@@ -251,7 +251,7 @@ const Notifications: React.FC<NotificationsProps> = ({
           />
         </div>
       </div>
-    </div>
+   
   );
 };
 

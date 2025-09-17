@@ -395,7 +395,7 @@ interface EditValues {
   };
 
   return (
-    <div className="main-content">
+    <>
       <div className={styles.panel}>
         <div className={styles.headerSticky}>
           <div className={styles.headerRow}>
@@ -847,6 +847,6 @@ interface EditValues {
         className="admin-modal-content"
         overlayClassName="admin-modal-overlay"
       />
-    </div>
+    </>
   );
 }

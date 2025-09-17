@@ -44,7 +44,7 @@
 
 .global-search-input {
   width: 100%;
-  padding: 12px 160px 12px 160px;
+  padding: 12px 180px 12px 40px;
   min-height: 44px;
   background: transparent;
   border: none;

@@ -196,6 +196,7 @@ export default function WeekWidgetDesktop({
 
   const containerClass = [
     "week-widget",
+    "week-widget--desktop",
     className,
   ]
     .filter(Boolean)

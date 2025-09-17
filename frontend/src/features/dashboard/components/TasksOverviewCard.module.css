@@ -1,52 +1,27 @@
 .card {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  background: var(--bg2, #111111);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 20px;
+  box-sizing: border-box;
+  flex-shrink: 0;
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2, 16px);
-  padding: clamp(20px, 2.2vw, 28px);
   color: rgba(255, 255, 255, 0.95);
-  background:
-    radial-gradient(140% 140% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 18%, transparent) 0%, transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 68%),
-    var(--bg2, #111213);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-squircle, var(--radius-lg, 24px));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 18px 48px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
   isolation: isolate;
-}
-
-@supports (color: color-mix(in srgb, white 50%, black 50%)) {
-  .card {
-    border-color: color-mix(in srgb, rgba(255, 255, 255, 0.08) 78%, transparent 22%);
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, rgba(255, 255, 255, 0.08) 55%, transparent 45%),
-      0 18px 48px rgba(0, 0, 0, 0.45);
-  }
-}
-
-.card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='96' height='96' filter='url(%23n)' opacity='.08'/></svg>");
-  background-size: 180px 180px;
-  mix-blend-mode: soft-light;
-  opacity: 0.45;
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .card {
-    background: var(--bg2, #111213);
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
-  }
-
-  .card::after {
-    display: none;
-  }
+  background:
+    radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 70%),
+    var(--bg2, #111213);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .card > * {
@@ -232,7 +207,7 @@
 
 @media (max-width: 900px) {
   .card {
-    padding: 20px;
+    padding: 10px;
   }
 
   .statGrid {

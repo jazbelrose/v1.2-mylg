@@ -1,12 +1,8 @@
 import React from "react";
 import { Plus, MoreHorizontal } from "lucide-react";
 
-import Squircle from "@/shared/ui/Squircle";
-
 import { useTasksOverview } from "./useTasksOverview";
 import styles from "./TasksOverviewCard.module.css";
-
-const CARD_RADIUS = 24;
 
 type TasksOverviewCardProps = {
   className?: string;
@@ -22,10 +18,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
   };
 
   return (
-    <Squircle
-      as="section"
-      radius={CARD_RADIUS}
-      smoothing={0.6}
+    <section
       className={`${styles.card} ${className ?? ""}`.trim()}
       aria-label="Tasks overview"
     >
@@ -104,7 +97,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
           {loading ? "Loading tasks…" : "No open tasks are due this week. You’re all caught up!"}
         </div>
       )}
-    </Squircle>
+    </section>
   );
 };
 

@@ -12,6 +12,12 @@
   height: 100%;
 }
 
+.dashboard-home-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
 .welcome-screen-header {
   color: white;
   display: flex;

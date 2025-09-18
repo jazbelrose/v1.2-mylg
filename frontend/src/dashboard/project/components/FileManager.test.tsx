@@ -59,7 +59,10 @@ vi.mock("../../../shared/utils/api", () => {
     if (!key || typeof key !== "string") return key;
     if (key.startsWith("http") || key.startsWith("blob:")) return key;
     const sanitized = key.replace(/^https?:\/\/.+?\//, "");
-    return `${MOCK_S3_BASE}/${encodeURIComponent(sanitized)}`;
+    const parts = sanitized.split('/');
+    const lastPart = parts.pop();
+    const path = parts.join('/');
+    return `${MOCK_S3_BASE}/${path}/${encodeURIComponent(lastPart)}`;
   };
 
   const toKey = (url: string) => {
@@ -261,40 +264,6 @@ test("encodes + in S3 keys and renders without repeated errors", async () => {
   expect(consoleErrorSpy).not.toHaveBeenCalled();
 
   consoleErrorSpy.mockRestore();
-});
-
-
-const MOCK_S3_BASE = "https://s3";
-
-vi.mock("../../../shared/utils/api", () => {
-  const buildUrl = (key: string) => {
-    if (!key || typeof key !== "string") return key;
-    if (key.startsWith("http") || key.startsWith("blob:")) return key;
-    const sanitized = key.replace(/^https?:\/\/.+?\//, "");
-    return `${MOCK_S3_BASE}/${encodeURIComponent(sanitized)}`;
-  };
-
-  const toKey = (url: string) => {
-    if (!url || typeof url !== "string") return url;
-    if (!url.startsWith(MOCK_S3_BASE)) return url;
-    const path = url.slice(`${MOCK_S3_BASE}/`.length);
-    return decodeURIComponent(path);
-  };
-
-  return {
-    API_BASE_URL: "base",
-    ZIP_FILES_URL: "zip",
-    DELETE_FILE_FROM_S3_URL: "delete",
-    DELETE_PROJECT_MESSAGE_URL: "delMsg",
-    GET_PROJECT_MESSAGES_URL: "getMsgs",
-    EDIT_MESSAGE_URL: "editMsg",
-    getFileUrl: buildUrl,
-    normalizeFileUrl: (u: string) => buildUrl(u),
-    fileUrlsToKeys: (urls: string[]) => urls.map(toKey),
-    apiFetch: vi.fn(() =>
-      Promise.resolve({ ok: true, json: vi.fn().mockResolvedValue([]) })
-    ),
-  };
 });
 
 

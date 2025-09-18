@@ -94,15 +94,16 @@
 .recentsWrap { position: relative; }
 
 .recents {
-  display: inline-flex;
+  display: flex;          /* instead of inline-flex */
   align-items: center;
+  align-self: center;
   gap: 6px;
   border: 1px solid rgba(255, 255, 255, .14);
   background: rgba(255, 255, 255, .01);
   color: rgba(255, 255, 255, .85);
   font-size: 13px;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-radius: 10px;
   transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }

@@ -22,6 +22,7 @@ import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import ProjectsPanelDesktop from "@/dashboard/home/components/ProjectsPanelDesktop";
 import { getColor } from "@/shared/utils/colorUtils";
+import { useNavCollapsed } from "@/shared/hooks/useNavCollapsed";
 
 import "./dashboard-styles.css";
 
@@ -176,7 +177,7 @@ const WelcomeScreen: React.FC = () => {
     computeViewportFlags()
   );
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
-  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+  const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("dashboard");
   const rawDrawerId = useId();
   const drawerId = React.useMemo(
     () => `dashboard-nav-${rawDrawerId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
@@ -207,7 +208,7 @@ const WelcomeScreen: React.FC = () => {
     if (!isDesktop) {
       setIsNavCollapsed(false);
     }
-  }, [isDesktop]);
+  }, [isDesktop, setIsNavCollapsed]);
 
   const handleNavigateToProject = async ({
     projectId,

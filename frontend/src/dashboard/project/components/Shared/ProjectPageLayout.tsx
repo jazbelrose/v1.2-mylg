@@ -1,6 +1,7 @@
 import React from "react";
 import ProjectMessagesThread from "@/dashboard/features/messages/ProjectMessagesThread";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
+import { useNavCollapsed } from "@/shared/hooks/useNavCollapsed";
 import ChatPanel from "./ChatPanel";
 import type { ProjectAccentPalette } from "@/dashboard/project/hooks/useProjectPalette";
 
@@ -93,7 +94,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
     }
   });
 
-  const [isNavCollapsed, setIsNavCollapsed] = React.useState<boolean>(false);
+  const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("project");
 
   // Measure global + project header heights
   React.useLayoutEffect(() => {
@@ -179,7 +180,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
   const handleSetActiveView = React.useCallback(() => {}, []);
   const handleToggleNavigationCollapse = React.useCallback(() => {
     setIsNavCollapsed((prev) => !prev);
-  }, []);
+  }, [setIsNavCollapsed]);
 
   const mainContent = (
     <div

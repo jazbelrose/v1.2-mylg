@@ -87,11 +87,15 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement | null>(null);
   const filtersIdRef = useRef(`projects-filters-${sanitizeId(Math.random().toString(36).slice(2))}`);
+  const statusDropdownRef = useRef<HTMLDivElement | null>(null);
+  const statusListIdRef = useRef(`projects-status-${sanitizeId(Math.random().toString(36).slice(2))}`);
 
   const [sortOption, setSortOption] = useState<SortOption>("dateNewest");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [query, setQuery] = useState<string>("");
   const [scope, setScope] = useState<"recents" | "all">("recents");
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [statusHighlightIndex, setStatusHighlightIndex] = useState<number>(-1);
 
   useEffect(() => {
     if (!isLoading && projects.length === 0 && !projectsError) {
@@ -114,6 +118,40 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     return () => document.removeEventListener("click", onDocClick);
   }, [filtersOpen]);
 
+  useEffect(() => {
+    if (!statusDropdownOpen) return;
+
+    const handlePointer = (event: MouseEvent) => {
+      if (
+        statusDropdownRef.current &&
+        event.target instanceof Node &&
+        !statusDropdownRef.current.contains(event.target)
+      ) {
+        setStatusDropdownOpen(false);
+      }
+    };
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setStatusDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [statusDropdownOpen]);
+
+  useEffect(() => {
+    if (!filtersOpen) {
+      setStatusDropdownOpen(false);
+    }
+  }, [filtersOpen]);
+
   const statuses = useMemo(() => {
     try {
       return Array.from(
@@ -127,6 +165,21 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
       return [] as string[];
     }
   }, [projects]);
+
+  const statusOptions = useMemo(
+    () => [{ value: "", label: "All statuses" }, ...statuses.map((s) => ({ value: s, label: s }))],
+    [statuses]
+  );
+
+  useEffect(() => {
+    if (!statusDropdownOpen) {
+      setStatusHighlightIndex(-1);
+      return;
+    }
+
+    const selectedIndex = statusOptions.findIndex((opt) => opt.value === statusFilter);
+    setStatusHighlightIndex(selectedIndex >= 0 ? selectedIndex : 0);
+  }, [statusDropdownOpen, statusFilter, statusOptions]);
 
   const items = useMemo(() => {
     const list: ProjectWithMeta[] = (projects as ProjectLike[]).map((p) => ({
@@ -198,6 +251,99 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
       }
     },
     [onOpenProject, navigate]
+  );
+
+  const statusTriggerLabel = useMemo(() => {
+    const found = statusOptions.find((opt) => opt.value === statusFilter);
+    return found ? found.label : "All statuses";
+  }, [statusFilter, statusOptions]);
+
+  const statusActiveOptionId =
+    statusDropdownOpen && statusHighlightIndex >= 0
+      ? `${statusListIdRef.current}-option-${statusHighlightIndex}`
+      : undefined;
+
+  const updateHighlight = useCallback(
+    (direction: 1 | -1) => {
+      setStatusHighlightIndex((current) => {
+        if (!statusOptions.length) return -1;
+        const next = current < 0 ? 0 : current + direction;
+        if (next < 0) return statusOptions.length - 1;
+        if (next >= statusOptions.length) return 0;
+        return next;
+      });
+    },
+    [statusOptions.length]
+  );
+
+  const handleStatusSelect = useCallback(
+    (value: string) => {
+      setStatusFilter(value);
+      setStatusDropdownOpen(false);
+    },
+    []
+  );
+
+  const handleStatusTriggerKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (!statusOptions.length) return;
+
+      switch (event.key) {
+        case "ArrowDown": {
+          event.preventDefault();
+          if (!statusDropdownOpen) {
+            setStatusDropdownOpen(true);
+            return;
+          }
+          updateHighlight(1);
+          break;
+        }
+        case "ArrowUp": {
+          event.preventDefault();
+          if (!statusDropdownOpen) {
+            setStatusDropdownOpen(true);
+            return;
+          }
+          updateHighlight(-1);
+          break;
+        }
+        case "Home": {
+          if (!statusDropdownOpen) return;
+          event.preventDefault();
+          setStatusHighlightIndex(statusOptions.length ? 0 : -1);
+          break;
+        }
+        case "End": {
+          if (!statusDropdownOpen) return;
+          event.preventDefault();
+          setStatusHighlightIndex(statusOptions.length ? statusOptions.length - 1 : -1);
+          break;
+        }
+        case "Enter":
+        case " ": {
+          event.preventDefault();
+          if (statusDropdownOpen && statusHighlightIndex >= 0) {
+            const option = statusOptions[statusHighlightIndex];
+            if (option) {
+              handleStatusSelect(option.value);
+            }
+          } else {
+            setStatusDropdownOpen((open) => !open);
+          }
+          break;
+        }
+        case "Escape": {
+          if (statusDropdownOpen) {
+            event.preventDefault();
+            setStatusDropdownOpen(false);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    [handleStatusSelect, statusDropdownOpen, statusHighlightIndex, statusOptions, updateHighlight]
   );
 
   const handleRowKeyDown = (e: React.KeyboardEvent<HTMLTableRowElement>, id: string) => {
@@ -410,19 +556,57 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
                 />
 
                 {statuses.length > 0 && (
-                  <select
-                    className={mobileStyles.select}
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    aria-label="Filter by status"
+                  <div
+                    className={desktopStyles.statusDropdown}
+                    ref={statusDropdownRef}
                   >
-                    <option value="">All statuses</option>
-                    {statuses.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                    <button
+                      type="button"
+                      className={desktopStyles.statusTrigger}
+                      aria-haspopup="listbox"
+                      aria-expanded={statusDropdownOpen}
+                      aria-controls={statusListIdRef.current}
+                      aria-activedescendant={statusActiveOptionId}
+                      onClick={() => setStatusDropdownOpen((open) => !open)}
+                      onKeyDown={handleStatusTriggerKeyDown}
+                    >
+                      <span>{statusTriggerLabel}</span>
+                      <ChevronDown size={14} aria-hidden />
+                    </button>
+                    {statusDropdownOpen && (
+                      <ul
+                        className={desktopStyles.statusOptions}
+                        role="listbox"
+                        id={statusListIdRef.current}
+                      >
+                        {statusOptions.map((option, index) => {
+                          const optionId = `${statusListIdRef.current}-option-${index}`;
+                          const isSelected = statusFilter === option.value;
+                          const isActive = statusHighlightIndex === index;
+                          return (
+                            <li
+                              key={`${option.value || "all"}-${index}`}
+                              role="option"
+                              id={optionId}
+                              aria-selected={isSelected}
+                            >
+                              <button
+                                type="button"
+                                className={`${desktopStyles.statusOptionButton} ${
+                                  isSelected ? desktopStyles.statusOptionSelected : ""
+                                } ${isActive ? desktopStyles.statusOptionActive : ""}`}
+                                onClick={() => handleStatusSelect(option.value)}
+                                onMouseEnter={() => setStatusHighlightIndex(index)}
+                                onFocus={() => setStatusHighlightIndex(index)}
+                              >
+                                {option.label}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
                 )}
 
                 <select

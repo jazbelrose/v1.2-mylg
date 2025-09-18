@@ -142,85 +142,87 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
           )}
         </div>
 
-        {showGlobalSearchInHeader ? (
-          <div className="welcome-header-center">
-            <GlobalSearch />
-          </div>
-        ) : null}
-
-        {/* Right: Create, Notifications, Avatar (+ online dot) */}
+        {/* Right: Global Search + Create, Notifications, Avatar (+ online dot) */}
         <div className="welcome-header-right">
-          <div
-            className="nav-item-style"
-            onClick={() => navigate("/dashboard/new")}
-            title="Start something"
-          >
-            <Plus size={isMobile ? 20 : 26} color="white" />
-          </div>
+          {showGlobalSearchInHeader ? (
+            <div className="welcome-header-search">
+              <GlobalSearch className="welcome-header-global-search" />
+            </div>
+          ) : null}
 
-          <div
-            className="nav-icon-wrapper nav-icon-style"
-            onClick={handleNotificationsToggle}
-            role="button"
-            tabIndex={0}
-            aria-label="Open notifications"
-            onKeyDown={handleNotificationKeyDown}
-          >
-            <Bell size={isMobile ? 24 : 26} color="white" />
-            <NavBadge count={unreadNotifications} label="notification" className="nav-bar-badge" />
-          </div>
+          <div className="welcome-header-actions">
+            <div
+              className="nav-item-style"
+              onClick={() => navigate("/dashboard/new")}
+              title="Start something"
+            >
+              <Plus size={isMobile ? 20 : 26} color="white" />
+            </div>
 
-          <div style={{ position: 'relative' }}>
-            {userThumbnail ? (
-              <img
-                src={getFileUrl(userThumbnail)}
-                alt={`${userName}'s Thumbnail`}
-                style={{
-                  width: isMobile ? '32px' : '40px',
-                  height: isMobile ? '32px' : '40px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  cursor: 'pointer',
-                }}
-                onClick={handleHomeClick}
-                role="button"
-                tabIndex={0}
-                aria-label="Go to Home"
-                onKeyDown={handleAvatarKeyDown}
-              />
-            ) : (
-              <User
-                size={isMobile ? 24 : 30}
-                color="white"
-                style={{
-                  borderRadius: '50%',
-                  backgroundColor: '#333',
-                  cursor: 'pointer',
-                  padding: isMobile ? '4px' : '5px',
-                }}
-                onClick={handleHomeClick}
-                role="button"
-                tabIndex={0}
-                aria-label="Go to Home"
-                onKeyDown={handleAvatarKeyDown}
-              />
-            )}
+            <div
+              className="nav-icon-wrapper nav-icon-style"
+              onClick={handleNotificationsToggle}
+              role="button"
+              tabIndex={0}
+              aria-label="Open notifications"
+              onKeyDown={handleNotificationKeyDown}
+            >
+              <Bell size={isMobile ? 24 : 26} color="white" />
+              <NavBadge count={unreadNotifications} label="notification" className="nav-bar-badge" />
+            </div>
 
-            {isUserOnline && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: isMobile ? '1px' : '2px',
-                  right: isMobile ? '1px' : '2px',
-                  width: isMobile ? '10px' : '12px',
-                  height: isMobile ? '10px' : '12px',
-                  borderRadius: '50%',
-                  backgroundColor: '#00ff00',
-                  border: '2px solid #000',
-                }}
-                aria-label="Online"
-              />
-            )}
+            <div style={{ position: 'relative' }}>
+              {userThumbnail ? (
+                <img
+                  src={getFileUrl(userThumbnail)}
+                  alt={`${userName}'s Thumbnail`}
+                  style={{
+                    width: isMobile ? '32px' : '40px',
+                    height: isMobile ? '32px' : '40px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleHomeClick}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Go to Home"
+                  onKeyDown={handleAvatarKeyDown}
+                />
+              ) : (
+                <User
+                  size={isMobile ? 24 : 30}
+                  color="white"
+                  style={{
+                    borderRadius: '50%',
+                    backgroundColor: '#333',
+                    cursor: 'pointer',
+                    padding: isMobile ? '4px' : '5px',
+                  }}
+                  onClick={handleHomeClick}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Go to Home"
+                  onKeyDown={handleAvatarKeyDown}
+                />
+              )}
+
+              {isUserOnline && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: isMobile ? '1px' : '2px',
+                    right: isMobile ? '1px' : '2px',
+                    width: isMobile ? '10px' : '12px',
+                    height: isMobile ? '10px' : '12px',
+                    borderRadius: '50%',
+                    backgroundColor: '#00ff00',
+                    border: '2px solid #000',
+                  }}
+                  aria-label="Online"
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

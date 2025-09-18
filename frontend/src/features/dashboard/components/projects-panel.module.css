@@ -91,23 +91,28 @@
   border-radius: 999px;
 }
 
-.recentsWrap { position: relative; }
-
-.recents {
-  display: flex;          /* instead of inline-flex */
+.recentsWrap {
+  position: relative;
+  display: flex;
   align-items: center;
-  align-self: center;
-  gap: 6px;
-  border: 1px solid rgba(255, 255, 255, .14);
-  background: rgba(255, 255, 255, .01);
-  color: rgba(255, 255, 255, .85);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 10px;
-  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
 
+.recents {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-color, #fff);
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  line-height: 1;
+}
+
+.recents svg {
+  display: block;
+}
 .recents:hover:not(:disabled) {
   background: rgba(255, 255, 255, .03);
 }
@@ -492,9 +497,9 @@
 .select {
   width: 100%;
   background: rgba(255,255,255,.04);
-  color: var(--text-color, #fff);
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 8px;
+  
+  
+  border-radius: 4px;
   padding: 6px 32px 6px 10px;
   font-size: 13px;
   line-height: 1.4;
@@ -511,13 +516,7 @@
   padding: 6px 10px;
 }
 
-.input:focus-visible,
-.select:focus-visible {
-  outline: 2px auto var(--color-focus, #EB5DFA);
-  outline-offset: 2px;
-  border-color: rgba(235, 93, 250, .6);
-  box-shadow: 0 0 0 2px rgba(235, 93, 250, .18);
-}
+
 
 .select {
   position: relative;
@@ -533,7 +532,7 @@
 
 .select option {
   background: var(--bg2, #111111);
-  color: var(--text-color, #fff);
+  
 }
 
 .select::-ms-expand {

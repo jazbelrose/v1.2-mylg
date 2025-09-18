@@ -6,15 +6,17 @@ import TasksComponent from './TasksComponent';
 import { message } from 'antd';
 
 // Define mock functions
-const fetchTasks = vi.fn(() => Promise.resolve([]));
-const deleteTask = vi.fn(() => Promise.resolve({}));
-const fetchUserProfilesBatch = vi.fn(() => Promise.resolve([]));
+type Mock = ReturnType<typeof vi.fn>;
+
+let fetchTasksMock: Mock;
+let deleteTaskMock: Mock;
+let fetchUserProfilesBatchMock: Mock;
 
 vi.mock('@/shared/utils/api', () => ({
   __esModule: true,
-  fetchTasks,
-  deleteTask,
-  fetchUserProfilesBatch,
+  fetchTasks: vi.fn(() => Promise.resolve([])),
+  deleteTask: vi.fn(() => Promise.resolve({})),
+  fetchUserProfilesBatch: vi.fn(() => Promise.resolve([])),
   createTask: vi.fn((t) => Promise.resolve(t)),
   updateTask: vi.fn((t) => Promise.resolve(t)),
 }));
@@ -94,7 +96,7 @@ vi.mock('antd', () => ({
 }));
 
 // Import mocked api functions
-// const { fetchTasks, deleteTask, fetchUserProfilesBatch } = vi.mocked(await import('../../../shared/utils/api'));
+// const { fetchTasks, deleteTask, fetchUserProfilesBatch } = vi.mocked(await import('@/shared/utils/api'));
 
 const mockUseBudget = vi.fn(() => ({ budgetItems: [] }));
 vi.mock('@/dashboard/project/features/budget/context/BudgetContext', () => ({
@@ -119,16 +121,22 @@ beforeAll(() => {
     };
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   mockUseBudget.mockReturnValue({ budgetItems: [] });
-  (fetchTasks as vi.Mock).mockResolvedValue([]);
-  (fetchTasks as vi.Mock).mockClear();
 
-  (deleteTask as vi.Mock).mockResolvedValue({});
-  (deleteTask as vi.Mock).mockClear();
+  const apiModule = await import('@/shared/utils/api');
+  fetchTasksMock = apiModule.fetchTasks as Mock;
+  deleteTaskMock = apiModule.deleteTask as Mock;
+  fetchUserProfilesBatchMock = apiModule.fetchUserProfilesBatch as Mock;
 
-  (fetchUserProfilesBatch as vi.Mock).mockResolvedValue([]);
-  (fetchUserProfilesBatch as vi.Mock).mockClear();
+  fetchTasksMock.mockReset();
+  fetchTasksMock.mockResolvedValue([]);
+
+  deleteTaskMock.mockReset();
+  deleteTaskMock.mockResolvedValue({});
+
+  fetchUserProfilesBatchMock.mockReset();
+  fetchUserProfilesBatchMock.mockResolvedValue([]);
 });
 
 test('shows no tasks message when list is empty', async () => {
@@ -141,7 +149,7 @@ test('Assigned To select displays team members by full name', async () => {
     { userId: '1', firstName: 'Alice', lastName: 'Wonderland' },
     { userId: '2', firstName: 'Bob', lastName: 'Smith' },
   ];
-  (fetchUserProfilesBatch as vi.Mock).mockResolvedValue(team);
+  fetchUserProfilesBatchMock.mockResolvedValue(team);
 
   render(<TasksComponent team={team} />);
   const select = screen.getByLabelText('Assigned To');
@@ -171,7 +179,7 @@ test('Task Name lists budget item descriptions', async () => {
 });
 
 test('invokes deleteTask when deleting a task', async () => {
-  (fetchTasks as vi.Mock).mockResolvedValue([{ projectId: 'p1', taskId: '1', name: 'Sample' }]);
+  fetchTasksMock.mockResolvedValue([{ projectId: 'p1', taskId: '1', name: 'Sample' }]);
 
   render(<TasksComponent projectId="p1" team={[]} />);
   await screen.findByText('SAMPLE');
@@ -179,12 +187,12 @@ test('invokes deleteTask when deleting a task', async () => {
   await userEvent.click(screen.getByLabelText('actions-dropdown'));
   await userEvent.click(await screen.findByText('Delete'));
 
-  await waitFor(() => expect(deleteTask).toHaveBeenCalledWith({ projectId: 'p1', taskId: '1' }));
+  await waitFor(() => expect(deleteTaskMock).toHaveBeenCalledWith({ projectId: 'p1', taskId: '1' }));
 });
 
 test('restores task and shows error message when deleteTask fails', async () => {
-  (fetchTasks as vi.Mock).mockResolvedValue([{ taskId: '1', name: 'Sample' }]);
-  (deleteTask as vi.Mock).mockRejectedValue(new Error('fail'));
+  fetchTasksMock.mockResolvedValue([{ taskId: '1', name: 'Sample' }]);
+  deleteTaskMock.mockRejectedValue(new Error('fail'));
 
   render(<TasksComponent projectId="p1" team={[]} />);
   await screen.findByText('SAMPLE');
@@ -199,14 +207,20 @@ test('restores task and shows error message when deleteTask fails', async () => 
 });
 
 test('loads tasks when API returns { tasks: [...] }', async () => {
-  (fetchTasks as vi.Mock).mockResolvedValue([{ projectId: 'p1', taskId: '1', title: 'Sample' }]);
+  fetchTasksMock.mockResolvedValue([{ projectId: 'p1', taskId: '1', title: 'Sample' }]);
 
   render(<TasksComponent projectId="p1" team={[]} />);
 
   expect(await screen.findByText('SAMPLE')).toBeInTheDocument();
 
-  (fetchTasks as vi.Mock).mockReset();
+  fetchTasksMock.mockReset();
 });
+
+
+
+
+
+
 
 
 

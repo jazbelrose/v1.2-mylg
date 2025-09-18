@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import { vi, test, expect, beforeEach } from "vitest";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// -- Types ---------------------------------------------------------------------
 interface MockS3Item {
   key: string;
   lastModified: string;
@@ -87,49 +87,49 @@ vi.mock("@/shared/utils/api", () => {
     ),
   };
 });
-// ── Imports that use the mocks ─────────────────────────────────────────────────
+// -- Imports that use the mocks -------------------------------------------------
 import FileManagerComponent from "./FileManager";
 
 // Mock NotificationContainer since it's just a wrapper
-vi.mock("../../../shared/ui/ToastNotifications", () => ({
+vi.mock('@/shared/ui/ToastNotifications', () => ({
   NotificationContainer: () => null,
 }));
 
 // Import mocked modules after mocks are defined
-// Note: useData and api are mocked, so we don't import them directly
-import { NotificationContainer } from "../../../shared/ui/ToastNotifications";
+import { NotificationContainer } from '@/shared/ui/ToastNotifications';
 
-// Access mocked functions through the mock registry
-const useDataMock = vi.fn();
-const apiFetchMock = vi.fn();
+type Mock = ReturnType<typeof vi.fn>;
 
-// Mock the imports to return our mock functions
-vi.doMock("../../../app/contexts/useData", () => ({
-  useData: useDataMock,
-}));
+let useDataMock: Mock;
+let apiFetchMock: Mock;
 
-vi.doMock("../../../shared/utils/api", () => ({
-  apiFetch: apiFetchMock,
-}));
+// -- Setup ----------------------------------------------------------------------
+beforeEach(async () => {
+  const dataModule = await import('@/app/contexts/useData');
+  useDataMock = dataModule.useData as Mock;
 
-// ── Setup ──────────────────────────────────────────────────────────────────────
-beforeEach(() => {
+  const apiModule = await import('@/shared/utils/api');
+  apiFetchMock = apiModule.apiFetch as Mock;
+
+  useDataMock.mockReset();
   useDataMock.mockReturnValue({
     activeProject: {
-      projectId: "1",
+      projectId: '1',
       invoices: [
-        { fileName: "file1.txt", url: "https://s3/projects/1/invoices/file1.txt" },
-        { fileName: "file2.pdf", url: "https://s3/projects/1/invoices/file2.pdf" },
-        { fileName: "file3.txt", url: "https://s3/projects/1/invoices/file3.txt" },
+        { fileName: 'file1.txt', url: 'https://s3/projects/1/invoices/file1.txt' },
+        { fileName: 'file2.pdf', url: 'https://s3/projects/1/invoices/file2.pdf' },
+        { fileName: 'file3.txt', url: 'https://s3/projects/1/invoices/file3.txt' },
       ],
     },
-    user: { userId: "u1", role: "admin" },
+    user: { userId: 'u1', role: 'admin' },
     isAdmin: true,
   } as MockDataValue);
-  apiFetchMock.mockClear();
+
+  apiFetchMock.mockReset();
+  apiFetchMock.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue([]) });
 });
 
-// ── Tests ──────────────────────────────────────────────────────────────────────
+// -- Tests ----------------------------------------------------------------------
 test.skip("deleting a file via toast confirmation updates the list without closing modal", async () => {
   render(
     <>

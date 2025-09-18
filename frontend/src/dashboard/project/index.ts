@@ -1,7 +1,7 @@
 // src/dashboard/projects/index.ts
 
 // Pages
-export { default as SingleProjectPage } from "./pages/project";
+export { default as SingleProjectPage } from "./project";
 
 // Components - using barrel exports from subdirectories
 export * from "./components";

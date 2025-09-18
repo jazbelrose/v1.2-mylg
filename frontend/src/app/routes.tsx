@@ -20,8 +20,8 @@ import Spinner from "../shared/ui/Spinner";
 
 const Dashboard = React.lazy(() => import("../dashboard/home/pages/DashboardLayout"));
 const DashboardWelcome = React.lazy(() => import("../dashboard/home/pages/DashboardHome"));
-const DashboardNewProject = React.lazy(() => import("@/dashboard/project/pages/NewProject"));
-const DashboardSingleProject = React.lazy(() => import("@/dashboard/project/pages/project"));
+const DashboardNewProject = React.lazy(() => import("@/dashboard/NewProject/NewProject"));
+const DashboardSingleProject = React.lazy(() => import("@/dashboard/project/project"));
 const DashboardBudgetPage = React.lazy(() => import("../dashboard/project/features/budget/pages/BudgetPage"));
 const DashboardCalendarPage = React.lazy(() => import("@/dashboard/project/features/calendar/calendar"));
 const DashboardEditorPage = React.lazy(() => import("@/dashboard/project/features/editor/pages/editorpage"));

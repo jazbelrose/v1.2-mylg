@@ -9,7 +9,6 @@ import {
   fetchUserProfilesBatch,
   updateUserRole,
   POST_PROJECT_TO_USER_URL,
-  S3_PUBLIC_BASE,
   apiFetch,
   UserProfile,
   getFileUrl,
@@ -181,7 +180,7 @@ export default function AdminUserManagement() {
       options: { accessLevel: 'guest' },
     });
     console.log('Thumbnail uploaded:', result);
-    return `${S3_PUBLIC_BASE}${filename}?t=${Date.now()}`;
+    return filename;
   };
 
   const handleThumbnailChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
@@ -198,8 +197,8 @@ export default function AdminUserManagement() {
     });
 
     try {
-      const uploadedURL = await handleFileUpload(userId, file);
-      handleChange(userId, 'thumbnail', uploadedURL);
+      const uploadedKey = await handleFileUpload(userId, file);
+      handleChange(userId, 'thumbnail', `${uploadedKey}?t=${Date.now()}`);
     } catch (err) {
       console.error('Failed to upload thumbnail', err);
       alert('Failed to upload thumbnail');
@@ -225,6 +224,7 @@ export default function AdminUserManagement() {
     const payload = {
       userId,
       ...vals,
+      thumbnail: vals.thumbnail ? vals.thumbnail.split('?')[0] : '',
       collaborators: collaboratorIds,
     };
 

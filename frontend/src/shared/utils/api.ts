@@ -175,6 +175,9 @@ export function getFileUrl(keyOrUrl: string): string {
   // Normalize project thumbnail paths:
   // older data may omit the `public/` prefix and/or include a `thumbnail-` filename
   // which no longer exists. Convert such keys to the canonical public path.
+  if (!keyOrUrl.startsWith('http')) {
+    keyOrUrl = keyOrUrl.replace(/^\/+/, '');
+  }
   if (keyOrUrl.startsWith('project-thumbnails/')) {
     keyOrUrl = `public/${keyOrUrl}`;
   }

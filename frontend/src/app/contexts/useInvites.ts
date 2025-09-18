@@ -7,3 +7,4 @@ export const useInvites = (): InvitesValue => {
   if (!ctx) throw new Error("useInvites must be used within InvitesProvider");
   return ctx;
 };
+

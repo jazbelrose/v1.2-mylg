@@ -184,3 +184,4 @@ describe('DataProvider', () => {
     expect(new Set(sent.map((e: TimelineEvent) => e.id)).size).toBe(2);
   });
 });
+

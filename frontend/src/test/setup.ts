@@ -85,3 +85,4 @@ afterEach(() => {
   mockWebSocket.onerror = undefined;
   mockWebSocket.readyState = MockWebSocket.OPEN;
 });
+

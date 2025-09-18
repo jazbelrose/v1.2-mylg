@@ -47,3 +47,4 @@ export const Introtext: React.FC = () => {
     </div>
   );
 };
+

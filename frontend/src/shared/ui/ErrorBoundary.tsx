@@ -28,3 +28,4 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren> {
 }
 
 export default ErrorBoundary;
+

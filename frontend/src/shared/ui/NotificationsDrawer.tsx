@@ -8,7 +8,7 @@ import { useNotificationSocket } from '../../app/contexts/useNotificationSocket'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useData } from '../../app/contexts/useData';
 import { slugify } from '../utils/slug';
-import { prefetchBudgetData } from '@/features/budget/context/useBudget';
+import { prefetchBudgetData } from '@/dashboard/budget/context/useBudget';
 import { useSocket } from '../../app/contexts/useSocket';
 import { MESSAGES_THREADS_URL, apiFetch } from '../utils/api';
 import type { Thread } from '@/app/contexts/DataProvider';
@@ -406,3 +406,4 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
 };
 
 export default NotificationsDrawer;
+

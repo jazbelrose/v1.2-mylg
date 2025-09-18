@@ -4,3 +4,4 @@ export interface NavigationDirectionContextType {
   direction: NavigationDirection;
   setDirection: (direction: NavigationDirection) => void;
 }
+

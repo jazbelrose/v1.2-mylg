@@ -43,3 +43,4 @@ export default function InlineSvg({ src, className, onReady }: InlineSvgProps) {
   );
 }
 
+

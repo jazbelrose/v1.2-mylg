@@ -7,3 +7,4 @@ export const GridPlus = createLucideIcon("GridPlus", [
   ["path", { key: "path1", d: "M17.5 15.5v4" }],
   ["path", { key: "path2", d: "M15.5 17.5h4" }],
 ]);
+

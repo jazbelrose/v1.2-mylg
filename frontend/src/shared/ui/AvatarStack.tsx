@@ -86,3 +86,4 @@ const AvatarStack: React.FC<AvatarStackProps> = ({ members = [], onClick, size }
 };
 
 export default AvatarStack;
+

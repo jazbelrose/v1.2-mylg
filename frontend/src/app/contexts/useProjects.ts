@@ -7,3 +7,4 @@ export const useProjects = (): ProjectsValue => {
   if (!ctx) throw new Error("useProjects must be used within DataProvider");
   return ctx;
 };
+

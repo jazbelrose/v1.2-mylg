@@ -33,3 +33,4 @@ export { default as TitleStatus } from "./dashboard/title-status.svg?react";
 // Home subfolder
 export { default as Home01 } from "./home/01.svg?react";
 export { default as Home02 } from "./home/02.svg?react";
+

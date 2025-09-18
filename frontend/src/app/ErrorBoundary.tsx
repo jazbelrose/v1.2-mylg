@@ -48,3 +48,4 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Erro
     return this.props.children;
   }
 }
+

@@ -15,3 +15,4 @@ describe('getFileNameFromUrl', () => {
     expect(getFileNameFromUrl(undefined)).toBe('');
   });
 });
+

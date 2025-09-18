@@ -36,3 +36,4 @@ export interface ProjectsValue {
   updateTimelineEvents: (projectId: string, events: TimelineEvent[]) => Promise<void>;
   updateProjectFields: (projectId: string, fields: Partial<Project>) => Promise<void>;
 }
+

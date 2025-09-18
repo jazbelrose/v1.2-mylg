@@ -1,7 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
-import GlobalSearch from "@/features/dashboard/components/GlobalSearch";
+import GlobalSearch from "@/dashboard/dashboard/components/GlobalSearch";
 import NavBadge from "./NavBadge";
 import useDashboardNavigation, {
   type DashboardNavItem,
@@ -128,3 +128,4 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
 };
 
 export default DashboardNavPanel;
+

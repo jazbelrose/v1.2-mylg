@@ -1,5 +1,5 @@
 import React from 'react';
-import SVGThumbnail from '../../features/dashboard/components/SvgThumbnail';
+import SVGThumbnail from '../../dashboard/dashboard/components/SvgThumbnail';
 import { getFileUrl } from '../utils/api';
 
 interface ProjectAvatarProps {
@@ -25,4 +25,6 @@ const ProjectAvatar: React.FC<ProjectAvatarProps> = ({
   );
 
 export default ProjectAvatar;
+
+
 

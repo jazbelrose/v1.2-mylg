@@ -4,3 +4,4 @@ export const getFileNameFromUrl = (url?: string): string => {
 };
 
 export default getFileNameFromUrl;
+

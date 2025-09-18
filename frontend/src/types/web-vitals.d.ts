@@ -7,3 +7,4 @@ declare module 'web-vitals' {
   export const getTTFB: (onPerfEntry: ReportHandler) => void;
 }
 
+

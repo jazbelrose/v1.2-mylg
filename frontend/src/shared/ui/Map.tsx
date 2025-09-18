@@ -359,3 +359,4 @@ const Map = forwardRef<MapRef, MapProps>(
 );
 
 export default React.memo(Map);
+

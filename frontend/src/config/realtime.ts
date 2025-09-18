@@ -12,3 +12,4 @@ export const YJS_WS_URL =
   import.meta.env.VITE_YJS_USE_PROXY === "true" && import.meta.env.DEV
     ? `${scheme}://${window.location.host}/yjs`
     : baseUrl;
+

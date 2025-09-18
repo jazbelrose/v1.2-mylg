@@ -147,3 +147,4 @@ export const socialprofils: SocialProfiles = {
   twitter: "https://twitter.com",
 };
 
+

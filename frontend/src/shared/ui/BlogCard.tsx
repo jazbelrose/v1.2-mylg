@@ -138,3 +138,4 @@ const BlogCard: React.FC<BlogCardProps> = ({
 };
 
 export default BlogCard;
+

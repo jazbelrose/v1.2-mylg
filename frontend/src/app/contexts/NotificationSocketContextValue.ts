@@ -7,3 +7,4 @@ export interface NotificationSocketContextValue {
 export const NotificationSocketContext = createContext<NotificationSocketContextValue>({
   emitNotificationRead: () => {},
 });
+

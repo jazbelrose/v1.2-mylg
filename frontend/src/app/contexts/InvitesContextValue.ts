@@ -13,3 +13,4 @@ export interface InvitesValue {
   handleCancelInvite: (inviteId: string) => Promise<void>;
   addPendingInvite: (invite: Invite) => void;
 }
+

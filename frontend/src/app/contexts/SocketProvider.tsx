@@ -381,3 +381,4 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
 
   return <SocketContext.Provider value={{ ws, isConnected }}>{children}</SocketContext.Provider>;
 };
+

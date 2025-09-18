@@ -25,3 +25,4 @@ export const getMicroTransition = (
   prefersReducedMotion: boolean,
   spring: Spring = SPRING_FAST,
 ) => (prefersReducedMotion ? undefined : spring);
+

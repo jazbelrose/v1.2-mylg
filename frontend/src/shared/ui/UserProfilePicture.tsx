@@ -56,3 +56,4 @@ const UserProfilePicture: React.FC<UserProfilePictureProps> = ({
 
 export default UserProfilePicture;
 
+

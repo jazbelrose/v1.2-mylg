@@ -9,3 +9,4 @@ export interface NotificationContextType {
   removeNotification: (timestampUuid: string) => Promise<void>;
   removeNotifications: (ids: string[]) => Promise<void>;
 }
+

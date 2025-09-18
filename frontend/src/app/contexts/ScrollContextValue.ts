@@ -5,3 +5,4 @@ export interface ScrollContextType {
   updateHeaderVisibility: (isVisible: boolean) => void;
   scrollableDivRef: RefObject<HTMLDivElement>;
 }
+

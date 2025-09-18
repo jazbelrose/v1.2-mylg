@@ -169,3 +169,4 @@ export function getSquirclePath(
 export function clearSquirclePathCache(): void {
   PATH_CACHE.clear();
 }
+

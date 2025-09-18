@@ -8,7 +8,7 @@ export * as requestQueue from "./requestQueue";
 export * as storageWithTTL from "./storageWithTTL";
 export * as colorUtils from "./colorUtils";
 
-// Domain-specific (could later be moved into features/*)
+// Domain-specific (could later be moved into dashboard/*)
 export * as budgetUtils from "./budgetUtils";
 export * as messageUtils from "./messageUtils";
 export * as notificationUtils from "./notificationUtils";
@@ -27,3 +27,5 @@ export * as websocketUtils from "./websocketUtils";
 
 // Modal stack hook
 export { default as useModalStack } from "./useModalStack";
+
+

@@ -75,3 +75,4 @@ export default class SmoothScroll extends React.Component<React.PropsWithChildre
     );
   }
 }
+

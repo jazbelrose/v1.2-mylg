@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Modal from 'react-modal';
 
-import '@/features/dashboard/pages/dashboard-styles.css';
+import '@/dashboard/dashboard/pages/dashboard-styles.css';
 import useModalStack from '@/shared/utils/useModalStack';
 
 type ClassState = {
@@ -100,4 +100,5 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 };
 
 export default ConfirmModal;
+
 

@@ -16,3 +16,4 @@ declare module '@storybook/react' {
     parameters?: Record<string, unknown>;
   };
 }
+

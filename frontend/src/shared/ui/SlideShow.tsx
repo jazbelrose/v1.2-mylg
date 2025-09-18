@@ -47,3 +47,4 @@ const Slideshow: React.FC<SlideshowProps> = ({ slides }) => {
 };
 
 export default Slideshow;
+

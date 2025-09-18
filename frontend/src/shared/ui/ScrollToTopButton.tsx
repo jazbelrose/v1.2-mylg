@@ -80,3 +80,4 @@ const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({
 };
 
 export default ScrollToTopButton;
+

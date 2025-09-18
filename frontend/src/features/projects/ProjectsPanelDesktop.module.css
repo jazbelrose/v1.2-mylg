@@ -250,6 +250,129 @@
   overflow-y: auto;
 }
 
+.statusFilter {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statusFilterTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color, #eaecee);
+  background: linear-gradient(135deg, rgba(32, 34, 37, 0.92), rgba(18, 19, 21, 0.94));
+  border: 1px solid rgba(72, 76, 81, 0.45);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease,
+    color 0.24s ease;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.statusFilterTrigger:hover,
+.statusFilterTrigger:focus-visible {
+  background: linear-gradient(135deg, rgba(40, 42, 46, 0.94), rgba(24, 26, 29, 0.96));
+  border-color: rgba(104, 108, 114, 0.55);
+  color: var(--text-color, #eaecee);
+}
+
+.statusFilterTrigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(122, 126, 132, 0.55);
+}
+
+.statusFilterPlaceholder {
+  color: var(--text-color-muted, #9aa0a6);
+}
+
+.statusFilterValue {
+  flex: 1;
+  text-align: left;
+  color: inherit;
+  font-weight: 600;
+}
+
+.statusFilterChevron {
+  color: var(--text-color-muted, #9aa0a6);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.statusFilterTrigger:hover .statusFilterChevron,
+.statusFilterTrigger:focus-visible .statusFilterChevron {
+  color: var(--text-color, #eaecee);
+}
+
+.statusFilterOpen .statusFilterChevron {
+  transform: rotate(-180deg);
+  color: var(--text-color, #eaecee);
+}
+
+.statusFilterList {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  border-radius: 14px;
+  border: 1px solid rgba(72, 76, 81, 0.45);
+  background: linear-gradient(135deg, rgba(24, 25, 28, 0.96), rgba(12, 13, 15, 0.95));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 20;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.statusFilterOption {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-color, #eaecee);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.statusFilterOption:hover,
+.statusFilterOption:focus-visible {
+  background: rgba(68, 72, 76, 0.45);
+  color: var(--text-color, #eaecee);
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(110, 114, 118, 0.55);
+}
+
+.statusFilterOptionActive {
+  background: rgba(58, 62, 66, 0.55);
+  color: var(--text-color, #eaecee);
+  box-shadow: inset 0 0 0 1px rgba(110, 114, 118, 0.38);
+}
+
+.statusFilterOptionActive:hover,
+.statusFilterOptionActive:focus-visible {
+  background: rgba(66, 70, 74, 0.6);
+}
+
 @media (max-width: 1440px) {
   .table {
     min-width: 560px;

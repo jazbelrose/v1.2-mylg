@@ -67,6 +67,16 @@ function sanitizeId(raw: string) {
   return raw.replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
+const formatStatusLabel = (status: string): string => {
+  const clean = status.trim();
+  if (!clean) return "";
+  return clean
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
 const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProject }) => {
   const reduceMotion = useReducedMotion();
   const {
@@ -96,6 +106,14 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   const [query, setQuery] = useState<string>("");
   const [scope, setScope] = useState<"recents" | "all">("recents");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+
+  const statusDropdownRef = useRef<HTMLDivElement | null>(null);
+  const statusDropdownListRef = useRef<HTMLUListElement | null>(null);
+  const statusTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const statusListIdRef = useRef(
+    `projects-status-filter-${sanitizeId(Math.random().toString(36).slice(2))}`
+  );
 
   useEffect(() => {
     if (!isLoading && projects.length === 0 && !projectsError) {
@@ -129,6 +147,51 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
   }, [filtersOpen]);
+
+  useEffect(() => {
+    if (!statusDropdownOpen) return;
+    const handleClick = (event: MouseEvent) => {
+      if (
+        statusDropdownRef.current &&
+        event.target instanceof Node &&
+        !statusDropdownRef.current.contains(event.target)
+      ) {
+        setStatusDropdownOpen(false);
+      }
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setStatusDropdownOpen(false);
+        statusTriggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [statusDropdownOpen]);
+
+  useEffect(() => {
+    if (!statusDropdownOpen) return;
+    const listEl = statusDropdownListRef.current;
+    if (!listEl) return;
+    const focusOption = () => {
+      const selected = listEl.querySelector<HTMLButtonElement>("[data-selected='true']");
+      const first = listEl.querySelector<HTMLButtonElement>("button");
+      (selected ?? first)?.focus();
+    };
+    const raf = requestAnimationFrame(focusOption);
+    return () => cancelAnimationFrame(raf);
+  }, [statusDropdownOpen]);
+
+  useEffect(() => {
+    if (!filtersOpen && statusDropdownOpen) {
+      setStatusDropdownOpen(false);
+    }
+  }, [filtersOpen, statusDropdownOpen]);
 
   const statuses = useMemo(() => {
     try {
@@ -578,19 +641,143 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
                 />
 
                 {statuses.length > 0 && (
-                  <select
-                    className={mobileStyles.select}
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    aria-label="Filter by status"
+                  <div
+                    className={`${desktopStyles.statusFilter} ${
+                      statusDropdownOpen ? desktopStyles.statusFilterOpen : ""
+                    }`}
+                    ref={statusDropdownRef}
                   >
-                    <option value="">All statuses</option>
-                    {statuses.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                    <button
+                      type="button"
+                      ref={statusTriggerRef}
+                      className={`${desktopStyles.statusFilterTrigger} ${
+                        statusFilter ? "" : desktopStyles.statusFilterPlaceholder
+                      }`}
+                      aria-haspopup="listbox"
+                      aria-expanded={statusDropdownOpen}
+                      aria-controls={statusListIdRef.current}
+                      onClick={() =>
+                        setStatusDropdownOpen((open) => !open)
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                          event.preventDefault();
+                          setStatusDropdownOpen(true);
+                        }
+                        if (event.key === "Escape" && statusDropdownOpen) {
+                          event.preventDefault();
+                          setStatusDropdownOpen(false);
+                        }
+                      }}
+                    >
+                      <span className={desktopStyles.statusFilterValue}>
+                        {statusFilter
+                          ? formatStatusLabel(statusFilter)
+                          : "All statuses"}
+                      </span>
+                      <ChevronDown
+                        aria-hidden
+                        size={14}
+                        className={desktopStyles.statusFilterChevron}
+                      />
+                    </button>
+                    {statusDropdownOpen && (
+                      <ul
+                        className={desktopStyles.statusFilterList}
+                        role="listbox"
+                        id={statusListIdRef.current}
+                        aria-label="Filter by status"
+                        ref={statusDropdownListRef}
+                        onKeyDown={(event) => {
+                          const buttons = Array.from(
+                            statusDropdownListRef.current?.querySelectorAll<HTMLButtonElement>(
+                              "button"
+                            ) ?? []
+                          );
+                          if (event.key === "Escape") {
+                            event.preventDefault();
+                            setStatusDropdownOpen(false);
+                            statusTriggerRef.current?.focus();
+                            return;
+                          }
+                          if (event.key === "Tab") {
+                            setStatusDropdownOpen(false);
+                            return;
+                          }
+                          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                            event.preventDefault();
+                            if (buttons.length === 0) return;
+                            const activeElement = document.activeElement as HTMLButtonElement | null;
+                            const currentIndex = activeElement
+                              ? buttons.indexOf(activeElement)
+                              : -1;
+                            const offset = event.key === "ArrowDown" ? 1 : -1;
+                            const nextIndex =
+                              currentIndex === -1
+                                ? offset > 0
+                                  ? 0
+                                  : buttons.length - 1
+                                : (currentIndex + offset + buttons.length) % buttons.length;
+                            buttons[nextIndex]?.focus();
+                          }
+                          if (event.key === "Home") {
+                            event.preventDefault();
+                            buttons[0]?.focus();
+                          }
+                          if (event.key === "End") {
+                            event.preventDefault();
+                            if (buttons.length === 0) return;
+                            buttons[buttons.length - 1]?.focus();
+                          }
+                        }}
+                      >
+                        <li>
+                          <button
+                            type="button"
+                            role="option"
+                            className={`${desktopStyles.statusFilterOption} ${
+                              statusFilter ? "" : desktopStyles.statusFilterOptionActive
+                            }`}
+                            aria-selected={!statusFilter}
+                            data-selected={!statusFilter ? "true" : undefined}
+                            onClick={() => {
+                              setStatusFilter("");
+                              setStatusDropdownOpen(false);
+                              statusTriggerRef.current?.focus();
+                            }}
+                          >
+                            All statuses
+                          </button>
+                        </li>
+                        {statuses.map((s) => {
+                          const isActive = statusFilter === s;
+                          return (
+                            <li key={s}>
+                              <button
+                                type="button"
+                                role="option"
+                                className={`${desktopStyles.statusFilterOption} ${
+                                  isActive
+                                    ? desktopStyles.statusFilterOptionActive
+                                    : ""
+                                }`}
+                                id={`status-filter-option-${sanitizeId(s)}`}
+                                aria-selected={isActive}
+                                data-selected={isActive ? "true" : undefined}
+                                onClick={() => {
+                                  setStatusFilter(s);
+                                  setStatusDropdownOpen(false);
+                                  statusTriggerRef.current?.focus();
+                                }}
+                              >
+                                {formatStatusLabel(s)}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
                 )}
 
                 <select

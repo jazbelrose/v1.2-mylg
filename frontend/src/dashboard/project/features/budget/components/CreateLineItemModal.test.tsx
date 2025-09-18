@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi, it, expect, beforeAll } from "vitest";
 
-import Modal from "../../../shared/ui/ModalWithStack";
+import Modal from "../../../../../../shared/ui/ModalWithStack";
 
 let CreateLineItemModal: React.ComponentType<{
   isOpen: boolean;

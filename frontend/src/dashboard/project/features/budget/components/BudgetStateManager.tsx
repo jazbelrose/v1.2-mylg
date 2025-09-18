@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
-import { updateBudgetItem } from "../../../shared/utils/api";
-import type { BudgetItem, Project } from "../../../shared/utils/api";
+import { updateBudgetItem } from "@/shared/utils/api";
+import type { BudgetItem, Project } from "@/shared/utils/api";
 
 type BudgetSnapshot = {
   items: Record<string, unknown>[];

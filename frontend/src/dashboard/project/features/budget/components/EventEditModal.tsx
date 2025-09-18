@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { v4 as uuid } from "uuid";
 import Modal from "@/shared/ui/ModalWithStack";
 import styles from "./create-line-item-modal.module.css";
-import type { TimelineEvent } from "../../../shared/utils/api";
-import { createEvent, updateEvent, deleteEvent } from "../../../shared/utils/api";
+import type { TimelineEvent } from "@/shared/utils/api";
+import { createEvent, updateEvent, deleteEvent } from "@/shared/utils/api";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { useData } from "@/app/contexts/useData";
 

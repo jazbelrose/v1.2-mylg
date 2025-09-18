@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faClone, faClock } from "@fortawesome/free-solid-svg-icons";
 import { Tooltip as AntTooltip, Table } from "antd";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
-import { formatUSD } from "../../../../shared/utils/budgetUtils";
+import { formatUSD } from "@/shared/utils/budgetUtils";
 import styles from "@/dashboard/project/features/budget/pages/budget-page.module.css";
 
 type TableColumn = Record<string, unknown>;

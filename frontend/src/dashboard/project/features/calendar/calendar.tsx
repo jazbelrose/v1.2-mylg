@@ -152,7 +152,7 @@ const CalendarPage: React.FC = () => {
   };
 
   const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
-  const projectPalette = useProjectPalette(coverImage, activeProject?.color);
+  const projectPalette = useProjectPalette(coverImage, { color: activeProject?.color });
 
   return (
     <ProjectPageLayout

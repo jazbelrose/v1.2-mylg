@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import { CalendarDays, ChevronDown, Search } from "lucide-react";
 import { useData } from "@/app/contexts/useData";
 import type { UserLite } from "@/app/contexts/DataProvider";
 import { useProjectKpis, type ProjectLike } from "@/features/dashboard/hooks/useProjectKpis";
@@ -547,13 +547,16 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
                   </button>
                 </div>
 
-                <input
-                  className={mobileStyles.input}
-                  placeholder="Filter projects..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  aria-label="Filter projects"
-                />
+                <div className={desktopStyles.filterField}>
+                  <Search size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
+                  <input
+                    className={desktopStyles.filterInput}
+                    placeholder="Filter projects..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    aria-label="Filter projects by title"
+                  />
+                </div>
 
                 {statuses.length > 0 && (
                   <div
@@ -609,17 +612,29 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
                   </div>
                 )}
 
-                <select
-                  className={mobileStyles.select}
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value as SortOption)}
-                  aria-label="Sort projects"
-                >
-                  <option value="titleAsc">Title (A-Z)</option>
-                  <option value="titleDesc">Title (Z-A)</option>
-                  <option value="dateNewest">Date (Newest)</option>
-                  <option value="dateOldest">Date (Oldest)</option>
-                </select>
+                <div className={`${desktopStyles.filterField} ${desktopStyles.filterSelect}`}>
+                  <CalendarDays
+                    size={16}
+                    aria-hidden
+                    className={desktopStyles.filterFieldIcon}
+                  />
+                  <select
+                    className={desktopStyles.filterSelectControl}
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value as SortOption)}
+                    aria-label="Sort projects"
+                  >
+                    <option value="titleAsc">Title (A-Z)</option>
+                    <option value="titleDesc">Title (Z-A)</option>
+                    <option value="dateNewest">Date (Newest)</option>
+                    <option value="dateOldest">Date (Oldest)</option>
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    aria-hidden
+                    className={desktopStyles.filterSelectChevron}
+                  />
+                </div>
               </div>
             </div>
           )}

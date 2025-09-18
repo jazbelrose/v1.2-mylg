@@ -549,6 +549,7 @@
   font-size: 12px;
   font-weight: 600;
   transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+  margin: 2.5px;
 }
 
 .scopeBtn:hover:not(:disabled) {

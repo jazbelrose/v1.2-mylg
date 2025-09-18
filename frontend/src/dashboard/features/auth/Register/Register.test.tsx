@@ -10,6 +10,10 @@ import { AuthProvider } from '../../../../app/contexts/AuthContext';
 vi.mock('@aws-amplify/auth', () => ({
   signUp: vi.fn(),
   resendSignUpCode: vi.fn(),
+  getCurrentUser: vi.fn().mockResolvedValue({
+    userId: 'test-user-id',
+    username: 'testuser',
+  }),
 }));
 
 vi.mock('../email-verification', () => ({

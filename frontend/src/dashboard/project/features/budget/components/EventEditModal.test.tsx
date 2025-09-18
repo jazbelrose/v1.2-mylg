@@ -1,9 +1,3 @@
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { vi, test, expect, beforeAll } from "vitest";
-import EventEditModal from "./EventEditModal";
-import { BudgetProvider } from "../context/BudgetProvider";
-
 // Mock the hooks that BudgetProvider depends on
 vi.mock("../../../app/contexts/useSocket", () => ({
   useSocket: vi.fn(() => ({
@@ -11,10 +5,23 @@ vi.mock("../../../app/contexts/useSocket", () => ({
   })),
 }));
 
+vi.mock("../../../../../app/contexts/useAuth", () => ({
+  useAuth: vi.fn(() => ({
+    userId: "test-user-id",
+    isAuthenticated: true,
+    authStatus: "authenticated",
+    cognitoUser: null,
+    loading: false,
+  })),
+}));
+
 vi.mock("../../../app/contexts/useData", () => ({
   useData: vi.fn(() => ({
     user: { firstName: "Test User" },
     userId: "test-user-id",
+    projects: [],
+    messages: [],
+    isLoading: false,
   })),
 }));
 
@@ -29,6 +36,14 @@ vi.mock("../context/useBudget", () => ({
   })),
 }));
 
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { vi, test, expect, beforeAll } from "vitest";
+import EventEditModal from "./EventEditModal";
+import { BudgetProvider } from "../context/BudgetProvider";
+import { DataProvider } from "../../../../../app/contexts/DataProvider";
+import { AuthProvider } from "../../../../../app/contexts/AuthContext";
+
 beforeAll(() => {
   const root = document.createElement("div");
   root.setAttribute("id", "root");
@@ -37,17 +52,21 @@ beforeAll(() => {
 
 test("uses last event date as default after adding", () => {
   render(
-    <BudgetProvider projectId="p1">
-      <EventEditModal
-        isOpen={true}
-        onRequestClose={() => {}}
-        projectId="p1"
-        budgetItemId="LINE-1"
-        events={[]}
-        defaultDate="2024-05-01"
-        defaultDescription=""
-      />
-    </BudgetProvider>
+    <AuthProvider>
+      <DataProvider>
+        <BudgetProvider projectId="p1">
+          <EventEditModal
+            isOpen={true}
+            onRequestClose={() => {}}
+            projectId="p1"
+            budgetItemId="LINE-1"
+            events={[]}
+            defaultDate="2024-05-01"
+            defaultDescription=""
+          />
+        </BudgetProvider>
+      </DataProvider>
+    </AuthProvider>
   );
 
   const dateInput = screen.getByLabelText(/event date/i) as HTMLInputElement;
@@ -69,19 +88,21 @@ test("uses last event date as default after adding", () => {
 
 test("displays event description for existing events", () => {
   render(
-    <BudgetProvider projectId="p1">
-      <EventEditModal
-        isOpen={true}
-        onRequestClose={() => {}}
-        projectId="p1"
-        budgetItemId="LINE-1"
-        events={[
-          { id: "1", date: "2024-05-01", hours: 2, description: "Setup" },
-        ]}
-        defaultDate="2024-05-01"
-        defaultDescription=""
-      />
-    </BudgetProvider>
+    <DataProvider>
+      <BudgetProvider projectId="p1">
+        <EventEditModal
+          isOpen={true}
+          onRequestClose={() => {}}
+          projectId="p1"
+          budgetItemId="LINE-1"
+          events={[
+            { id: "1", date: "2024-05-01", hours: 2, description: "Setup" },
+          ]}
+          defaultDate="2024-05-01"
+          defaultDescription=""
+        />
+      </BudgetProvider>
+    </DataProvider>
   );
 
   expect(screen.getByText("Setup")).toBeInTheDocument();

@@ -52,6 +52,32 @@ function sameDay(a: Date | null, b: Date | null) {
   return !!(a && b) && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+export const parseDashboardPath = (
+  pathname: string
+): { view: string; userSlug: string | null } => {
+  const segments = pathname.split("/").filter(Boolean);
+  const idx = segments.indexOf("dashboard");
+
+  if (idx === -1) {
+    return { view: "welcome", userSlug: null };
+  }
+
+  let view = segments[idx + 1] || "welcome";
+  let userSlug = segments[idx + 2] || null;
+
+  if (view === "features") {
+    view = segments[idx + 2] || "welcome";
+    userSlug = segments[idx + 3] || null;
+  }
+
+  if (view === "welcome") {
+    view = segments[idx + 2] || "welcome";
+    userSlug = segments[idx + 3] || null;
+  }
+
+  return { view, userSlug };
+};
+
 const WelcomeScreen: React.FC = () => {
   const {
     userData,
@@ -125,18 +151,7 @@ const WelcomeScreen: React.FC = () => {
     return items;
   };
 
-  const parsePath = () => {
-    const segments = location.pathname.split("/").filter(Boolean);
-    const idx = segments.indexOf("dashboard");
-    let view = segments[idx + 1] || "welcome";
-    let userSlug = segments[idx + 2] || null;
-
-    if (view === "welcome") {
-      view = segments[idx + 2] || "welcome";
-      userSlug = segments[idx + 3] || null;
-    }
-    return { view, userSlug };
-  };
+  const parsePath = () => parseDashboardPath(location.pathname);
 
   const { view: initialView, userSlug: initialDMUserSlug } = parsePath();
   const [activeView, setActiveView] = useState<string>(initialView);

@@ -91,7 +91,7 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('../../../../shared/utils/api', () => ({
-  fetchGalleries: vi.fn(() => Promise.resolve([])),
+  fetchGalleries: vi.fn(),
   getFileUrl: vi.fn((key) => `https://example.com/${key}`),
   fileUrlsToKeys: vi.fn((urls) => urls && Array.isArray(urls) ? urls.map(url => url && typeof url === 'string' ? url.replace('https://example.com/', '') : '') : []),
 }));
@@ -132,10 +132,12 @@ const useNavigateMock = vi.mocked(useNavigate);
 
 describe('GalleryPage', () => {
   beforeEach(async () => {
-    const { default: GalleryPageImport } = await import('./GalleryPage');
-    GalleryPage = GalleryPageImport;
+    if (!GalleryPage) {
+      const { default: GalleryPageImport } = await import('./GalleryPage');
+      GalleryPage = GalleryPageImport;
+    }
     fetchGalleriesMock.mockResolvedValue([
-      { projectId: 'project-1', name: 'client 001', slug: 'client-001', updatedSvgUrl: '/test.svg', imageUrls: ['img1.png'] },
+      { projectId: '1', name: 'client 001', slug: 'client-001', updatedSvgUrl: '/test.svg', imageUrls: ['img1.png'] },
     ]);
     useParamsMock.mockReturnValue({ projectSlug: 'project-1', gallerySlug: 'client-001' });
     useNavigateMock.mockReturnValue(vi.fn());

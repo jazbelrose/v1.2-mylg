@@ -2,16 +2,8 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import EmailVerification from './EmailVerification';
-import {
-  confirmSignUp,
-  fetchAuthSession,
-  signIn,
-} from 'aws-amplify/auth';
-import { updateUserProfile } from '../../../../shared/utils/api';
-import { AuthProvider } from '@/app/contexts/AuthContext';
-import { DataProvider } from '@/app/contexts/DataProvider';
 
+// Mock dependencies before importing
 vi.mock('aws-amplify/auth', () => ({
   confirmSignUp: vi.fn().mockResolvedValue({ isSignUpComplete: true }),
   resendSignUpCode: vi.fn(),
@@ -19,12 +11,15 @@ vi.mock('aws-amplify/auth', () => ({
   fetchAuthSession: vi.fn().mockResolvedValue({
     tokens: { idToken: { payload: { sub: 'sub123', 'custom:userId': 'user123' } } },
   }),
+  getCurrentUser: vi.fn().mockResolvedValue({
+    userId: 'user123',
+    username: 'testuser',
+  }),
 }));
 
 vi.mock('../../../app/contexts/useData', () => ({
   useData: () => ({ opacity: 1 }),
 }));
-
 
 vi.mock('@/app/contexts/useAuth', () => ({
   useAuth: () => ({ validateAndSetUserSession: vi.fn() }),
@@ -35,10 +30,21 @@ vi.mock('../../../shared/utils/api', () => ({
 }));
 
 const mockNavigate = vi.fn();
+
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => ({ state: {} }),
 }));
+
+import EmailVerification from './EmailVerification';
+import {
+  confirmSignUp,
+  fetchAuthSession,
+  signIn,
+} from 'aws-amplify/auth';
+import { updateUserProfile } from '../../../../shared/utils/api';
+import { AuthProvider } from '@/app/contexts/AuthContext';
+import { DataProvider } from '@/app/contexts/DataProvider';
 
 // Cast the mocked fns for TS
 const mockedConfirmSignUp = confirmSignUp as ReturnType<typeof vi.fn>;
@@ -48,6 +54,7 @@ const mockedUpdateUserProfile = updateUserProfile as ReturnType<typeof vi.fn>;
 
 describe('EmailVerification', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     mockedConfirmSignUp.mockResolvedValue({ isSignUpComplete: true });
     mockedFetchAuthSession.mockResolvedValue({
       tokens: {
@@ -55,6 +62,7 @@ describe('EmailVerification', () => {
       },
     } as Awaited<ReturnType<typeof fetchAuthSession>>);
     mockedSignIn.mockResolvedValue({} as Awaited<ReturnType<typeof signIn>>);
+    mockedUpdateUserProfile.mockResolvedValue({ userId: 'user123' });
   });
 
   afterEach(() => {

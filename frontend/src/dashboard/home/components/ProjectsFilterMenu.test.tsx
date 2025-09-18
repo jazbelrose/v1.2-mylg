@@ -32,7 +32,7 @@ const createDropdownStub = <T,>(): DropdownHelpers<T> => ({
 });
 
 describe("ProjectsFilterMenu", () => {
-  it("renders scope toggle and triggers toggle handler", () => {
+  it("renders filter trigger and toggles menu", () => {
     const toggleFilters = vi.fn();
     const statusDropdown = createDropdownStub<string>();
     const sortDropdown = createDropdownStub<SortOption>();
@@ -42,8 +42,6 @@ describe("ProjectsFilterMenu", () => {
         filtersOpen={false}
         filtersRef={createRef<HTMLDivElement>()}
         filtersId="filters"
-        scope="recents"
-        onScopeChange={vi.fn()}
         query=""
         onQueryChange={vi.fn()}
         toggleFilters={toggleFilters}
@@ -57,8 +55,8 @@ describe("ProjectsFilterMenu", () => {
       />
     );
 
-    const scopeButton = screen.getByRole("button", { name: /recents/i });
-    fireEvent.click(scopeButton);
+    const filterButton = screen.getByRole("button", { name: /filter/i });
+    fireEvent.click(filterButton);
     expect(toggleFilters).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
@@ -97,8 +95,6 @@ describe("ProjectsFilterMenu", () => {
         filtersOpen
         filtersRef={createRef<HTMLDivElement>()}
         filtersId="filters"
-        scope="all"
-        onScopeChange={vi.fn()}
         query=""
         onQueryChange={vi.fn()}
         toggleFilters={vi.fn()}

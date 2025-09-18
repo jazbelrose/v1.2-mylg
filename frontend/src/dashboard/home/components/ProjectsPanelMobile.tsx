@@ -74,7 +74,6 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
   const [sortOption, setSortOption] = useState<SortOption>("dateNewest");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [query, setQuery] = useState<string>("");
-  const [scope, setScope] = useState<"recents" | "all">("recents");
   // Icons-only strip lives next to the title; main list remains compact list rows
 
   useEffect(() => {
@@ -141,11 +140,8 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
       _created: new Date(p.dateCreated || p.date || 0).getTime() || 0,
     }));
 
-    // Base ordering by scope
+    // Base ordering
     let ordered = list.slice();
-    if (scope === "recents") {
-      ordered.sort((a, b) => b._activity - a._activity);
-    }
 
     // Filters
     const q = query.trim().toLowerCase();
@@ -187,7 +183,7 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
     }
 
     return ordered;
-  }, [projects, sortOption, statusFilter, query, scope]);
+  }, [projects, sortOption, statusFilter, query]);
 
   const kpis = useProjectKpis(projects as ProjectLike[]);
 
@@ -223,8 +219,6 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
     if (action === "open") handleOpen(id);
     setMenuOpenId(null);
   };
-
-  const scopeLabel = scope === "recents" ? "Recents" : "All projects";
 
   return (
     <section
@@ -298,36 +292,11 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
             aria-haspopup="menu"
             onClick={() => setFiltersOpen((v) => !v)}
           >
-            {scopeLabel} <ChevronDown size={14} aria-hidden />
+            Filter <ChevronDown size={14} aria-hidden />
           </button>
           {filtersOpen && (
             <div className={styles.filterPop} role="menu">
               <div className={styles.filterSection}>
-                <div
-                  className={styles.scopeBtns}
-                  role="group"
-                  aria-label="Scope"
-                >
-                  <button
-                    type="button"
-                    className={`${styles.scopeBtn} ${
-                      scope === "recents" ? styles.scopeBtnActive : ""
-                    }`}
-                    onClick={() => setScope("recents")}
-                  >
-                    Recents
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.scopeBtn} ${
-                      scope === "all" ? styles.scopeBtnActive : ""
-                    }`}
-                    onClick={() => setScope("all")}
-                  >
-                    All projects
-                  </button>
-                </div>
-
                 <input
                   className={styles.input}
                   placeholder="Filter projects..."

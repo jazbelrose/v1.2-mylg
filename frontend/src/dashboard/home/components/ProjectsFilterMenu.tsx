@@ -11,8 +11,6 @@ type ProjectsFilterMenuProps = {
   filtersOpen: boolean;
   filtersRef: RefObject<HTMLDivElement>;
   filtersId: string;
-  scope: "recents" | "all";
-  onScopeChange: (scope: "recents" | "all") => void;
   query: string;
   onQueryChange: (value: string) => void;
   toggleFilters: () => void;
@@ -29,8 +27,6 @@ export const ProjectsFilterMenu: FC<ProjectsFilterMenuProps> = ({
   filtersOpen,
   filtersRef,
   filtersId,
-  scope,
-  onScopeChange,
   query,
   onQueryChange,
   toggleFilters,
@@ -56,32 +52,11 @@ export const ProjectsFilterMenu: FC<ProjectsFilterMenuProps> = ({
         aria-controls={filtersId}
         onClick={toggleFilters}
       >
-        {scope === "recents" ? "Recents" : "All projects"} <ChevronDown size={14} aria-hidden />
+        Filter <ChevronDown size={14} aria-hidden />
       </button>
       {filtersOpen && (
         <div className={mobileStyles.filterPop} role="menu" id={filtersId}>
           <div className={mobileStyles.filterSection}>
-            <div className={mobileStyles.scopeBtns} role="group" aria-label="Scope">
-              <button
-                type="button"
-                className={`${mobileStyles.scopeBtn} ${
-                  scope === "recents" ? mobileStyles.scopeBtnActive : ""
-                }`}
-                onClick={() => onScopeChange("recents")}
-              >
-                Recents
-              </button>
-              <button
-                type="button"
-                className={`${mobileStyles.scopeBtn} ${
-                  scope === "all" ? mobileStyles.scopeBtnActive : ""
-                }`}
-                onClick={() => onScopeChange("all")}
-              >
-                All projects
-              </button>
-            </div>
-
             <div className={desktopStyles.filterField}>
               <Search size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
               <input

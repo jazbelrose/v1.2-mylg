@@ -66,8 +66,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     filtersRef,
     filtersId,
     toggleFilters,
-    scope,
-    setScope,
     query,
     setQuery,
     statusOptions,
@@ -115,8 +113,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
           filtersOpen={filtersOpen}
           filtersRef={filtersRef}
           filtersId={filtersId}
-          scope={scope}
-          onScopeChange={setScope}
           query={query}
           onQueryChange={setQuery}
           toggleFilters={toggleFilters}

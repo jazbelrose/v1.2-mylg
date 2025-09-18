@@ -17,6 +17,17 @@ import UserProfilePicture from '../../../shared/ui/UserProfilePicture';
 import ProjectAvatar from '../../../shared/ui/ProjectAvatar';
 import './AdminUserManagement.css';
 
+const buildThumbnailSrc = (thumbnail?: string | null): string => {
+  if (!thumbnail) {
+    return '';
+  }
+
+  const [rawPath, ...queryParts] = thumbnail.split('?');
+  const query = queryParts.length ? `?${queryParts.join('?')}` : '';
+
+  return `${getFileUrl(rawPath)}${query}`;
+};
+
 if (typeof document !== 'undefined') {
   Modal.setAppElement('#root');
 }
@@ -492,7 +503,11 @@ export default function AdminUserManagement() {
                           onChange={() => toggleCollaboratorSelection(selectedUserId, u.userId)}
                         />
                         {u.thumbnail ? (
-                          <img src={getFileUrl(u.thumbnail)} alt="" className="collaborator-thumb" />
+                          <img
+                            src={buildThumbnailSrc(u.thumbnail)}
+                            alt=""
+                            className="collaborator-thumb"
+                          />
                         ) : (
                           <div className="collaborator-thumb" />
                         )}

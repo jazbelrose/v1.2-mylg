@@ -221,7 +221,7 @@
   }
 
   .welcome-header-right {
-    justify-content: center;
+    justify-content: flex-end;
     gap: 12px;
     width: 100%;
   }

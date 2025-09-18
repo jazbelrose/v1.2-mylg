@@ -480,6 +480,7 @@
   padding: 8px;
   box-shadow: 0 8px 24px rgba(0,0,0,.5);
   z-index: 1000;
+  color-scheme: dark;
 }
 
 .filterSection {
@@ -490,20 +491,54 @@
 .input,
 .select {
   width: 100%;
-  background: transparent;
+  background: rgba(255,255,255,.04);
   color: var(--text-color, #fff);
   border: 1px solid rgba(255,255,255,.16);
   border-radius: 8px;
-  padding: 6px 8px;
+  padding: 6px 32px 6px 10px;
   font-size: 13px;
+  line-height: 1.4;
+  transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
 }
 
-.scopeBtns {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+.input:hover,
+.select:hover {
+  border-color: rgba(255,255,255,.26);
+  background: rgba(255,255,255,.06);
 }
 
+.input {
+  padding: 6px 10px;
+}
+
+.input:focus-visible,
+.select:focus-visible {
+  outline: 2px auto var(--color-focus, #EB5DFA);
+  outline-offset: 2px;
+  border-color: rgba(235, 93, 250, .6);
+  box-shadow: 0 0 0 2px rgba(235, 93, 250, .18);
+}
+
+.select {
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  cursor: pointer;
+}
+
+.select option {
+  background: var(--bg2, #111111);
+  color: var(--text-color, #fff);
+}
+
+.select::-ms-expand {
+  display: none;
+}
 .scopeBtn {
   position: relative;
   border: 1px solid rgba(255,255,255,.14);

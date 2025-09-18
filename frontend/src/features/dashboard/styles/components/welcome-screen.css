@@ -81,7 +81,7 @@
   max-width: 100vw;
   overflow: visible; /* allow children (CTA) to be fully visible */
   align-items: stretch;
-  gap: 16px;
+ 
 
 }
 
@@ -91,7 +91,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  gap: 16px;
+  
 }
 
 .mobile-projects-section {

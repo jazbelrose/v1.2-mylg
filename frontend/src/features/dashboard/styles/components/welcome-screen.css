@@ -90,13 +90,14 @@
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
   gap: 16px;
 }
 
 .mobile-projects-section {
   flex: 1 1 auto;
   max-height: none;
-  overflow: visible;
+  overflow: hidden;
   padding: 0; /* remove outer grey wrapper */
   background: transparent;
   width: 100%;
@@ -111,6 +112,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .mobile-projects-panel > * {
@@ -123,6 +125,7 @@
   width: 100%;
   max-width: 100vw;
   overflow: visible;
+  margin-top: auto;
 }
 
 .dashboard-footer {
@@ -130,7 +133,7 @@
 }
 
 .mobile-calendar-section {
-  flex: 1 0 auto;
+  flex: 0 0 auto;
   min-height: 0;
   overflow: auto;
 

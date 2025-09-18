@@ -196,7 +196,6 @@
   position: relative;
 }
 
-.projects-list::before,
 .projects-list::after {
   content: "";
   position: sticky;
@@ -205,19 +204,6 @@
   height: 24px;
   pointer-events: none;
   z-index: 1;
-}
-
-.projects-list::before {
-  top: 0;
-  margin: -12px -16px 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(17, 17, 17, 1),
-    rgba(17, 17, 17, 0)
-  );
-}
-
-.projects-list::after {
   bottom: 0;
   margin: 0 -16px -32px;
   background: linear-gradient(
@@ -364,4 +350,11 @@
 .project-list-team {
   min-width: max-content;
   overflow: visible;
+}
+
+/* Mobile adjustments */
+@media (max-width: 576px) {
+  .projects-list {
+    padding: 0 16px;
+  }
 }

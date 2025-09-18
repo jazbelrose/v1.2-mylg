@@ -23,8 +23,8 @@ import {
   updateUserRole,
   POST_PROJECT_TO_USER_URL,
   apiFetch,
-  getFileUrl,
 } from "@/shared/utils/api";
+import { resolveStoredFileUrl } from "@/shared/utils/media";
 import UserProfilePicture from "@/shared/ui/UserProfilePicture";
 import styles from "./Collaborators.module.css";
 import "./admin-user-management.css";
@@ -84,6 +84,10 @@ interface EditValues {
   const [projectFilter, setProjectFilter] = useState('');
   const [collabFilter, setCollabFilter] = useState('');
   const [isSaveConfirmOpen, setIsSaveConfirmOpen] = useState(false);
+
+  const selectedUser = selectedUserId
+    ? allUsers.find((u) => u.userId === selectedUserId || u.username === selectedUserId)
+    : null;
 
   const collaborators = Array.isArray(userData?.collaborators)
     ? userData.collaborators
@@ -572,6 +576,7 @@ interface EditValues {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 16 }}>
               <UserProfilePicture
                 thumbnail={editValues[selectedUserId]?.thumbnail || ''}
+                thumbnailUrl={selectedUser?.thumbnailUrl as string | undefined}
                 localPreview={localPreviews[selectedUserId]}
                 onChange={(e) => handleThumbnailChange(e, selectedUserId)}
               />
@@ -767,9 +772,11 @@ interface EditValues {
                           checked={checked}
                           onChange={() => toggleCollaboratorSelection(selectedUserId, u.userId)}
                         />
-                        {u.thumbnail ? (
+                        {u.thumbnail || u.thumbnailUrl ? (
                           <img
-                            src={getFileUrl(`${u.thumbnail}?t=${thumbCacheBust}`)}
+                            src={resolveStoredFileUrl(u.thumbnail, u.thumbnailUrl as string | undefined, {
+                              cacheBust: thumbCacheBust,
+                            })}
                             alt=""
                             className="collaborator-thumb"
                           />

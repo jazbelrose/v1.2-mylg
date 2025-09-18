@@ -11,22 +11,11 @@ import {
   POST_PROJECT_TO_USER_URL,
   apiFetch,
   UserProfile,
-  getFileUrl,
 } from '../../../shared/utils/api';
+import { resolveStoredFileUrl } from '../../../shared/utils/media';
 import UserProfilePicture from '../../../shared/ui/UserProfilePicture';
 import ProjectAvatar from '../../../shared/ui/ProjectAvatar';
 import './AdminUserManagement.css';
-
-const buildThumbnailSrc = (thumbnail?: string | null): string => {
-  if (!thumbnail) {
-    return '';
-  }
-
-  const [rawPath, ...queryParts] = thumbnail.split('?');
-  const query = queryParts.length ? `?${queryParts.join('?')}` : '';
-
-  return `${getFileUrl(rawPath)}${query}`;
-};
 
 if (typeof document !== 'undefined') {
   Modal.setAppElement('#root');
@@ -95,6 +84,10 @@ export default function AdminUserManagement() {
   const [projectFilter, setProjectFilter] = useState('');
   const [collabFilter, setCollabFilter] = useState('');
   const [isSaveConfirmOpen, setIsSaveConfirmOpen] = useState(false);
+
+  const selectedUser = selectedUserId
+    ? allUsers.find((u) => u.userId === selectedUserId)
+    : null;
 
   const openModalForUser = (userId: string) => {
     const ids = projects
@@ -393,6 +386,7 @@ export default function AdminUserManagement() {
           <div className="admin-modal-form">
             <UserProfilePicture
               thumbnail={editValues[selectedUserId]?.thumbnail || ''}
+              thumbnailUrl={selectedUser?.thumbnailUrl || undefined}
               localPreview={localPreviews[selectedUserId]}
               onChange={handleThumbnailChange}
             />
@@ -502,9 +496,9 @@ export default function AdminUserManagement() {
                           checked={checked}
                           onChange={() => toggleCollaboratorSelection(selectedUserId, u.userId)}
                         />
-                        {u.thumbnail ? (
+                        {u.thumbnail || u.thumbnailUrl ? (
                           <img
-                            src={buildThumbnailSrc(u.thumbnail)}
+                            src={resolveStoredFileUrl(u.thumbnail, u.thumbnailUrl as string | undefined)}
                             alt=""
                             className="collaborator-thumb"
                           />

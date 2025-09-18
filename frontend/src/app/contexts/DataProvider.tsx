@@ -18,6 +18,7 @@ export interface UserLite {
   messages?: Message[];
   pending?: boolean;
   thumbnail?: string;
+  thumbnailUrl?: string;
   phoneNumber?: string;
   company?: string;
   collaborators?: string[];

@@ -9,6 +9,7 @@ import PaymentsSection from "@/dashboard/home/components/paymentsection";
 import EditableTextField from "@/shared/ui/EditableTextField";
 import UserProfilePicture from "@/shared/ui/UserProfilePicture";
 import { HelpCircle } from "lucide-react";
+import { resolveStoredFileUrl } from "@/shared/utils/media";
 
 type RoleKey = "admin" | "designer" | "builder" | "vendor" | "client" | "";
 
@@ -208,7 +209,11 @@ const Settings: React.FC = () => {
       };
 
       await updateUserProfile(updatedUserData);
-      setUserData(updatedUserData);
+      const thumbnailUrl = resolveStoredFileUrl(updatedUserData.thumbnail) || undefined;
+      setUserData({
+        ...updatedUserData,
+        thumbnailUrl,
+      });
       toggleSettingsUpdated();
       setShowSavedWindow(true);
       toast.success("Saved. Nice.");
@@ -244,6 +249,7 @@ const Settings: React.FC = () => {
             <div className="settings-row">
               <UserProfilePicture
                 thumbnail={thumbnail}
+                thumbnailUrl={userData?.thumbnailUrl as string | undefined}
                 localPreview={localPreview || undefined}
                 onChange={handleThumbnailChange}
               />

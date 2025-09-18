@@ -12,9 +12,19 @@ import {
   fetchUserProfile as fetchUserProfileApi,
   updateUserProfile,
 } from "../../shared/utils/api";
+import { resolveStoredFileUrl } from "@/shared/utils/media";
 import { UserContext } from "./UserContext";
 import type { UserContextValue } from "./UserContextValue";
 import type { UserLite } from "./DataProvider";
+
+const mapUserLite = (user: UserLite): UserLite => {
+  const thumbnailUrl = resolveStoredFileUrl(user.thumbnail as string | undefined);
+  return {
+    ...user,
+    occupation: user.occupation || user.role,
+    thumbnailUrl: thumbnailUrl || undefined,
+  };
+};
 
 export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
@@ -28,7 +38,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
       try {
         const users = await fetchAllUsers();
         const mapped = Array.isArray(users)
-          ? (users as UserLite[]).map((u) => ({ ...u, occupation: u.occupation || u.role }))
+          ? (users as UserLite[]).map((u) => mapUserLite(u))
           : [];
         setAllUsers(mapped);
       } catch (error) {
@@ -44,7 +54,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
     try {
       const users = await fetchAllUsers();
       const mapped = Array.isArray(users)
-        ? (users as UserLite[]).map((u) => ({ ...u, occupation: u.occupation || u.role }))
+        ? (users as UserLite[]).map((u) => mapUserLite(u))
         : [];
       setAllUsers(mapped);
     } catch (error) {
@@ -61,10 +71,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
     try {
       const profile = await fetchUserProfileApi(userId);
       const mappedProfile = profile
-        ? ({
-            ...profile,
-            occupation: (profile as UserLite).occupation || (profile as UserLite).role,
-          } as UserLite)
+        ? mapUserLite(profile as UserLite)
         : null;
 
       setUser({

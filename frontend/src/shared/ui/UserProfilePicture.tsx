@@ -1,16 +1,18 @@
 import React from 'react';
 
 import User from '@/assets/svg/user.svg?react';
-import { getFileUrl } from '../utils/api';
+import { resolveStoredFileUrl } from '../utils/media';
 
 export interface UserProfilePictureProps {
   thumbnail?: string | null;
+  thumbnailUrl?: string | null;
   localPreview?: string | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const UserProfilePicture: React.FC<UserProfilePictureProps> = ({
   thumbnail,
+  thumbnailUrl,
   localPreview,
   onChange,
 }) => {
@@ -19,20 +21,8 @@ const UserProfilePicture: React.FC<UserProfilePictureProps> = ({
       return localPreview;
     }
 
-    if (!thumbnail) {
-      return '';
-    }
-
-    const [rawPath, ...queryParts] = thumbnail.split('?');
-    const cacheBuster = queryParts.length ? `?${queryParts.join('?')}` : '';
-    const path = rawPath.trim();
-
-    if (!path) {
-      return '';
-    }
-
-    return `${getFileUrl(path)}${cacheBuster}`;
-  }, [localPreview, thumbnail]);
+    return resolveStoredFileUrl(thumbnail ?? undefined, thumbnailUrl ?? undefined);
+  }, [localPreview, thumbnail, thumbnailUrl]);
 
   return (
     <div className="form-group thumbnail-group">

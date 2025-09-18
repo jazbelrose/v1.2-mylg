@@ -35,12 +35,13 @@
 
 /* Project messages panel */
 .project-messages {
-  flex: 3;
+  flex: 1 1 55%;
+  max-width: clamp(360px, 55%, 640px);
   min-height: 0;
   display: flex;
   flex-direction: column;
   padding-right: 5px;
-  
+
   border-radius: 20px;
   padding: 16px;
   background: rgba(255, 255, 255, 0.02);
@@ -63,6 +64,15 @@
 
 .project-messages.floating {
   min-width: 350px;
+  max-width: none;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1200px) {
+  .project-messages {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
 }
 
 .project-messages .messages-inner {

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useData } from "@/app/contexts/useData";
 import { UserLite } from "@/app/contexts/DataProvider";
 import { slugify } from "@/shared/utils/slug";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import { prefetchBudgetData } from "@/dashboard/project/features/budget/context/useBudget";
 import WelcomeHeader from "@/dashboard/home/components/WelcomeHeader";
 import AllProjects from "@/dashboard/home/components/AllProjects";
@@ -220,8 +221,7 @@ const WelcomeScreen: React.FC = () => {
     }
 
     const proj = projects.find((p: Project) => p.projectId === projectId);
-    const slug = proj ? slugify(proj.title) : projectId;
-    const path = `/dashboard/projects/${slug}`;
+    const path = getProjectDashboardPath(projectId, proj?.title);
 
     navigate(path);
 

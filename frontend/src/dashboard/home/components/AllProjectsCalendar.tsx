@@ -10,13 +10,13 @@ import "react-calendar/dist/Calendar.css";
 import { useData } from "@/app/contexts/useData";
 import "./AllProjectsCalendar.css";
 import { useNavigate } from "react-router-dom";
-import { slugify } from "@/shared/utils/slug";
 import { getColor } from "@/shared/utils/colorUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { TimelineEvent } from "@/shared/utils/api";
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { WeekWidget } from "./WeekWidget";
 import { getFileUrl } from "../../../shared/utils/api";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 
 // --- Types ---
 type Project = {
@@ -99,8 +99,7 @@ const AllProjectsCalendar: React.FC = () => {
 
   const handleProjectClick = async (project: Project, flashDate?: string) => {
     await fetchProjectDetails(project.projectId);
-    const slug = slugify(project.title ?? "");
-    navigate(`/dashboard/projects/${slug}`, {
+    navigate(getProjectDashboardPath(project.projectId, project.title), {
       state: flashDate ? { flashDate } : undefined,
     });
   };

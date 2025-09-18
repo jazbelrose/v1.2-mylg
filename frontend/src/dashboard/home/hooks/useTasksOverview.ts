@@ -5,7 +5,7 @@ import { useData } from "@/app/contexts/useData";
 import type { Project } from "@/app/contexts/DataProvider";
 import { fetchTasks } from "@/shared/utils/api";
 import { getColor } from "@/shared/utils/colorUtils";
-import { slugify } from "@/shared/utils/slug";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import pLimit from "@/shared/utils/pLimit";
 import { endOfWeek, startOfWeek } from "@/dashboard/home/utils/dateUtils";
 
@@ -231,17 +231,6 @@ export function useTasksOverview() {
     };
   }, [projects]);
 
-  const projectSlugMap = useMemo(() => {
-    const map = new Map<string, string>();
-    projects.forEach((project) => {
-      if (project?.projectId) {
-        const slug = slugify(project.title || project.projectId);
-        map.set(project.projectId, slug);
-      }
-    });
-    return map;
-  }, [projects]);
-
   const { completed, dueSoon, overdue, groups, primaryProjectId } = useMemo(() => {
     const now = new Date();
     const weekStart = startOfWeek(now);
@@ -348,9 +337,9 @@ export function useTasksOverview() {
       return;
     }
 
-    const slug = projectSlugMap.get(primaryProjectId) ?? primaryProjectId;
-    navigate(`/dashboard/projects/${slug}`);
-  }, [navigate, primaryProjectId, projectSlugMap]);
+    const project = projectMap.get(primaryProjectId);
+    navigate(getProjectDashboardPath(primaryProjectId, project?.title));
+  }, [navigate, primaryProjectId, projectMap]);
 
   const handleViewAll = useCallback(() => {
     navigate("/dashboard/projects");

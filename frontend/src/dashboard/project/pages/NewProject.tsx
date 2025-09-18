@@ -11,8 +11,8 @@ import NewProjectDescription from "@/dashboard/project/components/NewProjectDesc
 import { useData } from "@/app/contexts/useData";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import { slugify } from "@/shared/utils/slug";
 import { parseBudget } from "@/shared/utils/budgetUtils";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import {
   POST_PROJECTS_URL,
   POST_PROJECT_TO_USER_URL,
@@ -280,8 +280,7 @@ const NewProject: React.FC = () => {
 
     // Set active & navigate
     setActiveProject(newProject);
-    const slug = slugify(newProject.title);
-    navigate(`/dashboard/projects/${slug}`);
+    navigate(getProjectDashboardPath(newProject.projectId, newProject.title));
   };
 
   useEffect(() => {

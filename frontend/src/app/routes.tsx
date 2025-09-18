@@ -165,8 +165,8 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           } 
         />
         
-        <Route 
-          path="/dashboard/*" 
+        <Route
+          path="/dashboard/*"
           element={
             <ProtectedRoute>
               <Dashboard />
@@ -174,13 +174,25 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           }
         >
           <Route
-            path="projects/:projectSlug"
+            path="projects/:projectId/:projectName?"
             element={<DashboardSingleProject key={location.key} />}
           />
-          <Route path="projects/:projectSlug/budget" element={<DashboardBudgetPage />} />
-          <Route path="projects/:projectSlug/calendar" element={<DashboardCalendarPage />} />
-          <Route path="projects/:projectSlug/moodboard" element={<DashboardMoodboardPage />} />
-          <Route path="projects/:projectSlug/editor" element={<DashboardEditorPage />} />
+          <Route
+            path="projects/:projectId/:projectName?/budget"
+            element={<DashboardBudgetPage />}
+          />
+          <Route
+            path="projects/:projectId/:projectName?/calendar"
+            element={<DashboardCalendarPage />}
+          />
+          <Route
+            path="projects/:projectId/:projectName?/moodboard"
+            element={<DashboardMoodboardPage />}
+          />
+          <Route
+            path="projects/:projectId/:projectName?/editor"
+            element={<DashboardEditorPage />}
+          />
           <Route path="new" element={<DashboardNewProject />} />
           <Route path="welcome/*" element={<Navigate to=".." replace />} />
           <Route path="*" element={<DashboardWelcome />} />

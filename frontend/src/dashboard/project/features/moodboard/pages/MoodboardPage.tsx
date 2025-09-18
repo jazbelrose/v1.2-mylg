@@ -1,21 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import ProjectPageLayout from "@/dashboard/project/components/ProjectPageLayout";
 import ProjectHeader from "@/dashboard/project/components/ProjectHeader";
 import MoodboardCanvas from "../components/MoodboardCanvas";
 import { useData } from "@/app/contexts/useData";
-import { findProjectBySlug, slugify } from "@/shared/utils/slug";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import type { Project } from "@/app/contexts/DataProvider";
 import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 
 const MoodboardPage: React.FC = () => {
-  const { projectSlug = "" } = useParams<{ projectSlug: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     activeProject: initialProject,
-    projects,
     fetchProjectDetails,
     setProjects,
     setSelectedProjects,
@@ -32,27 +32,30 @@ const MoodboardPage: React.FC = () => {
   }, [initialProject]);
 
   useEffect(() => {
-    if (!projectSlug) return;
-    const matchesSlug =
-      activeProject?.title && slugify(activeProject.title) === projectSlug;
-    if (matchesSlug) return;
-    const fromList = findProjectBySlug(projects, projectSlug);
-    if (fromList && fromList.projectId) {
-      void fetchProjectDetails(fromList.projectId);
-    } else if (initialProject?.title) {
-      navigate(`/dashboard/projects/${slugify(initialProject.title)}/moodboard`, {
-        replace: true,
-      });
-    } else {
-      navigate("/dashboard/projects");
+    if (!projectId) return;
+    if (!initialProject || initialProject.projectId !== projectId) {
+      void fetchProjectDetails(projectId);
     }
+  }, [projectId, initialProject?.projectId, fetchProjectDetails]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    const title = activeProject?.title ?? initialProject?.title;
+    if (!title) return;
+
+    const currentPath = location.pathname.split(/[?#]/)[0];
+    if (!currentPath.includes("/moodboard")) return;
+
+    const canonicalPath = getProjectDashboardPath(projectId, title, "/moodboard");
+    if (currentPath === canonicalPath) return;
+
+    navigate(canonicalPath, { replace: true });
   }, [
+    projectId,
     activeProject?.title,
-    fetchProjectDetails,
     initialProject?.title,
+    location.pathname,
     navigate,
-    projectSlug,
-    projects,
   ]);
 
   useEffect(() => {
@@ -84,33 +87,33 @@ const MoodboardPage: React.FC = () => {
     navigate("/dashboard");
   }, [navigate]);
 
-  const projectId = activeProject?.projectId ?? "";
+  const resolvedProjectId = activeProject?.projectId ?? "";
   const currentUserId = userId ?? "";
 
   const board = useMemo(
     () => (
       <AnimatePresence mode="wait">
         <motion.div
-          key={projectId || "moodboard"}
+          key={resolvedProjectId || "moodboard"}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -24 }}
           transition={{ duration: 0.25 }}
         >
           <MoodboardCanvas
-            projectId={projectId}
+            projectId={resolvedProjectId}
             userId={currentUserId}
             palette={projectPalette}
           />
         </motion.div>
       </AnimatePresence>
     ),
-    [currentUserId, projectId, projectPalette]
+    [currentUserId, resolvedProjectId, projectPalette]
   );
 
   return (
     <ProjectPageLayout
-      projectId={projectId}
+      projectId={resolvedProjectId}
       theme={projectPalette}
       header={
         <ProjectHeader

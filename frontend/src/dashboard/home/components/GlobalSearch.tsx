@@ -3,6 +3,7 @@ import { Search, X, FileText, FolderOpen, MessageSquare, User } from 'lucide-rea
 import { useData } from '@/app/contexts/useData';
 import { useNavigate } from 'react-router-dom';
 import { slugify } from '@/shared/utils/slug';
+import { getProjectDashboardPath } from '@/shared/utils/projectUrl';
 import type { Project, Message, UserLite } from '@/app/contexts/DataProvider';
 import { getFileUrl } from '@/shared/utils/api';
 import type { AppUser } from '@/dashboard/features/messages/types';
@@ -531,8 +532,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate 
           await fetchProjectDetails(result.projectId);
         }
         const project = projects?.find((p: Project) => p.projectId === result.projectId);
-        const slug = slugify(project?.title || result.title);
-        navigate(`/dashboard/projects/${slug}`);
+        const path = getProjectDashboardPath(result.projectId, project?.title ?? result.title);
+        navigate(path);
       } catch (error) {
         console.error('Error navigating to project:', error);
       }
@@ -542,8 +543,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate 
           await fetchProjectDetails(result.projectId);
         }
         const project = projects?.find((p: Project) => p.projectId === result.projectId);
-        const slug = slugify(project?.title || 'project');
-        navigate(`/dashboard/projects/${slug}`, {
+        const path = getProjectDashboardPath(result.projectId, project?.title ?? result.title);
+        navigate(path, {
           state: { highlightMessage: result.messageId }
         });
       } catch (error) {

@@ -17,10 +17,10 @@ import { useData } from "@/app/contexts/useData";
 import { useSocket } from "@/app/contexts/useSocket";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { findProjectBySlug, slugify } from "@/shared/utils/slug";
 import type { Project } from "@/app/contexts/DataProvider";
 import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 
 interface QuickLinksRef {
   openModal: () => void;
@@ -34,7 +34,6 @@ const SingleProject: React.FC = () => {
   const {
     activeProject,
     userId,
-    projects,
     fetchProjectDetails,
     setProjects,
     setSelectedProjects,
@@ -44,18 +43,27 @@ const SingleProject: React.FC = () => {
   const location = useLocation();
   const flashDate = (location.state as LocationState)?.flashDate;
 
-  const { projectSlug } = useParams<{ projectSlug: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const [filesOpen, setFilesOpen] = useState<boolean>(false);
   const quickLinksRef = useRef<QuickLinksRef>(null);
   const { ws } = useSocket();
 
+  const projectNameFromPath = useMemo(() => {
+    const segments = location.pathname.split("/").filter(Boolean);
+    const projectsIdx = segments.indexOf("projects");
+    if (projectsIdx === -1) return undefined;
+    const rawSegment = segments[projectsIdx + 2];
+    if (!rawSegment) return undefined;
+    const cleanSegment = rawSegment.split(/[?#]/)[0] ?? "";
+    try {
+      return decodeURIComponent(cleanSegment);
+    } catch {
+      return cleanSegment;
+    }
+  }, [location.pathname]);
+
   // Stable helpers
   const noop = useCallback(() => {}, []);
-
-  const currentSlug = useMemo(
-    () => (activeProject?.title ? slugify(activeProject.title) : null),
-    [activeProject?.title]
-  );
 
   const parseStatusToNumber = useCallback((status: unknown): number => {
     if (status === undefined || status === null) return 0;
@@ -73,8 +81,9 @@ const SingleProject: React.FC = () => {
 
   const openCalendarPage = useCallback(() => {
     if (!activeProject) return;
-    const slug = slugify(activeProject.title);
-    navigate(`/dashboard/projects/${slug}/calendar`);
+    navigate(
+      getProjectDashboardPath(activeProject.projectId, activeProject.title, "/calendar")
+    );
   }, [activeProject, navigate]);
 
   const handleProjectDeleted = useCallback(
@@ -96,25 +105,34 @@ const SingleProject: React.FC = () => {
     [fetchProjectDetails]
   );
 
-  // Keep URL and active project in sync with the slug the user visited.
+  // Keep the active project in sync with the ID from the route.
   useEffect(() => {
-    if (!projectSlug) return;
+    if (!projectId) return;
+    if (activeProject?.projectId === projectId) return;
+    fetchProjectDetails(projectId);
+  }, [projectId, activeProject?.projectId, fetchProjectDetails]);
 
-    // If we're already viewing the right project, nothing to do.
-    if (currentSlug === projectSlug) return;
+  useEffect(() => {
+    if (!projectId) return;
+    if (activeProject?.projectId !== projectId) return;
 
-    // Try to locate the project by slug and load it if it's different from the active one.
-    const proj = findProjectBySlug(projects, projectSlug);
-    if (proj && proj.projectId !== activeProject?.projectId) {
-      fetchProjectDetails(proj.projectId as string);
-    }
+    const title = activeProject?.title;
+    if (!title) return;
+
+    if (projectNameFromPath === title) return;
+
+    const canonicalPath = getProjectDashboardPath(projectId, title);
+    const currentPath = location.pathname.split(/[?#]/)[0];
+    if (currentPath === canonicalPath) return;
+
+    navigate(canonicalPath, { replace: true });
   }, [
-    projectSlug,
-    currentSlug,
-    projects,
-    fetchProjectDetails,
+    projectId,
     activeProject?.projectId,
-    location.key,
+    activeProject?.title,
+    projectNameFromPath,
+    navigate,
+    location.pathname,
   ]);
 
   // Ensure team/details are loaded for the current project.

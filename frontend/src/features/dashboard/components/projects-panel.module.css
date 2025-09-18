@@ -458,7 +458,7 @@
   position: absolute;
   right: 0;
   top: 28px;
-  min-width: 140px;
+  min-width: 3200px;
   background: var(--bg2, #111111);
   border: 1px solid rgba(255, 255, 255, .08);
   border-radius: 10px;

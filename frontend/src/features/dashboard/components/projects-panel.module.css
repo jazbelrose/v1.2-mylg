@@ -582,6 +582,7 @@
   .kpis {
     margin-left: auto;
     justify-content: flex-end;
+    overflow-x: visible;
   }
 }
 

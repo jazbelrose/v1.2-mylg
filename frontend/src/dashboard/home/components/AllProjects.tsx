@@ -8,7 +8,7 @@ import SVGThumbnail from './SvgThumbnail';
 import { useData } from '@/app/contexts/useData';
 import Spinner from '../../../shared/ui/Spinner';
 import { useNavigate } from 'react-router-dom';
-import { slugify } from '../../../shared/utils/slug';
+import { getProjectDashboardPath } from '@/shared/utils/projectUrl';
 import AvatarStack from '../../../shared/ui/AvatarStack';
 import type { UserLite, TeamMember } from '../../../app/contexts/DataProvider';
 import {
@@ -117,12 +117,7 @@ const AllProjects: React.FC = () => {
   }, [isLoading, projects.length, projectsError, fetchProjects]);
 
   const onSelectProject = (project: Project): void => {
-    const safeTitle =
-      (project.title && project.title.trim()) ||
-      `project-${project.projectId.slice(0, 6)}`;
-    const slug = slugify(safeTitle);
-
-    navigate(`/dashboard/projects/${slug}`);
+    navigate(getProjectDashboardPath(project.projectId, project.title));
 
     const fetchPromise = fetchProjectDetails(project.projectId).catch((err) => {
       console.error('Error loading project', err);

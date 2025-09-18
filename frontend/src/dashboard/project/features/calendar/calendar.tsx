@@ -7,8 +7,8 @@ import QuickLinksComponent from '@/dashboard/project/components/QuickLinksCompon
 import FileManagerComponent from '@/dashboard/project/components/FileManager';
 import { useData } from '@/app/contexts/useData';
 import { useSocket } from '@/app/contexts/SocketContext';
-import { useNavigate, useParams } from 'react-router-dom';
-import { findProjectBySlug, slugify } from '@/shared/utils/slug';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { getProjectDashboardPath } from '@/shared/utils/projectUrl';
 import { BudgetProvider } from '@/dashboard/project/features/budget/context/BudgetProvider';
 import type { Project } from '@/app/contexts/DataProvider';
 import type { QuickLinksRef } from '@/dashboard/project/components/QuickLinksComponent';
@@ -46,12 +46,12 @@ type ProjectCalendarProject = {
 };
 
 const CalendarPage: React.FC = () => {
-  const { projectSlug } = useParams<{ projectSlug: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     activeProject: initialActiveProject,
-    projects,
     fetchProjectDetails,
     setProjects,
     setSelectedProjects,
@@ -73,17 +73,32 @@ const CalendarPage: React.FC = () => {
   }, [initialActiveProject]);
 
   useEffect(() => {
-    if (!initialActiveProject) return;
-
-    if (slugify((initialActiveProject as Project).title) !== projectSlug) {
-      const proj = findProjectBySlug(projects, projectSlug || '');
-      if (proj) {
-        fetchProjectDetails(proj.projectId);
-      } else {
-        navigate(`/dashboard/projects/${slugify((initialActiveProject as Project).title)}`);
-      }
+    if (!projectId) return;
+    if (!initialActiveProject || (initialActiveProject as Project).projectId !== projectId) {
+      fetchProjectDetails(projectId);
     }
-  }, [projectSlug, projects, initialActiveProject, navigate, fetchProjectDetails]);
+  }, [projectId, initialActiveProject, fetchProjectDetails]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    const title =
+      (activeProject as Project | null)?.title || (initialActiveProject as Project | null)?.title;
+    if (!title) return;
+
+    const currentPath = location.pathname.split(/[?#]/)[0];
+    if (!currentPath.includes('/calendar')) return;
+
+    const canonicalPath = getProjectDashboardPath(projectId, title, '/calendar');
+    if (currentPath === canonicalPath) return;
+
+    navigate(canonicalPath, { replace: true });
+  }, [
+    projectId,
+    activeProject,
+    initialActiveProject,
+    location.pathname,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (!ws || !activeProject?.projectId) return;
@@ -126,7 +141,14 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate(`/dashboard/projects/${projectSlug}`);
+    if (!projectId) {
+      navigate('/dashboard/projects');
+      return;
+    }
+
+    const title =
+      (activeProject as Project | null)?.title || (initialActiveProject as Project | null)?.title;
+    navigate(getProjectDashboardPath(projectId, title));
   };
 
   const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);

@@ -31,7 +31,7 @@ import { BudgetProvider} from "@/dashboard/project/features/budget/context/Budge
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { useData } from "@/app/contexts/useData";
 import type { Project, TimelineEvent } from "@/app/contexts/DataProvider";
-import { findProjectBySlug, slugify } from "@/shared/utils/slug";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 import {
@@ -48,12 +48,11 @@ const TABLE_BOTTOM_MARGIN = 20;
 
 // Inner component that uses the budget context
 const BudgetPageContent = () => {
-  const { projectSlug } = useParams();
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const {
     activeProject: initialActiveProject,
-    projects,
     fetchProjectDetails,
     user,
     userId,
@@ -122,25 +121,40 @@ const BudgetPageContent = () => {
   }, [initialActiveProject]);
 
   useEffect(() => {
-    if (!initialActiveProject) return;
-    if (slugify(initialActiveProject.title) !== projectSlug) {
-      const proj = findProjectBySlug(projects, projectSlug);
-      if (proj) {
-        fetchProjectDetails(proj.projectId as string);
-      } else {
-        navigate(`/dashboard/projects/${slugify(initialActiveProject.title)}`);
-      }
+    if (!projectId) return;
+    if (!initialActiveProject || initialActiveProject.projectId !== projectId) {
+      fetchProjectDetails(projectId);
     }
+  }, [projectId, initialActiveProject?.projectId, fetchProjectDetails]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    const title = activeProject?.title ?? initialActiveProject?.title;
+    if (!title) return;
+
+    const currentPath = location.pathname.split(/[?#]/)[0];
+    if (!currentPath.includes("/budget")) return;
+
+    const canonicalPath = getProjectDashboardPath(projectId, title, "/budget");
+    if (currentPath === canonicalPath) return;
+
+    navigate(canonicalPath, { replace: true });
   }, [
-    projectSlug,
-    projects,
-    initialActiveProject,
+    projectId,
+    activeProject?.title,
+    initialActiveProject?.title,
+    location.pathname,
     navigate,
-    fetchProjectDetails,
   ]);
 
   const handleBack = () => {
-    navigate(`/dashboard/projects/${projectSlug}`);
+    if (!projectId) {
+      navigate("/dashboard/projects");
+      return;
+    }
+
+    const title = activeProject?.title ?? initialActiveProject?.title;
+    navigate(getProjectDashboardPath(projectId, title));
   };
 
   const parseStatusToNumber = (statusString) => {

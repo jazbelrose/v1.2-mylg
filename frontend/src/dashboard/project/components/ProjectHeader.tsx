@@ -33,7 +33,7 @@ import { uploadData } from "aws-amplify/storage";
 import { useData } from "@/app/contexts/useData";
 import { useSocket } from "@/app/contexts/useSocket";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { slugify, findProjectBySlug } from "@/shared/utils/slug";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import { HexColorPicker, HexColorInput } from "react-colorful";
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
@@ -116,7 +116,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   const { ws } = useSocket() || {};
   const { refreshUser } = useData();
   const navigate = useNavigate();
-  const { projectSlug = "" } = useParams();
+  const { projectId = "" } = useParams<{ projectId: string }>();
 
   const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -152,22 +152,25 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     setClientEmail(toString(activeProject?.clientEmail));
   }, [activeProject]);
 
-  // Update URL slug when project title changes locally or via WebSocket
+  // Update URL when project title changes locally or via WebSocket
   useEffect(() => {
     if (!localActiveProject?.title || !localActiveProject.projectId) return;
-    const slug = slugify(localActiveProject.title);
-    if (slug !== projectSlug) {
-      const project = findProjectBySlug(projects, projectSlug);
-      if (!project || project.projectId === localActiveProject.projectId) {
-        navigate(`/dashboard/projects/${slug}`, { replace: true });
-      }
-    }
+    if (!projectId || localActiveProject.projectId !== projectId) return;
+
+    const canonicalPath = getProjectDashboardPath(
+      localActiveProject.projectId,
+      localActiveProject.title
+    );
+    const currentPath = location.pathname.split(/[?#]/)[0];
+    if (currentPath === canonicalPath) return;
+
+    navigate(canonicalPath, { replace: true });
   }, [
     localActiveProject?.title,
     localActiveProject?.projectId,
-    projectSlug,
-    projects,
+    projectId,
     navigate,
+    location.pathname,
   ]);
 
   // Derive project initial
@@ -377,10 +380,10 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   // --------------------------
   // Team avatars
   // --------------------------
-  const projectId = activeProject?.projectId;
+  const activeProjectId = activeProject?.projectId;
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(
-    projectId && teamMembersCache.has(projectId)
-      ? (teamMembersCache.get(projectId) as TeamMember[])
+    activeProjectId && teamMembersCache.has(activeProjectId)
+      ? (teamMembersCache.get(activeProjectId) as TeamMember[])
       : []
   );
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
@@ -389,13 +392,13 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     let isMounted = true;
     const load = async () => {
       if (
-        !projectId ||
+        !activeProjectId ||
         !localActiveProject ||
         !Array.isArray(localActiveProject.team)
       ) {
         if (isMounted) {
           setTeamMembers([]);
-          if (projectId) teamMembersCache.set(projectId, []);
+          if (activeProjectId) teamMembersCache.set(activeProjectId, []);
         }
         return;
       }
@@ -414,12 +417,12 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         });
         if (isMounted) {
           setTeamMembers(results);
-          teamMembersCache.set(projectId, results);
+          teamMembersCache.set(activeProjectId, results);
         }
       } catch {
         if (isMounted) {
           setTeamMembers([]);
-          teamMembersCache.set(projectId, []);
+          teamMembersCache.set(activeProjectId, []);
         }
       }
     };
@@ -1061,7 +1064,10 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
           <div className="right-side">
             <div className="project-nav-tabs" style={{ padding: "0 10px 10px" }}>
-              <ProjectTabs projectSlug={projectSlug} />
+              <ProjectTabs
+                projectId={localActiveProject?.projectId || projectId}
+                projectTitle={localActiveProject?.title}
+              />
             </div>
           </div>
         </div>
@@ -1683,7 +1689,12 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 // -----------------------
 // Project Tabs Component
 // -----------------------
-const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
+interface ProjectTabsProps {
+  projectId: string;
+  projectTitle?: string | null;
+}
+
+const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const tabRefs = useRef<HTMLButtonElement[]>([]);
@@ -1691,7 +1702,7 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
     { width: 0, left: 0 }
   );
   const [transitionEnabled, setTransitionEnabled] = useState(false);
-  const storageKey = `project-tabs-prev:${projectSlug}`;
+  const storageKey = `project-tabs-prev:${projectId || "unknown"}`;
 
   const { user } = useData();
   const isAdmin = user?.role === "admin";
@@ -1701,7 +1712,22 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
   const showMoodboardTab = isAdmin || isDesigner;
   const showEditorTab = isAdmin || isDesigner;
 
-  const basePath = `/dashboard/projects/${projectSlug}`;
+  const hasProject = Boolean(projectId);
+  const basePath = hasProject
+    ? getProjectDashboardPath(projectId, projectTitle ?? undefined)
+    : "/dashboard/projects";
+  const budgetPath = hasProject
+    ? getProjectDashboardPath(projectId, projectTitle ?? undefined, "/budget")
+    : "/dashboard/projects";
+  const calendarPath = hasProject
+    ? getProjectDashboardPath(projectId, projectTitle ?? undefined, "/calendar")
+    : "/dashboard/projects";
+  const moodboardPath = hasProject
+    ? getProjectDashboardPath(projectId, projectTitle ?? undefined, "/moodboard")
+    : "/dashboard/projects";
+  const editorPath = hasProject
+    ? getProjectDashboardPath(projectId, projectTitle ?? undefined, "/editor")
+    : "/dashboard/projects";
 
   const tabs = useMemo(
     () =>
@@ -1718,33 +1744,33 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
           key: "budget",
           label: "Budget",
           icon: <Coins size={16} />,
-          path: `${basePath}/budget`,
+          path: budgetPath,
           visible: showBudgetTab,
-          matches: (pathname: string) => pathname.startsWith(`${basePath}/budget`),
+          matches: (pathname: string) => pathname.startsWith(budgetPath),
         },
         {
           key: "calendar",
           label: "Calendar",
           icon: <CalendarIcon size={16} />,
-          path: `${basePath}/calendar`,
+          path: calendarPath,
           visible: showCalendarTab,
-          matches: (pathname: string) => pathname.startsWith(`${basePath}/calendar`),
+          matches: (pathname: string) => pathname.startsWith(calendarPath),
         },
         {
           key: "moodboard",
           label: "Moodboard",
           icon: <StickyNote size={16} />,
-          path: `${basePath}/moodboard`,
+          path: moodboardPath,
           visible: showMoodboardTab,
-          matches: (pathname: string) => pathname.startsWith(`${basePath}/moodboard`),
+          matches: (pathname: string) => pathname.startsWith(moodboardPath),
         },
         {
           key: "editor",
           label: "Editor",
           icon: <PenTool size={16} />,
-          path: `${basePath}/editor`,
+          path: editorPath,
           visible: showEditorTab,
-          matches: (pathname: string) => pathname.startsWith(`${basePath}/editor`),
+          matches: (pathname: string) => pathname.startsWith(editorPath),
         },
       ].filter((tab) => tab.visible),
     [

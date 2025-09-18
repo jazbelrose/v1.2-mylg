@@ -12,19 +12,18 @@ import LexicalEditor from "@/dashboard/project/features/editor/components/Brief/
 import { useData } from "@/app/contexts/useData";
 import { Project } from "@/app/contexts/DataProvider";
 import { useSocket } from "@/app/contexts/useSocket";
-import { findProjectBySlug, slugify } from "@/shared/utils/slug";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import { notify } from "@/shared/ui/ToastNotifications";
 import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 
 const EditorPage: React.FC = () => {
-  const { projectSlug } = useParams<{ projectSlug: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
 
   const {
     activeProject: initialActiveProject,
-    projects,
     fetchProjectDetails,
     setProjects,
     setSelectedProjects,
@@ -87,16 +86,31 @@ const EditorPage: React.FC = () => {
   }, [activeProject?.description]);
 
   useEffect(() => {
-    if (!initialActiveProject) return;
-    if (slugify(initialActiveProject.title) !== projectSlug) {
-      const proj = findProjectBySlug(projects, projectSlug);
-      if (proj) {
-        fetchProjectDetails(proj.projectId as string);
-      } else {
-        navigate(`/dashboard/projects/${slugify(initialActiveProject.title)}`);
-      }
+    if (!projectId) return;
+    if (!initialActiveProject || initialActiveProject.projectId !== projectId) {
+      fetchProjectDetails(projectId);
     }
-  }, [projectSlug, projects, initialActiveProject, navigate, fetchProjectDetails]);
+  }, [projectId, initialActiveProject?.projectId, fetchProjectDetails]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    const title = activeProject?.title ?? initialActiveProject?.title;
+    if (!title) return;
+
+    const currentPath = location.pathname.split(/[?#]/)[0];
+    if (!currentPath.includes('/editor')) return;
+
+    const canonicalPath = getProjectDashboardPath(projectId, title, '/editor');
+    if (currentPath === canonicalPath) return;
+
+    navigate(canonicalPath, { replace: true });
+  }, [
+    projectId,
+    activeProject?.title,
+    initialActiveProject?.title,
+    location.pathname,
+    navigate,
+  ]);
 
   const lastFetchedId = useRef<string | null>(null);
   useEffect(() => {
@@ -144,7 +158,13 @@ const EditorPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate(`/dashboard/projects/${projectSlug}`);
+    if (!projectId) {
+      navigate('/dashboard/projects');
+      return;
+    }
+
+    const title = activeProject?.title ?? initialActiveProject?.title;
+    navigate(getProjectDashboardPath(projectId, title));
   };
 
   const handleSelectTool = () => designerRef.current?.changeMode("select");

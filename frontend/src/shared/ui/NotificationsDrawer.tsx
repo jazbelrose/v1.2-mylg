@@ -8,6 +8,7 @@ import { useNotificationSocket } from '../../app/contexts/useNotificationSocket'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useData } from '../../app/contexts/useData';
 import { slugify } from '../utils/slug';
+import { getProjectDashboardPath } from '@/shared/utils/projectUrl';
 import { prefetchBudgetData } from '@/dashboard/project/features/budget/context/useBudget';
 import { useSocket } from '../../app/contexts/useSocket';
 import { MESSAGES_THREADS_URL, apiFetch } from '../utils/api';
@@ -149,8 +150,7 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
       if (!confirmLeave) return;
     }
     const proj = projects.find((p) => p.projectId === projectId);
-    const slug = proj ? slugify(proj.title || projectId) : projectId;
-    const path = `/dashboard/projects/${slug}`;
+    const path = getProjectDashboardPath(projectId, proj?.title || projectId);
     if (location.pathname !== path) {
       await Promise.all([
         fetchProjectDetails(projectId),

@@ -71,7 +71,8 @@
 }
 
 .iconBtnSm:focus-visible {
-  outline: 2px auto var(--color-focus, #EB5DFA);
+  outline: 2px solid rgba(255, 255, 255, .4);
+  outline-offset: 2px;
 }
 
 .thumbSm {
@@ -96,20 +97,29 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-color, #fff);
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .01);
+  color: rgba(255, 255, 255, .85);
   font-size: 13px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
 
-.recents:hover {
-  background: rgba(255, 255, 255, .04);
+.recents:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .03);
 }
 
 .recents:focus-visible {
-  outline: 2px auto var(--color-focus, #EB5DFA);
+  outline: 2px solid rgba(255, 255, 255, .4);
+  outline-offset: 2px;
+}
+
+.recents:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .kpis {
@@ -120,8 +130,20 @@
   gap: 8px;
   margin: 4px 2px; /* compact */
   min-width: 0;
-  overflow-x: hidden; /* keep long labels from bleeding horizontally */
+  overflow-x: auto; /* allow chips to scroll horizontally on overflow */
   overflow-y: visible; /* allow hover animations to show without clipping */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+
+.kpis::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kpis::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .12);
+  border-radius: 999px;
 }
 
 .kpiGroup {
@@ -133,14 +155,13 @@
 }
 
 .chip {
-  border: 1px solid var(--chip-border, rgba(255, 255, 255, .16));
+  border: 1px solid var(--chip-border, rgba(255, 255, 255, .14));
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 11.5px;
   line-height: 1;
-  opacity: .85;
-  background: var(--chip-bg, transparent);
-  color: var(--chip-color, inherit);
+  background: var(--chip-bg, rgba(255, 255, 255, .01));
+  color: var(--chip-color, rgba(255, 255, 255, .85));
   box-shadow: var(--chip-shadow, none);
   display: inline-flex;
   align-items: center;
@@ -150,6 +171,11 @@
   flex: 0 0 auto;
   white-space: nowrap;
   max-width: 100%;
+  transition: background-color .2s ease;
+}
+
+.chip:hover {
+  background: rgba(255, 255, 255, .03);
 }
 
 .chipNoWrap {
@@ -168,9 +194,9 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--chip-dot, #FA3356);
+  background: var(--chip-dot, rgba(255, 255, 255, .55));
   align-self: center;
-  opacity: .9;
+  opacity: 1;
   flex-shrink: 0;
 }
 
@@ -420,7 +446,8 @@
 }
 
 .menuBtn:focus-visible {
-  outline: 2px auto var(--color-focus, #EB5DFA);
+  outline: 2px solid rgba(255, 255, 255, .4);
+  outline-offset: 2px;
 }
 
 .menuBtn:active {
@@ -473,20 +500,58 @@
 .scopeBtns {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .scopeBtn {
-  border: 1px solid rgba(255,255,255,.16);
-  background: transparent;
-  color: var(--text-color, #fff);
-  padding: 6px 8px;
+  position: relative;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.01);
+  color: rgba(255,255,255,.85);
+  padding: 6px 12px;
   border-radius: 8px;
   font-size: 12px;
+  font-weight: 600;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+
+.scopeBtn:hover:not(:disabled) {
+  background: rgba(255,255,255,.03);
+}
+
+.scopeBtn:focus-visible {
+  outline: 2px solid rgba(255,255,255,.4);
+  outline-offset: 2px;
+}
+
+.scopeBtn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .scopeBtnActive {
-  background: rgba(255,255,255,.06);
-  border-color: rgba(255,255,255,.24);
+  color: #fff;
+  font-weight: 700;
+}
+
+.scopeBtnActive::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 4px;
+  height: 1px;
+  background: currentColor;
+  opacity: .5;
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  .kpis {
+    margin-left: auto;
+    justify-content: flex-end;
+  }
 }
 
 .menuItem {

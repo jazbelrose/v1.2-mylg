@@ -72,35 +72,85 @@
 .headerTop {
   display: flex;
   gap: var(--space-2, 16px);
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
+}
+
+@media (min-width: 1024px) {
+  .header {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: var(--space-3, 24px);
+  }
+
+  .headerTop {
+    flex: 0 0 auto;
+    align-items: flex-end;
+    gap: var(--space-1, 12px);
+  }
+
+  .viewToggle {
+    flex-wrap: nowrap;
+  }
 }
 
 .viewToggle {
   display: inline-flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  padding: 4px;
-  gap: 4px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .toggleButton {
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.72);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.01);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
   font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 999px;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
+
+.toggleButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.toggleButton:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.toggleButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .toggleButton[aria-pressed="true"] {
-  background: rgba(250, 51, 86, 0.18);
-  color: #fff;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.toggleButton[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 6px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .tableWrap {

@@ -4,7 +4,11 @@ export type ProjectAccentPalette = {
   accent: string;
   accentWeak: string;
   accentStrong: string;
-  source: "image" | "fallback";
+  source: "image" | "fallback" | "custom";
+};
+
+export type UseProjectPaletteOptions = {
+  color?: string | null;
 };
 
 const BRAND_ACCENT = "#FA3356";
@@ -25,6 +29,24 @@ type Bucket = {
 };
 
 const paletteCache = new Map<string, ProjectAccentPalette>();
+
+function normalizeHexColor(color?: string | null): string | null {
+  if (!color) return null;
+  let value = color.trim();
+  if (!value) return null;
+  if (!value.startsWith("#")) {
+    value = `#${value}`;
+  }
+
+  const hex = value.slice(1);
+  if (!(hex.length === 3 || hex.length === 6)) return null;
+  if (!/^[0-9a-fA-F]+$/.test(hex)) return null;
+
+  const normalized =
+    hex.length === 3 ? hex.split("").map((char) => char + char).join("") : hex;
+
+  return `#${normalized.toUpperCase()}`;
+}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -343,6 +365,54 @@ async function extractPaletteFromImage(
   });
 }
 
+function computePaletteFromColor(color: string): ProjectAccentPalette {
+  let accent = clampSaturation(color, 0.35, 0.95);
+  accent = applyContrastConstraints(accent, [
+    { reference: BRAND_BG, min: 3.6, prefer: "lighter" },
+    { reference: WHITE, min: 2.4, prefer: "darker" },
+  ]);
+
+  let accentStrong = clampSaturation(mixColors(accent, BRAND_BG, 0.18), 0.4, 0.95);
+  accentStrong = applyContrastConstraints(accentStrong, [
+    { reference: BRAND_BG, min: 4.5, prefer: "lighter" },
+    { reference: WHITE, min: 2.2, prefer: "darker" },
+  ]);
+
+  if (contrastRatio(accentStrong, accent) < 1.35) {
+    accentStrong = applyContrastConstraints(mixColors(accent, BRAND_BG, 0.28), [
+      { reference: BRAND_BG, min: 4.5, prefer: "lighter" },
+      { reference: WHITE, min: 2.2, prefer: "darker" },
+    ]);
+  }
+
+  let accentWeak = clampSaturation(mixColors(accent, BRAND_BG, 0.6), 0.2, 0.7);
+  accentWeak = applyContrastConstraints(accentWeak, [
+    { reference: WHITE, min: 4.5, prefer: "darker" },
+    { reference: BRAND_BG, min: 1.6, prefer: "lighter" },
+  ]);
+
+  if (contrastRatio(accentWeak, accentStrong) < 1.2) {
+    accentWeak = applyContrastConstraints(mixColors(accentStrong, BRAND_BG, 0.55), [
+      { reference: WHITE, min: 4.5, prefer: "darker" },
+      { reference: BRAND_BG, min: 1.6, prefer: "lighter" },
+    ]);
+  }
+
+  if (contrastRatio(accentWeak, accent) < 1.25) {
+    accentWeak = applyContrastConstraints(mixColors(accent, BRAND_BG, 0.7), [
+      { reference: WHITE, min: 4.5, prefer: "darker" },
+      { reference: BRAND_BG, min: 1.6, prefer: "lighter" },
+    ]);
+  }
+
+  return {
+    accent,
+    accentWeak,
+    accentStrong,
+    source: "custom",
+  };
+}
+
 const DEFAULT_PALETTE: ProjectAccentPalette = {
   accent: BRAND_ACCENT,
   accentWeak: applyContrastConstraints(
@@ -419,10 +489,21 @@ function palettesEqual(a: ProjectAccentPalette, b: ProjectAccentPalette): boolea
   );
 }
 
-export function useProjectPalette(imageUrl?: string | null): ProjectAccentPalette {
+export function useProjectPalette(
+  imageUrl?: string | null,
+  options?: UseProjectPaletteOptions
+): ProjectAccentPalette {
   const [palette, setPalette] = useState<ProjectAccentPalette>(DEFAULT_PALETTE);
+  const color = options?.color;
 
   useEffect(() => {
+    const normalizedColor = normalizeHexColor(color);
+    if (normalizedColor) {
+      const derived = computePaletteFromColor(normalizedColor);
+      setPalette((prev) => (palettesEqual(prev, derived) ? prev : derived));
+      return;
+    }
+
     let cancelled = false;
     if (!imageUrl) {
       setPalette((prev) => (palettesEqual(prev, DEFAULT_PALETTE) ? prev : DEFAULT_PALETTE));
@@ -448,7 +529,7 @@ export function useProjectPalette(imageUrl?: string | null): ProjectAccentPalett
     return () => {
       cancelled = true;
     };
-  }, [imageUrl]);
+  }, [imageUrl, color]);
 
   return palette;
 }

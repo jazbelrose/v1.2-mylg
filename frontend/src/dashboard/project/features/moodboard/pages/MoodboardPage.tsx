@@ -25,7 +25,9 @@ const MoodboardPage: React.FC = () => {
   const [activeProject, setActiveProject] = useState<Project | null>(initialProject ?? null);
 
   const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
-  const projectPalette = useProjectPalette(coverImage);
+  const projectPalette = useProjectPalette(coverImage, {
+    color: activeProject?.color,
+  });
 
   useEffect(() => {
     setActiveProject(initialProject ?? null);

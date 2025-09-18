@@ -108,7 +108,6 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     setActiveProject,
     updateProjectFields,
     isAdmin,
-    projects,
     setProjects,
     setUserProjects,
   } = useData();
@@ -116,6 +115,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   const { ws } = useSocket() || {};
   const { refreshUser } = useData();
   const navigate = useNavigate();
+  const location = useLocation();
   const { projectId = "" } = useParams<{ projectId: string }>();
 
   const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
@@ -157,11 +157,48 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     if (!localActiveProject?.title || !localActiveProject.projectId) return;
     if (!projectId || localActiveProject.projectId !== projectId) return;
 
+    const currentPath = location.pathname.split(/[?#]/)[0];
+    const segments = currentPath.split("/").filter(Boolean);
+    const projectsIndex = segments.indexOf("projects");
+
+    let suffix = "";
+    if (projectsIndex !== -1) {
+      const afterProjectId = segments.slice(projectsIndex + 2);
+      if (afterProjectId.length > 0) {
+        const [firstSegment, ...restSegments] = afterProjectId;
+        const expectedSlug = encodeURIComponent(
+          (localActiveProject.title ?? "").trim()
+        );
+        const knownSuffixes = new Set([
+          "budget",
+          "calendar",
+          "moodboard",
+          "editor",
+        ]);
+
+        let suffixSegments: string[] = [];
+        const slugMatchesExpected =
+          expectedSlug.length > 0 && firstSegment === expectedSlug;
+
+        if (slugMatchesExpected) {
+          suffixSegments = restSegments;
+        } else if (knownSuffixes.has(firstSegment.toLowerCase())) {
+          suffixSegments = [firstSegment, ...restSegments];
+        } else if (restSegments.length > 0) {
+          suffixSegments = restSegments;
+        }
+
+        if (suffixSegments.length > 0) {
+          suffix = `/${suffixSegments.join("/")}`;
+        }
+      }
+    }
+
     const canonicalPath = getProjectDashboardPath(
       localActiveProject.projectId,
-      localActiveProject.title
+      localActiveProject.title,
+      suffix
     );
-    const currentPath = location.pathname.split(/[?#]/)[0];
     if (currentPath === canonicalPath) return;
 
     navigate(canonicalPath, { replace: true });

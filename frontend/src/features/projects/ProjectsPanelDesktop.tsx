@@ -11,6 +11,10 @@ import { CalendarDays, ChevronDown, Search } from "lucide-react";
 import { useData } from "@/app/contexts/useData";
 import type { UserLite } from "@/app/contexts/DataProvider";
 import { useProjectKpis, type ProjectLike } from "@/features/dashboard/hooks/useProjectKpis";
+import useProjectsFilterState, {
+  type ProjectWithMeta,
+  type SortOption,
+} from "@/features/dashboard/hooks/useProjectsFilterState";
 import SVGThumbnail from "@/features/dashboard/components/SvgThumbnail";
 import { getFileUrl } from "@/shared/utils/api";
 import desktopStyles from "./ProjectsPanelDesktop.module.css";
@@ -25,11 +29,7 @@ export type ProjectsPanelDesktopProps = {
   onOpenProject?: (projectId: string) => void;
 };
 
-type SortOption = "titleAsc" | "titleDesc" | "dateNewest" | "dateOldest";
-
-type ProjectWithMeta = ProjectLike & {
-  _activity: number;
-  _created: number;
+type DesktopProject = ProjectWithMeta & {
   team?: Array<{ userId?: string; firstName?: string; lastName?: string; email?: string }>;
   unreadCount?: number;
 };
@@ -39,27 +39,6 @@ const formatShortDate = (iso?: string): string | undefined => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return undefined;
   return d.toLocaleString(undefined, { month: "short", day: "numeric" });
-};
-
-const getProjectActivityTs = (p: ProjectLike): number => {
-  const candidates: (string | undefined)[] = [
-    p.updatedAt,
-    p.dateUpdated,
-    p.lastModified,
-    p.date,
-    p.dateCreated,
-  ];
-  if (Array.isArray(p.timelineEvents)) {
-    for (const ev of p.timelineEvents) {
-      if (ev?.timestamp) candidates.push(ev.timestamp);
-      if (ev?.date) candidates.push(ev.date);
-    }
-  }
-  const timestamps = candidates
-    .filter(Boolean)
-    .map((s) => new Date(s as string).getTime())
-    .filter((n) => Number.isFinite(n));
-  return timestamps.length ? Math.max(...timestamps) : 0;
 };
 
 function sanitizeId(raw: string) {
@@ -96,10 +75,22 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     `projects-sort-${sanitizeId(Math.random().toString(36).slice(2))}`
   );
 
-  const [sortOption, setSortOption] = useState<SortOption>("dateNewest");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [query, setQuery] = useState<string>("");
-  const [scope, setScope] = useState<"recents" | "all">("recents");
+  const {
+    scope,
+    setScope,
+    query,
+    setQuery,
+    statusFilter,
+    setStatusFilter,
+    sortOption,
+    setSortOption,
+    statuses,
+    statusOptions,
+    sortOptions,
+    visibleProjects,
+  } = useProjectsFilterState(projects as ProjectLike[], {
+    recentsLimit: DEFAULT_DESKTOP_ROWS,
+  });
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [statusHighlightIndex, setStatusHighlightIndex] = useState<number>(-1);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
@@ -189,25 +180,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     }
   }, [filtersOpen]);
 
-  const statuses = useMemo(() => {
-    try {
-      return Array.from(
-        new Set(
-          projects
-            .map((p) => String(p.status || "").toLowerCase())
-            .filter(Boolean)
-        )
-      );
-    } catch {
-      return [] as string[];
-    }
-  }, [projects]);
-
-  const statusOptions = useMemo(
-    () => [{ value: "", label: "All statuses" }, ...statuses.map((s) => ({ value: s, label: s }))],
-    [statuses]
-  );
-
   useEffect(() => {
     if (!statusDropdownOpen) {
       setStatusHighlightIndex(-1);
@@ -218,16 +190,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     setStatusHighlightIndex(selectedIndex >= 0 ? selectedIndex : 0);
   }, [statusDropdownOpen, statusFilter, statusOptions]);
 
-  const sortOptions = useMemo(
-    () => [
-      { value: "titleAsc" as SortOption, label: "Title (A-Z)" },
-      { value: "titleDesc" as SortOption, label: "Title (Z-A)" },
-      { value: "dateNewest" as SortOption, label: "Date (Newest)" },
-      { value: "dateOldest" as SortOption, label: "Date (Oldest)" },
-    ],
-    []
-  );
-
   useEffect(() => {
     if (!sortDropdownOpen) {
       setSortHighlightIndex(-1);
@@ -237,57 +199,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     const selectedIndex = sortOptions.findIndex((opt) => opt.value === sortOption);
     setSortHighlightIndex(selectedIndex >= 0 ? selectedIndex : 0);
   }, [sortDropdownOpen, sortOption, sortOptions]);
-
-  const items = useMemo(() => {
-    const list: ProjectWithMeta[] = (projects as ProjectLike[]).map((p) => ({
-      ...(p as ProjectWithMeta),
-      _activity: getProjectActivityTs(p),
-      _created: new Date(p.dateCreated || p.date || 0).getTime() || 0,
-    }));
-
-    let ordered = list.slice();
-    if (scope === "recents") {
-      ordered.sort((a, b) => b._activity - a._activity);
-    }
-
-    const q = query.trim().toLowerCase();
-    if (q) {
-      ordered = ordered.filter((p) => (p.title || "").toLowerCase().includes(q));
-    }
-    if (statusFilter) {
-      ordered = ordered.filter(
-        (p) => String(p.status || "").toLowerCase() === statusFilter
-      );
-    }
-
-    const byTitle = (a: ProjectLike, b: ProjectLike) =>
-      (a.title || "").localeCompare(b.title || "", undefined, {
-        sensitivity: "base",
-      });
-    const byCreated = (a: ProjectWithMeta, b: ProjectWithMeta) => b._created - a._created;
-    const byCreatedAsc = (a: ProjectWithMeta, b: ProjectWithMeta) => a._created - b._created;
-
-    switch (sortOption) {
-      case "titleAsc":
-        ordered.sort(byTitle);
-        break;
-      case "titleDesc":
-        ordered.sort((a, b) => -byTitle(a, b));
-        break;
-      case "dateOldest":
-        ordered.sort(byCreatedAsc);
-        break;
-      case "dateNewest":
-      default:
-        ordered.sort(byCreated);
-        break;
-    }
-
-    if (scope === "recents") {
-      return ordered.slice(0, DEFAULT_DESKTOP_ROWS);
-    }
-    return ordered;
-  }, [projects, scope, query, statusFilter, sortOption]);
 
   const kpis = useProjectKpis(projects as ProjectLike[]);
 
@@ -500,7 +411,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     }
   };
 
-  const getOwnerName = (project: ProjectWithMeta): string => {
+  const getOwnerName = (project: DesktopProject): string => {
     const team = Array.isArray(project.team) ? project.team : [];
     if (team.length === 0) return "—";
     const primary = team[0];
@@ -558,13 +469,16 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     );
   };
 
-  const tableRows = items.map((p) => {
+  const tableRows = visibleProjects.map((project) => {
+    const p = project as DesktopProject;
     const id = p.projectId;
     const title = (p.title || "Untitled project").trim();
     const thumb = Array.isArray(p.thumbnails) && p.thumbnails[0] ? p.thumbnails[0] : undefined;
     const deadline = formatShortDate(p.finishline);
     const status = p.status ? String(p.status) : "—";
-    const unread = Number.isFinite(p.unreadCount as number) ? Number(p.unreadCount) : Number((p as { unreadCount?: number }).unreadCount ?? 0);
+    const unread = Number.isFinite(p.unreadCount as number)
+      ? Number(p.unreadCount)
+      : Number((p as { unreadCount?: number }).unreadCount ?? 0);
     const owner = getOwnerName(p);
 
     return (
@@ -622,7 +536,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
       <div className={desktopStyles.tableWrap}>
         {isLoading ? (
           <div className={desktopStyles.emptyState}>Loading projects…</div>
-        ) : items.length === 0 ? (
+        ) : visibleProjects.length === 0 ? (
           <div className={desktopStyles.emptyState}>No projects match filters.</div>
         ) : (
           <table className={desktopStyles.table} aria-label="Projects table">

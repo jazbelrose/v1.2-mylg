@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
@@ -7,14 +7,13 @@ import { useData } from "@/app/contexts/useData";
 import SVGThumbnail from "./SvgThumbnail";
 import styles from "./projects-panel.module.css";
 import { useProjectKpis, type ProjectLike } from "../hooks/useProjectKpis";
+import useProjectsFilterState from "@/features/dashboard/hooks/useProjectsFilterState";
 import { getFileUrl } from "../../../shared/utils/api";
 import { MICRO_WOBBLE_SCALE, SPRING_FAST } from "@/shared/ui/motionTokens";
 
 type Props = {
   onOpenProject: (projectId: string) => void;
 };
-
-type ProjectWithMeta = ProjectLike & { _activity: number; _created: number };
 
 const getMaxQuickProjectIcons = (width?: number): number => {
   if (!width) return 5;
@@ -33,27 +32,6 @@ const formatShortDate = (iso?: string): string | undefined => {
   return d.toLocaleString(undefined, { month: "short", day: "numeric" });
 };
 
-const getProjectActivityTs = (p: ProjectLike): number => {
-  const candidates: (string | undefined)[] = [
-    p.updatedAt,
-    p.dateUpdated,
-    p.lastModified,
-    p.date,
-    p.dateCreated,
-  ];
-  if (Array.isArray(p.timelineEvents)) {
-    for (const ev of p.timelineEvents) {
-      if (ev?.timestamp) candidates.push(ev.timestamp);
-      if (ev?.date) candidates.push(ev.date);
-    }
-  }
-  const timestamps = candidates
-    .filter(Boolean)
-    .map((s) => new Date(s as string).getTime())
-    .filter((n) => Number.isFinite(n));
-  return timestamps.length ? Math.max(...timestamps) : 0;
-};
-
 const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
   const reduceMotion = useReducedMotion();
   const { projects, isLoading, projectsError, fetchProjects } = useData();
@@ -69,12 +47,20 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
     )
   );
 
-  // Compact filter/sort options (mirrors AllProjects)
-  type SortOption = "titleAsc" | "titleDesc" | "dateNewest" | "dateOldest";
-  const [sortOption, setSortOption] = useState<SortOption>("dateNewest");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [query, setQuery] = useState<string>("");
-  const [scope, setScope] = useState<"recents" | "all">("recents");
+  const {
+    scope,
+    setScope,
+    query,
+    setQuery,
+    statusFilter,
+    setStatusFilter,
+    sortOption,
+    setSortOption,
+    statuses,
+    statusOptions,
+    sortOptions,
+    filteredProjects,
+  } = useProjectsFilterState(projects as ProjectLike[]);
   // Icons-only strip lives next to the title; main list remains compact list rows
 
   useEffect(() => {
@@ -119,75 +105,6 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
     document.addEventListener("click", onDocClick);
     return () => document.removeEventListener("click", onDocClick);
   }, [filtersOpen]);
-
-  const statuses = useMemo(() => {
-    try {
-      return Array.from(
-        new Set(
-          (projects as ProjectLike[])
-            .map((p) => String(p.status || "").toLowerCase())
-            .filter(Boolean)
-        )
-      );
-    } catch {
-      return [] as string[];
-    }
-  }, [projects]);
-
-  const items = useMemo(() => {
-    const list: ProjectWithMeta[] = (projects as ProjectLike[]).map((p) => ({
-      ...p,
-      _activity: getProjectActivityTs(p),
-      _created: new Date(p.dateCreated || p.date || 0).getTime() || 0,
-    }));
-
-    // Base ordering by scope
-    let ordered = list.slice();
-    if (scope === "recents") {
-      ordered.sort((a, b) => b._activity - a._activity);
-    }
-
-    // Filters
-    const q = query.trim().toLowerCase();
-    if (q) {
-      ordered = ordered.filter((p) =>
-        (p.title || "").toLowerCase().includes(q)
-      );
-    }
-    if (statusFilter) {
-      ordered = ordered.filter(
-        (p) => String(p.status || "").toLowerCase() === statusFilter
-      );
-    }
-
-    // Sort
-    const byTitle = (a: ProjectLike, b: ProjectLike) =>
-      (a.title || "").localeCompare(b.title || "", undefined, {
-        sensitivity: "base",
-      });
-    const byCreated = (a: ProjectWithMeta, b: ProjectWithMeta) =>
-      b._created - a._created; // newest first
-    const byCreatedAsc = (a: ProjectWithMeta, b: ProjectWithMeta) =>
-      a._created - b._created; // oldest first
-
-    switch (sortOption) {
-      case "titleAsc":
-        ordered.sort(byTitle);
-        break;
-      case "titleDesc":
-        ordered.sort((a, b) => -byTitle(a, b));
-        break;
-      case "dateOldest":
-        ordered.sort(byCreatedAsc);
-        break;
-      case "dateNewest":
-      default:
-        ordered.sort(byCreated);
-        break;
-    }
-
-    return ordered;
-  }, [projects, sortOption, statusFilter, query, scope]);
 
   const kpis = useProjectKpis(projects as ProjectLike[]);
 
@@ -343,10 +260,12 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     aria-label="Filter by status"
                   >
-                    <option value="">All statuses</option>
-                    {statuses.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
+                    {statusOptions.map((option) => (
+                      <option
+                        key={`status-${option.value || "all"}`}
+                        value={option.value}
+                      >
+                        {option.label}
                       </option>
                     ))}
                   </select>
@@ -355,13 +274,21 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
                 <select
                   className={styles.select}
                   value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value as SortOption)}
+                  onChange={(event) => {
+                    const next = sortOptions.find(
+                      (option) => option.value === event.target.value
+                    );
+                    if (next) {
+                      setSortOption(next.value);
+                    }
+                  }}
                   aria-label="Sort projects"
                 >
-                  <option value="titleAsc">Title (A-Z)</option>
-                  <option value="titleDesc">Title (Z-A)</option>
-                  <option value="dateNewest">Date (Newest)</option>
-                  <option value="dateOldest">Date (Oldest)</option>
+                  {sortOptions.map((option) => (
+                    <option key={`sort-${option.value}`} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -400,12 +327,12 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
               <div className={styles.skelBar} />
             </div>
           </div>
-        ) : items.length === 0 ? (
+        ) : filteredProjects.length === 0 ? (
           <div className={styles.empty} role="note">
             No projects match filters
           </div>
         ) : (
-          items.map((p) => {
+          filteredProjects.map((p) => {
             const dateIso =
               p.updatedAt ||
               p.dateUpdated ||

@@ -541,15 +541,7 @@ const AllProjects: React.FC = () => {
     <div className="welcome project-view">
       <header className={`projects-header ${desktopStyles.header}`}>
         <div className={desktopStyles.headerTop}>
-          <div className={mobileStyles.titleWrap}>
-            <h3 className={mobileStyles.title}>Projects</h3>
-            <ProjectsIconsStrip
-              projects={projects as ProjectLike[]}
-              imgError={imageErrors}
-              onImageError={handleThumbnailError}
-              onOpenProject={handleOpenProject}
-            />
-          </div>
+         
           <div
             className={desktopStyles.viewToggle}
             role="group"

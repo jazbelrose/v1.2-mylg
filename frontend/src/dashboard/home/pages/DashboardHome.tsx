@@ -53,6 +53,7 @@ function sameDay(a: Date | null, b: Date | null) {
   return !!(a && b) && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const parseDashboardPath = (
   pathname: string
 ): { view: string; userSlug: string | null } => {

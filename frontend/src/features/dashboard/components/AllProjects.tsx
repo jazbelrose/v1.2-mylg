@@ -20,6 +20,22 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileUrl } from '../../../shared/utils/api';
+import {
+  DashboardPanelHeader,
+  DashboardPanelTitleWrap,
+  DashboardPanelTitle,
+  DashboardPanelActions,
+  DashboardPanelPills,
+  DashboardPanelPillButton,
+  DashboardPanelSortWrapper,
+  DashboardPanelSortMenu,
+  DashboardPanelActionGroup,
+  DashboardPanelSearchContainer,
+  DashboardPanelSearchInput,
+  DashboardPanelViewToggle,
+  DashboardPanelViewToggleButton,
+} from './DashboardPanelHeader';
+import { dashboardPanelPillUnderlineClass } from './dashboard-panel-header.constants';
 
 interface Project {
   projectId: string;
@@ -544,109 +560,127 @@ const AllProjects: React.FC = () => {
 
   return (
     <div className="welcome project-view">
-      <div className="projects-header">
-        <div className="projects-title">Projects</div>
-        <div className="project-pills">
-          {[{ key: 'all', label: `All Projects (${projects.length})` },
-            ...statusOptions.map((s) => ({
-              key: s,
-              label: `${s.charAt(0).toUpperCase() + s.slice(1)} (${statusCounts[s] || 0})`,
-            })),
-          ].map((p) => {
-            const active =
-              (p.key === 'all' && !statusFilter) || statusFilter === p.key;
-            return (
-              <button
-                key={p.key}
-                className={`pill ${active ? 'active' : ''}`}
-                onClick={() =>
-                  setStatusFilter(p.key === 'all' ? '' : p.key.toString())
-                }
+      <DashboardPanelHeader>
+        <DashboardPanelTitleWrap>
+          <DashboardPanelTitle>Projects</DashboardPanelTitle>
+        </DashboardPanelTitleWrap>
+        <DashboardPanelActions>
+          <DashboardPanelPills>
+            {[{ key: 'all', label: `All Projects (${projects.length})` },
+              ...statusOptions.map((s) => ({
+                key: s,
+                label: `${s.charAt(0).toUpperCase() + s.slice(1)} (${statusCounts[s] || 0})`,
+              })),
+            ].map((p) => {
+              const active =
+                (p.key === 'all' && !statusFilter) || statusFilter === p.key;
+              return (
+                <DashboardPanelPillButton
+                  key={p.key}
+                  active={active}
+                  onClick={() =>
+                    setStatusFilter(p.key === 'all' ? '' : p.key.toString())
+                  }
+                >
+                  {p.label}
+                  {active && (
+                    <motion.div
+                      layoutId="pill-underline"
+                      className={dashboardPanelPillUnderlineClass}
+                    />
+                  )}
+                </DashboardPanelPillButton>
+              );
+            })}
+            <DashboardPanelSortWrapper ref={sortRef}>
+              <DashboardPanelPillButton
+                active={sortOpen}
+                variant="sort"
+                onClick={() => setSortOpen((o) => !o)}
+                aria-expanded={sortOpen}
+                aria-haspopup="menu"
               >
-                {p.label}
-                {active && (
+                {`Sort (${sortLabels[sortOption]})`}
+                {sortOpen && (
                   <motion.div
                     layoutId="pill-underline"
-                    className="pill-underline"
+                    className={dashboardPanelPillUnderlineClass}
                   />
                 )}
-              </button>
-            );
-          })}
-          <div className="sort-wrapper" ref={sortRef}>
-            <button
-              type="button"
-              className={`pill sort-pill ${sortOpen ? 'active' : ''}`}
-              onClick={() => setSortOpen((o) => !o)}
-            >
-              {`Sort (${sortLabels[sortOption]})`}
+              </DashboardPanelPillButton>
               {sortOpen && (
-                <motion.div
-                  layoutId="pill-underline"
-                  className="pill-underline"
-                />
+                <DashboardPanelSortMenu role="menu">
+                  {Object.entries(sortLabels).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        setSortOption(value as SortOption);
+                        setSortOpen(false);
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </DashboardPanelSortMenu>
               )}
-            </button>
-            {sortOpen && (
-              <div className="sort-menu" role="menu">
-                {Object.entries(sortLabels).map(([value, label]) => (
-                  <button
-                    key={value}
-                    onClick={() => {
-                      setSortOption(value as SortOption);
-                      setSortOpen(false);
-                    }}
+            </DashboardPanelSortWrapper>
+          </DashboardPanelPills>
+          <DashboardPanelActionGroup>
+            <DashboardPanelSearchContainer>
+              <AnimatePresence initial={false}>
+                {searchOpen ? (
+                  <motion.div
+                    key="input"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 160, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    style={{ overflow: 'hidden' }}
                   >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="search-pill">
-            <AnimatePresence initial={false}>
-              {searchOpen ? (
-                <motion.input
-                  key="input"
-                  className="search-input"
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 140, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  value={filterQuery}
-                  onChange={(e) => setFilterQuery(e.target.value)}
-                  onBlur={() => setSearchOpen(false)}
-                  placeholder="Search"
-                />
-              ) : (
-                <motion.button
-                  key="button"
-                  type="button"
-                  className="pill icon-pill"
-                  onClick={() => setSearchOpen(true)}
-                >
-                  <Search size={14} />
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
-          <div className="view-toggle">
-            <button
-              className={viewMode === 'grid' ? 'active' : ''}
-              onClick={() => setViewMode('grid')}
-              aria-label="Grid view"
-            >
-              <LayoutGrid size={16} />
-            </button>
-            <button
-              className={viewMode === 'list' ? 'active' : ''}
-              onClick={() => setViewMode('list')}
-              aria-label="List view"
-            >
-              <List size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
+                    <DashboardPanelSearchInput
+                      value={filterQuery}
+                      onChange={(e) => setFilterQuery(e.target.value)}
+                      onBlur={() => setSearchOpen(false)}
+                      placeholder="Search"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="button"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                  >
+                    <DashboardPanelPillButton
+                      variant="icon"
+                      onClick={() => setSearchOpen(true)}
+                      aria-label="Open search"
+                    >
+                      <Search size={14} />
+                    </DashboardPanelPillButton>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </DashboardPanelSearchContainer>
+            <DashboardPanelViewToggle>
+              <DashboardPanelViewToggleButton
+                active={viewMode === 'grid'}
+                onClick={() => setViewMode('grid')}
+                aria-label="Grid view"
+              >
+                <LayoutGrid size={16} />
+              </DashboardPanelViewToggleButton>
+              <DashboardPanelViewToggleButton
+                active={viewMode === 'list'}
+                onClick={() => setViewMode('list')}
+                aria-label="List view"
+              >
+                <List size={16} />
+              </DashboardPanelViewToggleButton>
+            </DashboardPanelViewToggle>
+          </DashboardPanelActionGroup>
+        </DashboardPanelActions>
+      </DashboardPanelHeader>
       {content}
     </div>
   );

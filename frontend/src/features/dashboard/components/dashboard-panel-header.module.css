@@ -1,0 +1,210 @@
+.header {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 768px) {
+  .header {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+
+.titleWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-color, #ffffff);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-color, #ffffff);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.pill:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pillActive {
+  font-weight: 600;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pillUnderline {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-focus, #EB5DFA);
+}
+
+.pillSort {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.pillIcon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  justify-content: center;
+}
+
+.sortWrapper {
+  position: relative;
+}
+
+.sortMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 160px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-elevated, #0c0c0c);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+}
+
+.sortMenu button {
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.sortMenu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.searchContainer {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.searchInput {
+  width: 160px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--bg, #0c0c0c);
+  color: var(--text-color, #ffffff);
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: rgba(255, 255, 255, 0.56);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-focus, #EB5DFA);
+  box-shadow: 0 0 0 2px rgba(235, 93, 250, 0.18);
+}
+
+.rightControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.viewToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.viewToggleButton {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.viewToggleButton:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.viewToggleButtonActive {
+  background: #ffffff;
+  color: #0c0c0c;
+}
+
+@media (max-width: 600px) {
+  .header {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+
+  .rightControls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .searchInput {
+    width: 140px;
+  }
+}

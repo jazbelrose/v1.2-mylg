@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import ProjectsTable from "./ProjectsTable";
-import type { ProjectWithMeta } from "./types";
+import type { ProjectWithMeta } from "../utils/types";
 import type { UserLite } from "@/app/contexts/DataProvider";
 import "@testing-library/jest-dom";
 

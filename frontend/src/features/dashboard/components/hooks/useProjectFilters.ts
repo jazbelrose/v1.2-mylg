@@ -9,9 +9,9 @@ import {
 
 import type { ProjectLike } from "@/features/dashboard/hooks/useProjectKpis";
 
-import { createRandomId, getProjectActivityTs } from "../utils";
+import { createRandomId, getProjectActivityTs } from "../../utils/utils";
 import { useDropdown, type DropdownHelpers, type DropdownOption } from "./useDropdown";
-import type { ProjectWithMeta } from "../types";
+import type { ProjectWithMeta } from "../../utils/types";
 
 export type SortOption = "titleAsc" | "titleDesc" | "dateNewest" | "dateOldest";
 

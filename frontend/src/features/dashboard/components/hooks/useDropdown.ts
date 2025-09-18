@@ -8,7 +8,7 @@ import {
   type RefObject,
 } from "react";
 
-import { createRandomId } from "../utils";
+import { createRandomId } from "../../utils/utils";
 
 type DropdownOption<T> = {
   value: T;

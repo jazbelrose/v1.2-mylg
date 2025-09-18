@@ -14,7 +14,7 @@ import { ProjectsIconsStrip } from "./ProjectsIconsStrip";
 import ProjectsTable from "./ProjectsTable";
 import { ProjectsFilterMenu } from "./ProjectsFilterMenu";
 import { useProjectFilters } from "./hooks/useProjectFilters";
-import type { ProjectWithMeta } from "./types";
+import type { ProjectWithMeta } from "../utils/types";
 
 import "@/features/dashboard/components/week-widget.css";
 

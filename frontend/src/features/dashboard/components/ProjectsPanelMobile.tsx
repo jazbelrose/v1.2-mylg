@@ -54,7 +54,7 @@ const getProjectActivityTs = (p: ProjectLike): number => {
   return timestamps.length ? Math.max(...timestamps) : 0;
 };
 
-const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
+const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
   const reduceMotion = useReducedMotion();
   const { projects, isLoading, projectsError, fetchProjects } = useData();
   const navigate = useNavigate();
@@ -525,4 +525,4 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
   );
 };
 
-export default ProjectsPanel;
+export default ProjectsPanelMobile;

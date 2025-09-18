@@ -5,8 +5,8 @@ import mobileStyles from "@/features/dashboard/components/projects-panel.module.
 import SVGThumbnail from "@/features/dashboard/components/SvgThumbnail";
 import { getFileUrl } from "@/shared/utils/api";
 import type { UserLite } from "@/app/contexts/DataProvider";
-import type { ProjectWithMeta } from "./types";
-import { formatShortDate } from "./utils";
+import type { ProjectWithMeta } from "../utils/types";
+import { formatShortDate } from "../utils/utils";
 
 type ProjectsTableProps = {
   projects: ProjectWithMeta[];

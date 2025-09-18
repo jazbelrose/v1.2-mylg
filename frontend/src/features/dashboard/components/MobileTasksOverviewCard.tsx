@@ -1,6 +1,6 @@
 import React from "react";
 
-import { useTasksOverview } from "./useTasksOverview";
+import { useTasksOverview } from "../hooks/useTasksOverview";
 import styles from "./MobileTasksOverviewCard.module.css";
 
 type MobileTasksOverviewCardProps = {

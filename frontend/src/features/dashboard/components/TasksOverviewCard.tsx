@@ -1,7 +1,7 @@
 import React from "react";
 import { Plus, MoreHorizontal } from "lucide-react";
 
-import { useTasksOverview } from "./useTasksOverview";
+import { useTasksOverview } from "../hooks/useTasksOverview";
 import styles from "./TasksOverviewCard.module.css";
 
 type TasksOverviewCardProps = {

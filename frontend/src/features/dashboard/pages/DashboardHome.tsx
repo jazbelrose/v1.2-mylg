@@ -6,7 +6,7 @@ import { slugify } from "@/shared/utils/slug";
 import { prefetchBudgetData } from "@/features/budget/context/useBudget";
 import WelcomeHeader from "@/features/dashboard/components/WelcomeHeader";
 import AllProjects from "@/features/dashboard/components/AllProjects";
-import ProjectsPanel from "@/features/dashboard/components/ProjectsPanel";
+import ProjectsPanelMobile from "@/features/dashboard/components/ProjectsPanelMobile";
 import NotificationsPage from "@/features/dashboard/components/NotificationsPage";
 import Messages from "@/features/messages";
 import Settings from "@/features/dashboard/components/Settings";
@@ -19,7 +19,7 @@ import TasksOverviewCard from "@/features/dashboard/components/TasksOverviewCard
 import MobileTasksOverviewCard from "@/features/dashboard/components/MobileTasksOverviewCard";
 import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
-import ProjectsPanelDesktop from "@/features/projects/ProjectsPanelDesktop";
+import ProjectsPanelDesktop from "@/features/dashboard/components/ProjectsPanelDesktop";
 import { getColor } from "@/shared/utils/colorUtils";
 
 import "./dashboard-styles.css";
@@ -315,7 +315,7 @@ const WelcomeScreen: React.FC = () => {
         <div className="mobile-projects-tasks">
           <div className="mobile-projects-section">
             <div className="mobile-projects-panel">
-              <ProjectsPanel
+              <ProjectsPanelMobile
                 onOpenProject={(projectId) =>
                   handleNavigateToProject({ projectId })
                 }

@@ -223,7 +223,16 @@
   -webkit-backdrop-filter: blur(14px);
 }
 
-.statusTrigger span {
+.triggerLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.triggerLabelText {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -231,13 +240,31 @@
   white-space: nowrap;
 }
 
-.statusTrigger svg {
+.triggerLabelIcon {
+  flex: 0 0 auto;
+  color: inherit;
+  opacity: 0.75;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.statusTrigger:hover .triggerLabelIcon,
+.statusTrigger:focus-visible .triggerLabelIcon {
+  color: var(--text-color, #eaecee);
+  opacity: 1;
+}
+
+.triggerChevron {
   flex: 0 0 auto;
   opacity: 0.7;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.statusTrigger[aria-expanded="true"] svg {
+.statusTrigger:hover .triggerChevron,
+.statusTrigger:focus-visible .triggerChevron {
+  opacity: 0.9;
+}
+
+.statusTrigger[aria-expanded="true"] .triggerChevron {
   transform: rotate(-180deg);
   opacity: 0.9;
 }

@@ -88,7 +88,13 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   const filtersRef = useRef<HTMLDivElement | null>(null);
   const filtersIdRef = useRef(`projects-filters-${sanitizeId(Math.random().toString(36).slice(2))}`);
   const statusDropdownRef = useRef<HTMLDivElement | null>(null);
-  const statusListIdRef = useRef(`projects-status-${sanitizeId(Math.random().toString(36).slice(2))}`);
+  const statusListIdRef = useRef(
+    `projects-status-${sanitizeId(Math.random().toString(36).slice(2))}`
+  );
+  const sortDropdownRef = useRef<HTMLDivElement | null>(null);
+  const sortListIdRef = useRef(
+    `projects-sort-${sanitizeId(Math.random().toString(36).slice(2))}`
+  );
 
   const [sortOption, setSortOption] = useState<SortOption>("dateNewest");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -96,6 +102,8 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   const [scope, setScope] = useState<"recents" | "all">("recents");
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [statusHighlightIndex, setStatusHighlightIndex] = useState<number>(-1);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [sortHighlightIndex, setSortHighlightIndex] = useState<number>(-1);
 
   useEffect(() => {
     if (!isLoading && projects.length === 0 && !projectsError) {
@@ -147,8 +155,37 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   }, [statusDropdownOpen]);
 
   useEffect(() => {
+    if (!sortDropdownOpen) return;
+
+    const handlePointer = (event: MouseEvent) => {
+      if (
+        sortDropdownRef.current &&
+        event.target instanceof Node &&
+        !sortDropdownRef.current.contains(event.target)
+      ) {
+        setSortDropdownOpen(false);
+      }
+    };
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSortDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [sortDropdownOpen]);
+
+  useEffect(() => {
     if (!filtersOpen) {
       setStatusDropdownOpen(false);
+      setSortDropdownOpen(false);
     }
   }, [filtersOpen]);
 
@@ -180,6 +217,26 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     const selectedIndex = statusOptions.findIndex((opt) => opt.value === statusFilter);
     setStatusHighlightIndex(selectedIndex >= 0 ? selectedIndex : 0);
   }, [statusDropdownOpen, statusFilter, statusOptions]);
+
+  const sortOptions = useMemo(
+    () => [
+      { value: "titleAsc" as SortOption, label: "Title (A-Z)" },
+      { value: "titleDesc" as SortOption, label: "Title (Z-A)" },
+      { value: "dateNewest" as SortOption, label: "Date (Newest)" },
+      { value: "dateOldest" as SortOption, label: "Date (Oldest)" },
+    ],
+    []
+  );
+
+  useEffect(() => {
+    if (!sortDropdownOpen) {
+      setSortHighlightIndex(-1);
+      return;
+    }
+
+    const selectedIndex = sortOptions.findIndex((opt) => opt.value === sortOption);
+    setSortHighlightIndex(selectedIndex >= 0 ? selectedIndex : 0);
+  }, [sortDropdownOpen, sortOption, sortOptions]);
 
   const items = useMemo(() => {
     const list: ProjectWithMeta[] = (projects as ProjectLike[]).map((p) => ({
@@ -263,6 +320,16 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
       ? `${statusListIdRef.current}-option-${statusHighlightIndex}`
       : undefined;
 
+  const sortTriggerLabel = useMemo(() => {
+    const found = sortOptions.find((opt) => opt.value === sortOption);
+    return found ? found.label : sortOptions[0]?.label || "Sort";
+  }, [sortOption, sortOptions]);
+
+  const sortActiveOptionId =
+    sortDropdownOpen && sortHighlightIndex >= 0
+      ? `${sortListIdRef.current}-option-${sortHighlightIndex}`
+      : undefined;
+
   const updateHighlight = useCallback(
     (direction: 1 | -1) => {
       setStatusHighlightIndex((current) => {
@@ -344,6 +411,86 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
       }
     },
     [handleStatusSelect, statusDropdownOpen, statusHighlightIndex, statusOptions, updateHighlight]
+  );
+
+  const updateSortHighlight = useCallback(
+    (direction: 1 | -1) => {
+      setSortHighlightIndex((current) => {
+        if (!sortOptions.length) return -1;
+        const next = current < 0 ? 0 : current + direction;
+        if (next < 0) return sortOptions.length - 1;
+        if (next >= sortOptions.length) return 0;
+        return next;
+      });
+    },
+    [sortOptions.length]
+  );
+
+  const handleSortSelect = useCallback((value: SortOption) => {
+    setSortOption(value);
+    setSortDropdownOpen(false);
+  }, []);
+
+  const handleSortTriggerKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (!sortOptions.length) return;
+
+      switch (event.key) {
+        case "ArrowDown": {
+          event.preventDefault();
+          if (!sortDropdownOpen) {
+            setSortDropdownOpen(true);
+            return;
+          }
+          updateSortHighlight(1);
+          break;
+        }
+        case "ArrowUp": {
+          event.preventDefault();
+          if (!sortDropdownOpen) {
+            setSortDropdownOpen(true);
+            return;
+          }
+          updateSortHighlight(-1);
+          break;
+        }
+        case "Home": {
+          if (!sortDropdownOpen) return;
+          event.preventDefault();
+          setSortHighlightIndex(sortOptions.length ? 0 : -1);
+          break;
+        }
+        case "End": {
+          if (!sortDropdownOpen) return;
+          event.preventDefault();
+          setSortHighlightIndex(sortOptions.length ? sortOptions.length - 1 : -1);
+          break;
+        }
+        case "Enter":
+        case " ": {
+          event.preventDefault();
+          if (sortDropdownOpen && sortHighlightIndex >= 0) {
+            const option = sortOptions[sortHighlightIndex];
+            if (option) {
+              handleSortSelect(option.value);
+            }
+          } else {
+            setSortDropdownOpen((open) => !open);
+          }
+          break;
+        }
+        case "Escape": {
+          if (sortDropdownOpen) {
+            event.preventDefault();
+            setSortDropdownOpen(false);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    [handleSortSelect, sortDropdownOpen, sortHighlightIndex, sortOptions, updateSortHighlight]
   );
 
   const handleRowKeyDown = (e: React.KeyboardEvent<HTMLTableRowElement>, id: string) => {
@@ -551,7 +698,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
                   <Search size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
                   <input
                     className={desktopStyles.filterInput}
-                    placeholder="Filter projects..."
+                    placeholder="Filter by title..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     aria-label="Filter projects by title"
@@ -573,8 +720,14 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
                       onClick={() => setStatusDropdownOpen((open) => !open)}
                       onKeyDown={handleStatusTriggerKeyDown}
                     >
-                      <span>{statusTriggerLabel}</span>
-                      <ChevronDown size={14} aria-hidden />
+                      <span className={desktopStyles.triggerLabel}>
+                        <span className={desktopStyles.triggerLabelText}>{statusTriggerLabel}</span>
+                      </span>
+                      <ChevronDown
+                        size={14}
+                        aria-hidden
+                        className={desktopStyles.triggerChevron}
+                      />
                     </button>
                     {statusDropdownOpen && (
                       <ul
@@ -612,28 +765,64 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
                   </div>
                 )}
 
-                <div className={`${desktopStyles.filterField} ${desktopStyles.filterSelect}`}>
-                  <CalendarDays
-                    size={16}
-                    aria-hidden
-                    className={desktopStyles.filterFieldIcon}
-                  />
-                  <select
-                    className={desktopStyles.filterSelectControl}
-                    value={sortOption}
-                    onChange={(e) => setSortOption(e.target.value as SortOption)}
-                    aria-label="Sort projects"
+                <div className={desktopStyles.statusDropdown} ref={sortDropdownRef}>
+                  <button
+                    type="button"
+                    className={desktopStyles.statusTrigger}
+                    aria-haspopup="listbox"
+                    aria-expanded={sortDropdownOpen}
+                    aria-controls={sortListIdRef.current}
+                    aria-activedescendant={sortActiveOptionId}
+                    onClick={() => setSortDropdownOpen((open) => !open)}
+                    onKeyDown={handleSortTriggerKeyDown}
                   >
-                    <option value="titleAsc">Title (A-Z)</option>
-                    <option value="titleDesc">Title (Z-A)</option>
-                    <option value="dateNewest">Date (Newest)</option>
-                    <option value="dateOldest">Date (Oldest)</option>
-                  </select>
-                  <ChevronDown
-                    size={14}
-                    aria-hidden
-                    className={desktopStyles.filterSelectChevron}
-                  />
+                    <span className={desktopStyles.triggerLabel}>
+                      <CalendarDays
+                        size={16}
+                        aria-hidden
+                        className={desktopStyles.triggerLabelIcon}
+                      />
+                      <span className={desktopStyles.triggerLabelText}>{sortTriggerLabel}</span>
+                    </span>
+                    <ChevronDown
+                      size={14}
+                      aria-hidden
+                      className={desktopStyles.triggerChevron}
+                    />
+                  </button>
+                  {sortDropdownOpen && (
+                    <ul
+                      className={desktopStyles.statusOptions}
+                      role="listbox"
+                      id={sortListIdRef.current}
+                    >
+                      {sortOptions.map((option, index) => {
+                        const optionId = `${sortListIdRef.current}-option-${index}`;
+                        const isSelected = sortOption === option.value;
+                        const isActive = sortHighlightIndex === index;
+                        return (
+                          <li
+                            key={`${option.value}-${index}`}
+                            role="option"
+                            id={optionId}
+                            aria-selected={isSelected}
+                          >
+                            <button
+                              type="button"
+                              className={`${desktopStyles.statusOptionButton} ${
+                                isSelected ? desktopStyles.statusOptionSelected : ""
+                              } ${isActive ? desktopStyles.statusOptionActive : ""}`}
+                              onClick={() => handleSortSelect(option.value)}
+                              onMouseEnter={() => setSortHighlightIndex(index)}
+                              onFocus={() => setSortHighlightIndex(index)}
+                            >
+                              {option.label}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>

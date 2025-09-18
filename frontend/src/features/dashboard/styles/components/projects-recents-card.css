@@ -36,6 +36,7 @@
   font-size: 13px;
   padding: 6px 8px;
   border-radius: 8px;
+  line-height: 1;
 }
 
 .prc-recents-btn:hover {

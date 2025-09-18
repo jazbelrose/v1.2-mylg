@@ -38,7 +38,7 @@ const MoodboardPage: React.FC = () => {
     if (!initialProject || initialProject.projectId !== projectId) {
       void fetchProjectDetails(projectId);
     }
-  }, [projectId, initialProject?.projectId, fetchProjectDetails]);
+  }, [projectId, initialProject, fetchProjectDetails]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -137,6 +137,7 @@ const MoodboardPage: React.FC = () => {
 };
 
 export default MoodboardPage;
+
 
 
 

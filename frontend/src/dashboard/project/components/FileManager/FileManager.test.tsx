@@ -39,7 +39,7 @@ const root = document.createElement("div");
 root.id = "root";
 document.body.appendChild(root);
 
-vi.mock("../../../app/contexts/useData", () => ({
+vi.mock("@/app/contexts/useData", () => ({
   useData: vi.fn(),
 }));
 
@@ -54,7 +54,7 @@ vi.mock("./PDFPreview", () => ({
 
 const MOCK_S3_BASE = "https://s3";
 
-vi.mock("../../../shared/utils/api", () => {
+vi.mock("@/shared/utils/api", () => {
   const buildUrl = (key: string) => {
     if (!key || typeof key !== "string") return key;
     if (key.startsWith("http") || key.startsWith("blob:")) return key;
@@ -89,13 +89,28 @@ vi.mock("../../../shared/utils/api", () => {
 });
 // ── Imports that use the mocks ─────────────────────────────────────────────────
 import FileManagerComponent from "./FileManager";
-import { NotificationContainer } from "../../../shared/ui/ToastNotifications";
-import { useData } from "../../../app/contexts/useData";
-import { apiFetch } from "../../../shared/utils/api";
 
-// Helper to type vi.fn() from mocks
-const useDataMock = useData as vi.MockedFunction<typeof useData>;
-const apiFetchMock = apiFetch as vi.MockedFunction<typeof apiFetch>;
+// Mock NotificationContainer since it's just a wrapper
+vi.mock("../../../shared/ui/ToastNotifications", () => ({
+  NotificationContainer: () => null,
+}));
+
+// Import mocked modules after mocks are defined
+// Note: useData and api are mocked, so we don't import them directly
+import { NotificationContainer } from "../../../shared/ui/ToastNotifications";
+
+// Access mocked functions through the mock registry
+const useDataMock = vi.fn();
+const apiFetchMock = vi.fn();
+
+// Mock the imports to return our mock functions
+vi.doMock("../../../app/contexts/useData", () => ({
+  useData: useDataMock,
+}));
+
+vi.doMock("../../../shared/utils/api", () => ({
+  apiFetch: apiFetchMock,
+}));
 
 // ── Setup ──────────────────────────────────────────────────────────────────────
 beforeEach(() => {
@@ -221,7 +236,7 @@ test("previews PDF files in a modal", async () => {
 });
 
 test("encodes + in S3 keys and renders without repeated errors", async () => {
-  const { list } = await import("aws-amplify/storage");
+  const { list } = vi.mocked(await import("aws-amplify/storage"));
   const listMock = list as vi.MockedFunction<typeof list>;
   listMock.mockClear();
   listMock.mockResolvedValue({

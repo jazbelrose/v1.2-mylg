@@ -3,20 +3,20 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { test, expect, beforeAll, beforeEach, vi } from 'vitest';
 import TasksComponent from './TasksComponent';
-import {
+import { message } from 'antd';
+
+// Define mock functions
+const fetchTasks = vi.fn(() => Promise.resolve([]));
+const deleteTask = vi.fn(() => Promise.resolve({}));
+const fetchUserProfilesBatch = vi.fn(() => Promise.resolve([]));
+
+vi.mock('@/shared/utils/api', () => ({
+  __esModule: true,
   fetchTasks,
   deleteTask,
   fetchUserProfilesBatch,
-} from '../../../shared/utils/api';
-import { message } from 'antd';
-
-vi.mock('../../../shared/utils/api', () => ({
-  __esModule: true,
-  fetchTasks: vi.fn(() => Promise.resolve([])),
   createTask: vi.fn((t) => Promise.resolve(t)),
   updateTask: vi.fn((t) => Promise.resolve(t)),
-  deleteTask: vi.fn(() => Promise.resolve({})),
-  fetchUserProfilesBatch: vi.fn(() => Promise.resolve([]))
 }));
 vi.mock('antd', () => ({
   Form: Object.assign(
@@ -92,6 +92,9 @@ vi.mock('antd', () => ({
   )),
   // other antd components if needed
 }));
+
+// Import mocked api functions
+// const { fetchTasks, deleteTask, fetchUserProfilesBatch } = vi.mocked(await import('../../../shared/utils/api'));
 
 const mockUseBudget = vi.fn(() => ({ budgetItems: [] }));
 vi.mock('@/dashboard/project/features/budget/context/BudgetContext', () => ({
@@ -204,6 +207,7 @@ test('loads tasks when API returns { tasks: [...] }', async () => {
 
   (fetchTasks as vi.Mock).mockReset();
 });
+
 
 
 

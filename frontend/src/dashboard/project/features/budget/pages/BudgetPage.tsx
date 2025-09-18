@@ -125,7 +125,7 @@ const BudgetPageContent = () => {
     if (!initialActiveProject || initialActiveProject.projectId !== projectId) {
       fetchProjectDetails(projectId);
     }
-  }, [projectId, initialActiveProject?.projectId, fetchProjectDetails]);
+  }, [projectId, initialActiveProject, fetchProjectDetails]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -698,6 +698,7 @@ const BudgetPage = () => {
 };
 
 export default BudgetPage;
+
 
 
 

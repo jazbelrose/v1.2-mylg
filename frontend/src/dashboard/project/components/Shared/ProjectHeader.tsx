@@ -1812,6 +1812,10 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) =>
       ].filter((tab) => tab.visible),
     [
       basePath,
+      budgetPath,
+      calendarPath,
+      moodboardPath,
+      editorPath,
       showBudgetTab,
       showCalendarTab,
       showEditorTab,
@@ -1921,6 +1925,7 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) =>
 };
 
 export default React.memo(ProjectHeader);
+
 
 
 

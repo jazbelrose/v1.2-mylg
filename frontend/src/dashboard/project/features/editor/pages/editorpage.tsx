@@ -91,7 +91,7 @@ const EditorPage: React.FC = () => {
     if (!initialActiveProject || initialActiveProject.projectId !== projectId) {
       fetchProjectDetails(projectId);
     }
-  }, [projectId, initialActiveProject?.projectId, fetchProjectDetails]);
+  }, [projectId, initialActiveProject, fetchProjectDetails]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -343,6 +343,7 @@ const EditorPage: React.FC = () => {
 };
 
 export default EditorPage;
+
 
 
 

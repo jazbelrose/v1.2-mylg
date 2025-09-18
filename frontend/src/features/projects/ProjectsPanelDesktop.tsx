@@ -12,7 +12,6 @@ import { useData } from "@/app/contexts/useData";
 import type { UserLite } from "@/app/contexts/DataProvider";
 import { useProjectKpis, type ProjectLike } from "@/features/dashboard/hooks/useProjectKpis";
 import SVGThumbnail from "@/features/dashboard/components/SvgThumbnail";
-import { Kebab } from "@/shared/icons/Kebab";
 import { getFileUrl } from "@/shared/utils/api";
 import desktopStyles from "./ProjectsPanelDesktop.module.css";
 import mobileStyles from "@/features/dashboard/components/projects-panel.module.css";
@@ -84,8 +83,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   };
   const navigate = useNavigate();
 
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
-  const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [imgError, setImgError] = useState<Record<string, boolean>>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersRef = useRef<HTMLDivElement | null>(null);
@@ -95,25 +92,12 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [query, setQuery] = useState<string>("");
   const [scope, setScope] = useState<"recents" | "all">("recents");
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
 
   useEffect(() => {
     if (!isLoading && projects.length === 0 && !projectsError) {
       fetchProjects();
     }
   }, [isLoading, projects.length, projectsError, fetchProjects]);
-
-  useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
-      if (!menuOpenId) return;
-      const el = menuRefs.current[menuOpenId];
-      if (el && e.target instanceof Node && !el.contains(e.target)) {
-        setMenuOpenId(null);
-      }
-    };
-    document.addEventListener("click", onDocClick);
-    return () => document.removeEventListener("click", onDocClick);
-  }, [menuOpenId]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -221,20 +205,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
       e.preventDefault();
       handleOpen(id);
     }
-  };
-
-  const toggleMenu = (id: string) =>
-    setMenuOpenId((prev) => (prev === id ? null : id));
-
-  const onAction = (
-    action: "open" | "pin" | "unpin" | "archive",
-    id: string
-  ) => {
-    if (action === "open") {
-      handleOpen(id);
-    }
-    console.log(`Project ${id}: ${action}`);
-    setMenuOpenId(null);
   };
 
   const getOwnerName = (project: ProjectWithMeta): string => {
@@ -348,123 +318,13 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     );
   });
 
-  const renderGrid = () => (
-    <div className={desktopStyles.gridWrap}>
-      <div
-        className={`${mobileStyles.list} ${
-          scope === "all" ? mobileStyles.listScrollable : ""
-        }`}
-        role="list"
-      >
-        {items.map((p) => {
-          const dateIso =
-            p.updatedAt || p.dateUpdated || p.lastModified || p.date || p.dateCreated;
-          const dateLabel = formatShortDate(dateIso);
-          const id = p.projectId;
-          const title = (p.title || "Untitled project").trim();
-          const isMenuOpen = menuOpenId === id;
-          const thumb = Array.isArray(p.thumbnails) && p.thumbnails[0] ? p.thumbnails[0] : undefined;
-          const onKey = (e: React.KeyboardEvent) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              handleOpen(id);
-            }
-          };
-          return (
-            <div key={id} className={mobileStyles.row} role="listitem">
-              <div
-                className={mobileStyles.rowMain}
-                role="button"
-                tabIndex={0}
-                onClick={() => handleOpen(id)}
-                onKeyDown={onKey}
-                aria-label={`Open project ${title}`}
-              >
-                <div className={mobileStyles.icon} aria-hidden>
-                  {thumb && !imgError[id] ? (
-                    <img
-                      className={mobileStyles.thumb}
-                      src={getFileUrl(thumb)}
-                      alt=""
-                      onError={() => setImgError((m) => ({ ...m, [id]: true }))}
-                    />
-                  ) : (
-                    <SVGThumbnail
-                      initial={title.charAt(0).toUpperCase() || "#"}
-                      className={mobileStyles.thumb}
-                    />
-                  )}
-                </div>
-                <div className={mobileStyles.meta}>
-                  <div className={mobileStyles.titleRow}>
-                    <div className={mobileStyles.titleLeft}>
-                      <span className={mobileStyles.name}>{title}</span>
-                    </div>
-                    {dateLabel ? (
-                      <span className={mobileStyles.dateInline}>{dateLabel}</span>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className={`${mobileStyles.menu} ${
-                  isMenuOpen ? mobileStyles.menuOpen : ""
-                }`}
-                ref={(el) => {
-                  menuRefs.current[id] = el;
-                }}
-              >
-                <button
-                  type="button"
-                  className={mobileStyles.menuBtn}
-                  aria-label="Project actions"
-                  aria-haspopup="menu"
-                  aria-expanded={isMenuOpen}
-                  onClick={() => toggleMenu(id)}
-                >
-                  <Kebab size={20} aria-hidden />
-                </button>
-                {isMenuOpen && (
-                  <div className={mobileStyles.menuPop} role="menu">
-                    <button
-                      className={mobileStyles.menuItem}
-                      role="menuitem"
-                      onClick={() => onAction("open", id)}
-                    >
-                      Open
-                    </button>
-                    <button
-                      className={mobileStyles.menuItem}
-                      role="menuitem"
-                      onClick={() => onAction("pin", id)}
-                    >
-                      Pin
-                    </button>
-                    <button
-                      className={mobileStyles.menuItem}
-                      role="menuitem"
-                      onClick={() => onAction("archive", id)}
-                    >
-                      Archive
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-
   const errorText = projectsError ? "Failed to load projects." : undefined;
 
   let bodyContent: React.ReactNode;
 
   if (errorText) {
     bodyContent = <div className={desktopStyles.errorState}>{errorText}</div>;
-  } else if (viewMode === "table") {
+  } else {
     bodyContent = (
       <div className={desktopStyles.tableWrap}>
         {isLoading ? (
@@ -487,14 +347,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
         )}
       </div>
     );
-  } else {
-    bodyContent = isLoading ? (
-      <div className={desktopStyles.emptyState}>Loading projects…</div>
-    ) : items.length === 0 ? (
-      <div className={desktopStyles.emptyState}>No projects match filters.</div>
-    ) : (
-      renderGrid()
-    );
   }
 
   return (
@@ -507,26 +359,6 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
           <div className={mobileStyles.titleWrap}>
             <h3 className={mobileStyles.title}>Projects</h3>
             {renderIconsStrip()}
-          </div>
-          <div className={desktopStyles.viewToggle} role="group" aria-label="Select projects layout">
-            <button
-              type="button"
-              className={desktopStyles.toggleButton}
-              aria-pressed={viewMode === "table"}
-              onClick={() => setViewMode("table")}
-              aria-label="Show projects table"
-            >
-              Table
-            </button>
-            <button
-              type="button"
-              className={desktopStyles.toggleButton}
-              aria-pressed={viewMode === "grid"}
-              onClick={() => setViewMode("grid")}
-              aria-label="Show project cards"
-            >
-              Cards
-            </button>
           </div>
         </div>
 

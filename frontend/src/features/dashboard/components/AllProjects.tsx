@@ -116,17 +116,19 @@ const AllProjects: React.FC = () => {
     }
   }, [isLoading, projects.length, projectsError, fetchProjects]);
 
-  const onSelectProject = async (project: Project): Promise<void> => {
-    try {
-      await fetchProjectDetails(project.projectId);
-      const safeTitle =
-        (project.title && project.title.trim()) ||
-        `project-${project.projectId.slice(0, 6)}`;
-      const slug = slugify(safeTitle);
-      navigate(`/dashboard/projects/${slug}`);
-    } catch (err) {
+  const onSelectProject = (project: Project): void => {
+    const safeTitle =
+      (project.title && project.title.trim()) ||
+      `project-${project.projectId.slice(0, 6)}`;
+    const slug = slugify(safeTitle);
+
+    navigate(`/dashboard/projects/${slug}`);
+
+    const fetchPromise = fetchProjectDetails(project.projectId).catch((err) => {
       console.error('Error loading project', err);
-    }
+    });
+
+    void fetchPromise;
   };
 
   // Preload project thumbnails

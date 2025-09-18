@@ -194,13 +194,16 @@ const WelcomeScreen: React.FC = () => {
     const slug = proj ? slugify(proj.title) : projectId;
     const path = `/dashboard/projects/${slug}`;
 
-    if (location.pathname !== path) {
-      await Promise.all([
-        fetchProjectDetails(projectId),
-        prefetchBudgetData(projectId),
-      ]);
-      navigate(path);
-    }
+    navigate(path);
+
+    const fetchPromise = Promise.all([
+      fetchProjectDetails(projectId),
+      prefetchBudgetData(projectId),
+    ]).catch((error) => {
+      console.error("Failed to prefetch project resources", error);
+    });
+
+    void fetchPromise;
   };
 
   useEffect(() => {

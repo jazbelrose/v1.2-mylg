@@ -1,7 +1,7 @@
 // -------------- Tame react-modal so portals/props don't spam warnings --------------
 import * as React from 'react';
 vi.mock('react-modal', () => {
-  const Modal = ({ isOpen, children }: { isOpen?: boolean; children?: React.ReactNode }) =>
+  const Modal = ({ children }: { children?: React.ReactNode }) =>
     React.createElement('div', { 'data-testid': 'modal' }, children);
   Modal.setAppElement = vi.fn();
   return { default: Modal };

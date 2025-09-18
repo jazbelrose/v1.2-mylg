@@ -22,7 +22,7 @@ vi.mock('antd', () => ({
   Form: Object.assign(
     vi.fn(({ children, ...props }) => <form {...props}>{children}</form>),
     {
-      Item: vi.fn(({ children, label, name, ...props }) => <div {...props}> {label && <label htmlFor={name}>{label}</label>} {React.cloneElement(children as React.ReactElement<any>, { id: name })} </div>), // @ts-expect-error: Cloning React element with additional props
+      Item: vi.fn(({ children, label, name, ...props }) => <div {...props}> {label && <label htmlFor={name}>{label}</label>} {React.cloneElement(children as React.ReactElement<any>, { id: name })} </div>), // eslint-disable-line @typescript-eslint/no-explicit-any
       useForm: vi.fn(() => [{
         getFieldValue: vi.fn(),
         setFieldsValue: vi.fn(),
@@ -37,9 +37,9 @@ vi.mock('antd', () => ({
   Table: vi.fn(({ columns, dataSource }) => 
     !dataSource || dataSource.length === 0 ? <div>No tasks yet!</div> : (
       <div>
-        {dataSource.map((record: any) => (
+        {dataSource.map((record: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
           <div key={record.id || record.taskId}>
-            {columns.map((col: any) => {
+            {columns.map((col: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
               if (col.dataIndex === 'name') {
                 return <div key={col.key}>{(record[col.dataIndex] || "").toUpperCase()}</div>;
               }
@@ -56,7 +56,8 @@ vi.mock('antd', () => ({
   ),
   Select: vi.fn(({ id, options, children, ...props }) => (
     <select id={id} name={id} {...props}>
-      {options ? options.map((opt: any) => <option key={opt.value} value={opt.value}>{opt.label || opt.children}</option>) : children}
+      {options ? options.map((opt: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
+        <option key={opt.value} value={opt.value}>{opt.label || opt.children}</option>) : children}
     </select>
   )),
   Button: vi.fn(({ children, ...props }) => <button {...props}>{children || 'Button'}</button>),
@@ -65,7 +66,7 @@ vi.mock('antd', () => ({
     return (
       <div {...props}>
         {children}
-        {items.map((item: any) => (
+        {items.map((item: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
           <button key={item.key} onClick={() => menu?.onClick?.({ key: item.key })}>
             {item.label}
           </button>
@@ -85,7 +86,8 @@ vi.mock('antd', () => ({
   AutoComplete: vi.fn(({ id, options, ...props }) => (
     <div>
       <input id={id} name={id} {...props} />
-      {options ? options.map((opt: any) => <div key={opt.value} role="option">{opt.label || opt}</div>) : null}
+      {options ? options.map((opt: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
+        <div key={opt.value} role="option">{opt.label || opt}</div>) : null}
     </div>
   )),
   // other antd components if needed

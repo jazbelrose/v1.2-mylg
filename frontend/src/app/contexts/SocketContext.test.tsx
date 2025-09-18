@@ -28,17 +28,6 @@ declare global {
   var mockWebSocket: MockWebSocket;
 }
 
-// Create a local mock WebSocket for this test (keeping for reference but not used in mock)
-const localMockWebSocket: MockWebSocket = {
-  onopen: null,
-  onmessage: null,
-  onclose: null,
-  onerror: null,
-  readyState: 1,
-  send: vi.fn(),
-  close: vi.fn(),
-};
-
 // Mock the WebSocket connection creation BEFORE imports
 vi.mock("@/shared/utils/secureWebSocketAuth", () => {
   // Create the mock WebSocket inside the mock factory

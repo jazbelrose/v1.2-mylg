@@ -38,7 +38,7 @@ vi.mock("./useBudget", () => ({
 
 // Mock the BudgetContext to provide the useBudget hook
 vi.mock("./BudgetContext", async (importOriginal) => {
-  const actual = await importOriginal() as any;
+  const actual = await importOriginal() as unknown;
   return {
     ...actual,
     useBudget: () => ({

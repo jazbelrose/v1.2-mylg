@@ -19,7 +19,7 @@ const formatTimestamp = (iso: string) => {
       month: "short",
       day: "numeric",
     });
-  } catch (error) {
+  } catch {
     return "";
   }
 };

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Search, X, FileText, FolderOpen, MessageSquare, User } from 'lucide-react';
 import { useData } from '@/app/contexts/useData';
 import { useNavigate } from 'react-router-dom';
@@ -332,16 +332,16 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate 
   const navigate = useNavigate();
 
   const data = useData();
-  const projects = (Array.isArray(data?.projects) ? data.projects : []) as Project[];
-  const projectMessages = (data?.projectMessages && typeof data.projectMessages === 'object'
+  const projects = useMemo(() => (Array.isArray(data?.projects) ? data.projects : []) as Project[], [data?.projects]);
+  const projectMessages = useMemo(() => (data?.projectMessages && typeof data.projectMessages === 'object'
     ? data.projectMessages
-    : {}) as Record<string, Message[]>;
+    : {}) as Record<string, Message[]>, [data?.projectMessages]);
   const fetchProjectDetails = data?.fetchProjectDetails as
     | ((projectId: string) => Promise<unknown>)
     | undefined;
-  const userData = (data?.userData ?? null) as UserLite | null;
-  const allUsers = (Array.isArray(data?.allUsers) ? data.allUsers : []) as UserLite[];
-  const isAdmin = Boolean((data as { isAdmin?: boolean })?.isAdmin);
+  const userData = useMemo(() => (data?.userData ?? null) as UserLite | null, [data?.userData]);
+  const allUsers = useMemo(() => (Array.isArray(data?.allUsers) ? data.allUsers : []) as UserLite[], [data?.allUsers]);
+  const isAdmin = useMemo(() => Boolean((data as { isAdmin?: boolean })?.isAdmin), [data]);
 
   // Close search when clicking outside
   useEffect(() => {

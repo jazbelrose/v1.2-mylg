@@ -114,6 +114,7 @@ const SingleProject: React.FC = () => {
     projects,
     fetchProjectDetails,
     activeProject?.projectId,
+    location.key,
   ]);
 
   // Ensure team/details are loaded for the current project.

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Bell, Menu, Plus } from "lucide-react";
 import { useData } from '@/app/contexts/useData';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import NotificationsDrawer from '../../../shared/ui/NotificationsDrawer';
 import { useNotifications } from "../../../app/contexts/useNotifications";
@@ -9,7 +9,6 @@ import NavBadge from "../../../shared/ui/NavBadge";
 import GlobalSearch from './GlobalSearch';
 import './GlobalSearch.css';
 import { getFileUrl } from '../../../shared/utils/api';
-import WeekWidgetCard from "@/features/schedule/WeekWidgetCard";
 
 interface WelcomeHeaderProps {
   userName?: string;
@@ -31,7 +30,6 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
   const { userData } = useData();
   const { isOnline } = useOnlineStatus(); // <-- only need this now
   const navigate = useNavigate();
-  const location = useLocation();
 
   const userName = propUserName || userData?.firstName || userData?.email || 'User';
   const userThumbnail = userData?.thumbnail;
@@ -109,20 +107,6 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
   ]
     .filter(Boolean)
     .join(' ');
-
-  const activeView = React.useMemo(() => {
-    const segments = location.pathname.split('/').filter(Boolean);
-    const idx = segments.indexOf('dashboard');
-    if (idx === -1) return null;
-
-    let view = segments[idx + 1] ?? 'welcome';
-    if (view === 'welcome') {
-      view = segments[idx + 2] ?? 'welcome';
-    }
-    return view;
-  }, [location.pathname]);
-
-  const showWelcomeCards = Boolean(isDesktopShell && activeView === 'welcome');
 
   return (
     <>

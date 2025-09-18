@@ -185,7 +185,7 @@ function adjustLightness(
   prefer: "lighter" | "darker" | "auto" = "auto"
 ): string {
   const { r, g, b } = hexToRgb255(color);
-  let { h, s, l } = rgbToHslNormalized(r, g, b);
+  const { h, s, l } = rgbToHslNormalized(r, g, b);
   let bestColor = color;
   let bestContrast = contrastRatio(color, reference);
   if (bestContrast >= minContrast) return bestColor;

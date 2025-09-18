@@ -12,7 +12,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 vi.mock("lucide-react", () => ({ GalleryVerticalEnd: () => <div /> }));
 
 vi.mock("react-modal", () => {
-  const Modal = ({ isOpen, children }: { isOpen?: boolean; children?: React.ReactNode }) =>
+  const Modal = ({ children }: { children?: React.ReactNode }) =>
     React.createElement('div', { 'data-testid': 'modal' }, children);
   Modal.setAppElement = vi.fn();
   return { default: Modal };

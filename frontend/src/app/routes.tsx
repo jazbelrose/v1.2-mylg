@@ -173,7 +173,10 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
             </ProtectedRoute>
           }
         >
-          <Route path="projects/:projectSlug" element={<DashboardSingleProject />} />
+          <Route
+            path="projects/:projectSlug"
+            element={<DashboardSingleProject key={location.key} />}
+          />
           <Route path="projects/:projectSlug/budget" element={<DashboardBudgetPage />} />
           <Route path="projects/:projectSlug/calendar" element={<DashboardCalendarPage />} />
           <Route path="projects/:projectSlug/moodboard" element={<DashboardMoodboardPage />} />

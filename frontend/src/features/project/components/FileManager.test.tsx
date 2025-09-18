@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { vi, test, expect, beforeEach } from "vitest";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface MockS3Item {

@@ -6,7 +6,7 @@ import { test, expect, vi, beforeAll } from 'vitest';
 
 // Mock react-modal
 vi.mock('react-modal', () => {
-  const Modal = ({ isOpen, children }: { isOpen?: boolean; children?: React.ReactNode }) =>
+  const Modal = ({ children }: { children?: React.ReactNode }) =>
     React.createElement('div', { 'data-testid': 'modal' }, children);
   Modal.setAppElement = vi.fn();
   return { default: Modal };

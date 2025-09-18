@@ -80,6 +80,10 @@
   display: block;
 }
 
+.thumbSquircle {
+  border-radius: 0;
+}
+
 .iconsMore {
   font-size: 11px;
   opacity: .85;

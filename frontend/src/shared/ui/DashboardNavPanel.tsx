@@ -1,6 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
+import GlobalSearch from "@/features/dashboard/components/GlobalSearch";
 import NavBadge from "./NavBadge";
 import useDashboardNavigation, {
   type DashboardNavItem,
@@ -80,18 +81,26 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
     .filter(Boolean)
     .join(" ");
 
+     const topSection = isOverlay ? (
+    <div className="navigation-drawer-search">
+      <GlobalSearch onNavigate={onClose} />
+    </div>
+  ) : onClose ? (
+    <div className="navigation-drawer-header">
+      <button
+        type="button"
+        className="close-button"
+        onClick={onClose}
+        aria-label="Close navigation"
+      >
+        <X size={24} color="white" />
+      </button>
+    </div>
+  ) : null;
+
   return (
     <div className={containerClass}>
-      <div className={`navigation-drawer-header ${isOverlay ? 'navigation-drawer-header--overlay' : ''}`}>
-        <button
-          type="button"
-          className="close-button"
-          onClick={onClose}
-          aria-label="Close navigation"
-        >
-          <X size={24} color="white" />
-        </button>
-      </div>
+        {topSection}
 
       <div className="navigation-drawer-content">
         {isPersistent ? (

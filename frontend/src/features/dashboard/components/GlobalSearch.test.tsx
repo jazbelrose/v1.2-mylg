@@ -108,7 +108,7 @@ const mockUseData = {
   isAdmin: false
 };
 
-const PLACEHOLDER_TEXT = 'Microcopy: speak human';
+const PLACEHOLDER_TEXT = 'Find anything...';
 
 describe('GlobalSearch', () => {
   beforeEach(() => {

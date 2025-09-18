@@ -63,6 +63,8 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const showGlobalSearchInHeader = !isMobile;
+
   const handleHomeClick = () => navigate('/');
   const handleNotificationsToggle = () => setNotificationsOpen(!notificationsOpen);
   const handleNotificationsPinToggle = () => setNotificationsPinned(!notificationsPinned);
@@ -156,14 +158,14 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
           )}
         </div>
 
-        {/* Center: Global Search */}
-
+        {showGlobalSearchInHeader ? (
+          <div className="welcome-header-center">
+            <GlobalSearch />
+          </div>
+        ) : null}
 
         {/* Right: Create, Notifications, Avatar (+ online dot) */}
         <div className="welcome-header-right">
-                  <div className="welcome-header-center">
-          <GlobalSearch />
-        </div>
           <div
             className="nav-item-style"
             onClick={() => navigate("/dashboard/new")}

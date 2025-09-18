@@ -316,9 +316,10 @@ const buildCollaboratorResults = (
 
 interface GlobalSearchProps {
   className?: string;
+  onNavigate?: () => void;
 }
 
-const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
+const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -520,6 +521,9 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) => {
     setIsOpen(false);
     setQuery('');
     setSelectedIndex(-1);
+    if (onNavigate) {
+      onNavigate();
+    }
 
     if (result.type === 'project' && result.projectId) {
       try {

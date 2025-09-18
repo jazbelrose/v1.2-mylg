@@ -3,6 +3,7 @@ import type { FC, KeyboardEvent as ReactKeyboardEvent } from "react";
 import desktopStyles from "./ProjectsPanelDesktop.module.css";
 import mobileStyles from "@/dashboard/home/components/projects-panel.module.css";
 import SVGThumbnail from "@/dashboard/home/components/SvgThumbnail";
+import Squircle from "@/shared/ui/Squircle";
 import { getFileUrl } from "@/shared/utils/api";
 import type { UserLite } from "@/app/contexts/DataProvider";
 import type { ProjectWithMeta } from "../utils/types";
@@ -97,10 +98,15 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
                 >
                   <td>
                     <div className={desktopStyles.projectCell}>
-                      <span className={desktopStyles.thumb} aria-hidden>
+                      <Squircle
+                        as="span"
+                        className={desktopStyles.thumb}
+                        aria-hidden
+                        radius={12}
+                      >
                         {thumb && !imgError[id] ? (
                           <img
-                            className={mobileStyles.thumb}
+                            className={`${mobileStyles.thumb} ${mobileStyles.thumbSquircle}`}
                             src={getFileUrl(thumb)}
                             alt=""
                             onError={() => onImageError(id)}
@@ -108,10 +114,10 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
                         ) : (
                           <SVGThumbnail
                             initial={title.charAt(0).toUpperCase() || "#"}
-                            className={mobileStyles.thumb}
+                            className={`${mobileStyles.thumb} ${mobileStyles.thumbSquircle}`}
                           />
                         )}
-                      </span>
+                      </Squircle>
                       <span className={desktopStyles.projectName}>{title}</span>
                     </div>
                   </td>

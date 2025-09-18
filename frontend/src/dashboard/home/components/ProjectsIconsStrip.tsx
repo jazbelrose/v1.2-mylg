@@ -2,6 +2,7 @@ import type { FC } from "react";
 
 import type { ProjectLike } from "@/dashboard/home/hooks/useProjectKpis";
 import SVGThumbnail from "@/dashboard/home/components/SvgThumbnail";
+import Squircle from "@/shared/ui/Squircle";
 import { getFileUrl } from "@/shared/utils/api";
 
 import mobileStyles from "@/dashboard/home/components/projects-panel.module.css";
@@ -35,17 +36,19 @@ export const ProjectsIconsStrip: FC<ProjectsIconsStripProps> = ({
             : undefined;
 
         return (
-          <button
+          <Squircle
             key={`icon-${id}`}
+            as="button"
             type="button"
             className={mobileStyles.iconBtnSm}
             aria-label={`Open project ${title}`}
             title={title}
             onClick={() => onOpenProject(id)}
+            radius={8}
           >
             {thumb && !imgError[id] ? (
               <img
-                className={mobileStyles.thumbSm}
+                className={`${mobileStyles.thumbSm} ${mobileStyles.thumbSquircle}`}
                 src={getFileUrl(thumb)}
                 alt=""
                 onError={() => onImageError(id)}
@@ -53,10 +56,10 @@ export const ProjectsIconsStrip: FC<ProjectsIconsStripProps> = ({
             ) : (
               <SVGThumbnail
                 initial={title.charAt(0).toUpperCase() || "#"}
-                className={mobileStyles.thumbSm}
+                className={`${mobileStyles.thumbSm} ${mobileStyles.thumbSquircle}`}
               />
             )}
-          </button>
+          </Squircle>
         );
       })}
       {more > 0 && (

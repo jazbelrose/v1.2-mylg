@@ -60,7 +60,7 @@ vi.mock('./AuthContext', () => ({
   },
 }));
 import { useAuth } from './useAuth';
-import type { AuthContextValue } from './AuthContext';
+import type { AuthContextValue } from './AuthContextValue';
 
 /** ---------- Now safe to import React & SUT ---------- */
 import React from 'react';
@@ -88,21 +88,15 @@ beforeEach(() => {
 
   // default auth: logged in admin with no project IDs (provider calls list endpoint)
   (useAuth as ReturnType<typeof vi.fn<() => AuthContextValue>>).mockReturnValue({
-    user: { userId: 'u1', role: 'admin', projects: [] },
-    userId: 'u1',
-    userName: 'Test User',
-    isAdmin: true,
-    isDesigner: false,
-    isBuilder: false,
-    isVendor: false,
-    isClient: false,
     isAuthenticated: true,
     authStatus: 'signedIn',
+    cognitoUser: { userId: 'u1', role: 'admin' },
     loading: false,
+    userId: 'u1',
+    role: 'admin',
     setIsAuthenticated: vi.fn(),
     setAuthStatus: vi.fn(),
-    setUser: vi.fn(),
-    refreshUser: vi.fn(),
+    setCognitoUser: vi.fn(),
     validateAndSetUserSession: vi.fn(),
     getCurrentUser: vi.fn(),
     getAuthTokens: vi.fn(),

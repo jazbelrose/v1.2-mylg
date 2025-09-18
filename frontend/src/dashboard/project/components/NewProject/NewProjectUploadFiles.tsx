@@ -8,7 +8,7 @@ import React, {
   ChangeEvent,
   KeyboardEvent,
 } from 'react';
-import Modal from '../../../shared/ui/ModalWithStack';
+import Modal from '@/shared/ui/ModalWithStack';
 import {
   FaFilePdf,
   FaFileExcel,
@@ -17,7 +17,7 @@ import {
   FaCube,
 } from 'react-icons/fa';
 import { SiAdobe, SiSvg, SiHtml5 } from 'react-icons/si';
-import styles from '@/dashboard/project/components/new-project-upload-files.module.css';
+import styles from './new-project-upload-files.module.css';
 
 interface NewProjectUploadFilesProps {
   selectedFiles: File[];

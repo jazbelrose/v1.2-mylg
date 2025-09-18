@@ -1,17 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import ProjectPageLayout from '@/dashboard/project/components/ProjectPageLayout';
-import ProjectHeader from '@/dashboard/project/components/ProjectHeader';
-import TimelineChart from '@/dashboard/project/components/TimelineChart';
-import ProjectCalendar from '@/dashboard/project/components/ProjectCalendar';
-import QuickLinksComponent from '@/dashboard/project/components/QuickLinksComponent';
-import FileManagerComponent from '@/dashboard/project/components/FileManager';
+import { ProjectPageLayout, ProjectHeader, TimelineChart, ProjectCalendar, QuickLinksComponent, FileManager as FileManagerComponent } from '@/dashboard/project/components';
 import { useData } from '@/app/contexts/useData';
 import { useSocket } from '@/app/contexts/SocketContext';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getProjectDashboardPath } from '@/shared/utils/projectUrl';
 import { BudgetProvider } from '@/dashboard/project/features/budget/context/BudgetProvider';
 import type { Project } from '@/app/contexts/DataProvider';
-import type { QuickLinksRef } from '@/dashboard/project/components/QuickLinksComponent';
+import type { QuickLinksRef } from '@/dashboard/project/components';
 import { useProjectPalette } from '@/dashboard/project/hooks/useProjectPalette';
 import { resolveProjectCoverUrl } from '@/dashboard/project/utils/theme';
 

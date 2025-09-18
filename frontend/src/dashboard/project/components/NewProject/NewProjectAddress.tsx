@@ -1,6 +1,6 @@
 import React, { useState, ChangeEvent } from 'react';
-import Map from '../../../shared/ui/Map';
-import { NOMINATIM_SEARCH_URL, apiFetch } from '../../../shared/utils/api';
+import Map from '@/shared/ui/Map';
+import { NOMINATIM_SEARCH_URL, apiFetch } from '@/shared/utils/api';
 import styles from './new-project-address.module.css';
 
 interface NominatimResult {

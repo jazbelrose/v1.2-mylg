@@ -40,7 +40,7 @@ vi.mock('./useAuth', () => ({
   useAuth: vi.fn(),
 }));
 import { useAuth } from './useAuth';
-import type { AuthContextValue } from './AuthContext';
+import type { AuthContextValue } from './AuthContextValue';
 
 const ErrProbe: React.FC = () => {
   const { projectsError } = useProjects();
@@ -61,7 +61,8 @@ beforeEach(() => {
   // Mock auth context
   (useAuth as ReturnType<typeof vi.fn<() => Partial<AuthContextValue>>>).mockReturnValue({
     userId: 'u1',
-    isAdmin: true,
+    role: 'admin',
+    isAuthenticated: true,
   });
 
   // Set up default mock responses

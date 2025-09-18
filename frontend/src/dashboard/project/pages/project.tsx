@@ -9,6 +9,7 @@ import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPage
 import Timeline from "@/dashboard/project/components/Timeline/Timeline";
 import ProjectCalendar from "@/dashboard/project/components/Shared/ProjectCalendar";
 import QuickLinksComponent from "@/dashboard/project/components/Shared/QuickLinksComponent";
+import type { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickLinksComponent";
 import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
 import FileManagerComponent from "@/dashboard/project/components/FileManager/FileManager";
 import TasksComponent from "@/dashboard/project/components/Tasks/TasksComponent";
@@ -21,10 +22,6 @@ import type { Project } from "@/app/contexts/DataProvider";
 import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
-
-interface QuickLinksRef {
-  openModal: () => void;
-}
 
 interface LocationState {
   flashDate?: string;
@@ -299,7 +296,6 @@ const SingleProject: React.FC = () => {
 };
 
 export default SingleProject;
-
 
 
 

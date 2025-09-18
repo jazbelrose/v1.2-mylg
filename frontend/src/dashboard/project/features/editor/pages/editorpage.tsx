@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPageLayout";
 import ProjectHeader from "@/dashboard/project/components/Shared/ProjectHeader";
 import DesignerComponent, { DesignerRef } from "@/dashboard/project/features/editor/components/canvas/designercomponent";
-import QuickLinksComponent, { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickLinksComponent";
+import QuickLinksComponent from "@/dashboard/project/components/Shared/QuickLinksComponent";
+import type { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickLinksComponent";
 import FileManagerComponent from "@/dashboard/project/components/FileManager/FileManager";
 import PreviewDrawer from "@/dashboard/project/features/editor/components/PreviewDrawer";
 import UnifiedToolbar from "@/dashboard/project/features/editor/components/UnifiedToolbar";
@@ -342,7 +343,6 @@ const EditorPage: React.FC = () => {
 };
 
 export default EditorPage;
-
 
 
 

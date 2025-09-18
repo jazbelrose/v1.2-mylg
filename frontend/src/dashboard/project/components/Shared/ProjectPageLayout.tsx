@@ -1,5 +1,6 @@
 import React from "react";
 import ProjectMessagesThread from "@/dashboard/features/messages/ProjectMessagesThread";
+import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import ChatPanel from "./ChatPanel";
 import type { ProjectAccentPalette } from "@/dashboard/project/hooks/useProjectPalette";
 
@@ -32,6 +33,7 @@ const _ProjectMessagesThread = ProjectMessagesThread as unknown as React.FC<Proj
 const _ChatPanel = ChatPanel as unknown as React.FC<ChatPanelProps>;
 
 const MOBILE_BREAKPOINT = 768;
+const DESKTOP_BREAKPOINT = 1024;
 const MIN_THREAD_WIDTH = 350;
 const MAX_THREAD_WIDTH = 800;
 
@@ -77,6 +79,9 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
   const [isMobile, setIsMobile] = React.useState<boolean>(() =>
     typeof window !== "undefined" ? window.innerWidth < MOBILE_BREAKPOINT : false
   );
+  const [isDesktop, setIsDesktop] = React.useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth >= DESKTOP_BREAKPOINT : false
+  );
 
   const [floatingThread, setFloatingThread] = React.useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -87,6 +92,8 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
       return false;
     }
   });
+
+  const [isNavCollapsed, setIsNavCollapsed] = React.useState<boolean>(false);
 
   // Measure global + project header heights
   React.useLayoutEffect(() => {
@@ -106,7 +113,12 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
 
   // Track mobile state
   React.useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < MOBILE_BREAKPOINT);
+      setIsDesktop(width >= DESKTOP_BREAKPOINT);
+    };
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -164,7 +176,12 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
   const headerOffset = headerHeights.global + headerHeights.project;
   const contentHeight = `calc(${viewportUnit} - ${headerOffset}px)`;
 
-  return (
+  const handleSetActiveView = React.useCallback(() => {}, []);
+  const handleToggleNavigationCollapse = React.useCallback(() => {
+    setIsNavCollapsed((prev) => !prev);
+  }, []);
+
+  const mainContent = (
     <div
       className="dashboard-wrapper active-project-details"
       data-project-theme={theme ? "" : undefined}
@@ -244,6 +261,24 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
       )}
     </div>
   );
+
+  if (isDesktop) {
+    return (
+      <div className={`dashboard-root${isNavCollapsed ? " dashboard-root--nav-collapsed" : ""}`}>
+        <aside>
+          <DashboardNavPanel 
+            variant="persistent" 
+            setActiveView={handleSetActiveView}
+            isCollapsed={isNavCollapsed}
+            onToggleCollapse={handleToggleNavigationCollapse}
+          />
+        </aside>
+        <main className="dashboard-main">{mainContent}</main>
+      </div>
+    );
+  }
+
+  return mainContent;
 };
 
 export default ProjectPageLayout;

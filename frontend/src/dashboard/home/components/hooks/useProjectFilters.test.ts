@@ -79,6 +79,50 @@ describe("useProjectFilters", () => {
 
     expect(result.current.filteredProjects.every((project) => project.status === "Active")).toBe(true);
   });
+
+  it("supports custom defaults and matchers", () => {
+    const customProjects: ProjectLike[] = [
+      {
+        projectId: "custom-1",
+        title: "Custom",
+        description: "Important milestone",
+        status: "Active",
+        dateCreated: "2024-01-01T00:00:00Z",
+      },
+      {
+        projectId: "custom-2",
+        title: "Sample",
+        description: "Contains hidden text",
+        status: "75%",
+        dateCreated: "2024-01-02T00:00:00Z",
+      },
+    ];
+
+    const { result } = renderHook(() =>
+      useProjectFilters({
+        projects: customProjects,
+        recentsLimit: 5,
+        defaultScope: "all",
+        defaultSortOption: "titleAsc",
+        queryMatcher: (project, normalizedQuery) => {
+          const title = (project.title || "").toLowerCase();
+          const description = (project.description || "").toLowerCase();
+          return title.includes(normalizedQuery) || description.includes(normalizedQuery);
+        },
+        statusFilterPredicate: (status) => status !== "75%",
+      })
+    );
+
+    expect(result.current.scope).toBe("all");
+    expect(result.current.statusOptions.map((option) => option.value)).toEqual(["", "active"]);
+
+    act(() => {
+      result.current.setQuery("hidden");
+    });
+
+    expect(result.current.filteredProjects).toHaveLength(1);
+    expect(result.current.filteredProjects[0]?.projectId).toBe("custom-2");
+  });
 });
 
 

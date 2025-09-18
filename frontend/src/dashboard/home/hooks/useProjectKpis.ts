@@ -10,6 +10,7 @@ export interface ProjectTimelineEvent {
 export interface ProjectLike {
   projectId: string;
   title?: string;
+  description?: string;
   status?: string | number;
   finishline?: string;
   date?: string;

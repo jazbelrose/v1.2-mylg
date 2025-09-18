@@ -3,36 +3,33 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useCallback,
 } from 'react';
-import SVGThumbnail from './SvgThumbnail';
-import { useData } from '@/app/contexts/useData';
-import Spinner from '../../../shared/ui/Spinner';
+import { motion, useReducedMotion } from 'framer-motion';
+import { LayoutGrid, List, MoreVertical, Pin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getProjectDashboardPath } from '@/shared/utils/projectUrl';
+
+import SVGThumbnail from './SvgThumbnail';
+import Spinner from '../../../shared/ui/Spinner';
 import AvatarStack from '../../../shared/ui/AvatarStack';
-import type { UserLite, TeamMember } from '../../../app/contexts/DataProvider';
+import { ProjectsIconsStrip } from './ProjectsIconsStrip';
+import { ProjectsFilterMenu } from './ProjectsFilterMenu';
+import { useProjectFilters } from './hooks/useProjectFilters';
 import {
-  LayoutGrid,
-  List,
-  Search,
-  MoreVertical,
-  Pin,
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+  useProjectKpis,
+  type ProjectLike,
+} from '@/dashboard/home/hooks/useProjectKpis';
+import type { UserLite, TeamMember } from '../../../app/contexts/DataProvider';
+import { useData } from '@/app/contexts/useData';
+import { getProjectDashboardPath } from '@/shared/utils/projectUrl';
 import { getFileUrl } from '../../../shared/utils/api';
-import Squircle from '@/shared/ui/Squircle';
+import desktopStyles from './ProjectsPanelDesktop.module.css';
+import mobileStyles from '@/dashboard/home/components/projects-panel.module.css';
+import { MICRO_WOBBLE_SCALE, SPRING_FAST } from '@/shared/ui/motionTokens';
 
-const PILL_RADIUS = 14;
-const PILL_CORNER_RADII = Object.freeze({ top: PILL_RADIUS + 2, bottom: PILL_RADIUS - 2 });
+const DEFAULT_RECENTS_LIMIT = 12;
 
-interface Project {
-  projectId: string;
-  title?: string; // <-- make optional
-  description?: string;
-  status?: string;
-  thumbnails?: string[];
-  dateCreated?: string;
-  date?: string;
+interface Project extends ProjectLike {
   pinned?: boolean;
   team?: {
     userId: string;
@@ -41,15 +38,6 @@ interface Project {
     thumbnail?: string;
   }[];
 }
-
-type SortOption = 'titleAsc' | 'titleDesc' | 'dateNewest' | 'dateOldest';
-
-const sortLabels: Record<SortOption, string> = {
-  titleAsc: 'A → Z',
-  titleDesc: 'Z → A',
-  dateNewest: 'Newest →',
-  dateOldest: 'Oldest ←',
-};
 
 const ProgressRing: React.FC<{ value: number }> = ({ value }) => {
   const radius = 12;
@@ -97,17 +85,74 @@ const ProgressRing: React.FC<{ value: number }> = ({ value }) => {
 };
 
 const AllProjects: React.FC = () => {
-  const { projects, isLoading, fetchProjectDetails, projectsError, fetchProjects, allUsers } = useData();
+  const {
+    projects,
+    isLoading,
+    fetchProjectDetails,
+    projectsError,
+    fetchProjects,
+    allUsers,
+  } = useData();
   const navigate = useNavigate();
-  const [filterQuery, setFilterQuery] = useState<string>('');
+  const reduceMotion = useReducedMotion();
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-  const [sortOption, setSortOption] = useState<SortOption>('titleAsc');
-  const [statusFilter, setStatusFilter] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [sortOpen, setSortOpen] = useState(false);
+
+  const queryMatcher = useCallback(
+    (
+      project: ProjectLike,
+      normalizedQuery: string,
+    ): boolean => {
+      const title = (project.title || '').toLowerCase();
+      const description = (project.description || '').toLowerCase();
+      return title.includes(normalizedQuery) || description.includes(normalizedQuery);
+    },
+    [],
+  );
+
+  const statusFilterPredicate = useCallback((status: string) => !isPercentageStatus(status), []);
+
+  const {
+    filtersOpen,
+    toggleFilters,
+    filtersRef,
+    filtersId,
+    scope,
+    setScope,
+    query,
+    setQuery,
+    statusOptions,
+    statusTriggerLabel,
+    statusDropdown,
+    showStatusDropdown,
+    sortOptions,
+    sortTriggerLabel,
+    sortDropdown,
+    filteredProjects: filteredProjectsWithMeta,
+  } = useProjectFilters({
+    projects: projects as ProjectLike[],
+    recentsLimit: Math.max(DEFAULT_RECENTS_LIMIT, projects.length || DEFAULT_RECENTS_LIMIT),
+    defaultScope: 'all',
+    defaultSortOption: 'titleAsc',
+    queryMatcher,
+    statusFilterPredicate,
+  });
+
+  const filteredProjects = useMemo(
+    () => filteredProjectsWithMeta as Project[],
+    [filteredProjectsWithMeta],
+  );
+
+  const kpis = useProjectKpis(projects as ProjectLike[]);
+
+  const handleThumbnailError = useCallback((projectId: string) => {
+    setImageErrors((prev) => {
+      if (prev[projectId]) return prev;
+      return { ...prev, [projectId]: true };
+    });
+  }, []);
 
   // Ensure projects are loaded when this view is displayed
   useEffect(() => {
@@ -155,7 +200,15 @@ const AllProjects: React.FC = () => {
     }
   };
 
-  const sortRef = useRef<HTMLDivElement | null>(null);
+  const handleOpenProject = useCallback(
+    (projectId: string) => {
+      const proj = projects.find((p: Project) => p.projectId === projectId);
+      if (proj) {
+        handleProjectClick(proj);
+      }
+    },
+    [projects],
+  );
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -165,13 +218,10 @@ const AllProjects: React.FC = () => {
           setMenuOpenId(null);
         }
       }
-      if (sortOpen && sortRef.current && e.target instanceof Node && !sortRef.current.contains(e.target)) {
-        setSortOpen(false);
-      }
     };
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
-  }, [menuOpenId, sortOpen]);
+  }, [menuOpenId]);
 
   const toggleMenu = (id: string) =>
     setMenuOpenId((prev) => (prev === id ? null : id));
@@ -181,8 +231,7 @@ const AllProjects: React.FC = () => {
     id: string,
   ) => {
     if (action === 'open') {
-      const proj = projects.find((p: Project) => p.projectId === id);
-      if (proj) handleProjectClick(proj);
+      handleOpenProject(id);
     }
     console.log(`Project ${id}: ${action}`);
     setMenuOpenId(null);
@@ -194,22 +243,6 @@ const AllProjects: React.FC = () => {
     return cleaned !== '' && !Number.isNaN(num) && num >= 0 && num <= 100;
   };
 
-  const statusOptions = useMemo(() => {
-    const statuses = projects
-      .map((p: Project) => (p.status || '').toLowerCase())
-      .filter((s) => s && !isPercentageStatus(s)) as string[];
-    return Array.from(new Set(statuses));
-  }, [projects]);
-
-  const statusCounts = useMemo(() => {
-    const map: Record<string, number> = {};
-    projects.forEach((p: Project) => {
-      const s = (p.status || '').toLowerCase();
-      if (s && !isPercentageStatus(s)) map[s] = (map[s] || 0) + 1;
-    });
-    return map;
-  }, [projects]);
-
   const formatShortDate = (iso?: string): string | undefined => {
     if (!iso) return undefined;
     const d = new Date(iso);
@@ -217,36 +250,7 @@ const AllProjects: React.FC = () => {
     return d.toLocaleString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  const normalizedQuery = filterQuery.trim().toLowerCase();
-  const filteredProjects = projects.filter((p: Project) => {
-    const title = (p.title || '').toLowerCase();
-    const description = (p.description || '').toLowerCase();
-    const status = (p.status || '').toLowerCase();
-    const matchesQuery = title.includes(normalizedQuery) || description.includes(normalizedQuery);
-    const matchesStatus = !statusFilter || status === statusFilter;
-    return matchesQuery && matchesStatus;
-  });
-
-  const sortedProjects = filteredProjects.slice().sort((a: Project, b: Project) => {
-    const titleA = (a.title || '').toLowerCase();
-    const titleB = (b.title || '').toLowerCase();
-    const dateA = new Date(a.dateCreated || a.date || 0).getTime();
-    const dateB = new Date(b.dateCreated || b.date || 0).getTime();
-
-    switch (sortOption) {
-      case 'titleDesc':
-        return titleB.localeCompare(titleA);
-      case 'dateNewest':
-        return dateB - dateA;
-      case 'dateOldest':
-        return dateA - dateB;
-      case 'titleAsc':
-      default:
-        return titleA.localeCompare(titleB);
-    }
-  });
-
-  const isSingleProject = sortedProjects.length === 1;
+  const isSingleProject = filteredProjects.length === 1;
 
   let content: React.ReactNode;
 
@@ -297,7 +301,7 @@ const AllProjects: React.FC = () => {
         </p>
       </div>
     );
-  } else if (sortedProjects.length === 0) {
+  } else if (filteredProjects.length === 0) {
     content = (
       <div
         style={{
@@ -320,7 +324,7 @@ const AllProjects: React.FC = () => {
           isSingleProject ? 'single-item' : ''
         }`}
       >
-        {sortedProjects.map((project: Project) => (
+        {filteredProjects.map((project: Project) => (
           <div
             key={project.projectId}
             className={`project-container-welcome ${
@@ -345,12 +349,7 @@ const AllProjects: React.FC = () => {
                 className="project-thumbnail"
                 loading="lazy"
                 decoding="async"
-                onError={() =>
-                  setImageErrors((prev) => ({
-                    ...prev,
-                    [project.projectId]: true,
-                  }))
-                }
+                onError={() => handleThumbnailError(project.projectId)}
               />
             ) : (
               <SVGThumbnail
@@ -411,7 +410,7 @@ const AllProjects: React.FC = () => {
 
     content = (
       <ul className="projects-list">
-        {sortedProjects.map((project: Project) => {
+        {filteredProjects.map((project: Project) => {
           const statusText = formatStatus(project.status);
           const team = normalizeTeam(project.team);
           const progress = Number(statusText.replace('%', ''));
@@ -442,12 +441,7 @@ const AllProjects: React.FC = () => {
                   className="project-list-thumb"
                   loading="lazy"
                   decoding="async"
-                  onError={() =>
-                    setImageErrors((prev) => ({
-                      ...prev,
-                      [project.projectId]: true,
-                    }))
-                  }
+                  onError={() => handleThumbnailError(project.projectId)}
                 />
               ) : (
                 <SVGThumbnail
@@ -545,122 +539,104 @@ const AllProjects: React.FC = () => {
 
   return (
     <div className="welcome project-view">
-      <div className="projects-header">
-        <div className="projects-title">Projects</div>
-        <div className="project-pills">
-          {[{ key: 'all', label: `All Projects (${projects.length})` },
-            ...statusOptions.map((s) => ({
-              key: s,
-              label: `${s.charAt(0).toUpperCase() + s.slice(1)} (${statusCounts[s] || 0})`,
-            })),
-          ].map((p) => {
-            const active =
-              (p.key === 'all' && !statusFilter) || statusFilter === p.key;
-            return (
-              <Squircle
-                key={p.key}
-                as="button"
-                type="button"
-                className={`pill ${active ? 'active' : ''}`}
-                radius={PILL_RADIUS}
-                smoothing={0.75}
-                cornerRadii={PILL_CORNER_RADII}
-                onClick={() =>
-                  setStatusFilter(p.key === 'all' ? '' : p.key.toString())
-                }
-              >
-                {p.label}
-                {active && (
-                  <motion.div
-                    layoutId="pill-underline"
-                    className="pill-underline"
-                  />
-                )}
-              </Squircle>
-            );
-          })}
-          <div className="sort-wrapper" ref={sortRef}>
-            <Squircle
-              as="button"
-              type="button"
-              className={`pill sort-pill ${sortOpen ? 'active' : ''}`}
-              radius={PILL_RADIUS}
-              smoothing={0.75}
-              cornerRadii={PILL_CORNER_RADII}
-              onClick={() => setSortOpen((o) => !o)}
-            >
-              {`Sort (${sortLabels[sortOption]})`}
-              {sortOpen && (
-                <motion.div
-                  layoutId="pill-underline"
-                  className="pill-underline"
-                />
-              )}
-            </Squircle>
-            {sortOpen && (
-              <div className="sort-menu" role="menu">
-                {Object.entries(sortLabels).map(([value, label]) => (
-                  <button
-                    key={value}
-                    onClick={() => {
-                      setSortOption(value as SortOption);
-                      setSortOpen(false);
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
+      <header className={`projects-header ${desktopStyles.header}`}>
+        <div className={desktopStyles.headerTop}>
+          <div className={mobileStyles.titleWrap}>
+            <h3 className={mobileStyles.title}>Projects</h3>
+            <ProjectsIconsStrip
+              projects={projects as ProjectLike[]}
+              imgError={imageErrors}
+              onImageError={handleThumbnailError}
+              onOpenProject={handleOpenProject}
+            />
           </div>
-          <div className="search-pill">
-            <AnimatePresence initial={false}>
-              {searchOpen ? (
-                <motion.input
-                  key="input"
-                  className="search-input"
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 140, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  value={filterQuery}
-                  onChange={(e) => setFilterQuery(e.target.value)}
-                  onBlur={() => setSearchOpen(false)}
-                  placeholder="Search"
-                />
-              ) : (
-                <Squircle
-                  key="button"
-                  as={motion.button}
-                  type="button"
-                  className="pill icon-pill"
-                  radius={PILL_RADIUS}
-                  smoothing={0.75}
-                  cornerRadii={PILL_CORNER_RADII}
-                  onClick={() => setSearchOpen(true)}
-                >
-                  <Search size={14} />
-                </Squircle>
-              )}
-            </AnimatePresence>
-          </div>
-          <div className="view-toggle">
+          <div
+            className={desktopStyles.viewToggle}
+            role="group"
+            aria-label="Change project view"
+          >
             <button
-              className={viewMode === 'grid' ? 'active' : ''}
+              type="button"
+              className={desktopStyles.toggleButton}
+              aria-pressed={viewMode === 'grid'}
               onClick={() => setViewMode('grid')}
-              aria-label="Grid view"
             >
               <LayoutGrid size={16} />
+              Grid
             </button>
             <button
-              className={viewMode === 'list' ? 'active' : ''}
+              type="button"
+              className={desktopStyles.toggleButton}
+              aria-pressed={viewMode === 'list'}
               onClick={() => setViewMode('list')}
-              aria-label="List view"
             >
               <List size={16} />
+              List
             </button>
           </div>
         </div>
-      </div>
+
+        <ProjectsFilterMenu
+          filtersOpen={filtersOpen}
+          filtersRef={filtersRef}
+          filtersId={filtersId}
+          scope={scope}
+          onScopeChange={setScope}
+          query={query}
+          onQueryChange={setQuery}
+          toggleFilters={toggleFilters}
+          statusOptions={statusOptions}
+          statusTriggerLabel={statusTriggerLabel}
+          statusDropdown={statusDropdown}
+          showStatusDropdown={showStatusDropdown}
+          sortOptions={sortOptions}
+          sortTriggerLabel={sortTriggerLabel}
+          sortDropdown={sortDropdown}
+        />
+
+        <div className={mobileStyles.kpis}>
+          <motion.span
+            className={mobileStyles.chip}
+            whileHover={
+              reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
+            }
+            whileFocus={
+              reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
+            }
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
+            {kpis.totalProjects} Projects
+          </motion.span>
+          <span className={mobileStyles.dot} />
+          <motion.span
+            className={mobileStyles.chip}
+            whileHover={
+              reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
+            }
+            whileFocus={
+              reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
+            }
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
+            {kpis.pendingProjects} Pending
+          </motion.span>
+          <span className={mobileStyles.dot} />
+          <motion.span
+            className={mobileStyles.chip}
+            whileHover={
+              reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
+            }
+            whileFocus={
+              reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
+            }
+            transition={reduceMotion ? undefined : SPRING_FAST}
+          >
+            {kpis.nextProject
+              ? `Next: ${kpis.nextProject.title} ${kpis.nextProject.date}`
+              : 'No upcoming projects'}
+          </motion.span>
+        </div>
+      </header>
       <div className="projects-scrollable">{content}</div>
     </div>
   );

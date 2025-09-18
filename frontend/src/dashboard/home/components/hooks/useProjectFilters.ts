@@ -18,6 +18,13 @@ export type SortOption = "titleAsc" | "titleDesc" | "dateNewest" | "dateOldest";
 type UseProjectFiltersArgs = {
   projects: ProjectLike[];
   recentsLimit: number;
+  defaultScope?: "recents" | "all";
+  defaultSortOption?: SortOption;
+  queryMatcher?: (
+    project: ProjectWithMeta,
+    normalizedQuery: string
+  ) => boolean;
+  statusFilterPredicate?: (status: string) => boolean;
 };
 
 type UseProjectFiltersResult = {
@@ -52,12 +59,16 @@ const SORT_OPTIONS: DropdownOption<SortOption>[] = [
 export const useProjectFilters = ({
   projects,
   recentsLimit,
+  defaultScope = "recents",
+  defaultSortOption = "dateNewest",
+  queryMatcher,
+  statusFilterPredicate,
 }: UseProjectFiltersArgs): UseProjectFiltersResult => {
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [scope, setScope] = useState<"recents" | "all">("recents");
+  const [scope, setScope] = useState<"recents" | "all">(defaultScope);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [sortOption, setSortOption] = useState<SortOption>("dateNewest");
+  const [sortOption, setSortOption] = useState<SortOption>(defaultSortOption);
 
   const filtersRef = useRef<HTMLDivElement | null>(null);
   const filtersId = useMemo(() => createRandomId("projects-filters"), []);
@@ -86,19 +97,37 @@ export const useProjectFilters = ({
     setFiltersOpen(false);
   }, []);
 
+  const matchQuery = useMemo(
+    () =>
+      queryMatcher ||
+      ((project: ProjectWithMeta, normalizedQuery: string) =>
+        (project.title || "").toLowerCase().includes(normalizedQuery)),
+    [queryMatcher]
+  );
+
+  const shouldIncludeStatus = useMemo(
+    () =>
+      statusFilterPredicate
+        ? statusFilterPredicate
+        : () => true,
+    [statusFilterPredicate]
+  );
+
   const statuses = useMemo(() => {
     try {
       return Array.from(
         new Set(
           projects
             .map((project) => String(project.status || "").toLowerCase())
+            .map((status) => status.trim())
             .filter(Boolean)
+            .filter((status) => shouldIncludeStatus(status))
         )
       );
     } catch {
       return [] as string[];
     }
-  }, [projects]);
+  }, [projects, shouldIncludeStatus]);
 
   const statusOptions = useMemo<DropdownOption<string>[]>(() => {
     if (!statuses.length) return [{ value: "", label: "All statuses" }];
@@ -145,7 +174,7 @@ export const useProjectFilters = ({
 
     const q = query.trim().toLowerCase();
     if (q) {
-      ordered = ordered.filter((project) => (project.title || "").toLowerCase().includes(q));
+      ordered = ordered.filter((project) => matchQuery(project, q));
     }
 
     if (statusFilter) {
@@ -182,7 +211,7 @@ export const useProjectFilters = ({
     }
 
     return ordered;
-  }, [projects, scope, query, statusFilter, sortOption, recentsLimit]);
+  }, [projects, scope, query, statusFilter, sortOption, recentsLimit, matchQuery]);
 
   const statusTriggerLabel = useMemo(() => {
     const found = statusOptions.find((option) => option.value === statusFilter);

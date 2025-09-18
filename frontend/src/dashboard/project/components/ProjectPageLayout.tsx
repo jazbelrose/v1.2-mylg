@@ -149,7 +149,20 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
     resizingRef.current = true;
   };
 
-  const contentHeight = `calc(100vh - ${headerHeights.global + headerHeights.project}px)`;
+  const viewportUnit = React.useMemo(() => {
+    if (typeof window === "undefined") {
+      return "100vh";
+    }
+
+    if ("CSS" in window && window.CSS && typeof window.CSS.supports === "function") {
+      return window.CSS.supports("height", "100dvh") ? "100dvh" : "100vh";
+    }
+
+    return "100vh";
+  }, []);
+
+  const headerOffset = headerHeights.global + headerHeights.project;
+  const contentHeight = `calc(${viewportUnit} - ${headerOffset}px)`;
 
   return (
     <div

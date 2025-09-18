@@ -99,6 +99,7 @@ const MoodboardPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -24 }}
           transition={{ duration: 0.25 }}
+          style={{ height: "100%" }}
         >
           <MoodboardCanvas
             projectId={resolvedProjectId}

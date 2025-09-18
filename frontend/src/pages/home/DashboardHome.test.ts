@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseDashboardPath } from "./DashboardHome";
+import { parseDashboardPath } from "../../dashboard/home/pages/DashboardHome";
 
 describe("parseDashboardPath", () => {
   it("returns the welcome view by default", () => {

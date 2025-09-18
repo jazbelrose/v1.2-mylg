@@ -22,11 +22,11 @@ vi.mock('../../../app/contexts/useData', () => ({
 }));
 
 vi.mock('@/app/contexts/useAuth', () => ({
-  useAuth: () => ({ validateAndSetUserSession: vi.fn() }),
+  useAuth: () => ({ validateAndSetUserSession: vi.fn().mockResolvedValue(undefined) }),
 }));
 
-vi.mock('../../../shared/utils/api', () => ({
-  updateUserProfile: vi.fn(),
+vi.mock('../../../../shared/utils/api', () => ({
+  updateUserProfile: mockedUpdateUserProfile,
 }));
 
 const mockNavigate = vi.fn();
@@ -46,11 +46,13 @@ import { updateUserProfile } from '../../../../shared/utils/api';
 import { AuthProvider } from '@/app/contexts/AuthContext';
 import { DataProvider } from '@/app/contexts/DataProvider';
 
+// Mock updateUserProfile directly
+const mockedUpdateUserProfile = vi.fn().mockResolvedValue({ userId: 'user123' });
+
 // Cast the mocked fns for TS
 const mockedConfirmSignUp = confirmSignUp as ReturnType<typeof vi.fn>;
 const mockedFetchAuthSession = fetchAuthSession as ReturnType<typeof vi.fn>;
 const mockedSignIn = signIn as ReturnType<typeof vi.fn>;
-const mockedUpdateUserProfile = updateUserProfile as ReturnType<typeof vi.fn>;
 
 describe('EmailVerification', () => {
   beforeEach(() => {
@@ -180,11 +182,15 @@ describe('EmailVerification', () => {
       fireEvent.change(inputs[i], { target: { value: d } });
     });
 
+    // Check if updateUserProfile was called at all
     await waitFor(() => {
-      expect(mockedUpdateUserProfile).toHaveBeenCalledWith(
-        expect.objectContaining({ pending: true })
-      );
+      expect(mockedUpdateUserProfile).toHaveBeenCalled();
     });
+
+    // Check the call arguments
+    expect(mockedUpdateUserProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ pending: true })
+    );
   });
 });
 

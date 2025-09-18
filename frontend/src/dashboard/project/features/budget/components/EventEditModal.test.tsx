@@ -2,7 +2,6 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, test, expect, beforeAll } from "vitest";
 import EventEditModal from "./EventEditModal";
-import Modal from "../../../../../../shared/ui/ModalWithStack";
 import { BudgetProvider } from "../context/BudgetProvider";
 
 // Mock the hooks that BudgetProvider depends on
@@ -34,7 +33,6 @@ beforeAll(() => {
   const root = document.createElement("div");
   root.setAttribute("id", "root");
   document.body.appendChild(root);
-  Modal.setAppElement(root);
 });
 
 test("uses last event date as default after adding", () => {

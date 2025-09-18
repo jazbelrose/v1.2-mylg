@@ -5,6 +5,7 @@ import { vi, describe, it, expect } from 'vitest';
 import { Register } from './Register';
 import { signUp, resendSignUpCode } from '@aws-amplify/auth';
 import { DataProvider } from '../../../../app/contexts/DataProvider';
+import { AuthProvider } from '../../../../app/contexts/AuthContext';
 
 vi.mock('@aws-amplify/auth', () => ({
   signUp: vi.fn(),
@@ -39,9 +40,11 @@ describe('Register', () => {
     mockedSignUp.mockRejectedValue({ name: 'UsernameExistsException' } as Error);
 
     const { getByLabelText, getByText } = render(
-      <DataProvider>
-        <Register />
-      </DataProvider>
+      <AuthProvider>
+        <DataProvider>
+          <Register />
+        </DataProvider>
+      </AuthProvider>
     );
 
     fireEvent.change(getByLabelText('First Name'), { target: { value: 'John' } });

@@ -9,6 +9,8 @@ import {
   signIn,
 } from 'aws-amplify/auth';
 import { updateUserProfile } from '../../../../shared/utils/api';
+import { AuthProvider } from '@/app/contexts/AuthContext';
+import { DataProvider } from '@/app/contexts/DataProvider';
 
 vi.mock('aws-amplify/auth', () => ({
   confirmSignUp: vi.fn().mockResolvedValue({ isSignUpComplete: true }),
@@ -60,7 +62,13 @@ describe('EmailVerification', () => {
   });
 
   it('auto verifies when code is pasted', async () => {
-    const { getAllByRole } = render(<EmailVerification userEmail="test@example.com" />);
+    const { getAllByRole } = render(
+      <AuthProvider>
+        <DataProvider>
+          <EmailVerification userEmail="test@example.com" />
+        </DataProvider>
+      </AuthProvider>
+    );
     const inputs = getAllByRole('textbox') as HTMLInputElement[];
 
     fireEvent.paste(inputs[0], {
@@ -78,7 +86,13 @@ describe('EmailVerification', () => {
   });
 
   it('auto verifies when code typed', async () => {
-    const { getAllByRole } = render(<EmailVerification userEmail="test@example.com" />);
+    const { getAllByRole } = render(
+      <AuthProvider>
+        <DataProvider>
+          <EmailVerification userEmail="test@example.com" />
+        </DataProvider>
+      </AuthProvider>
+    );
     const inputs = getAllByRole('textbox') as HTMLInputElement[];
     const digits = ['1', '2', '3', '4', '5', '6'];
 
@@ -92,7 +106,13 @@ describe('EmailVerification', () => {
   });
 
   it('prevents double verification when validate clicked after paste', async () => {
-    const { getAllByRole, getByRole } = render(<EmailVerification userEmail="test@example.com" />);
+    const { getAllByRole, getByRole } = render(
+      <AuthProvider>
+        <DataProvider>
+          <EmailVerification userEmail="test@example.com" />
+        </DataProvider>
+      </AuthProvider>
+    );
     const inputs = getAllByRole('textbox') as HTMLInputElement[];
     const button = getByRole('button', { name: /validate/i });
 
@@ -114,7 +134,13 @@ describe('EmailVerification', () => {
     error.name = 'NotAuthorizedException';
     mockedConfirmSignUp.mockImplementationOnce(() => Promise.reject(error));
 
-    const { getAllByRole, findByText } = render(<EmailVerification userEmail="test@example.com" />);
+    const { getAllByRole, findByText } = render(
+      <AuthProvider>
+        <DataProvider>
+          <EmailVerification userEmail="test@example.com" />
+        </DataProvider>
+      </AuthProvider>
+    );
     const inputs = getAllByRole('textbox') as HTMLInputElement[];
 
     fireEvent.paste(inputs[0], {
@@ -131,9 +157,13 @@ describe('EmailVerification', () => {
   });
 
   it('keeps profile pending after verification', async () => {
-    const registrationData = { password: 'pass123', pending: true };
+    const registrationData = { email: 'test@example.com', password: 'pass123', pending: true };
     const { getAllByRole } = render(
-      <EmailVerification userEmail="test@example.com" registrationData={registrationData} />
+      <AuthProvider>
+        <DataProvider>
+          <EmailVerification userEmail="test@example.com" registrationData={registrationData} />
+        </DataProvider>
+      </AuthProvider>
     );
     const inputs = getAllByRole('textbox') as HTMLInputElement[];
     const digits = ['1', '2', '3', '4', '5', '6'];

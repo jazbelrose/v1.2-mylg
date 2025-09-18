@@ -21,9 +21,6 @@
   },
   "include": ["src", "vite.config.ts"],
   "exclude": [
-    "**/*.test.*",
-    "**/*.spec.*",
-    "**/__tests__/**",
     "dist",
     "build",
     "backend",

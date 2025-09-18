@@ -60,7 +60,7 @@ vi.mock("../../../../shared/utils/api", () => ({
 // }));
 
 // SUT
-import GalleryComponent from "../project/components/GalleryComponent";
+import GalleryComponent from "../../components/GalleryComponent";
 
 // pull mocked fns with types
 import { useData } from "@/app/contexts/useData";

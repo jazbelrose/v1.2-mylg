@@ -3,19 +3,24 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi, it, expect, beforeAll } from "vitest";
 
-import Modal from "../../../../../../shared/ui/ModalWithStack";
+// Mock ModalWithStack
+vi.mock("../../../../../../shared/ui/ModalWithStack", () => ({
+  default: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => 
+    React.createElement('div', { 'data-testid': 'modal', ...props }, children),
+}));
 
+// Import the component under test
 let CreateLineItemModal: React.ComponentType<{
   isOpen: boolean;
   onRequestClose: () => void;
-  onSubmit: (data: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  onSubmit?: (data: Record<string, unknown>, isAutoSave?: boolean) => Promise<{ budgetItemId?: string } | void | null>;
+  initialData?: Record<string, unknown> | null;
 }>;
 
 beforeAll(async () => {
   const root = document.createElement("div");
   root.setAttribute("id", "root");
   document.body.appendChild(root);
-  Modal.setAppElement(root);
 
   // Lazy import inside beforeAll to ensure root is available
   const { default: CreateLineItemModalImport } = await import("./CreateLineItemModal");

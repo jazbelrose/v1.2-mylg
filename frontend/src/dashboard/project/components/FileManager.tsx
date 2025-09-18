@@ -130,7 +130,6 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       activeProject: activeProject || {},
       localActiveProject,
       setLocalActiveProject,
-      projectMessages: projectMessages as Record<string, Message[]>,
       setProjectMessages,
       user,
       ws,

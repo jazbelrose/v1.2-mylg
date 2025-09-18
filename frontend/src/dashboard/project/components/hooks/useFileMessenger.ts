@@ -8,7 +8,6 @@ interface UseFileMessengerParams {
   activeProject: Project;
   localActiveProject: Project;
   setLocalActiveProject: React.Dispatch<React.SetStateAction<Project>>;
-  projectMessages: Record<string, Message[]>;
   setProjectMessages: (updater: (prev: Record<string, Message[]>) => Record<string, Message[]>) => void;
   user: { userId?: string };
   ws?: WebSocket;
@@ -20,7 +19,6 @@ export const useFileMessenger = ({
   activeProject,
   localActiveProject,
   setLocalActiveProject,
-  projectMessages,
   setProjectMessages,
   user,
   ws,
@@ -63,10 +61,11 @@ export const useFileMessenger = ({
               delete msg.file;
 
               setProjectMessages((prev: Record<string, Message[]>) => {
-                const msgs = Array.isArray(prev[activeProject.projectId]) ? prev[activeProject.projectId] : [];
+                const projectId = activeProject.projectId as string;
+                const msgs = Array.isArray(prev[projectId]) ? prev[projectId] : [];
                 return {
                   ...prev,
-                  [activeProject.projectId]: msgs.map((m) =>
+                  [projectId]: msgs.map((m) =>
                     m.messageId === msg.messageId ? { ...m, text: "File deleted.", file: undefined } : m
                   ),
                 };

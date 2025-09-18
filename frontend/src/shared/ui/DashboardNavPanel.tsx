@@ -1,5 +1,5 @@
 import React from "react";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import GlobalSearch from "@/dashboard/home/components/GlobalSearch";
 import NavBadge from "./NavBadge";
@@ -14,12 +14,23 @@ type Variant = "persistent" | "overlay";
 type DashboardNavPanelProps = UseDashboardNavigationArgs & {
   variant?: Variant;
   className?: string;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 };
 
-function renderNavItem(item: DashboardNavItem) {
+function renderNavItem(item: DashboardNavItem, isCollapsed: boolean) {
   const hasBadge = typeof item.badgeCount === "number" && item.badgeCount > 0 && item.badgeLabel;
   const keyClass = item.key ? `nav-item--${item.key}` : "";
   const className = ["nav-item", keyClass, item.isAction ? "nav-item--action" : ""]
+    .filter(Boolean)
+    .join(" ");
+  const accessibilityProps = isCollapsed
+    ? {
+        "aria-label": item.label,
+        title: item.label,
+      }
+    : {};
+  const labelClass = ["nav-item__label", isCollapsed ? "nav-item__label--hidden" : ""]
     .filter(Boolean)
     .join(" ");
   const inner = (
@@ -34,7 +45,7 @@ function renderNavItem(item: DashboardNavItem) {
           />
         ) : null}
       </span>
-      <span className="nav-item__label">{item.label}</span>
+      <span className={labelClass}>{item.label}</span>
     </>
   );
 
@@ -47,6 +58,7 @@ function renderNavItem(item: DashboardNavItem) {
           target={item.external ? "_blank" : undefined}
           rel={item.external ? "noopener noreferrer" : undefined}
           onClick={item.onClick}
+          {...accessibilityProps}
         >
           {inner}
         </a>
@@ -56,7 +68,12 @@ function renderNavItem(item: DashboardNavItem) {
 
   return (
     <li key={item.key}>
-      <button type="button" className={className} onClick={item.onClick}>
+      <button
+        type="button"
+        className={className}
+        onClick={item.onClick}
+        {...accessibilityProps}
+      >
         {inner}
       </button>
     </li>
@@ -68,6 +85,8 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
   onClose,
   variant = "persistent",
   className,
+  isCollapsed = false,
+  onToggleCollapse,
 }) => {
   const { navItems, bottomItems } = useDashboardNavigation({ setActiveView, onClose });
   const isOverlay = variant === "overlay";
@@ -76,12 +95,13 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
   const containerClass = [
     "dashboard-nav-panel",
     `dashboard-nav-panel--${variant}`,
+    isCollapsed ? "dashboard-nav-panel--collapsed" : "",
     className,
   ]
     .filter(Boolean)
     .join(" ");
 
-     const topSection = isOverlay ? (
+  const topSection = isOverlay ? (
     <div className="navigation-drawer-search">
       <GlobalSearch onNavigate={onClose} />
     </div>
@@ -100,7 +120,7 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
 
   return (
     <div className={containerClass}>
-        {topSection}
+      {topSection}
 
       <div className="navigation-drawer-content">
         {isPersistent ? (
@@ -113,14 +133,25 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
               <span className="dashboard-nav-panel__brand-mark">M!</span>
               <span className="dashboard-nav-panel__brand-text">MYLG</span>
             </Link>
+            {onToggleCollapse ? (
+              <button
+                type="button"
+                className="dashboard-nav-panel__collapse-toggle"
+                onClick={onToggleCollapse}
+                aria-label={isCollapsed ? "Expand navigation" : "Collapse navigation"}
+                title={isCollapsed ? "Expand navigation" : "Collapse navigation"}
+              >
+                {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              </button>
+            ) : null}
           </div>
         ) : null}
 
         <ul className="nav-list nav-list--primary">
-          {navItems.map((item) => renderNavItem(item))}
+          {navItems.map((item) => renderNavItem(item, isCollapsed))}
         </ul>
         <ul className="nav-list nav-list--secondary">
-          {bottomItems.map((item) => renderNavItem(item))}
+          {bottomItems.map((item) => renderNavItem(item, isCollapsed))}
         </ul>
       </div>
     </div>

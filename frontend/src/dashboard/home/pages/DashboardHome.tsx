@@ -176,6 +176,7 @@ const WelcomeScreen: React.FC = () => {
     computeViewportFlags()
   );
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
   const rawDrawerId = useId();
   const drawerId = React.useMemo(
     () => `dashboard-nav-${rawDrawerId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
@@ -199,6 +200,12 @@ const WelcomeScreen: React.FC = () => {
   useEffect(() => {
     if (isDesktop) {
       setIsNavigationOpen(false);
+    }
+  }, [isDesktop]);
+
+  useEffect(() => {
+    if (!isDesktop) {
+      setIsNavCollapsed(false);
     }
   }, [isDesktop]);
 
@@ -373,6 +380,8 @@ const WelcomeScreen: React.FC = () => {
 
   const handleOpenNavigation = () => setIsNavigationOpen(true);
   const handleCloseNavigation = () => setIsNavigationOpen(false);
+  const handleToggleNavigationCollapse = () =>
+    setIsNavCollapsed((previous) => !previous);
 
   const mainContent = (
     <main className="dashboard-main">
@@ -407,11 +416,17 @@ const WelcomeScreen: React.FC = () => {
 
   if (isDesktop) {
     return (
-      <div className="dashboard-root">
+      <div
+        className={`dashboard-root${
+          isNavCollapsed ? " dashboard-root--nav-collapsed" : ""
+        }`}
+      >
         <aside>
           <DashboardNavPanel
             variant="persistent"
             setActiveView={setActiveView}
+            isCollapsed={isNavCollapsed}
+            onToggleCollapse={handleToggleNavigationCollapse}
           />
         </aside>
         {mainContent}

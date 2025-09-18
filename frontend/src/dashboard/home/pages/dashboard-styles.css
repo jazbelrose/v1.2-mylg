@@ -11,12 +11,20 @@
   overflow: hidden;
 }
 
+.dashboard-root--nav-collapsed {
+  grid-template-columns: 120px 1fr;
+}
+
 .dashboard-root > aside {
   position: sticky;
   top: 0;
   align-self: start;
   height: 100vh;
   display: flex;
+}
+
+.dashboard-root--nav-collapsed > aside {
+  width: 120px;
 }
 
 .dashboard-root > aside > * {

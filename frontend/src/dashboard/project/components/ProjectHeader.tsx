@@ -380,10 +380,10 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   // --------------------------
   // Team avatars
   // --------------------------
-  const projectId = activeProject?.projectId;
+  const activeProjectId = activeProject?.projectId;
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(
-    projectId && teamMembersCache.has(projectId)
-      ? (teamMembersCache.get(projectId) as TeamMember[])
+    activeProjectId && teamMembersCache.has(activeProjectId)
+      ? (teamMembersCache.get(activeProjectId) as TeamMember[])
       : []
   );
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
@@ -392,13 +392,13 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     let isMounted = true;
     const load = async () => {
       if (
-        !projectId ||
+        !activeProjectId ||
         !localActiveProject ||
         !Array.isArray(localActiveProject.team)
       ) {
         if (isMounted) {
           setTeamMembers([]);
-          if (projectId) teamMembersCache.set(projectId, []);
+          if (activeProjectId) teamMembersCache.set(activeProjectId, []);
         }
         return;
       }
@@ -417,12 +417,12 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         });
         if (isMounted) {
           setTeamMembers(results);
-          teamMembersCache.set(projectId, results);
+          teamMembersCache.set(activeProjectId, results);
         }
       } catch {
         if (isMounted) {
           setTeamMembers([]);
-          teamMembersCache.set(projectId, []);
+          teamMembersCache.set(activeProjectId, []);
         }
       }
     };

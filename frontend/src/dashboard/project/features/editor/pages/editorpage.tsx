@@ -40,7 +40,7 @@ const EditorPage: React.FC = () => {
   const [briefToolbarActions, setBriefToolbarActions] = useState<Record<string, unknown>>({});
   const quickLinksRef = useRef<QuickLinksRef>(null);
   const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
-  const projectPalette = useProjectPalette(coverImage);
+  const projectPalette = useProjectPalette(coverImage, activeProject?.color);
   const designerRef = useRef<DesignerRef>(null);
   const [briefContent, setBriefContent] = useState<string>("");
   const [isBriefDirty, setIsBriefDirty] = useState(false);

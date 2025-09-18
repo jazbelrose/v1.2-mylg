@@ -89,7 +89,7 @@ const BudgetPageContent = () => {
   const [clients, setClients] = useState([]);
 
   const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
-  const projectPalette = useProjectPalette(coverImage);
+ const projectPalette = useProjectPalette(coverImage, activeProject?.color);
 
   useLayoutEffect(() => {
     const updateTableHeight = () => {

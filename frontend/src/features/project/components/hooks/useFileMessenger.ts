@@ -1,0 +1,100 @@
+import { useCallback } from "react";
+import { API_BASE_URL, apiFetch } from "../../../../shared/utils/api";
+import { normalizeMessage } from "../../../../shared/utils/websocketUtils";
+import type { Message } from "../../../../app/contexts/DataProvider";
+import type { Project } from "../fileManagerTypes";
+
+interface UseFileMessengerParams {
+  activeProject: Project;
+  localActiveProject: Project;
+  setLocalActiveProject: React.Dispatch<React.SetStateAction<Project>>;
+  projectMessages: Record<string, Message[]>;
+  setProjectMessages: (updater: (prev: Record<string, Message[]>) => Record<string, Message[]>) => void;
+  user: { userId?: string };
+  ws?: WebSocket;
+}
+
+const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export const useFileMessenger = ({
+  activeProject,
+  localActiveProject,
+  setLocalActiveProject,
+  projectMessages,
+  setProjectMessages,
+  user,
+  ws,
+}: UseFileMessengerParams) => {
+  const removeReferences = useCallback(
+    async (urls: string[], messagesList: Message[]) => {
+      let description: string = (localActiveProject.description as string) || "";
+      let descChanged = false;
+
+      for (const url of urls) {
+        const regex = new RegExp(`<img[^>]*src=["']${escapeRegExp(url)}["'][^>]*>`, "g");
+        if (regex.test(description)) {
+          description = description.replace(regex, "");
+          descChanged = true;
+        }
+
+        const referencing = messagesList.filter(
+          (m) => (m.text && m.text.includes(url)) || ((m.file as { url?: string })?.url && (m.file as { url?: string }).url.includes(url))
+        );
+
+        for (const msg of referencing) {
+          if (msg.messageId) {
+            try {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                const editPayload = {
+                  action: "editMessage",
+                  conversationType: "project",
+                  conversationId: `project#${activeProject.projectId}`,
+                  projectId: activeProject.projectId,
+                  messageId: msg.messageId,
+                  text: "File deleted.",
+                  timestamp: msg.timestamp,
+                  editedAt: new Date().toISOString(),
+                  editedBy: user.userId,
+                };
+                ws.send(JSON.stringify(normalizeMessage(editPayload, "editMessage")));
+              }
+
+              msg.text = "File deleted.";
+              delete msg.file;
+
+              setProjectMessages((prev: Record<string, Message[]>) => {
+                const msgs = Array.isArray(prev[activeProject.projectId]) ? prev[activeProject.projectId] : [];
+                return {
+                  ...prev,
+                  [activeProject.projectId]: msgs.map((m) =>
+                    m.messageId === msg.messageId ? { ...m, text: "File deleted.", file: undefined } : m
+                  ),
+                };
+              });
+            } catch (err) {
+              console.error("Failed to strip file from message", err);
+            }
+          }
+        }
+      }
+
+      if (descChanged) {
+        try {
+          await apiFetch(`${API_BASE_URL}/editProject?projectId=${activeProject.projectId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ description }),
+          });
+          setLocalActiveProject((prev: Project) => ({ ...prev, description }));
+        } catch (err) {
+          console.error("Failed to update description", err);
+        }
+      }
+    },
+    [activeProject, localActiveProject.description, setLocalActiveProject, setProjectMessages, user.userId, ws]
+  );
+
+  return { removeReferences };
+};
+
+export type UseFileMessengerReturn = ReturnType<typeof useFileMessenger>;

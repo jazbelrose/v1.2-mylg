@@ -16,3 +16,9 @@ export default function normalizeCognitoError(error: unknown): string {
   const cognitoError = error as CognitoError;
   return map[cognitoError.name || ''] || cognitoError.message || cognitoError.name || 'An unknown error occurred';
 }
+
+
+
+
+
+

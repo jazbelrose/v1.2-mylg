@@ -34,7 +34,7 @@ import {
   deleteTask,
   fetchUserProfilesBatch,
 } from "../../../shared/utils/api";
-import { useBudget } from "@/dashboard/budget/context/BudgetContext";
+import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import "./task-table.css";
 
 /* =========================
@@ -920,6 +920,12 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
 };
 
 export default TasksComponent;
+
+
+
+
+
+
 
 
 

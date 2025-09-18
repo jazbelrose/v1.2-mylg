@@ -94,7 +94,7 @@ vi.mock('antd', () => ({
 }));
 
 const mockUseBudget = vi.fn(() => ({ budgetItems: [] }));
-vi.mock('@/dashboard/budget/context/BudgetContext', () => ({
+vi.mock('@/dashboard/project/features/budget/context/BudgetContext', () => ({
   __esModule: true,
   useBudget: (...args: unknown[]) => mockUseBudget(...args),
 }));
@@ -204,6 +204,12 @@ test('loads tasks when API returns { tasks: [...] }', async () => {
 
   (fetchTasks as vi.Mock).mockReset();
 });
+
+
+
+
+
+
 
 
 

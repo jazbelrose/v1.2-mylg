@@ -26,3 +26,9 @@ export function findProjectBySlug(projects: Project[], slug: string): Project | 
   if (!Array.isArray(projects)) return null;
   return projects.find(p => slugify(p.title || '') === slug) || null;
 }
+
+
+
+
+
+

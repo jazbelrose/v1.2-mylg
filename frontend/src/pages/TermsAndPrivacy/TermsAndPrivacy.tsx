@@ -143,3 +143,9 @@ const TermsAndPrivacy: React.FC = () => {
 
 export default TermsAndPrivacy;
 
+
+
+
+
+
+

@@ -5,3 +5,9 @@ import cfg from "./amplifyconfiguration.json";
 // are safely ignored by Amplify.
 export default cfg as unknown as Record<string, unknown>;
 
+
+
+
+
+
+

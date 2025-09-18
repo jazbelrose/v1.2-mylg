@@ -96,3 +96,9 @@ export interface FileUploadProps {
   setIsDragging: (isDragging: boolean) => void;
   children: React.ReactNode;
 }
+
+
+
+
+
+

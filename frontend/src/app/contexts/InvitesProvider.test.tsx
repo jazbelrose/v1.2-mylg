@@ -55,3 +55,9 @@ describe('InvitesProvider', () => {
     expect(api.fetchPendingInvites).toHaveBeenCalledWith('u1');
   });
 });
+
+
+
+
+
+

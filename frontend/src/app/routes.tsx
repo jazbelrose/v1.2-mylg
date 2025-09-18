@@ -6,7 +6,7 @@ import EmailVerification from "@/dashboard/auth/email-verification/EmailVerifica
 import EmailChangeVerification from "../dashboard/auth/email-verification/EmailChange";
 import ForgotPassword from "../dashboard/auth/forgot-password/ForgotPassword";
 import WorkPost from "../pages/works/workpage/WorkPost";
-import GalleryPage from "../dashboard/gallery/GalleryPage";
+import GalleryPage from "../dashboard/project/features/gallery/GalleryPage";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import ProtectedRoute from "./contexts/ProtectedRoute";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -18,14 +18,14 @@ import { Works } from "../pages/works/showcase";
 
 import Spinner from "../shared/ui/Spinner";
 
-const Dashboard = React.lazy(() => import("../dashboard/dashboard/pages/DashboardLayout"));
-const DashboardWelcome = React.lazy(() => import("../dashboard/dashboard/pages/DashboardHome"));
+const Dashboard = React.lazy(() => import("../dashboard/home/pages/DashboardLayout"));
+const DashboardWelcome = React.lazy(() => import("../dashboard/home/pages/DashboardHome"));
 const DashboardNewProject = React.lazy(() => import("@/dashboard/project/pages/NewProject"));
 const DashboardSingleProject = React.lazy(() => import("@/dashboard/project/pages/project"));
-const DashboardBudgetPage = React.lazy(() => import("../dashboard/budget/pages/BudgetPage"));
-const DashboardCalendarPage = React.lazy(() => import("@/dashboard/calendar/calendar"));
-const DashboardEditorPage = React.lazy(() => import("@/dashboard/editor/pages/editorpage"));
-const DashboardMoodboardPage = React.lazy(() => import("@/dashboard/moodboard/pages/MoodboardPage"));
+const DashboardBudgetPage = React.lazy(() => import("../dashboard/project/features/budget/pages/BudgetPage"));
+const DashboardCalendarPage = React.lazy(() => import("@/dashboard/project/features/calendar/calendar"));
+const DashboardEditorPage = React.lazy(() => import("@/dashboard/project/features/editor/pages/editorpage"));
+const DashboardMoodboardPage = React.lazy(() => import("@/dashboard/project/components/moodboard/pages/MoodboardPage"));
 
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
@@ -296,6 +296,11 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
 };
 
 export default AppRoutes;
+
+
+
+
+
 
 
 

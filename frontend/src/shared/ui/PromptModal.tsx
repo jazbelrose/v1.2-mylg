@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Modal from 'react-modal';
 
-import '@/dashboard/dashboard/pages/dashboard-styles.css';
+import '@/dashboard/home/pages/dashboard-styles.css';
 import useModalStack from '../utils/useModalStack';
 
 if (typeof document !== 'undefined') {
@@ -82,6 +82,12 @@ const PromptModal: React.FC<PromptModalProps> = ({
 };
 
 export default PromptModal;
+
+
+
+
+
+
 
 
 

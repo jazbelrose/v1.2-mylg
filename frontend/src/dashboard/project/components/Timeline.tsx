@@ -2,7 +2,7 @@ import React from "react";
 import Modal from "../../../shared/ui/ModalWithStack";
 import { useData } from "../../../app/contexts/useData";
 import { useSocket } from "../../../app/contexts/useSocket";
-import styles from "@/dashboard/dashboard/components/finish-line-component.module.css";
+import styles from "@/dashboard/home/components/finish-line-component.module.css";
 import { enqueueProjectUpdate } from "../../../shared/utils/requestQueue";
 import type { Project } from "../../../app/contexts/DataProvider";
 
@@ -253,6 +253,12 @@ const Timeline: React.FC<TimelineProps> = ({
 };
 
 export default Timeline;
+
+
+
+
+
+
 
 
 

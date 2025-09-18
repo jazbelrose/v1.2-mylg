@@ -170,3 +170,9 @@ export function clearSquirclePathCache(): void {
   PATH_CACHE.clear();
 }
 
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ProjectHeader from "@/dashboard/project/components/ProjectHeader";
 
-import BudgetOverviewCard from "@/dashboard/budget/components/BudgetOverviewCard";
+import BudgetOverviewCard from "@/dashboard/project/features/budget/components/BudgetOverviewCard";
 
 import GalleryComponent from "@/dashboard/project/components/GalleryComponent";
 
@@ -12,7 +12,7 @@ import QuickLinksComponent from "@/dashboard/project/components/QuickLinksCompon
 import LocationComponent from "@/dashboard/project/components/LocationComponent";
 import FileManagerComponent from "@/dashboard/project/components/FileManager";
 import TasksComponent from "@/dashboard/project/components/TasksComponent";
-import { BudgetProvider } from "@/dashboard/budget/context/BudgetProvider";
+import { BudgetProvider } from "@/dashboard/project/features/budget/context/BudgetProvider";
 import { useData } from "@/app/contexts/useData";
 import { useSocket } from "@/app/contexts/useSocket";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -280,6 +280,12 @@ const SingleProject: React.FC = () => {
 };
 
 export default SingleProject;
+
+
+
+
+
+
 
 
 

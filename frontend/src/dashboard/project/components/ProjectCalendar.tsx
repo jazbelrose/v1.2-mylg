@@ -26,7 +26,7 @@ import {
   faClock,
 } from "@fortawesome/free-solid-svg-icons";
 // Frontend no longer persists timeline events directly; backend handles persistence
-import { useBudget } from "@/dashboard/budget/context/BudgetContext";
+import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 
 type TimelineEvent = {
   id: string;
@@ -1128,6 +1128,12 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 };
 
 export default ProjectCalendar;
+
+
+
+
+
+
 
 
 

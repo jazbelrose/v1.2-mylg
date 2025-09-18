@@ -215,3 +215,9 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({ registrationData,
 
 export default EmailVerification;
 
+
+
+
+
+
+

@@ -1,8 +1,8 @@
 // ClientInvoicePreviewModal.tsx
 import React from "react";
 
-import InvoicePreviewModal from "@/dashboard/budget/components/InvoicePreviewModal";
-import { BudgetProvider } from "@/dashboard/budget/context/BudgetProvider";
+import InvoicePreviewModal from "@/dashboard/project/features/budget/components/InvoicePreviewModal";
+import { BudgetProvider } from "@/dashboard/project/features/budget/context/BudgetProvider";
 import { Project } from "@/app/contexts/DataProvider";
 
 interface RevisionLike {
@@ -36,6 +36,12 @@ const ClientInvoicePreviewModal: React.FC<ClientInvoicePreviewModalProps> = ({
 );
 
 export default ClientInvoicePreviewModal;
+
+
+
+
+
+
 
 
 

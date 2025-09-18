@@ -114,3 +114,9 @@ export const InfoSection: React.FC<InfoSectionProps> = ({ style }) => {
 
 export default InfoSection;
 
+
+
+
+
+
+

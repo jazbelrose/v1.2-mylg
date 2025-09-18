@@ -27,3 +27,9 @@ export function formatUSD(value: string | number): string {
   if (isNaN(num)) return String(value);
   return `$${num.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
+
+
+
+
+
+

@@ -58,3 +58,9 @@ export const getFilePreviewIcon = (extension: string | undefined) => {
   return <FaFileAlt size={50} color="blue" />;
 };
 
+
+
+
+
+
+

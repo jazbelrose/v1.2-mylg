@@ -10,3 +10,9 @@ export async function waitForAuthReady(maxRetries: number = 5, delay: number = 3
   }
   throw new Error('Auth not ready after retries');
 }
+
+
+
+
+
+

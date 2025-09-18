@@ -9,3 +9,9 @@ export async function sha256(str: string): Promise<string> {
   }
   return jsSha256(str);
 }
+
+
+
+
+
+

@@ -20,3 +20,9 @@ export const getUserThumbnail = (u?: AppUser): string | null =>
   (u?.profileImage as string | undefined) ||
   (u?.picture as string | undefined) ||
   null;
+
+
+
+
+
+

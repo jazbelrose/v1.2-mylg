@@ -62,3 +62,9 @@ describe("Refactored Messages Components", () => {
     expect(screen.getByText("Send it")).toBeInTheDocument();
   });
 });
+
+
+
+
+
+

@@ -1371,3 +1371,9 @@ const GalleryComponent: React.FC = () => {
 
 export default GalleryComponent;
 
+
+
+
+
+
+

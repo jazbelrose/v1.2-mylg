@@ -34,3 +34,9 @@ const SingleTicker: React.FC = () => {
 
 export default SingleTicker;
 
+
+
+
+
+
+

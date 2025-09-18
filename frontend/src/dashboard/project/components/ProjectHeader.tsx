@@ -35,7 +35,7 @@ import { useSocket } from "@/app/contexts/useSocket";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { slugify, findProjectBySlug } from "@/shared/utils/slug";
 import { HexColorPicker, HexColorInput } from "react-colorful";
-import styles from "@/dashboard/dashboard/components/finish-line-component.module.css";
+import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
 
 import {
@@ -1858,6 +1858,12 @@ const ProjectTabs: React.FC<{ projectSlug: string }> = ({ projectSlug }) => {
 };
 
 export default React.memo(ProjectHeader);
+
+
+
+
+
+
 
 
 

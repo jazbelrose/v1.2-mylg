@@ -271,3 +271,9 @@ const Squircle = React.forwardRef(SquircleInner) as <
 
 export default Squircle;
 
+
+
+
+
+
+

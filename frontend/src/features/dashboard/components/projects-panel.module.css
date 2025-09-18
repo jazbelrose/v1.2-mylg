@@ -6,16 +6,13 @@
   border: 2px solid rgba(255, 255, 255, 0.10);
   padding: 15px; /* compact */
   margin: 5px 0; /* compact */
-  /* Fixed panel height with internal scroll area */
-  height: 275px;
-  min-height: 275px;
-  max-height: 275px;
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .panelFullBleed {
@@ -177,16 +174,12 @@
 .list {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0; /* allow flex child to shrink for scrolling */
-  overflow: visible; /* allow tooltips to overflow; no scroll unless explicitly enabled */
-  padding: 0;
-}
-
-/* Enable vertical scroll for long lists (e.g., All projects) */
-.listScrollable {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0;
 }
 
 /* Compact tile (icon) grid */
@@ -519,10 +512,10 @@
 }
 
 .ctaWrap {
-  position: sticky;
-  bottom: calc(env(safe-area-inset-bottom) + 8px);
+  flex: 0 0 auto;
+  margin-top: 12px;
+  padding-top: 8px;
   background: var(--bg2, #111111);
-  
 }
 
 .cta {

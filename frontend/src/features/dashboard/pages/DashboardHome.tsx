@@ -295,15 +295,19 @@ const WelcomeScreen: React.FC = () => {
         <div className="mobile-calendar-section">
           <AllProjectsWeekWidget />
         </div>
-        <div className="mobile-projects-section">
-          <ProjectsPanel
-            onOpenProject={(projectId) =>
-              handleNavigateToProject({ projectId })
-            }
-          />
-        </div>
-        <div className="mobile-tasks-section">
-          <MobileTasksOverviewCard />
+        <div className="mobile-projects-tasks">
+          <div className="mobile-projects-section">
+            <div className="mobile-projects-panel">
+              <ProjectsPanel
+                onOpenProject={(projectId) =>
+                  handleNavigateToProject({ projectId })
+                }
+              />
+            </div>
+          </div>
+          <div className="mobile-tasks-section dashboard-footer">
+            <MobileTasksOverviewCard />
+          </div>
         </div>
       </div>
     );

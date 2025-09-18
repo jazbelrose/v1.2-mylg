@@ -14,8 +14,6 @@ type Props = {
   onOpenProject: (projectId: string) => void;
 };
 
-const DEFAULT_PROJECT_ROWS = 3;
-
 type ProjectWithMeta = ProjectLike & { _activity: number; _created: number };
 
 const getMaxQuickProjectIcons = (width?: number): number => {
@@ -188,10 +186,6 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
         break;
     }
 
-    // Show fewer rows for Recents, all for All projects (scrolls in fixed panel)
-    if (scope === "recents") {
-      return ordered.slice(0, DEFAULT_PROJECT_ROWS);
-    }
     return ordered;
   }, [projects, sortOption, statusFilter, query, scope]);
 
@@ -398,12 +392,7 @@ const ProjectsPanel: React.FC<Props> = ({ onOpenProject }) => {
 
       {errorText && <div className={styles.inlineError}>{errorText}</div>}
 
-      <div
-        className={`${styles.list} ${
-          scope === "all" ? styles.listScrollable : ""
-        }`}
-        role="list"
-      >
+      <div className={styles.list} role="list">
         {isLoading ? (
           <div className={`${styles.row} ${styles.skeleton}`} aria-hidden>
             <div className={`${styles.icon} ${styles.skel}`} />

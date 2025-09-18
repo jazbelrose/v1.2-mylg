@@ -74,22 +74,50 @@
 .mobile-welcome-layout {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   height: 100%;
   width: 100%;
   max-width: 100vw;
   overflow: visible; /* allow children (CTA) to be fully visible */
   align-items: stretch;
-  
+  gap: 16px;
+
+}
+
+.mobile-projects-tasks {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  gap: 16px;
 }
 
 .mobile-projects-section {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   max-height: none;
-  overflow: visible;
+  overflow: hidden;
   padding: 0; /* remove outer grey wrapper */
   background: transparent;
   width: 100%;
   max-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.mobile-projects-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mobile-projects-panel > * {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .mobile-tasks-section {
@@ -97,10 +125,15 @@
   width: 100%;
   max-width: 100vw;
   overflow: visible;
+  margin-top: auto;
+}
+
+.dashboard-footer {
+  flex: 0 0 auto;
 }
 
 .mobile-calendar-section {
-  flex: 1 0 auto;
+  flex: 0 0 auto;
   min-height: 0;
   overflow: auto;
 

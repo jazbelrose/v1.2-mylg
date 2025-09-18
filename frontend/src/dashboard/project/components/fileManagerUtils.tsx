@@ -1,5 +1,6 @@
 import { FaCube, FaDraftingCompass, FaFileAlt, FaFileExcel, FaFilePdf } from "react-icons/fa";
 import { SiAdobe, SiHtml5, SiSvg } from "react-icons/si";
+import { fileUrlsToKeys, getFileUrl, normalizeFileUrl } from "../../../shared/utils/api";
 import type { FileItem } from "./fileManagerTypes";
 
 export const encodeS3Key = (key: string = "") =>
@@ -23,8 +24,21 @@ export const getFileKind = (fileName: string | undefined): string => {
   return ext;
 };
 
-export const getThumbnailUrl = (url: string, key: string) =>
-  url.replace(`/${key}/`, `/${key}_thumbnails/`);
+export const getThumbnailUrl = (url: string, key: string) => {
+  if (!url || url.startsWith("blob:")) return url;
+
+  const [decodedKey] = fileUrlsToKeys([url]);
+  if (!decodedKey) {
+    return normalizeFileUrl(url);
+  }
+
+  const thumbnailKey = decodedKey.replace(`/${key}/`, `/${key}_thumbnails/`);
+  if (thumbnailKey === decodedKey) {
+    return normalizeFileUrl(url);
+  }
+
+  return normalizeFileUrl(getFileUrl(thumbnailKey));
+};
 
 export const truncateFileName = (fileName?: string, maxLength = 12) => {
   if (!fileName) return "";

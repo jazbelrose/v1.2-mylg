@@ -1,6 +1,6 @@
 import React, { CSSProperties } from "react";
 import { DMFile } from "@/shared/utils/messageUtils";
-import { normalizeFileUrl } from "@/shared/utils/api";
+import { fileUrlsToKeys, getFileUrl, normalizeFileUrl } from "@/shared/utils/api";
 import OptimisticImage from "@/shared/ui/OptimisticImage";
 import {
   FaFilePdf,
@@ -20,14 +20,29 @@ import {
 const thumbnailUrlCache = new Map<string, string>();
 
 export const getThumbnailUrl = (url: string, folderKey = "chat_uploads"): string => {
-  const cacheKey = `${url}:${folderKey}`;
+  if (!url || url.startsWith("blob:")) return url;
+
+  const normalizedUrl = normalizeFileUrl(url);
+  const cacheKey = `${normalizedUrl}:${folderKey}`;
   if (thumbnailUrlCache.has(cacheKey)) {
     return thumbnailUrlCache.get(cacheKey)!;
   }
-  
-  const thumbnailUrl = url.replace(`/${folderKey}/`, `/${folderKey}_thumbnails/`);
-  thumbnailUrlCache.set(cacheKey, thumbnailUrl);
-  return thumbnailUrl;
+
+  const [decodedKey] = fileUrlsToKeys([normalizedUrl]);
+  if (!decodedKey) {
+    thumbnailUrlCache.set(cacheKey, normalizedUrl);
+    return normalizedUrl;
+  }
+
+  const thumbnailKey = decodedKey.replace(`/${folderKey}/`, `/${folderKey}_thumbnails/`);
+  if (thumbnailKey === decodedKey) {
+    thumbnailUrlCache.set(cacheKey, normalizedUrl);
+    return normalizedUrl;
+  }
+
+  const finalUrl = normalizeFileUrl(getFileUrl(thumbnailKey));
+  thumbnailUrlCache.set(cacheKey, finalUrl);
+  return finalUrl;
 };
 
 export const renderFilePreview = (file: DMFile, folderKey = "chat_uploads"): React.ReactNode => {

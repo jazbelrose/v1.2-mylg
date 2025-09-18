@@ -26,7 +26,7 @@ vi.mock('@/app/contexts/useAuth', () => ({
 }));
 
 vi.mock('../../../../shared/utils/api', () => ({
-  updateUserProfile: mockedUpdateUserProfile,
+  updateUserProfile: vi.fn(),
 }));
 
 const mockNavigate = vi.fn();
@@ -46,13 +46,11 @@ import { updateUserProfile } from '../../../../shared/utils/api';
 import { AuthProvider } from '@/app/contexts/AuthContext';
 import { DataProvider } from '@/app/contexts/DataProvider';
 
-// Mock updateUserProfile directly
-const mockedUpdateUserProfile = vi.fn().mockResolvedValue({ userId: 'user123' });
-
 // Cast the mocked fns for TS
 const mockedConfirmSignUp = confirmSignUp as ReturnType<typeof vi.fn>;
 const mockedFetchAuthSession = fetchAuthSession as ReturnType<typeof vi.fn>;
 const mockedSignIn = signIn as ReturnType<typeof vi.fn>;
+const mockedUpdateUserProfile = vi.mocked(updateUserProfile);
 
 describe('EmailVerification', () => {
   beforeEach(() => {

@@ -14,7 +14,7 @@ import { notify, notifyLoading, updateNotification } from "../../../../shared/ui
 import pLimit from "../../../../shared/utils/pLimit";
 import type { Message } from "../../../../app/contexts/DataProvider";
 import type { FileItem, Project } from "../fileManagerTypes";
-import { encodeS3Key, getFileKind } from "../fileManagerUtils";
+import { getFileKind } from "../fileManagerUtils";
 
 interface UseFileTransfersParams {
   activeProject: Project;
@@ -112,7 +112,7 @@ export const useFileTransfers = ({
           const key = (item as { key: string }).key;
           const name: string = key.split("/").pop()!;
           const fullKey = key.startsWith("public/") ? key : `public/${key}`;
-          const url = getFileUrl(encodeS3Key(fullKey));
+          const url = getFileUrl(fullKey);
           return {
             fileName: name,
             url: normalizeFileUrl(url),
@@ -175,8 +175,9 @@ export const useFileTransfers = ({
           options: { accessLevel: "guest" },
         });
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        const fileUrl = getFileUrl(encodeS3Key(filename));
-        return { fileName: file.name, url: fileUrl };
+        const storageKey = filename.startsWith("public/") ? filename : `public/${filename}`;
+        const fileUrl = getFileUrl(storageKey);
+        return { fileName: file.name, url: normalizeFileUrl(fileUrl) };
       }),
     [folderKey, uploadQueue]
   );

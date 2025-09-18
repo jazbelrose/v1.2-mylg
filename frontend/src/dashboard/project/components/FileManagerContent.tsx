@@ -2,7 +2,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faDownload, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { Upload } from "lucide-react";
 import Spinner from "../../../shared/ui/Spinner";
-import { fileUrlsToKeys, getFileUrl } from "../../../shared/utils/api";
 import type { FileItem, ViewMode } from "./fileManagerTypes";
 import {
   getFilePreviewIcon,
@@ -38,10 +37,9 @@ const renderPreview = (file: FileItem, folderKey: string) => {
   const extension = file.fileName.split(".").pop()?.toLowerCase();
   if (isPreviewableImage(file)) {
     const thumbUrl = getThumbnailUrl(file.url, folderKey);
-    const key = fileUrlsToKeys([thumbUrl])[0];
     return (
       <img
-        src={getFileUrl(key)}
+        src={thumbUrl}
         alt={file.fileName}
         className={styles.previewImage}
         onError={(e) => {

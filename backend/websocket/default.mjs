@@ -20,6 +20,7 @@ const apigwManagementApi = new ApiGatewayManagementApiClient({
 });
 const inboxTable = process.env.INBOX_TABLE;
 const notificationsTable = process.env.NOTIFICATIONS_TABLE;
+const projectsTable = process.env.PROJECTS_TABLE;
 
 export const handler = async (event) => {
   console.log("📩 Received WS Message:", JSON.stringify(event, null, 2));
@@ -324,9 +325,14 @@ async function saveProjectNotifications(projectId, message, dedupeId, senderId =
     return;
   }
 
+  if (!projectsTable) {
+    console.log("ℹ️ PROJECTS_TABLE not set; skipping saveProjectNotifications");
+    return;
+  }
+
   try {
     const res = await dynamoDb.send(new GetCommand({
-      TableName: process.env.PROJECTS_TABLE_NAME,
+      TableName: projectsTable,
       Key: { projectId },
     }));
 

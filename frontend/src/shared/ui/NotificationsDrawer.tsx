@@ -202,7 +202,7 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
         : user.username || thread.otherUserId
       : thread.otherUserId;
 
-    navigate(`/dashboard/messages/${slug}`);
+    navigate(`/dashboard/features/messages/${slug}`);
     handleItemClick();
   };
 
@@ -406,6 +406,8 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
 };
 
 export default NotificationsDrawer;
+
+
 
 
 

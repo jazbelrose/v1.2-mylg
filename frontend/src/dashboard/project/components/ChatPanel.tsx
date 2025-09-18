@@ -5,7 +5,7 @@ import React, {
   useLayoutEffect,
   useCallback,
 } from "react";
-import ProjectMessagesThread from "../../messages/ProjectMessagesThread";
+import ProjectMessagesThread from "../../features/messages/ProjectMessagesThread";
 
 type ChatPanelProps = {
   projectId: string;
@@ -316,6 +316,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 };
 
 export default ChatPanel;
+
+
 
 
 

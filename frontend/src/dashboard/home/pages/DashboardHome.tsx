@@ -8,7 +8,7 @@ import WelcomeHeader from "@/dashboard/home/components/WelcomeHeader";
 import AllProjects from "@/dashboard/home/components/AllProjects";
 import ProjectsPanelMobile from "@/dashboard/home/components/ProjectsPanelMobile";
 import NotificationsPage from "@/dashboard/home/components/NotificationsPage";
-import Messages from "@/dashboard/messages";
+import Messages from "@/dashboard/features/messages";
 import Settings from "@/dashboard/home/components/Settings";
 import Collaborators from "@/dashboard/home/components/Collaborators";
 import SpinnerScreen from "@/shared/ui/SpinnerScreen";
@@ -256,7 +256,7 @@ const WelcomeScreen: React.FC = () => {
             ? slugify(`${user.firstName}-${user.lastName}`)
             : otherId;
           setDmUserSlug(slug);
-          navigate(`/dashboard/messages/${slug}`, { replace: true });
+          navigate(`/dashboard/features/messages/${slug}`, { replace: true });
         }
       }
     }
@@ -417,6 +417,8 @@ const WelcomeScreen: React.FC = () => {
 };
 
 export default WelcomeScreen;
+
+
 
 
 

@@ -67,3 +67,5 @@ export default function ImageLockPlugin({ provider, children }: Props) {
 
 
 
+
+

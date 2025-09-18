@@ -1,10 +1,10 @@
 import React, { useState, useLayoutEffect, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation, Location } from "react-router-dom";
-import Login from "../dashboard/auth/Login/Login";
-import Register from "../dashboard/auth/Register/Register";
-import EmailVerification from "@/dashboard/auth/email-verification/EmailVerification";
-import EmailChangeVerification from "../dashboard/auth/email-verification/EmailChange";
-import ForgotPassword from "../dashboard/auth/forgot-password/ForgotPassword";
+import Login from "../dashboard/features/auth/Login/Login";
+import Register from "../dashboard/features/auth/Register/Register";
+import EmailVerification from "@/dashboard/features/auth/email-verification/EmailVerification";
+import EmailChangeVerification from "../dashboard/features/auth/email-verification/EmailChange";
+import ForgotPassword from "../dashboard/features/auth/forgot-password/ForgotPassword";
 import WorkPost from "../pages/works/workpage/WorkPost";
 import GalleryPage from "../dashboard/project/features/gallery/GalleryPage";
 import { AnimatePresence, motion, Variants } from "framer-motion";
@@ -25,7 +25,7 @@ const DashboardSingleProject = React.lazy(() => import("@/dashboard/project/page
 const DashboardBudgetPage = React.lazy(() => import("../dashboard/project/features/budget/pages/BudgetPage"));
 const DashboardCalendarPage = React.lazy(() => import("@/dashboard/project/features/calendar/calendar"));
 const DashboardEditorPage = React.lazy(() => import("@/dashboard/project/features/editor/pages/editorpage"));
-const DashboardMoodboardPage = React.lazy(() => import("@/dashboard/project/components/moodboard/pages/MoodboardPage"));
+const DashboardMoodboardPage = React.lazy(() => import("@/dashboard/project/features/moodboard/pages/MoodboardPage"));
 
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
@@ -296,6 +296,8 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
 };
 
 export default AppRoutes;
+
+
 
 
 

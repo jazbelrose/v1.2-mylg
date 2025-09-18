@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { slugify } from '@/shared/utils/slug';
 import type { Project, Message, UserLite } from '@/app/contexts/DataProvider';
 import { getFileUrl } from '@/shared/utils/api';
-import type { AppUser } from '@/dashboard/messages/types';
-import { getUserDisplayName, getUserThumbnail } from '@/dashboard/messages/utils/userHelpers';
+import type { AppUser } from '@/dashboard/features/messages/types';
+import { getUserDisplayName, getUserThumbnail } from '@/dashboard/features/messages/utils/userHelpers';
 import SVGThumbnail from './SvgThumbnail';
 
 interface HighlightPart {
@@ -557,7 +557,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate 
           : '';
         const fallback = collaborator?.userId || result.userId || 'conversation';
         const slug = slugify(slugSource || fallback);
-        navigate(`/dashboard/messages/${slug}`);
+        navigate(`/dashboard/features/messages/${slug}`);
       } catch (error) {
         console.error('Error navigating to collaborator conversation:', error);
       }
@@ -756,6 +756,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate 
 };
 
 export default GlobalSearch;
+
+
 
 
 

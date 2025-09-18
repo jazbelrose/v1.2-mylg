@@ -120,7 +120,7 @@ const CollaboratorList: React.FC<CollaboratorListProps> = ({
                 aria-label="Message"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/dashboard/messages/${slug}`);
+                  navigate(`/dashboard/features/messages/${slug}`);
                 }}
               >
                 <MessageCircle size={18} />
@@ -155,6 +155,8 @@ const CollaboratorList: React.FC<CollaboratorListProps> = ({
 };
 
 export default CollaboratorList;
+
+
 
 
 

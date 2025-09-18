@@ -143,8 +143,21 @@ const WelcomeScreen: React.FC = () => {
   const [dmUserSlug, setDmUserSlug] = useState<string | null>(
     initialDMUserSlug
   );
-  const [isMobile, setIsMobile] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const computeViewportFlags = React.useCallback(() => {
+    if (typeof window === "undefined") {
+      return { isMobile: false, isDesktop: false };
+    }
+
+    const width = window.innerWidth;
+
+    return {
+      isMobile: width < 768,
+      isDesktop: width >= 1024,
+    };
+  }, []);
+  const [{ isMobile, isDesktop }, setViewportFlags] = useState(() =>
+    computeViewportFlags()
+  );
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const rawDrawerId = useId();
   const drawerId = React.useMemo(
@@ -153,17 +166,18 @@ const WelcomeScreen: React.FC = () => {
   );
 
   useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 768);
-      setIsDesktop(width >= 1024);
-    };
-    if (typeof window !== "undefined") {
-      handleResize();
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
+    if (typeof window === "undefined") {
+      return;
     }
-  }, []);
+
+    const handleResize = () => {
+      setViewportFlags(computeViewportFlags());
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [computeViewportFlags]);
 
   useEffect(() => {
     if (isDesktop) {

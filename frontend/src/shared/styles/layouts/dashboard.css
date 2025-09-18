@@ -141,4 +141,8 @@
   .all-projects-container {
     margin-top: 10px;
   }
+
+  .main-content {
+    padding-bottom: 12px;
+  }
 }

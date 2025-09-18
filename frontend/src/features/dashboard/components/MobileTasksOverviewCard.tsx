@@ -1,13 +1,13 @@
 import React from "react";
 
-import Squircle from "@/shared/ui/Squircle";
-
 import { useTasksOverview } from "./useTasksOverview";
 import styles from "./MobileTasksOverviewCard.module.css";
 
-const CARD_RADIUS = 20;
+type MobileTasksOverviewCardProps = {
+  className?: string;
+};
 
-const MobileTasksOverviewCard: React.FC = () => {
+const MobileTasksOverviewCard: React.FC<MobileTasksOverviewCardProps> = ({ className }) => {
   const { loading, error, stats, groups, handleViewAll } = useTasksOverview();
 
   const formatStatValue = (value: number): string | number => {
@@ -30,11 +30,8 @@ const MobileTasksOverviewCard: React.FC = () => {
   }, [error, loading, groups]);
 
   return (
-    <Squircle
-      as="section"
-      radius={CARD_RADIUS}
-      smoothing={0.6}
-      className={styles.card}
+    <section
+      className={`${styles.card} ${className ?? ""}`.trim()}
       aria-label="Tasks overview"
     >
       <header className={styles.header}>
@@ -60,7 +57,7 @@ const MobileTasksOverviewCard: React.FC = () => {
       </div>
 
       <p className={styles.status}>{statusMessage}</p>
-    </Squircle>
+    </section>
   );
 };
 

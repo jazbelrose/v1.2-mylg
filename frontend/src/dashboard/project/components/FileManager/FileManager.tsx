@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useImperativeHandle } from "react";
-import Modal from "../../../shared/ui/ModalWithStack";
+import Modal from "../../../../shared/ui/ModalWithStack";
 import ConfirmModal from "@/shared/ui/ConfirmModal";
 import { FileText, Download, Layout, Upload as UploadIcon, PenTool } from "lucide-react";
 import { useData } from "@/app/contexts/useData";
@@ -9,13 +9,13 @@ import FileManagerToolbar from "./FileManagerToolbar";
 import FileManagerContent from "./FileManagerContent";
 import FileManagerFooter from "./FileManagerFooter";
 import FilePreviewModal from "./FilePreviewModal";
-import { useFileManagerState } from "./hooks/useFileManagerState";
-import { useFileMessenger } from "./hooks/useFileMessenger";
-import { useFileTransfers } from "./hooks/useFileTransfers";
+import { useFileManagerState } from "../Shared/hooks/useFileManagerState";
+import { useFileMessenger } from "../Shared/hooks/useFileMessenger";
+import { useFileTransfers } from "../Shared/hooks/useFileTransfers";
 import type { Message } from "@/app/contexts/DataProvider";
-import type { FileManagerProps, FileManagerRef, FolderOption } from "./fileManagerTypes";
+import type { FileManagerProps, FileManagerRef, FolderOption } from "./FileManagerTypes";
 
-export type { FileManagerProps, FileManagerRef, FileItem } from "./fileManagerTypes";
+export type { FileManagerProps, FileManagerRef, FileItem } from "./FileManagerTypes";
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("#root");

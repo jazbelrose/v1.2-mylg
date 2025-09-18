@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import Map from "../../../shared/ui/Map";
+import Map from "../../../../shared/ui/Map";
 import { toast, ToastContainer } from "react-toastify";
-import Modal from "../../../shared/ui/ModalWithStack";
-import { NOMINATIM_SEARCH_URL, apiFetch, getFileUrl } from "../../../shared/utils/api";
-import { useData } from "../../../app/contexts/useData";
-import { useSocket } from "../../../app/contexts/useSocket";
+import Modal from "../../../../shared/ui/ModalWithStack";
+import { NOMINATIM_SEARCH_URL, apiFetch, getFileUrl } from "../../../../shared/utils/api";
+import { useData } from "../../../../app/contexts/useData";
+import { useSocket } from "../../../../app/contexts/useSocket";
 import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import { FaPencilAlt, FaCrosshairs, FaLock, FaUnlock } from "react-icons/fa";
-import { enqueueProjectUpdate } from "../../../shared/utils/requestQueue";
+import { enqueueProjectUpdate } from "../../../../shared/utils/requestQueue";
 
 const NOMINATIM_REVERSE_URL =
   "https://nominatim.openstreetmap.org/reverse?format=json";

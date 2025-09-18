@@ -47,7 +47,7 @@ import {
   type UserProfile,
 } from "@/shared/utils/api";
 import AvatarStack from "@/shared/ui/AvatarStack";
-import TeamModal from "@/dashboard/project/components/TeamModal";
+import TeamModal from "@/dashboard/project/components/Shared/TeamModal";
 import { enqueueProjectUpdate } from "@/shared/utils/requestQueue";
 import type { Project } from "@/app/contexts/DataProvider";
 

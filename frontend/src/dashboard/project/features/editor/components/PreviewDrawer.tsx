@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import PDFPreview from "@/dashboard/project/components/PDFPreview";
+import PDFPreview from "@/dashboard/project/components/Shared/PDFPreview";
 
 interface PreviewDrawerProps {
   open: boolean;

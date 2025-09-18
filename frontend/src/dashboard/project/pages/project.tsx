@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import ProjectHeader from "@/dashboard/project/components/ProjectHeader";
+import ProjectHeader from "@/dashboard/project/components/Shared/ProjectHeader";
 
 import BudgetOverviewCard from "@/dashboard/project/features/budget/components/BudgetOverviewCard";
 
-import GalleryComponent from "@/dashboard/project/components/GalleryComponent";
+import GalleryComponent from "@/dashboard/project/components/Gallery/GalleryComponent";
 
-import ProjectPageLayout from "@/dashboard/project/components/ProjectPageLayout";
-import Timeline from "@/dashboard/project/components/Timeline";
-import ProjectCalendar from "@/dashboard/project/components/ProjectCalendar";
-import QuickLinksComponent from "@/dashboard/project/components/QuickLinksComponent";
-import LocationComponent from "@/dashboard/project/components/LocationComponent";
-import FileManagerComponent from "@/dashboard/project/components/FileManager";
-import TasksComponent from "@/dashboard/project/components/TasksComponent";
+import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPageLayout";
+import Timeline from "@/dashboard/project/components/Timeline/Timeline";
+import ProjectCalendar from "@/dashboard/project/components/Shared/ProjectCalendar";
+import QuickLinksComponent from "@/dashboard/project/components/Shared/QuickLinksComponent";
+import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
+import FileManagerComponent from "@/dashboard/project/components/FileManager/FileManager";
+import TasksComponent from "@/dashboard/project/components/Tasks/TasksComponent";
 import { BudgetProvider } from "@/dashboard/project/features/budget/context/BudgetProvider";
 import { useData } from "@/app/contexts/useData";
 import { useSocket } from "@/app/contexts/useSocket";

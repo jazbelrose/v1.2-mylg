@@ -14,7 +14,7 @@ import type {
   Project,
   SortOption,
   ViewMode,
-} from "../fileManagerTypes";
+} from "../../FileManager/FileManagerTypes";
 
 interface UseFileManagerStateParams
   extends Pick<FileManagerProps, "folder" | "displayName" | "isOpen" | "onRequestClose"> {

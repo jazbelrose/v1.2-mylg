@@ -1,14 +1,14 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faDownload, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { Upload } from "lucide-react";
-import Spinner from "../../../shared/ui/Spinner";
-import type { FileItem, ViewMode } from "./fileManagerTypes";
+import Spinner from "../../../../shared/ui/Spinner";
+import type { FileItem, ViewMode } from "./FileManagerTypes";
 import {
   getFilePreviewIcon,
   getThumbnailUrl,
   isPreviewableImage,
   truncateFileName,
-} from "./fileManagerUtils";
+} from "./FileManagerUtils";
 import styles from "./file-manager.module.css";
 
 interface FileManagerContentProps {

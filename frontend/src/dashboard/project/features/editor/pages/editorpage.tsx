@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import ProjectPageLayout from "@/dashboard/project/components/ProjectPageLayout";
-import ProjectHeader from "@/dashboard/project/components/ProjectHeader";
+import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPageLayout";
+import ProjectHeader from "@/dashboard/project/components/Shared/ProjectHeader";
 import DesignerComponent, { DesignerRef } from "@/dashboard/project/features/editor/components/canvas/designercomponent";
-import QuickLinksComponent, { QuickLinksRef } from "@/dashboard/project/components/QuickLinksComponent";
-import FileManagerComponent from "@/dashboard/project/components/FileManager";
+import QuickLinksComponent, { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickLinksComponent";
+import FileManagerComponent from "@/dashboard/project/components/FileManager/FileManager";
 import PreviewDrawer from "@/dashboard/project/features/editor/components/PreviewDrawer";
 import UnifiedToolbar from "@/dashboard/project/features/editor/components/UnifiedToolbar";
 import LexicalEditor from "@/dashboard/project/features/editor/components/Brief/LexicalEditor";

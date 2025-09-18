@@ -5,7 +5,7 @@ import React, {
   useLayoutEffect,
   useCallback,
 } from "react";
-import ProjectMessagesThread from "../../features/messages/ProjectMessagesThread";
+import ProjectMessagesThread from "@/dashboard/features/messages/ProjectMessagesThread";
 
 type ChatPanelProps = {
   projectId: string;

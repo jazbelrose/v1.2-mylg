@@ -1,8 +1,8 @@
 import { useCallback } from "react";
-import { API_BASE_URL, apiFetch } from "../../../../shared/utils/api";
-import { normalizeMessage } from "../../../../shared/utils/websocketUtils";
-import type { Message } from "../../../../app/contexts/DataProvider";
-import type { Project } from "../fileManagerTypes";
+import { API_BASE_URL, apiFetch } from "../../../../../shared/utils/api";
+import { normalizeMessage } from "../../../../../shared/utils/websocketUtils";
+import type { Message } from "../../../../../app/contexts/DataProvider";
+import type { Project } from "../../FileManager/FileManagerTypes";
 
 interface UseFileMessengerParams {
   activeProject: Project;

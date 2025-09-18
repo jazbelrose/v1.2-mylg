@@ -33,7 +33,7 @@ import {
   updateTask,
   deleteTask,
   fetchUserProfilesBatch,
-} from "../../../shared/utils/api";
+} from "@/shared/utils/api";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import "./task-table.css";
 

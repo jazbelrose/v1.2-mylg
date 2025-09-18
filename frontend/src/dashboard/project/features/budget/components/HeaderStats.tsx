@@ -12,7 +12,7 @@ import {
 import { Segmented, Switch } from "antd";
 
 import EditBallparkModal from "@/dashboard/project/features/budget/components/EditBallparkModal";
-import ClientInvoicePreviewModal from "@/dashboard/project/components/ClientInvoicePreviewModal";
+import ClientInvoicePreviewModal from "@/dashboard/project/components/Shared/ClientInvoicePreviewModal";
 import VisxPieChart from "@/dashboard/project/features/budget/components/VisxPieChart";
 
 import { updateBudgetItem } from "@/shared/utils/api";

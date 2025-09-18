@@ -1,11 +1,11 @@
 import type React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faXmark } from "@fortawesome/free-solid-svg-icons";
-import Modal from "../../../shared/ui/ModalWithStack";
-import { fileUrlsToKeys, getFileUrl } from "../../../shared/utils/api";
-import PDFPreview from "./PDFPreview";
-import type { FileItem } from "./fileManagerTypes";
-import { getFilePreviewIcon, isPreviewableImage } from "./fileManagerUtils";
+import Modal from "../../../../shared/ui/ModalWithStack";
+import { fileUrlsToKeys, getFileUrl } from "../../../../shared/utils/api";
+import PDFPreview from "../Shared/PDFPreview";
+import type { FileItem } from "./FileManagerTypes";
+import { getFilePreviewIcon, isPreviewableImage } from "./FileManagerUtils";
 import styles from "./file-manager.module.css";
 
 interface FilePreviewModalProps {

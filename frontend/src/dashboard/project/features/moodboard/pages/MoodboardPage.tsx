@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import ProjectPageLayout from "@/dashboard/project/components/ProjectPageLayout";
-import ProjectHeader from "@/dashboard/project/components/ProjectHeader";
+import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPageLayout";
+import ProjectHeader from "@/dashboard/project/components/Shared/ProjectHeader";
 import MoodboardCanvas from "../components/MoodboardCanvas";
 import { useData } from "@/app/contexts/useData";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";

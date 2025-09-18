@@ -39,7 +39,7 @@ import { faTimes, faDownload } from "@fortawesome/free-solid-svg-icons";
 import Modal from "../../../shared/ui/ModalWithStack";
 import ConfirmModal from "@/shared/ui/ConfirmModal";
 import PromptModal from "../../../shared/ui/PromptModal";
-import PDFPreview from "@/dashboard/project/components/PDFPreview";
+import PDFPreview from "@/dashboard/project/components/Shared/PDFPreview";
 import {
   GET_PROJECT_MESSAGES_URL,
   DELETE_FILE_FROM_S3_URL,

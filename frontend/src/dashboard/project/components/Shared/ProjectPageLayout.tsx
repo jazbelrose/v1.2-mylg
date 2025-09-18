@@ -1,5 +1,5 @@
 import React from "react";
-import ProjectMessagesThread from "../../features/messages/ProjectMessagesThread";
+import ProjectMessagesThread from "@/dashboard/features/messages/ProjectMessagesThread";
 import ChatPanel from "./ChatPanel";
 import type { ProjectAccentPalette } from "@/dashboard/project/hooks/useProjectPalette";
 

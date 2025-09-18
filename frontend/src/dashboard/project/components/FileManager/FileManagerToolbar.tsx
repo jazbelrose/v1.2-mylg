@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import Dropdown from "./Dropdown";
-import type { FilterValue, FolderOption, SortOption } from "./fileManagerTypes";
+import type { FilterValue, FolderOption, SortOption } from "./FileManagerTypes";
 import styles from "./file-manager.module.css";
 
 interface FileManagerToolbarProps {

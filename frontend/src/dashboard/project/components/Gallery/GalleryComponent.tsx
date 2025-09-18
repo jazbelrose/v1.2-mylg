@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, Fragment, useCallback } from "react";
-import Modal from "../../../shared/ui/ModalWithStack";
+import Modal from "../../../../shared/ui/ModalWithStack";
 import { GalleryVerticalEnd } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -16,8 +16,8 @@ import {
 import ConfirmModal from "@/shared/ui/ConfirmModal";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useData } from "../../../app/contexts/useData";
-import { useSocket } from "../../../app/contexts/useSocket";
+import { useData } from "../../../../app/contexts/useData";
+import { useSocket } from "../../../../app/contexts/useSocket";
 import {
   GALLERY_UPLOAD_URL,
   fetchGalleries,
@@ -27,12 +27,12 @@ import {
   apiFetch,
   S3_PUBLIC_BASE,
   getFileUrl,
-} from "../../../shared/utils/api";
+} from "../../../../shared/utils/api";
 import { uploadData } from "aws-amplify/storage";
 import styles from "./gallery-component.module.css";
-import { slugify } from "../../../shared/utils/slug";
-import { sha256 } from "../../../shared/utils/hash";
-import { enqueueProjectUpdate } from "../../../shared/utils/requestQueue";
+import { slugify } from "../../../../shared/utils/slug";
+import { sha256 } from "../../../../shared/utils/hash";
+import { enqueueProjectUpdate } from "../../../../shared/utils/requestQueue";
 import { getUniqueSlug, getPreviewUrl } from './GalleryUtils';
 
 const COVER_PAGE_SIZE = 12;

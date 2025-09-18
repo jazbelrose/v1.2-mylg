@@ -11,14 +11,14 @@ import { v4 as uuid } from "uuid";
 import Calendar, { CalendarProps } from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "./project-calendar.css";
-import Modal from "../../../shared/ui/ModalWithStack";
-import { useData } from "../../../app/contexts/useData";
-import { useSocket } from "../../../app/contexts/useSocket";
-import { normalizeMessage } from "../../../shared/utils/websocketUtils";
-import { getColor } from "../../../shared/utils/colorUtils";
-import { createBudgetItem, updateBudgetItem, createEvent as createEventApi, updateEvent as updateEventApi, deleteEvent as deleteEventApi } from "../../../shared/utils/api";
-import { slugify } from "../../../shared/utils/slug";
-import { parseBudget, formatUSD } from "../../../shared/utils/budgetUtils";
+import Modal from "../../../../shared/ui/ModalWithStack";
+import { useData } from "../../../../app/contexts/useData";
+import { useSocket } from "../../../../app/contexts/useSocket";
+import { normalizeMessage } from "../../../../shared/utils/websocketUtils";
+import { getColor } from "../../../../shared/utils/colorUtils";
+import { createBudgetItem, updateBudgetItem, createEvent as createEventApi, updateEvent as updateEventApi, deleteEvent as deleteEventApi } from "../../../../shared/utils/api";
+import { slugify } from "../../../../shared/utils/slug";
+import { parseBudget, formatUSD } from "../../../../shared/utils/budgetUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,

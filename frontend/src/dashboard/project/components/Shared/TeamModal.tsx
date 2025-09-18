@@ -1,9 +1,9 @@
 import React from "react";
-import Modal from "../../../shared/ui/ModalWithStack";
+import Modal from "../../../../shared/ui/ModalWithStack";
 import { X } from "lucide-react";
 import styles from "./team-modal.module.css";
 import { useOnlineStatus } from "@/app/contexts/OnlineStatusContext";
-import { getFileUrl } from "../../../shared/utils/api";
+import { getFileUrl } from "../../../../shared/utils/api";
 
 type Member = {
   userId: string;

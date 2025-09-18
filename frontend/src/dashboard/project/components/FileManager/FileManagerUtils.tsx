@@ -1,7 +1,7 @@
 import { FaCube, FaDraftingCompass, FaFileAlt, FaFileExcel, FaFilePdf } from "react-icons/fa";
 import { SiAdobe, SiHtml5, SiSvg } from "react-icons/si";
-import { fileUrlsToKeys, getFileUrl, normalizeFileUrl } from "../../../shared/utils/api";
-import type { FileItem } from "./fileManagerTypes";
+import { fileUrlsToKeys, getFileUrl, normalizeFileUrl } from "@/shared/utils/api";
+import type { FileItem } from "./FileManagerTypes";
 
 export const encodeS3Key = (key: string = "") =>
   key

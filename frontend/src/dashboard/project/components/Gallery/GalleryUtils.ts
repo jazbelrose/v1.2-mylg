@@ -1,4 +1,4 @@
-import { slugify } from "../../../shared/utils/slug";
+import { slugify } from "@/shared/utils/slug";
 import { Gallery } from './GalleryComponent';
 
 export function getUniqueSlug(

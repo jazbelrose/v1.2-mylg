@@ -12,10 +12,10 @@ import ConfirmModal from "@/shared/ui/ConfirmModal";
 import * as ExcelJS from "exceljs";
 import styles from "./budget-page.module.css";
 
-import ProjectPageLayout from "@/dashboard/project/components/ProjectPageLayout";
-import ProjectHeader from "@/dashboard/project/components/ProjectHeader";
-import QuickLinksComponent from "@/dashboard/project/components/QuickLinksComponent";
-import FileManagerComponent from "@/dashboard/project/components/FileManager";
+import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPageLayout";
+import ProjectHeader from "@/dashboard/project/components/Shared/ProjectHeader";
+import QuickLinksComponent from "@/dashboard/project/components/Shared/QuickLinksComponent";
+import FileManagerComponent from "@/dashboard/project/components/FileManager/FileManager";
 import BudgetHeader from "@/dashboard/project/features/budget/components/HeaderStats";
 import BudgetFileModal from "@/dashboard/project/features/budget/components/BudgetFileModal";
 import CreateLineItemModal from "@/dashboard/project/features/budget/components/CreateLineItemModal";

@@ -9,12 +9,12 @@ import {
   fileUrlsToKeys,
   getFileUrl,
   normalizeFileUrl,
-} from "../../../../shared/utils/api";
-import { notify, notifyLoading, updateNotification } from "../../../../shared/ui/ToastNotifications";
-import pLimit from "../../../../shared/utils/pLimit";
-import type { Message } from "../../../../app/contexts/DataProvider";
-import type { FileItem, Project } from "../fileManagerTypes";
-import { getFileKind } from "../fileManagerUtils";
+} from "../../../../../shared/utils/api";
+import { notify, notifyLoading, updateNotification } from "../../../../../shared/ui/ToastNotifications";
+import pLimit from "../../../../../shared/utils/pLimit";
+import type { Message } from "../../../../../app/contexts/DataProvider";
+import type { FileItem, Project } from "../../FileManager/FileManagerTypes";
+import { getFileKind } from "../../FileManager/FileManagerUtils";
 
 interface UseFileTransfersParams {
   activeProject: Project;

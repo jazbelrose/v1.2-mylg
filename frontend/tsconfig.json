@@ -25,6 +25,8 @@
     "build",
     "backend",
     "src/pages/works/allworkposts/**",
-    "src/setupTests.ts"
+    "src/setupTests.ts",
+    "**/*.test.tsx",
+    "**/*.test.ts"
   ]
 }

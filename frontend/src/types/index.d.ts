@@ -1,6 +1,3 @@
-/// <reference types="vitest/globals" />
-/// <reference types="@testing-library/jest-dom" />
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Type declarations for modules without TypeScript support
 

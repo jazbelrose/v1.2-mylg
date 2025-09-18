@@ -1,6 +1,3 @@
-/// <reference types="vitest/globals" />
-/// <reference types="@testing-library/jest-dom" />
-
 // -------------- Tame react-modal so portals/props don't spam warnings --------------
 import * as React from 'react';
 vi.mock('react-modal', () => {

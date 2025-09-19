@@ -34,8 +34,6 @@
 .notification-avatar {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
   margin-right: 8px;
   flex-shrink: 0;
 }

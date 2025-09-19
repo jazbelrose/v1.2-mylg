@@ -325,13 +325,20 @@
 .all-projects-calendar-wrapper .tooltip-initial {
   width: 16px;
   height: 16px;
-  border-radius: 4px;
   object-fit: cover;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.2);
   font-size: 0.6rem;
+}
+
+.all-projects-calendar-wrapper .tooltip-thumb-image,
+.all-projects-calendar-wrapper .tooltip-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .all-projects-calendar-wrapper .tooltip-text {

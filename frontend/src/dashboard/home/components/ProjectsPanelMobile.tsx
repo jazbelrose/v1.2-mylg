@@ -9,6 +9,7 @@ import styles from "./projects-panel.module.css";
 import { useProjectKpis, type ProjectLike } from "../hooks/useProjectKpis";
 import { getFileUrl } from "../../../shared/utils/api";
 import { MICRO_WOBBLE_SCALE, SPRING_FAST } from "@/shared/ui/motionTokens";
+import Squircle from "@/shared/ui/Squircle";
 
 type Props = {
   onOpenProject: (projectId: string) => void;
@@ -250,17 +251,19 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
                       ? p.thumbnails[0]
                       : undefined;
                   return (
-                    <button
+                    <Squircle
                       key={`icon-${id}`}
+                      as="button"
                       type="button"
                       className={styles.iconBtnSm}
                       aria-label={`Open project ${title}`}
                       title={title}
                       onClick={() => handleOpen(id)}
+                      radius={8}
                     >
                       {thumb && !imgError[id] ? (
                         <img
-                          className={styles.thumbSm}
+                          className={`${styles.thumbSm} ${styles.thumbSquircle}`}
                           src={getFileUrl(thumb)}
                           alt=""
                           onError={() =>
@@ -275,10 +278,10 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
                               .charAt(0)
                               .toUpperCase() || "#"
                           }
-                          className={styles.thumbSm}
+                          className={`${styles.thumbSm} ${styles.thumbSquircle}`}
                         />
                       )}
-                    </button>
+                    </Squircle>
                   );
                 })}
                 {more > 0 && (
@@ -431,10 +434,10 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
                   onKeyDown={onKey}
                   aria-label={`Open project ${title}`}
                 >
-                  <div className={styles.icon} aria-hidden>
+                  <Squircle as="div" className={styles.icon} aria-hidden radius={10}>
                     {thumb && !imgError[id] ? (
                       <img
-                        className={styles.thumb}
+                        className={`${styles.thumb} ${styles.thumbSquircle}`}
                         src={getFileUrl(thumb)}
                         alt=""
                         onError={() =>
@@ -446,10 +449,10 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
                         initial={
                           title.charAt(0).toUpperCase() || "#"
                         }
-                        className={styles.thumb}
+                        className={`${styles.thumb} ${styles.thumbSquircle}`}
                       />
                     )}
-                  </div>
+                  </Squircle>
                   <div className={styles.meta}>
                     <div className={styles.titleRow}>
                       <div className={styles.titleLeft}>

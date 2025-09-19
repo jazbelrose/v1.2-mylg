@@ -9,6 +9,7 @@ import { getFileUrl } from '@/shared/utils/api';
 import type { AppUser } from '@/dashboard/features/messages/types';
 import { getUserDisplayName, getUserThumbnail } from '@/dashboard/features/messages/utils/userHelpers';
 import SVGThumbnail from './SvgThumbnail';
+import Squircle from '@/shared/ui/Squircle';
 
 interface HighlightPart {
   text: string;
@@ -675,7 +676,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate 
                 className={resultClasses}
               >
                 {isProject ? (
-                  <div className="global-search-thumbnail" aria-hidden>
+                  <Squircle
+                    as="div"
+                    className="global-search-thumbnail"
+                    aria-hidden
+                    radius={12}
+                  >
                     {result.thumbnailUrl && !imageErrors[result.id] ? (
                       <img
                         src={result.thumbnailUrl}
@@ -691,7 +697,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate 
                         className="global-search-thumbnail-placeholder"
                       />
                     )}
-                  </div>
+                  </Squircle>
                 ) : isCollaborator ? (
                   <div className="global-search-thumbnail collaborator-thumbnail" aria-hidden>
                     {result.thumbnailUrl && !imageErrors[result.id] ? (

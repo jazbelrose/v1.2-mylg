@@ -153,7 +153,6 @@
 .global-search-thumbnail {
   width: 48px;
   height: 48px;
-  border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
   display: flex;
@@ -170,8 +169,8 @@
 }
 
 .global-search-thumbnail-placeholder {
-  width: 48px;
-  height: 48px;
+  width: 100%;
+  height: 100%;
   display: block;
 }
 

@@ -170,10 +170,10 @@ const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
                   onKeyDown={onKey}
                   aria-label={`Open project ${title}`}
                 >
-                  <div className="prc-icon" aria-hidden>
+                  <Squircle as="div" className="prc-icon" aria-hidden radius={10}>
                     {thumb && !imgError[id] ? (
                       <img
-                        className="prc-thumb"
+                        className="prc-thumb prc-thumbSquircle"
                         src={getFileUrl(thumb)}
                         alt=""
                         onError={() => setImgError((m) => ({ ...m, [id]: true }))}
@@ -181,7 +181,7 @@ const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
                     ) : (
                       <ProjectCard size={16} color="#fff" />
                     )}
-                  </div>
+                  </Squircle>
                   <div className="prc-meta">
                     <div className="prc-title-row">
                       <div className="prc-title-left">

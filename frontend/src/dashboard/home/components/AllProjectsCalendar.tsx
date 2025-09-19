@@ -17,6 +17,8 @@ import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { WeekWidget } from "./WeekWidget";
 import { getFileUrl } from "../../../shared/utils/api";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
+import Squircle from "@/shared/ui/Squircle";
+import SVGThumbnail from "./SvgThumbnail";
 
 // --- Types ---
 type Project = {
@@ -383,13 +385,20 @@ const AllProjectsCalendar: React.FC = () => {
                   className="tooltip-item"
                   onClick={() => handleProjectClick({ projectId: item.projectId, title: item.title } as Project)}
                 >
-                  {item.thumbnail ? (
-                    <img
-                      src={getFileUrl(item.thumbnail)}
-                      alt={item.title ?? "thumbnail"}
-                      className="tooltip-thumb"
-                    />
-                  ) : null}
+                  <Squircle as="span" className="tooltip-thumb" aria-hidden radius={6}>
+                    {item.thumbnail ? (
+                      <img
+                        src={getFileUrl(item.thumbnail)}
+                        alt={item.title ?? "thumbnail"}
+                        className="tooltip-thumb-image"
+                      />
+                    ) : (
+                      <SVGThumbnail
+                        initial={(item.title ?? "Untitled").trim().charAt(0).toUpperCase() || "#"}
+                        className="tooltip-thumb-placeholder"
+                      />
+                    )}
+                  </Squircle>
                   <div className="tooltip-text">
                     <div className="tooltip-header">
                       <span className="tooltip-title">{item.title ?? "Untitled"}</span>

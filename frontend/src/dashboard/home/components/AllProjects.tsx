@@ -12,7 +12,6 @@ import { useNavigate } from 'react-router-dom';
 import SVGThumbnail from './SvgThumbnail';
 import Spinner from '../../../shared/ui/Spinner';
 import AvatarStack from '../../../shared/ui/AvatarStack';
-import { ProjectsIconsStrip } from './ProjectsIconsStrip';
 import { ProjectsFilterMenu } from './ProjectsFilterMenu';
 import { useProjectFilters } from './hooks/useProjectFilters';
 import {
@@ -161,15 +160,18 @@ const AllProjects: React.FC = () => {
     }
   }, [isLoading, projects.length, projectsError, fetchProjects]);
 
-  const onSelectProject = (project: Project): void => {
-    navigate(getProjectDashboardPath(project.projectId, project.title));
+  const onSelectProject = useCallback(
+    (project: Project): void => {
+      navigate(getProjectDashboardPath(project.projectId, project.title));
 
-    const fetchPromise = fetchProjectDetails(project.projectId).catch((err) => {
-      console.error('Error loading project', err);
-    });
+      const fetchPromise = fetchProjectDetails(project.projectId).catch((err) => {
+        console.error('Error loading project', err);
+      });
 
-    void fetchPromise;
-  };
+      void fetchPromise;
+    },
+    [navigate, fetchProjectDetails],
+  );
 
   // Preload project thumbnails
   useEffect(() => {
@@ -190,9 +192,12 @@ const AllProjects: React.FC = () => {
     return map;
   }, [allUsers]);
 
-  const handleProjectClick = (project: Project): void => {
-    onSelectProject(project);
-  };
+  const handleProjectClick = useCallback(
+    (project: Project): void => {
+      onSelectProject(project);
+    },
+    [onSelectProject],
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent, project: Project): void => {
     if (e.key === 'Enter') {
@@ -207,7 +212,7 @@ const AllProjects: React.FC = () => {
         handleProjectClick(proj);
       }
     },
-    [projects],
+    [projects, handleProjectClick],
   );
 
   useEffect(() => {

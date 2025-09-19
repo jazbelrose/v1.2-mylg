@@ -31,6 +31,7 @@ type ElementType = React.ElementType;
 export type SquircleProps<T extends React.ElementType = 'div'> = {
   as?: T;
   radius?: number;
+  roundness?: number;
   smoothing?: number;
   cornerRadii?: SquircleCornerRadii;
   className?: string;
@@ -60,6 +61,7 @@ const SquircleInner = <T extends React.ElementType = 'div'>(
   {
     as,
     radius = 20,
+    roundness,
     smoothing = 0.6,
     cornerRadii,
     className,
@@ -170,20 +172,34 @@ const SquircleInner = <T extends React.ElementType = 'div'>(
   const maskReady = supportsMask() && !prefersReducedTransparency;
   const canMask = maskReady && size.width > 0 && size.height > 0;
 
+  const resolvedRadius = React.useMemo(() => {
+    if (
+      typeof roundness === 'number' &&
+      Number.isFinite(roundness) &&
+      size.width > 0 &&
+      size.height > 0
+    ) {
+      const clamped = Math.max(0, Math.min(roundness, 1));
+      const maxRadius = Math.min(size.width, size.height) / 2;
+      return maxRadius * clamped;
+    }
+    return radius;
+  }, [radius, roundness, size.height, size.width]);
+
   const maskValue = React.useMemo(() => {
     if (!canMask) {
       return null;
     }
 
-    const path = getSquirclePath(size.width, size.height, radius, smoothing, cornerRadii);
+    const path = getSquirclePath(size.width, size.height, resolvedRadius, smoothing, cornerRadii);
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}" viewBox="0 0 ${size.width} ${size.height}"><path fill="white" d="${path}" /></svg>`;
     const dataUrl = `url("data:image/svg+xml,${encodeSvg(svg)}")`;
     return dataUrl;
-  }, [canMask, cornerRadii, radius, size.height, size.width, smoothing]);
+  }, [canMask, cornerRadii, resolvedRadius, size.height, size.width, smoothing]);
 
   const fallbackBorderRadius = React.useMemo(() => {
     if (!cornerRadii) {
-      return radius;
+      return resolvedRadius;
     }
 
     const pickCorner = (specific?: number, shared?: number): number => {
@@ -193,7 +209,7 @@ const SquircleInner = <T extends React.ElementType = 'div'>(
       if (typeof shared === 'number' && Number.isFinite(shared)) {
         return shared;
       }
-      return radius;
+      return resolvedRadius;
     };
 
     const topLeft = pickCorner(cornerRadii.topLeft, cornerRadii.top);
@@ -215,7 +231,7 @@ const SquircleInner = <T extends React.ElementType = 'div'>(
     };
 
     return values.map(formatCssNumber).join(' ');
-  }, [cornerRadii, radius]);
+  }, [cornerRadii, resolvedRadius]);
 
   const mergedStyle = React.useMemo(() => {
     const next: React.CSSProperties = {

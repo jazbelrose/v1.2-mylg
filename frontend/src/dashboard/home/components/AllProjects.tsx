@@ -269,14 +269,15 @@ const AllProjects: React.FC = () => {
       const baseClass = variant === 'grid' ? 'project-thumbnail' : 'project-list-thumb';
       const mediaClass =
         variant === 'grid' ? 'project-thumbnail-media' : 'project-list-thumb-media';
-      const radius = variant === 'grid' ? 28 : 14;
-      const smoothing = variant === 'grid' ? 0.82 : 0.88;
+      const roundness = variant === 'grid' ? 0.92 : 0.88;
+      const smoothing = variant === 'grid' ? 0.96 : 0.92;
+      const containerClassName = `${baseClass} ${hasImage ? `${baseClass}--image` : `${baseClass}--placeholder`}`;
 
       return (
         <Squircle
-          radius={radius}
+          roundness={roundness}
           smoothing={smoothing}
-          className={baseClass}
+          className={containerClassName}
         >
           {thumbnailKey ? (
             <img
@@ -291,7 +292,7 @@ const AllProjects: React.FC = () => {
             <SVGThumbnail
               initial={project.title?.trim()?.charAt(0)?.toUpperCase() || '#'}
               className={mediaClass}
-              roundness={0.92}
+              roundness={roundness}
             />
           )}
         </Squircle>

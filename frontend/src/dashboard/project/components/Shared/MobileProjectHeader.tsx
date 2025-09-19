@@ -4,6 +4,7 @@ import {
   Folder,
   Link as LinkIcon,
   MoreVertical,
+  MessageSquare,
   Settings,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
@@ -33,6 +34,7 @@ interface MobileProjectHeaderProps {
   onOpenFinishLine: () => void;
   onOpenStatus: () => void;
   onOpenThumbnail: () => void;
+  onOpenChat?: () => void;
   tabs: ProjectTabItem[];
   activeTabKey?: string;
   onSelectTab: (tab: ProjectTabItem) => void;
@@ -53,6 +55,7 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
   onOpenFinishLine,
   onOpenStatus,
   onOpenThumbnail,
+  onOpenChat,
   tabs,
   activeTabKey,
   onSelectTab,
@@ -79,6 +82,17 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
   const handleBackToDashboard = React.useCallback(() => {
     navigate("/dashboard");
   }, [navigate]);
+
+  const handleOpenChat = React.useCallback(() => {
+    if (onOpenChat) {
+      onOpenChat();
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("project-open-chat"));
+    }
+  }, [onOpenChat]);
 
   const statusBadgeLabel = React.useMemo(() => {
     if (Number.isFinite(progressValue)) {
@@ -179,6 +193,17 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
               </div>
             ) : null}
           </button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={styles.chatButton}
+            onClick={handleOpenChat}
+            aria-label="Open project chat"
+          >
+            <MessageSquare />
+          </Button>
 
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>
             <PopoverTrigger asChild>

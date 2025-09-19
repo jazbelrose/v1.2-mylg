@@ -12,6 +12,7 @@ type ChatPanelProps = {
   initialFloating?: boolean;
   onFloatingChange?: (floating: boolean) => void;
   initialOpen?: boolean;
+  openSignal?: number;
 };
 
 type Size = { width: number; height: number };
@@ -25,15 +26,20 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   projectId,
   initialFloating = false,
   onFloatingChange,
-  initialOpen = true,
+  initialOpen,
+  openSignal = 0,
 }) => {
   const isNarrowScreen =
     typeof window !== "undefined" ? window.innerWidth < 768 : false;
 
   const [isMobile, setIsMobile] = useState<boolean>(isNarrowScreen);
-  const [open, setOpen] = useState<boolean>(
-    isNarrowScreen ? false : Boolean(initialOpen)
-  );
+  const [open, setOpen] = useState<boolean>(() => {
+    if (isNarrowScreen) {
+      return Boolean(initialOpen);
+    }
+    const resolvedInitialOpen = initialOpen ?? true;
+    return Boolean(resolvedInitialOpen);
+  });
 
   const prevHeightRef = useRef<number>(400);
   const [floating, setFloating] = useState<boolean>(
@@ -93,6 +99,12 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       /* ignore write errors */
     }
   }, [size]);
+
+  useEffect(() => {
+    if (openSignal > 0) {
+      setOpen(true);
+    }
+  }, [openSignal]);
 
   useEffect(() => {
     const handleResize = () => {

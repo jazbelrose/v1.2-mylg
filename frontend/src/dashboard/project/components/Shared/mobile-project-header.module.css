@@ -120,6 +120,15 @@
   gap: 8px;
 }
 
+.chatButton {
+  color: #ffffff;
+}
+
+.chatButton :global(svg) {
+  width: 18px;
+  height: 18px;
+}
+
 .avatarGroup {
   display: flex;
   align-items: center;

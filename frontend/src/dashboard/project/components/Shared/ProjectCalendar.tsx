@@ -14,7 +14,7 @@ import { useData } from "../../../../app/contexts/useData";
 import { useSocket } from "../../../../app/contexts/useSocket";
 import { normalizeMessage } from "../../../../shared/utils/websocketUtils";
 import { getColor } from "../../../../shared/utils/colorUtils";
-import { startOfWeek, endOfWeek, addDays } from "@/dashboard/home/utils/dateUtils";
+import { startOfWeek, endOfWeek, addDays, rangePct } from "@/dashboard/home/utils/dateUtils";
 import { createBudgetItem, updateBudgetItem, createEvent as createEventApi, updateEvent as updateEventApi, deleteEvent as deleteEventApi } from "../../../../shared/utils/api";
 import { slugify } from "../../../../shared/utils/slug";
 import { parseBudget, formatUSD } from "../../../../shared/utils/budgetUtils";
@@ -864,112 +864,120 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
           </div>
 
           <div className="calendar-weeks">
-            {calendarWeeks.map((week, weekIdx) => (
-              <div className="calendar-week" key={`week-${weekIdx}`}>
-                {week.map(({ date, key, inMonth }) => {
-                  const dayEvents = eventsByDate[key] || [];
-                  const dayDots = dayEvents.map((e, idx) => project?.color || getColor(e.description || String(idx)));
-                  const isSelected = selectedKey === key;
-                  const isToday = todayKey === key;
-                  const isFlashing = flashKey === key;
-                  const isHovered = hoverKey === key;
-                  const dayClassName = [
-                    "calendar-day",
-                    inMonth ? "" : "calendar-day--muted",
-                    isToday ? "today" : "",
-                    isSelected ? "selected" : "",
-                    isFlashing ? "tile-highlight" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
-                  const prevKey = getDateKey(addDays(date, -1));
-                  const nextKey = getDateKey(addDays(date, 1));
-                  const prevInRange = prevKey ? rangeSet.has(prevKey) : false;
-                  const nextInRange = nextKey ? rangeSet.has(nextKey) : false;
-                  const totalHours = dayEvents.reduce(
-                    (sum, ev) => sum + Number(ev.hours || 0),
-                    0
-                  );
-                  return (
-                    <div key={key} className="calendar-day-wrapper">
-                      <div
-                        className={dayClassName}
-                        onMouseEnter={!isMobile ? () => queueHover(date) : undefined}
-                        onMouseLeave={!isMobile ? queueHoverClear : undefined}
-                        onClick={() => handleDayClick(date, inMonth)}
-                        onPointerUp={(evt) => {
-                          if (evt.pointerType === "touch") handleDayClick(date, inMonth);
-                        }}
-                        role="button"
-                        aria-label={date.toDateString()}
-                      >
-                        <div className="tile-date-number">{date.getDate()}</div>
+            {calendarWeeks.map((week, weekIdx) => {
+              const rowStart = startOfWeek(week[0].date);
+              const rowEnd = endOfWeek(week[0].date);
+              let weekTrack: { left: number; width: number } | null = null;
 
-                        <div className="day-dots">
-                          {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
-                            <svg
-                              key={`${key}-dot-${idx}`}
-                              width={DOT_SIZE}
-                              height={DOT_SIZE}
-                              viewBox="0 0 24 24"
-                              style={{
-                                marginLeft: idx ? -DOT_OVERLAP_PX : 0,
-                                filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
-                                zIndex: 20 - idx,
-                              }}
-                              aria-hidden
-                            >
-                              <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
-                              <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
-                              <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
-                            </svg>
-                          ))}
-                          {dayDots.length > DOT_MAX_VISIBLE && (
-                            <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
+              if (startDate && endDate) {
+                const { left, width } = rangePct(startDate, endDate, rowStart, rowEnd);
+                if (width > 0) {
+                  weekTrack = { left, width };
+                }
+              }
+
+              return (
+                <div className="calendar-week" key={`week-${weekIdx}`}>
+                  {weekTrack && (
+                    <div
+                      className="calendar-week-track"
+                      style={{
+                        left: `${weekTrack.left}%`,
+                        width: `${weekTrack.width}%`,
+                        backgroundColor: projectColor,
+                      }}
+                      aria-hidden
+                    />
+                  )}
+
+                  {week.map(({ date, key, inMonth }) => {
+                    const dayEvents = eventsByDate[key] || [];
+                    const dayDots = dayEvents.map((e, idx) => project?.color || getColor(e.description || String(idx)));
+                    const isSelected = selectedKey === key;
+                    const isToday = todayKey === key;
+                    const isFlashing = flashKey === key;
+                    const isHovered = hoverKey === key;
+                    const inRange = rangeSet.has(key);
+                    const dayClassName = [
+                      "calendar-day",
+                      inMonth ? "" : "calendar-day--muted",
+                      isToday ? "today" : "",
+                      isSelected ? "selected" : "",
+                      isFlashing ? "tile-highlight" : "",
+                      inRange ? "in-range" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    const totalHours = dayEvents.reduce(
+                      (sum, ev) => sum + Number(ev.hours || 0),
+                      0
+                    );
+                    return (
+                      <div key={key} className="calendar-day-wrapper">
+                        <div
+                          className={dayClassName}
+                          onMouseEnter={!isMobile ? () => queueHover(date) : undefined}
+                          onMouseLeave={!isMobile ? queueHoverClear : undefined}
+                          onClick={() => handleDayClick(date, inMonth)}
+                          onPointerUp={(evt) => {
+                            if (evt.pointerType === "touch") handleDayClick(date, inMonth);
+                          }}
+                          role="button"
+                          aria-label={date.toDateString()}
+                        >
+                          <div className="tile-date-number">{date.getDate()}</div>
+
+                          <div className="day-dots">
+                            {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
+                              <svg
+                                key={`${key}-dot-${idx}`}
+                                width={DOT_SIZE}
+                                height={DOT_SIZE}
+                                viewBox="0 0 24 24"
+                                style={{
+                                  marginLeft: idx ? -DOT_OVERLAP_PX : 0,
+                                  filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
+                                  zIndex: 20 - idx,
+                                }}
+                                aria-hidden
+                              >
+                                <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
+                                <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
+                                <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
+                              </svg>
+                            ))}
+                            {dayDots.length > DOT_MAX_VISIBLE && (
+                              <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
+                            )}
+                          </div>
+
+                          {isHovered && dayEvents.length > 0 && (
+                            <div className="tile-tooltip visible">
+                              {dayEvents.map((e, idx) => (
+                                <div className="tooltip-item" key={`${key}-tip-${idx}`}>
+                                  <FontAwesomeIcon
+                                    icon={faClock}
+                                    className="tooltip-dot"
+                                    style={{
+                                      color: project?.color || getColor(e.description || String(idx)),
+                                    }}
+                                  />
+                                  <span className="tooltip-text">
+                                    {e.description?.toUpperCase()} ({e.hours}{" "}
+                                    {Number(e.hours) === 1 ? "HR" : "HRS"})
+                                  </span>
+                                </div>
+                              ))}
+                              <div className="tooltip-info">{totalHours} hrs</div>
+                            </div>
                           )}
                         </div>
-
-                        {isHovered && dayEvents.length > 0 && (
-                          <div className="tile-tooltip visible">
-                            {dayEvents.map((e, idx) => (
-                              <div className="tooltip-item" key={`${key}-tip-${idx}`}>
-                                <FontAwesomeIcon
-                                  icon={faClock}
-                                  className="tooltip-dot"
-                                  style={{
-                                    color: project?.color || getColor(e.description || String(idx)),
-                                  }}
-                                />
-                                <span className="tooltip-text">
-                                  {e.description?.toUpperCase()} ({e.hours}{" "}
-                                  {Number(e.hours) === 1 ? "HR" : "HRS"})
-                                </span>
-                              </div>
-                            ))}
-                            <div className="tooltip-info">{totalHours} hrs</div>
-                          </div>
-                        )}
                       </div>
-
-                      {rangeSet.has(key) && (
-                        <div className="timeline-bars" aria-hidden>
-                          <div
-                            className="timeline-bar"
-                            style={{
-                              backgroundColor: projectColor,
-                              borderTopLeftRadius: prevInRange ? 0 : 5,
-                              borderBottomLeftRadius: prevInRange ? 0 : 5,
-                              borderTopRightRadius: nextInRange ? 0 : 5,
-                              borderBottomRightRadius: nextInRange ? 0 : 5,
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -1223,6 +1231,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 };
 
 export default ProjectCalendar;
+
 
 
 

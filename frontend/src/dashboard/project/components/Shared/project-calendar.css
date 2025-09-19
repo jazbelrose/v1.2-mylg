@@ -453,22 +453,26 @@
 }
 
 .project-calendar-wrapper .calendar-week {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
+  padding-bottom: 16px;
+  overflow: visible;
 }
 
 .project-calendar-wrapper .calendar-day-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
+  z-index: 2;
 }
 
 .project-calendar-wrapper .calendar-day {
   position: relative;
   min-height: 78px;
-  padding: 10px 10px 24px;
+  padding: 10px 10px 20px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.02);
@@ -510,28 +514,15 @@
   gap: 4px;
 }
 
-.project-calendar-wrapper .day-dot-more {
-  margin-left: 6px;
-  padding: 0 6px;
-  height: 16px;
-  line-height: 16px;
-  min-width: 18px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  color: #ffffff;
-  background: rgba(15, 15, 15, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: saturate(140%) blur(2px);
-}
 
-.project-calendar-wrapper .timeline-bars {
-  display: flex;
-  align-items: center;
+.project-calendar-wrapper .calendar-week-track {
+  position: absolute;
   height: 6px;
-  padding: 0 10px;
+  border-radius: 4px;
+  bottom: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   pointer-events: none;
+  z-index: 1;
 }
 
 .project-calendar-wrapper .timeline-bar {
@@ -544,14 +535,29 @@
   .project-calendar-wrapper .calendar-content {
     padding: 14px;
   }
+  .project-calendar-wrapper .calendar-week {
+    padding-bottom: 12px;
+  }
   .project-calendar-wrapper .calendar-day {
-    min-height: 68px;
-    padding: 8px 8px 20px;
+    min-height: 64px;
+    padding: 8px 8px 16px;
   }
   .project-calendar-wrapper .day-dots {
-    bottom: 6px;
+    bottom: 5px;
   }
   .project-calendar-wrapper .tile-date-number {
     font-size: 0.85rem;
   }
 }
+
+
+.project-calendar-wrapper .calendar-day.in-range {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+
+
+
+
+

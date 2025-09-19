@@ -891,22 +891,68 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
                     0
                   );
                   return (
-                    <div
-                      key={key}
-                      className={dayClassName}
-                      onMouseEnter={!isMobile ? () => queueHover(date) : undefined}
-                      onMouseLeave={!isMobile ? queueHoverClear : undefined}
-                      onClick={() => handleDayClick(date, inMonth)}
-                      onPointerUp={(evt) => {
-                        if (evt.pointerType === "touch") handleDayClick(date, inMonth);
-                      }}
-                      role="button"
-                      aria-label={date.toDateString()}
-                    >
-                      <div className="tile-date-number">{date.getDate()}</div>
+                    <div key={key} className="calendar-day-wrapper">
+                      <div
+                        className={dayClassName}
+                        onMouseEnter={!isMobile ? () => queueHover(date) : undefined}
+                        onMouseLeave={!isMobile ? queueHoverClear : undefined}
+                        onClick={() => handleDayClick(date, inMonth)}
+                        onPointerUp={(evt) => {
+                          if (evt.pointerType === "touch") handleDayClick(date, inMonth);
+                        }}
+                        role="button"
+                        aria-label={date.toDateString()}
+                      >
+                        <div className="tile-date-number">{date.getDate()}</div>
+
+                        <div className="day-dots">
+                          {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
+                            <svg
+                              key={`${key}-dot-${idx}`}
+                              width={DOT_SIZE}
+                              height={DOT_SIZE}
+                              viewBox="0 0 24 24"
+                              style={{
+                                marginLeft: idx ? -DOT_OVERLAP_PX : 0,
+                                filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
+                                zIndex: 20 - idx,
+                              }}
+                              aria-hidden
+                            >
+                              <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
+                              <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
+                              <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
+                            </svg>
+                          ))}
+                          {dayDots.length > DOT_MAX_VISIBLE && (
+                            <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
+                          )}
+                        </div>
+
+                        {isHovered && dayEvents.length > 0 && (
+                          <div className="tile-tooltip visible">
+                            {dayEvents.map((e, idx) => (
+                              <div className="tooltip-item" key={`${key}-tip-${idx}`}>
+                                <FontAwesomeIcon
+                                  icon={faClock}
+                                  className="tooltip-dot"
+                                  style={{
+                                    color: project?.color || getColor(e.description || String(idx)),
+                                  }}
+                                />
+                                <span className="tooltip-text">
+                                  {e.description?.toUpperCase()} ({e.hours}{" "}
+                                  {Number(e.hours) === 1 ? "HR" : "HRS"})
+                                </span>
+                              </div>
+                            ))}
+                            <div className="tooltip-info">{totalHours} hrs</div>
+                          </div>
+                        )}
+                      </div>
 
                       {rangeSet.has(key) && (
-                        <div className="timeline-bars">
+                        <div className="timeline-bars" aria-hidden>
                           <div
                             className="timeline-bar"
                             style={{
@@ -917,51 +963,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
                               borderBottomRightRadius: nextInRange ? 0 : 5,
                             }}
                           />
-                        </div>
-                      )}
-
-                      <div className="day-dots">
-                        {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
-                          <svg
-                            key={`${key}-dot-${idx}`}
-                            width={DOT_SIZE}
-                            height={DOT_SIZE}
-                            viewBox="0 0 24 24"
-                            style={{
-                              marginLeft: idx ? -DOT_OVERLAP_PX : 0,
-                              filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
-                              zIndex: 20 - idx,
-                            }}
-                            aria-hidden
-                          >
-                            <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
-                            <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
-                            <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
-                          </svg>
-                        ))}
-                        {dayDots.length > DOT_MAX_VISIBLE && (
-                          <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
-                        )}
-                      </div>
-
-                      {isHovered && dayEvents.length > 0 && (
-                        <div className="tile-tooltip visible">
-                          {dayEvents.map((e, idx) => (
-                            <div className="tooltip-item" key={`${key}-tip-${idx}`}>
-                              <FontAwesomeIcon
-                                icon={faClock}
-                                className="tooltip-dot"
-                                style={{
-                                  color: project?.color || getColor(e.description || String(idx)),
-                                }}
-                              />
-                              <span className="tooltip-text">
-                                {e.description?.toUpperCase()} ({e.hours}{" "}
-                                {Number(e.hours) === 1 ? "HR" : "HRS"})
-                              </span>
-                            </div>
-                          ))}
-                          <div className="tooltip-info">{totalHours} hrs</div>
                         </div>
                       )}
                     </div>

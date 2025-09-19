@@ -1,18 +1,3 @@
-.project-calendar-wrapper .timeline-bars {
-  position: absolute;
-  bottom: 1px;
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.project-calendar-wrapper .timeline-bar {
-  height: 10px;
-  border-radius: 0;
-}
-
 /* Wrapper mimicking the dashboard item style */
 .project-calendar-wrapper {
   display: flex;
@@ -473,16 +458,23 @@
   gap: 6px;
 }
 
+.project-calendar-wrapper .calendar-day-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
 .project-calendar-wrapper .calendar-day {
   position: relative;
-  min-height: 96px;
-  padding: 10px 8px 30px;
+  min-height: 78px;
+  padding: 10px 10px 24px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.02);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  align-items: center;
   gap: 8px;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
@@ -535,14 +527,15 @@
 }
 
 .project-calendar-wrapper .timeline-bars {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 34px;
   display: flex;
+  align-items: center;
+  height: 6px;
+  padding: 0 10px;
+  pointer-events: none;
 }
 
 .project-calendar-wrapper .timeline-bar {
+  width: 100%;
   height: 6px;
   border-radius: 4px;
 }
@@ -552,8 +545,11 @@
     padding: 14px;
   }
   .project-calendar-wrapper .calendar-day {
-    min-height: 82px;
-    padding: 8px 6px 28px;
+    min-height: 68px;
+    padding: 8px 8px 20px;
+  }
+  .project-calendar-wrapper .day-dots {
+    bottom: 6px;
   }
   .project-calendar-wrapper .tile-date-number {
     font-size: 0.85rem;

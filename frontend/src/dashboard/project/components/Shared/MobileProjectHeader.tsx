@@ -4,7 +4,7 @@ import {
   Folder,
   Link as LinkIcon,
   MoreVertical,
-  MessageSquare,
+  MessageCircle,
   Settings,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
@@ -202,7 +202,7 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
             onClick={handleOpenChat}
             aria-label="Open project chat"
           >
-            <MessageSquare />
+            <MessageCircle />
           </Button>
 
           <Popover open={menuOpen} onOpenChange={setMenuOpen}>

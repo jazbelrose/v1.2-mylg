@@ -63,7 +63,7 @@ interface ProjectCalendarProps {
   initialFlashDate?: string | null;
   onDateSelect?: (dateKey: string | null) => void;
   showEventList?: boolean;
-  onWrapperClick?: (e: MouseEvent<HTMLDivElement>) => void;
+  onWrapperClick?: () => void;
 }
 
 const CATEGORY_OPTIONS = [
@@ -1231,6 +1231,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 };
 
 export default ProjectCalendar;
+
 
 
 

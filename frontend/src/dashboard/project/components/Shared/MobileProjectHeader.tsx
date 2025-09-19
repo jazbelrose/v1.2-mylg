@@ -14,6 +14,7 @@ import { getFileUrl } from "@/shared/utils/api";
 import type { TeamMember } from "./types";
 import type { ProjectTabItem } from "./useProjectTabs";
 import styles from "./mobile-project-header.module.css";
+import Squircle from "@/shared/ui/Squircle";
 
 interface MobileProjectHeaderProps {
   projectName?: string;
@@ -83,18 +84,21 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
     <div className={styles.wrapper}>
       <div className={styles.topRow}>
         <div className={styles.projectSection}>
-          <button
+          <Squircle
+            as="button"
             type="button"
             onClick={onOpenThumbnail}
             className={styles.logoWrapper}
             aria-label="Change project thumbnail"
+            radius={18}
+            smoothing={0.88}
           >
             {thumbnailSrc ? (
               <img src={thumbnailSrc} alt={projectName} />
             ) : (
-              <span>{projectInitial.toUpperCase()}</span>
+              <span className={styles.logoInitial}>{projectInitial.toUpperCase()}</span>
             )}
-          </button>
+          </Squircle>
 
           <div className={styles.projectMeta}>
             <div className={styles.infoGroup}>

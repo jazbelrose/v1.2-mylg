@@ -12,7 +12,7 @@ body.chat-panel-docked {
   background: rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, height 0.3s ease;
   z-index: 10000;
 }
 
@@ -83,16 +83,23 @@ body.chat-panel-docked {
   left: 0;
   right: 0;
   width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
 }
 
 .chat-panel.bottom.floating {
-  height: 40vh;
-  max-height: 90vh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
 }
 
 .chat-panel.bottom.closed {
-  transform: translateY(calc(100% - 40px));
-  border-radius: 10px 10px 0 0;
+  transform: translateY(100%);
 }
 
 .chat-panel.bottom.open {

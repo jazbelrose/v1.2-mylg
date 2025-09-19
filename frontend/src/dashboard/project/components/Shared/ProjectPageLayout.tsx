@@ -239,26 +239,24 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
           {children}
         </div>
 
-        {!floatingThread && (
+        {!floatingThread && !isMobile && (
           <>
-            {!isMobile && (
-              <div
-                className="thread-resizer"
-                role="separator"
-                aria-orientation="vertical"
-                aria-label="Resize chat panel"
-                onMouseDown={startResize}
-                // Make it keyboard focusable if you later add keyboard resizing
-                tabIndex={0}
-              />
-            )}
+            <div
+              className="thread-resizer"
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize chat panel"
+              onMouseDown={startResize}
+              // Make it keyboard focusable if you later add keyboard resizing
+              tabIndex={0}
+            />
 
             <div
               style={{
-                flex: isMobile ? 1 : `0 0 ${threadWidth}px`,
-                width: isMobile ? "100%" : threadWidth,
-                minWidth: isMobile ? "auto" : MIN_THREAD_WIDTH,
-                maxWidth: isMobile ? "none" : MAX_THREAD_WIDTH,
+                flex: `0 0 ${threadWidth}px`,
+                width: threadWidth,
+                minWidth: MIN_THREAD_WIDTH,
+                maxWidth: MAX_THREAD_WIDTH,
                 height: "100%",
                 minHeight: 0,
               }}

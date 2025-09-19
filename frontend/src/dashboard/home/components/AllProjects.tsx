@@ -12,7 +12,6 @@ import { useNavigate } from 'react-router-dom';
 import SVGThumbnail from './SvgThumbnail';
 import Spinner from '../../../shared/ui/Spinner';
 import AvatarStack from '../../../shared/ui/AvatarStack';
-import { ProjectsIconsStrip } from './ProjectsIconsStrip';
 import { ProjectsFilterMenu } from './ProjectsFilterMenu';
 import { useProjectFilters } from './hooks/useProjectFilters';
 import {

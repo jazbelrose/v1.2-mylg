@@ -23,11 +23,6 @@ import {
   Image as ImageIcon,
   Palette,
   Trash,
-  PenTool,
-  LayoutDashboard,
-  Coins,
-  Calendar as CalendarIcon,
-  StickyNote,
 } from "lucide-react";
 import { uploadData } from "aws-amplify/storage";
 import { useData } from "@/app/contexts/useData";
@@ -50,19 +45,14 @@ import AvatarStack from "@/shared/ui/AvatarStack";
 import TeamModal from "@/dashboard/project/components/Shared/TeamModal";
 import { enqueueProjectUpdate } from "@/shared/utils/requestQueue";
 import type { Project } from "@/app/contexts/DataProvider";
+import MobileProjectHeader from "./MobileProjectHeader";
+import { useProjectTabs } from "./useProjectTabs";
+import type { TeamMember } from "./types";
 
 // Helper function for safe string conversion
 function toString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
-
-// ---------- Types ----------
-type TeamMember = {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  thumbnail: string | null;
-};
 
 interface ProjectHeaderProps {
   title?: string; // not used directly but kept for parity
@@ -117,6 +107,27 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { projectId = "" } = useParams<{ projectId: string }>();
+
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return window.innerWidth < 768;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return () => {};
+    }
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -252,6 +263,28 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     const endStr = endDate.toLocaleDateString(undefined, opts);
     return `${startStr} – ${endStr} | ${totalPart}`;
   }, [startDate, endDate, totalHoursForProject]);
+
+  const resolvedProjectId =
+    (localActiveProject?.projectId as string | undefined) || projectId || "";
+
+  const { tabs, getActiveIndex, confirmNavigate } = useProjectTabs(
+    resolvedProjectId,
+    localActiveProject?.title
+  );
+
+  const activeTabIndex = getActiveIndex();
+  const activeTabKey = tabs[activeTabIndex]?.key ?? tabs[0]?.key;
+
+  const mobileRangeLabel = useMemo(() => {
+    if (!rangeLabel) return "";
+    const parts = rangeLabel.split("|").map((part) => part.trim());
+    if (parts.length === 2) {
+      const [datesPart, hoursPart] = parts;
+      const normalizedHours = hoursPart.replace(/^Hrs Total:\s*/i, "").trim();
+      return `${datesPart} · ${normalizedHours}`;
+    }
+    return rangeLabel.replace(/^Hrs Total:\s*/i, "").trim();
+  }, [rangeLabel]);
 
   // --------------------------
   // Modal state
@@ -889,7 +922,28 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     <div>
       {saving && <div style={{ color: "#FA3356" }}>Saving...</div>}
 
-      <div className="project-header">
+      {isMobile ? (
+        <MobileProjectHeader
+          projectName={localActiveProject ? localActiveProject.title : "Summary"}
+          projectInitial={projectInitial}
+          thumbnailKey={localActiveProject?.thumbnails?.[0] as string | undefined}
+          statusLabel={displayStatus}
+          progressValue={parseStatusToNumber(localActiveProject?.status)}
+          rangeLabel={mobileRangeLabel || undefined}
+          teamMembers={teamMembers}
+          onOpenQuickLinks={onOpenQuickLinks}
+          onOpenFiles={onOpenFiles}
+          onOpenSettings={openSettingsModal}
+          onOpenTeam={openTeamModal}
+          onOpenFinishLine={openFinishLineModal}
+          onOpenStatus={openEditStatusModal}
+          onOpenThumbnail={() => openThumbnailModal(false)}
+          tabs={tabs}
+          activeTabKey={activeTabKey}
+          onSelectTab={(tab) => confirmNavigate(tab.path)}
+        />
+      ) : (
+        <div className="project-header">
         <div className="header-content">
           <div className="left-side">
             <FontAwesomeIcon
@@ -1109,6 +1163,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* Edit Name */}
       <Modal
@@ -1732,113 +1787,18 @@ interface ProjectTabsProps {
 }
 
 const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const tabRefs = useRef<HTMLButtonElement[]>([]);
   const [sliderStyle, setSliderStyle] = useState<{ width: number; left: number }>(
     { width: 0, left: 0 }
   );
   const [transitionEnabled, setTransitionEnabled] = useState(false);
-  const storageKey = `project-tabs-prev:${projectId || "unknown"}`;
 
-  const { user } = useData();
-  const isAdmin = user?.role === "admin";
-  const isDesigner = user?.role === "designer";
-  const showBudgetTab = isAdmin;
-  const showCalendarTab = isAdmin || isDesigner;
-  const showMoodboardTab = isAdmin || isDesigner;
-  const showEditorTab = isAdmin || isDesigner;
-
-  const hasProject = Boolean(projectId);
-  const basePath = hasProject
-    ? getProjectDashboardPath(projectId, projectTitle ?? undefined)
-    : "/dashboard/projects";
-  const budgetPath = hasProject
-    ? getProjectDashboardPath(projectId, projectTitle ?? undefined, "/budget")
-    : "/dashboard/projects";
-  const calendarPath = hasProject
-    ? getProjectDashboardPath(projectId, projectTitle ?? undefined, "/calendar")
-    : "/dashboard/projects";
-  const moodboardPath = hasProject
-    ? getProjectDashboardPath(projectId, projectTitle ?? undefined, "/moodboard")
-    : "/dashboard/projects";
-  const editorPath = hasProject
-    ? getProjectDashboardPath(projectId, projectTitle ?? undefined, "/editor")
-    : "/dashboard/projects";
-
-  const tabs = useMemo(
-    () =>
-      [
-        {
-          key: "overview",
-          label: "Overview",
-          icon: <LayoutDashboard size={16} />,
-          path: basePath,
-          visible: true,
-          matches: (pathname: string) => pathname === basePath,
-        },
-        {
-          key: "budget",
-          label: "Budget",
-          icon: <Coins size={16} />,
-          path: budgetPath,
-          visible: showBudgetTab,
-          matches: (pathname: string) => pathname.startsWith(budgetPath),
-        },
-        {
-          key: "calendar",
-          label: "Calendar",
-          icon: <CalendarIcon size={16} />,
-          path: calendarPath,
-          visible: showCalendarTab,
-          matches: (pathname: string) => pathname.startsWith(calendarPath),
-        },
-        {
-          key: "moodboard",
-          label: "Moodboard",
-          icon: <StickyNote size={16} />,
-          path: moodboardPath,
-          visible: showMoodboardTab,
-          matches: (pathname: string) => pathname.startsWith(moodboardPath),
-        },
-        {
-          key: "editor",
-          label: "Editor",
-          icon: <PenTool size={16} />,
-          path: editorPath,
-          visible: showEditorTab,
-          matches: (pathname: string) => pathname.startsWith(editorPath),
-        },
-      ].filter((tab) => tab.visible),
-    [
-      basePath,
-      budgetPath,
-      calendarPath,
-      moodboardPath,
-      editorPath,
-      showBudgetTab,
-      showCalendarTab,
-      showEditorTab,
-      showMoodboardTab,
-    ]
-  );
+  const { tabs, storageKey, getActiveIndex, getFromIndex, confirmNavigate } =
+    useProjectTabs(projectId, projectTitle);
 
   useEffect(() => {
     tabRefs.current = tabRefs.current.slice(0, tabs.length);
   }, [tabs.length]);
-
-  const getActiveIndex = useCallback(() => {
-    const index = tabs.findIndex((tab) => tab.matches(location.pathname));
-    return index === -1 ? 0 : index;
-  }, [location.pathname, tabs]);
-
-  const getFromIndex = useCallback(() => {
-    if (location.state?.fromTab !== undefined) {
-      return location.state.fromTab as number;
-    }
-    const stored = sessionStorage.getItem(storageKey);
-    return stored !== null ? Number(stored) : getActiveIndex();
-  }, [location.state, storageKey, getActiveIndex]);
 
   const updateSlider = useCallback(() => {
     const current = getActiveIndex();
@@ -1846,7 +1806,9 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) =>
     if (el) {
       setSliderStyle({ width: el.offsetWidth, left: el.offsetLeft });
     }
-    sessionStorage.setItem(storageKey, String(current));
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(storageKey, String(current));
+    }
   }, [getActiveIndex, storageKey]);
 
   useLayoutEffect(() => {
@@ -1865,26 +1827,12 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) =>
   }, [updateSlider]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return undefined;
     window.addEventListener("resize", updateSlider);
     return () => window.removeEventListener("resize", updateSlider);
   }, [updateSlider]);
 
-  const confirmNavigate = useCallback(
-    (path: string) => {
-      const hasUnsaved =
-        (typeof window.hasUnsavedChanges === "function" &&
-          window.hasUnsavedChanges()) ||
-        window.unsavedChanges === true;
-      if (hasUnsaved) {
-        const proceed = window.confirm(
-          "You have unsaved changes, continue?"
-        );
-        if (!proceed) return;
-      }
-      navigate(path, { state: { fromTab: getActiveIndex() } });
-    },
-    [navigate, getActiveIndex]
-  );
+  const activeIndex = getActiveIndex();
 
   return (
     <div
@@ -1902,8 +1850,8 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) =>
         aria-hidden="true"
       />
 
-      {tabs.map((tab, index) => {
-        const isActive = tab.matches(location.pathname);
+        {tabs.map((tab, index) => {
+          const isActive = index === activeIndex;
         return (
           <button
             key={tab.key}

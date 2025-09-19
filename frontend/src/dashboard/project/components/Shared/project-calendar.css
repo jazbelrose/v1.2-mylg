@@ -402,3 +402,160 @@
 
 
 
+/* Month view layout */
+.project-calendar-wrapper .calendar-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.project-calendar-wrapper .month-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 18px 20px 22px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.project-calendar-wrapper .month-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.project-calendar-wrapper .month-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.project-calendar-wrapper .month-nav-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.project-calendar-wrapper .month-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.project-calendar-wrapper .calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.project-calendar-wrapper .calendar-weeks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-calendar-wrapper .calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.project-calendar-wrapper .calendar-day {
+  position: relative;
+  min-height: 96px;
+  padding: 10px 8px 30px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.project-calendar-wrapper .calendar-day:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.project-calendar-wrapper .calendar-day.today {
+  outline: 1px solid rgba(255, 255, 255, 0.18);
+}
+.project-calendar-wrapper .calendar-day.selected {
+  background: rgba(250, 51, 86, 0.18);
+  border-color: rgba(250, 51, 86, 0.5);
+}
+.project-calendar-wrapper .calendar-day--muted {
+  opacity: 0.5;
+}
+
+.project-calendar-wrapper .tile-date-number {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.project-calendar-wrapper .day-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.project-calendar-wrapper .day-dot-more {
+  margin-left: 6px;
+  padding: 0 6px;
+  height: 16px;
+  line-height: 16px;
+  min-width: 18px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #ffffff;
+  background: rgba(15, 15, 15, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: saturate(140%) blur(2px);
+}
+
+.project-calendar-wrapper .timeline-bars {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 34px;
+  display: flex;
+}
+
+.project-calendar-wrapper .timeline-bar {
+  height: 6px;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .project-calendar-wrapper .calendar-content {
+    padding: 14px;
+  }
+  .project-calendar-wrapper .calendar-day {
+    min-height: 82px;
+    padding: 8px 6px 28px;
+  }
+  .project-calendar-wrapper .tile-date-number {
+    font-size: 0.85rem;
+  }
+}

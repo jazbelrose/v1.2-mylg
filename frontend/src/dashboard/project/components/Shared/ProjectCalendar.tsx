@@ -8,14 +8,13 @@ import React, {
   FormEvent,
 } from "react";
 import { v4 as uuid } from "uuid";
-import Calendar, { CalendarProps } from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import "./project-calendar.css";
 import Modal from "../../../../shared/ui/ModalWithStack";
 import { useData } from "../../../../app/contexts/useData";
 import { useSocket } from "../../../../app/contexts/useSocket";
 import { normalizeMessage } from "../../../../shared/utils/websocketUtils";
 import { getColor } from "../../../../shared/utils/colorUtils";
+import { startOfWeek, endOfWeek, addDays } from "@/dashboard/home/utils/dateUtils";
 import { createBudgetItem, updateBudgetItem, createEvent as createEventApi, updateEvent as updateEventApi, deleteEvent as deleteEventApi } from "../../../../shared/utils/api";
 import { slugify } from "../../../../shared/utils/slug";
 import { parseBudget, formatUSD } from "../../../../shared/utils/budgetUtils";
@@ -103,6 +102,11 @@ const UNIT_OPTIONS = [
   "SQFT",
   "KG",
 ] as const;
+
+const DOT_SIZE = 10;
+const DOT_STROKE = 2;
+const DOT_MAX_VISIBLE = 4;
+const DOT_OVERLAP_PX = 3;
 
 function safeParse(dateStr?: string | null): Date | null {
   if (!dateStr) return null;
@@ -214,6 +218,52 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     initialFlashDate ? safeParse(initialFlashDate) : null
   );
 
+  const projectColor = useMemo(
+    () => project?.color || getColor(project?.projectId || project?.title || "project"),
+    [project?.color, project?.projectId, project?.title]
+  );
+
+  const monthStart = useMemo(
+    () => new Date(activeStartDate.getFullYear(), activeStartDate.getMonth(), 1),
+    [activeStartDate]
+  );
+  const monthEnd = useMemo(
+    () => new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0),
+    [monthStart]
+  );
+  const monthTitle = useMemo(
+    () => monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+    [monthStart]
+  );
+  const weekdayLabels = useMemo(() => {
+    const base = startOfWeek(new Date());
+    return Array.from({ length: 7 }, (_, idx) =>
+      addDays(base, idx).toLocaleDateString(undefined, { weekday: "short" })
+    );
+  }, []);
+  const calendarWeeks = useMemo(() => {
+    const first = startOfWeek(monthStart);
+    const last = endOfWeek(monthEnd);
+    const totalDays = Math.round((last.getTime() - first.getTime()) / 86400000) + 1;
+    const weeks: Array<Array<{ date: Date; key: string; inMonth: boolean }>> = [];
+    for (let i = 0; i < totalDays; i += 1) {
+      const day = addDays(first, i);
+      const entry = { date: day, key: getDateKey(day)!, inMonth: day.getMonth() === monthStart.getMonth() };
+      if (weeks.length === 0 || weeks[weeks.length - 1].length === 7) {
+        weeks.push([]);
+      }
+      weeks[weeks.length - 1].push(entry);
+    }
+    while (weeks.length && weeks[weeks.length - 1].every((d) => !d.inMonth)) {
+      weeks.pop();
+    }
+    return weeks;
+  }, [monthStart, monthEnd]);
+  const selectedKey = getDateKey(selectedDate);
+  const hoverKey = getDateKey(hoverDate);
+  const flashKey = getDateKey(flashDate);
+  const todayKey = getDateKey(today);
+
   // Budget-line creation fields
   const [createLineItem, setCreateLineItem] = useState(false);
   const [category, setCategory] = useState<string>("");
@@ -238,7 +288,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
       const d = safeParse(initialFlashDate);
       if (d) {
         setSelectedDate(d);
-        setActiveStartDate(d);
+        setActiveStartDate(new Date(d.getFullYear(), d.getMonth(), 1));
         setFlashDate(d);
       }
     }
@@ -647,8 +697,9 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 
   const focusCalendarOnDate = useCallback((date?: Date | null) => {
     if (!date) return;
+    const anchor = new Date(date.getFullYear(), date.getMonth(), 1);
     setFlashDate(date);
-    setActiveStartDate(date);
+    setActiveStartDate(anchor);
     userNavigatedRef.current = true;
     calendarWrapperRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -656,111 +707,47 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     });
   }, []);
 
-  const tileContent: CalendarProps["tileContent"] = ({ date, view }) => {
-    if (view !== "month") return null;
+  const goToPrevMonthView = useCallback(() => {
+    const prev = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
+    setActiveStartDate(prev);
+    userNavigatedRef.current = true;
+  }, [monthStart]);
 
-    const key = getDateKey(date)!;
-    const dayEvents = eventsByDate[key] || [];
+  const goToNextMonthView = useCallback(() => {
+    const next = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
+    setActiveStartDate(next);
+    userNavigatedRef.current = true;
+  }, [monthStart]);
 
-    const showHover = () => {
+  const queueHover = useCallback((date: Date) => {
+    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => setHoverDate(date), 100);
+  }, []);
+
+  const queueHoverClear = useCallback(() => {
+    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
+    hoverTimer.current = window.setTimeout(() => setHoverDate(null), 200);
+  }, []);
+
+  useEffect(() => {
+    return () => {
       if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
-      hoverTimer.current = window.setTimeout(() => setHoverDate(date), 100);
     };
-    const hideHover = () => {
-      if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
-      hoverTimer.current = window.setTimeout(() => setHoverDate(null), 200);
-    };
+  }, []);
 
-    const handleClick = () => {
+  const handleDayClick = useCallback(
+    (date: Date, inMonth: boolean) => {
       handleDateSelection(date);
-      if (isMobile) setHoverDate(date);
-    };
-
-    const isHovered = hoverDate && getDateKey(hoverDate) === key;
-    const totalHours = dayEvents.reduce(
-      (sum, ev) => sum + Number(ev.hours || 0),
-      0
-    );
-
-    return (
-      <div
-        className="calendar-day"
-        onMouseEnter={!isMobile ? showHover : undefined}
-        onMouseLeave={!isMobile ? hideHover : undefined}
-        onClick={handleClick}
-      >
-        <div className="tile-dots">
-          {dayEvents.map((e, idx) => {
-            const id = e.description || String(idx);
-            const color = project?.color || getColor(id);
-            return (
-              <FontAwesomeIcon
-                icon={faClock}
-                className="event-dot"
-                style={{ color }}
-                key={`${key}-${idx}`}
-              />
-            );
-          })}
-        </div>
-        <div className="tile-date-number">{date.getDate()}</div>
-
-        {rangeSet.has(key) && (
-          <div className="timeline-bars">
-            {(() => {
-              const prevDate = new Date(date);
-              prevDate.setDate(prevDate.getDate() - 1);
-              const nextDate = new Date(date);
-              nextDate.setDate(nextDate.getDate() + 1);
-              const prevInRange = rangeSet.has(getDateKey(prevDate)!);
-              const nextInRange = rangeSet.has(getDateKey(nextDate)!);
-              return (
-                <div
-                  className="timeline-bar"
-                  style={{
-                    backgroundColor: project?.color || getColor(project?.projectId),
-                    borderTopLeftRadius: prevInRange ? 0 : 5,
-                    borderBottomLeftRadius: prevInRange ? 0 : 5,
-                    borderTopRightRadius: nextInRange ? 0 : 5,
-                    borderBottomRightRadius: nextInRange ? 0 : 5,
-                  }}
-                />
-              );
-            })()}
-          </div>
-        )}
-
-        {isHovered && dayEvents.length > 0 && (
-          <div className="tile-tooltip visible">
-            {dayEvents.map((e, idx) => (
-              <div className="tooltip-item" key={`${key}-tip-${idx}`}>
-                <FontAwesomeIcon
-                  icon={faClock}
-                  className="tooltip-dot"
-                  style={{
-                    color: project?.color || getColor(e.description || String(idx)),
-                  }}
-                />
-                <span className="tooltip-text">
-                  {e.description?.toUpperCase()} ({e.hours}{" "}
-                  {Number(e.hours) === 1 ? "HR" : "HRS"})
-                </span>
-              </div>
-            ))}
-            <div className="tooltip-info">{totalHours} hrs</div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const tileClassName: CalendarProps["tileClassName"] = ({ date, view }) => {
-    const classes = ["calendar-day"];
-    if (view === "month" && flashDate && getDateKey(date) === getDateKey(flashDate)) {
-      classes.push("tile-highlight");
-    }
-    return classes.join(" ");
-  };
+      if (!inMonth) {
+        setActiveStartDate(new Date(date.getFullYear(), date.getMonth(), 1));
+      }
+      userNavigatedRef.current = true;
+      if (isMobile) {
+        setHoverDate(date);
+      }
+    },
+    [handleDateSelection, isMobile]
+  );
 
   const eventsForSelected = eventsByDate[getDateKey(selectedDate)!] || [];
   const eventDateKeys = useMemo(
@@ -857,27 +844,134 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     <div className="dashboard-item project-calendar-wrapper" onClick={handleWrapperClick}>
 
       <div ref={calendarWrapperRef} className="calendar-content">
-        <Calendar
-          onChange={(val) => handleDateSelection(val as Date)}
-          value={selectedDate}
-          tileContent={tileContent}
-          tileClassName={tileClassName}
-          activeStartDate={activeStartDate}
-          onActiveStartDateChange={({ action, activeStartDate }) => {
-            setActiveStartDate(activeStartDate as Date);
-            if (
-              ["prev", "next", "drillUp", "drillDown", "onChange"].includes(
-                action as string
-              )
-            ) {
-              userNavigatedRef.current = true;
-            }
-          }}
-          prevLabel={<FontAwesomeIcon icon={faChevronLeft} />}
-          nextLabel={<FontAwesomeIcon icon={faChevronRight} />}
-          prev2Label={null}
-          next2Label={null}
-        />
+        <div className="month-widget">
+          <div className="month-widget-header">
+            <button className="month-nav-btn" onClick={goToPrevMonthView} aria-label="Previous month">
+              <FontAwesomeIcon icon={faChevronLeft} />
+            </button>
+            <span className="month-title">{monthTitle}</span>
+            <button className="month-nav-btn" onClick={goToNextMonthView} aria-label="Next month">
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          </div>
+
+          <div className="calendar-weekdays">
+            {weekdayLabels.map((label, idx) => (
+              <div key={`${label}-${idx}`} className="calendar-weekday">
+                {label}
+              </div>
+            ))}
+          </div>
+
+          <div className="calendar-weeks">
+            {calendarWeeks.map((week, weekIdx) => (
+              <div className="calendar-week" key={`week-${weekIdx}`}>
+                {week.map(({ date, key, inMonth }) => {
+                  const dayEvents = eventsByDate[key] || [];
+                  const dayDots = dayEvents.map((e, idx) => project?.color || getColor(e.description || String(idx)));
+                  const isSelected = selectedKey === key;
+                  const isToday = todayKey === key;
+                  const isFlashing = flashKey === key;
+                  const isHovered = hoverKey === key;
+                  const dayClassName = [
+                    "calendar-day",
+                    inMonth ? "" : "calendar-day--muted",
+                    isToday ? "today" : "",
+                    isSelected ? "selected" : "",
+                    isFlashing ? "tile-highlight" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ");
+                  const prevKey = getDateKey(addDays(date, -1));
+                  const nextKey = getDateKey(addDays(date, 1));
+                  const prevInRange = prevKey ? rangeSet.has(prevKey) : false;
+                  const nextInRange = nextKey ? rangeSet.has(nextKey) : false;
+                  const totalHours = dayEvents.reduce(
+                    (sum, ev) => sum + Number(ev.hours || 0),
+                    0
+                  );
+                  return (
+                    <div
+                      key={key}
+                      className={dayClassName}
+                      onMouseEnter={!isMobile ? () => queueHover(date) : undefined}
+                      onMouseLeave={!isMobile ? queueHoverClear : undefined}
+                      onClick={() => handleDayClick(date, inMonth)}
+                      onPointerUp={(evt) => {
+                        if (evt.pointerType === "touch") handleDayClick(date, inMonth);
+                      }}
+                      role="button"
+                      aria-label={date.toDateString()}
+                    >
+                      <div className="tile-date-number">{date.getDate()}</div>
+
+                      {rangeSet.has(key) && (
+                        <div className="timeline-bars">
+                          <div
+                            className="timeline-bar"
+                            style={{
+                              backgroundColor: projectColor,
+                              borderTopLeftRadius: prevInRange ? 0 : 5,
+                              borderBottomLeftRadius: prevInRange ? 0 : 5,
+                              borderTopRightRadius: nextInRange ? 0 : 5,
+                              borderBottomRightRadius: nextInRange ? 0 : 5,
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      <div className="day-dots">
+                        {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
+                          <svg
+                            key={`${key}-dot-${idx}`}
+                            width={DOT_SIZE}
+                            height={DOT_SIZE}
+                            viewBox="0 0 24 24"
+                            style={{
+                              marginLeft: idx ? -DOT_OVERLAP_PX : 0,
+                              filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
+                              zIndex: 20 - idx,
+                            }}
+                            aria-hidden
+                          >
+                            <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
+                            <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
+                            <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
+                          </svg>
+                        ))}
+                        {dayDots.length > DOT_MAX_VISIBLE && (
+                          <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
+                        )}
+                      </div>
+
+                      {isHovered && dayEvents.length > 0 && (
+                        <div className="tile-tooltip visible">
+                          {dayEvents.map((e, idx) => (
+                            <div className="tooltip-item" key={`${key}-tip-${idx}`}>
+                              <FontAwesomeIcon
+                                icon={faClock}
+                                className="tooltip-dot"
+                                style={{
+                                  color: project?.color || getColor(e.description || String(idx)),
+                                }}
+                              />
+                              <span className="tooltip-text">
+                                {e.description?.toUpperCase()} ({e.hours}{" "}
+                                {Number(e.hours) === 1 ? "HR" : "HRS"})
+                              </span>
+                            </div>
+                          ))}
+                          <div className="tooltip-info">{totalHours} hrs</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+
 
         {showEventList && (
           <>

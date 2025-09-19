@@ -201,9 +201,9 @@
 
 @media (max-width: 768px) {
   .welcome-header-desktop {
-    padding: 0px 12px 6px;
+    padding: 0px 12px;
     gap: 12px;
-     min-height: 0;
+     min-height: 45px;
   }
 
   .welcome-header-toc {

@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Menu,
   MoreVertical,
   Settings,
   Link as LinkIcon,
@@ -34,6 +35,9 @@ interface MobileProjectHeaderProps {
   tabs: ProjectTabItem[];
   activeTabKey?: string;
   onSelectTab: (tab: ProjectTabItem) => void;
+  onOpenNavigation?: () => void;
+  navigationDrawerId?: string;
+  isNavigationOpen?: boolean;
 }
 
 const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
@@ -54,6 +58,9 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
   tabs,
   activeTabKey,
   onSelectTab,
+  onOpenNavigation,
+  navigationDrawerId,
+  isNavigationOpen,
 }) => {
   const [menuOpen, setMenuOpen] = React.useState(false);
 
@@ -84,6 +91,18 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
     <div className={styles.wrapper}>
       <div className={styles.topRow}>
         <div className={styles.projectSection}>
+          {onOpenNavigation ? (
+            <button
+              type="button"
+              className={styles.navToggle}
+              onClick={onOpenNavigation}
+              aria-label="Open navigation"
+              aria-controls={navigationDrawerId}
+              aria-expanded={isNavigationOpen ?? false}
+            >
+              <Menu />
+            </button>
+          ) : null}
           <Squircle
             as="button"
             type="button"

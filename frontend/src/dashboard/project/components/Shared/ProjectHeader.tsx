@@ -5,7 +5,8 @@ import React, {
   useCallback,
   useLayoutEffect,
   useMemo,
- 
+  useId,
+
   FormEvent,
 } from "react";
 import "./project-header.css";
@@ -46,6 +47,7 @@ import TeamModal from "@/dashboard/project/components/Shared/TeamModal";
 import { enqueueProjectUpdate } from "@/shared/utils/requestQueue";
 import type { Project } from "@/app/contexts/DataProvider";
 import MobileProjectHeader from "./MobileProjectHeader";
+import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import { useProjectTabs } from "./useProjectTabs";
 import type { TeamMember } from "./types";
 
@@ -114,6 +116,12 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     }
     return window.innerWidth < 768;
   });
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const rawNavigationDrawerId = useId();
+  const navigationDrawerId = useMemo(
+    () => `project-nav-${rawNavigationDrawerId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+    [rawNavigationDrawerId]
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -127,6 +135,25 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     return () => {
       window.removeEventListener("resize", handleResize);
     };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsNavigationOpen(false);
+    }
+  }, [isMobile]);
+
+  const handleOpenNavigation = useCallback(() => {
+    setIsNavigationOpen(true);
+  }, []);
+
+  const handleCloseNavigation = useCallback(() => {
+    setIsNavigationOpen(false);
+  }, []);
+
+  const handleSetNavigationView = useCallback((view: string) => {
+    void view;
+    // Project pages don't maintain a dashboard view state, so this is a no-op.
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
@@ -923,25 +950,36 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       {saving && <div style={{ color: "#FA3356" }}>Saving...</div>}
 
       {isMobile ? (
-        <MobileProjectHeader
-          projectName={localActiveProject ? localActiveProject.title : "Summary"}
-          projectInitial={projectInitial}
-          thumbnailKey={localActiveProject?.thumbnails?.[0] as string | undefined}
-          statusLabel={displayStatus}
-          progressValue={parseStatusToNumber(localActiveProject?.status)}
-          rangeLabel={mobileRangeLabel || undefined}
-          teamMembers={teamMembers}
-          onOpenQuickLinks={onOpenQuickLinks}
-          onOpenFiles={onOpenFiles}
-          onOpenSettings={openSettingsModal}
-          onOpenTeam={openTeamModal}
-          onOpenFinishLine={openFinishLineModal}
-          onOpenStatus={openEditStatusModal}
-          onOpenThumbnail={() => openThumbnailModal(false)}
-          tabs={tabs}
-          activeTabKey={activeTabKey}
-          onSelectTab={(tab) => confirmNavigate(tab.path)}
-        />
+        <>
+          <NavigationDrawer
+            open={isNavigationOpen}
+            onClose={handleCloseNavigation}
+            setActiveView={handleSetNavigationView}
+            drawerId={navigationDrawerId}
+          />
+          <MobileProjectHeader
+            projectName={localActiveProject ? localActiveProject.title : "Summary"}
+            projectInitial={projectInitial}
+            thumbnailKey={localActiveProject?.thumbnails?.[0] as string | undefined}
+            statusLabel={displayStatus}
+            progressValue={parseStatusToNumber(localActiveProject?.status)}
+            rangeLabel={mobileRangeLabel || undefined}
+            teamMembers={teamMembers}
+            onOpenQuickLinks={onOpenQuickLinks}
+            onOpenFiles={onOpenFiles}
+            onOpenSettings={openSettingsModal}
+            onOpenTeam={openTeamModal}
+            onOpenFinishLine={openFinishLineModal}
+            onOpenStatus={openEditStatusModal}
+            onOpenThumbnail={() => openThumbnailModal(false)}
+            tabs={tabs}
+            activeTabKey={activeTabKey}
+            onSelectTab={(tab) => confirmNavigate(tab.path)}
+            onOpenNavigation={handleOpenNavigation}
+            navigationDrawerId={navigationDrawerId}
+            isNavigationOpen={isNavigationOpen}
+          />
+        </>
       ) : (
         <div className="project-header">
         <div className="header-content">

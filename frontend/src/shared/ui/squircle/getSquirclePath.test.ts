@@ -1,55 +1,61 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { clearSquirclePathCache, getSquirclePath } from './getSquirclePath';
+import { getSquirclePath } from './getSquirclePath';
 
 describe('getSquirclePath', () => {
-  beforeEach(() => {
-    clearSquirclePathCache();
+  const extractPoints = (path: string): [number, number][] => {
+    const numbers = path.match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+    const points: [number, number][] = [];
+
+    for (let i = 0; i < numbers.length; i += 2) {
+      points.push([numbers[i], numbers[i + 1]]);
+    }
+
+    return points;
+  };
+
+  it('creates a closed superellipse path for default smoothing', () => {
+    const width = 200;
+    const height = 120;
+    const path = getSquirclePath(width, height, 20, 0.6);
+    const points = extractPoints(path);
+
+    expect(path.startsWith('M ')).toBe(true);
+    expect(path.endsWith(' Z')).toBe(true);
+    expect(points).toHaveLength(128);
+
+    const [startX, startY] = points[0];
+    expect(startX).toBeCloseTo(width);
+    expect(startY).toBeCloseTo(height / 2);
+
+    const [quarterX, quarterY] = points[32];
+    expect(quarterX).toBeCloseTo(width / 2);
+    expect(quarterY).toBeCloseTo(height);
   });
 
-  it('creates a rounded path for default radius and smoothing', () => {
-    const path = getSquirclePath(200, 120, 20, 0.6);
+  it('generates points within the provided bounds', () => {
+    const width = 150;
+    const height = 90;
+    const path = getSquirclePath(width, height, 16, 0.6);
+    const points = extractPoints(path);
 
-    expect(path).toMatchInlineSnapshot(
-      '"M 20 0 L 180 0 C 196.4183 0 200 3.5817 200 20 L 200 100 C 200 116.4183 196.4183 120 180 120 L 20 120 C 3.5817 120 0 116.4183 0 100 L 0 20 C 0 3.5817 3.5817 0 20 0 Z"',
-    );
+    const xs = points.map(([x]) => x);
+    const ys = points.map(([, y]) => y);
+
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...xs)).toBeLessThanOrEqual(width);
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(height);
   });
 
-  it('clamps radius when larger than half the dimension', () => {
-    const path = getSquirclePath(60, 40, 80, 0.6);
+  it('adjusts curvature based on smoothing', () => {
+    const soft = extractPoints(getSquirclePath(200, 120, 48, 0.6));
+    const sharp = extractPoints(getSquirclePath(200, 120, 48, 0.9));
 
-    expect(path).toMatchInlineSnapshot(
-      '"M 20 0 L 40 0 C 56.4183 0 60 3.5817 60 20 L 60 20 C 60 36.4183 56.4183 40 40 40 L 20 40 C 3.5817 40 0 36.4183 0 20 L 0 20 C 0 3.5817 3.5817 0 20 0 Z"',
-    );
-  });
+    const soft45 = soft[16];
+    const sharp45 = sharp[16];
 
-  it('falls back to rectangle when radius is zero', () => {
-    const path = getSquirclePath(100, 50, 0, 0.6);
-
-    expect(path).toBe('M 0 0 L 100 0 L 100 50 L 0 50 Z');
-  });
-
-  it('returns cached value on repeated calls', () => {
-    const pathA = getSquirclePath(150, 90, 16, 0.4);
-    const pathB = getSquirclePath(150, 90, 16, 0.4);
-
-    expect(pathA).toBe(pathB);
-  });
-
-  it('supports asymmetric top and bottom radii', () => {
-    const path = getSquirclePath(200, 120, 20, 0.6, { top: 24, bottom: 18 });
-
-    expect(path).toMatchInlineSnapshot(
-      `"M 24 0 L 176 0 C 195.7019 0 200 4.2981 200 24 L 200 102 C 200 116.7765 196.7765 120 182 120 L 18 120 C 3.2235 120 0 116.7765 0 102 L 0 24 C 0 4.2981 4.2981 0 24 0 Z"`,
-    );
+    expect(soft45[0]).toBeLessThan(sharp45[0]);
+    expect(soft45[1]).toBeLessThan(sharp45[1]);
   });
 });
-
-
-
-
-
-
-
-
-

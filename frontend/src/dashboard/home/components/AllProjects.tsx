@@ -562,6 +562,9 @@ const AllProjects: React.FC = () => {
             sortOptions={sortOptions}
             sortTriggerLabel={sortTriggerLabel}
             sortDropdown={sortDropdown}
+            triggerLabel="Filter"
+            showScopeSelector={false}
+            popoverAlign="start"
           />
 
           <div

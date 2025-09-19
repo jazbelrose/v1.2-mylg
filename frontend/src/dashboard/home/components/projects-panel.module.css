@@ -488,6 +488,11 @@
   color-scheme: dark;
 }
 
+.filterPopStart {
+  left: 0;
+  right: auto;
+}
+
 .filterSection {
   display: grid;
   gap: 8px;

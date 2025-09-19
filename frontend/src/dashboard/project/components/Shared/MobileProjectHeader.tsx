@@ -1,9 +1,10 @@
 import React from "react";
 import {
+  ChevronLeft,
+  Folder,
+  Link as LinkIcon,
   MoreVertical,
   Settings,
-  Link as LinkIcon,
-  Folder,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,7 @@ import type { TeamMember } from "./types";
 import type { ProjectTabItem } from "./useProjectTabs";
 import styles from "./mobile-project-header.module.css";
 import Squircle from "@/shared/ui/Squircle";
+import { useNavigate } from "react-router-dom";
 
 interface MobileProjectHeaderProps {
   projectName?: string;
@@ -56,6 +58,7 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
   onSelectTab,
 }) => {
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const navigate = useNavigate();
 
   const displayedMembers = React.useMemo(
     () => teamMembers.slice(0, 3),
@@ -73,6 +76,10 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
     onSelectTab(tab);
   };
 
+  const handleBackToDashboard = React.useCallback(() => {
+    navigate("/dashboard");
+  }, [navigate]);
+
   const statusBadgeLabel = React.useMemo(() => {
     if (Number.isFinite(progressValue)) {
       return statusLabel;
@@ -84,6 +91,14 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
     <div className={styles.wrapper}>
       <div className={styles.topRow}>
         <div className={styles.projectSection}>
+          <button
+            type="button"
+            onClick={handleBackToDashboard}
+            className={styles.backButton}
+            aria-label="Return to dashboard"
+          >
+            <ChevronLeft className={styles.backIcon} />
+          </button>
           <Squircle
             as="button"
             type="button"

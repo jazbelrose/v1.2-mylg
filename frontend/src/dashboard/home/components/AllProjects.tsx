@@ -546,7 +546,24 @@ const AllProjects: React.FC = () => {
     <div className="welcome project-view">
       <header className={`projects-header ${desktopStyles.header}`}>
         <div className={desktopStyles.headerTop}>
-         
+          <ProjectsFilterMenu
+            filtersOpen={filtersOpen}
+            filtersRef={filtersRef}
+            filtersId={filtersId}
+            scope={scope}
+            onScopeChange={setScope}
+            query={query}
+            onQueryChange={setQuery}
+            toggleFilters={toggleFilters}
+            statusOptions={statusOptions}
+            statusTriggerLabel={statusTriggerLabel}
+            statusDropdown={statusDropdown}
+            showStatusDropdown={showStatusDropdown}
+            sortOptions={sortOptions}
+            sortTriggerLabel={sortTriggerLabel}
+            sortDropdown={sortDropdown}
+          />
+
           <div
             className={desktopStyles.viewToggle}
             role="group"
@@ -572,24 +589,6 @@ const AllProjects: React.FC = () => {
             </button>
           </div>
         </div>
-
-        <ProjectsFilterMenu
-          filtersOpen={filtersOpen}
-          filtersRef={filtersRef}
-          filtersId={filtersId}
-          scope={scope}
-          onScopeChange={setScope}
-          query={query}
-          onQueryChange={setQuery}
-          toggleFilters={toggleFilters}
-          statusOptions={statusOptions}
-          statusTriggerLabel={statusTriggerLabel}
-          statusDropdown={statusDropdown}
-          showStatusDropdown={showStatusDropdown}
-          sortOptions={sortOptions}
-          sortTriggerLabel={sortTriggerLabel}
-          sortDropdown={sortDropdown}
-        />
 
         <div className={mobileStyles.kpis}>
           <motion.span

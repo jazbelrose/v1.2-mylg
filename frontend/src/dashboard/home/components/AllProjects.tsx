@@ -271,7 +271,9 @@ const AllProjects: React.FC = () => {
         variant === 'grid' ? 'project-thumbnail-media' : 'project-list-thumb-media';
       const roundness = variant === 'grid' ? 0.92 : 0.88;
       const smoothing = variant === 'grid' ? 0.96 : 0.92;
-      const containerClassName = `${baseClass} ${hasImage ? `${baseClass}--image` : `${baseClass}--placeholder`}`;
+      const containerClassName = hasImage
+        ? baseClass
+        : `${baseClass} ${baseClass}--placeholder`;
 
       return (
         <Squircle

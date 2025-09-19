@@ -237,8 +237,22 @@
   display: flex;
   align-items: stretch;
   justify-content: stretch;
-  background: #0c0c0c;
+  background: transparent;
   border: 1px solid rgba(255,255,255,.16);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.project-list-thumb--image {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.project-list-thumb--placeholder {
+  border: none;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
 }
 
 .project-list-thumb-media {
@@ -246,6 +260,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: inherit;
 }
 
 .project-list-info {

@@ -27,6 +27,7 @@ type ChatPanelProps = {
   projectId: string;
   initialFloating?: boolean;
   onFloatingChange?: (floating: boolean) => void;
+  openSignal?: number;
 };
 
 // (If your imported components already export types, remove these lines)
@@ -93,6 +94,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
       return false;
     }
   });
+  const [chatOpenSignal, setChatOpenSignal] = React.useState<number>(0);
 
   const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("project");
 
@@ -156,6 +158,28 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
       /* ignore write errors */
     }
   }, [floatingThread]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleOpenChat = () => {
+      setFloatingThread((prev) => {
+        if (!prev) {
+          return true;
+        }
+        return prev;
+      });
+      setChatOpenSignal((prev) => prev + 1);
+    };
+
+    window.addEventListener("project-open-chat", handleOpenChat);
+
+    return () => {
+      window.removeEventListener("project-open-chat", handleOpenChat);
+    };
+  }, [setFloatingThread, setChatOpenSignal]);
 
   const startResize = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -258,6 +282,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
           projectId={safeProjectId}
           initialFloating
           onFloatingChange={setFloatingThread}
+          openSignal={chatOpenSignal}
         />
       )}
     </div>

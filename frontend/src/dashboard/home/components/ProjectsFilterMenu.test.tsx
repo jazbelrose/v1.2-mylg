@@ -124,6 +124,37 @@ describe("ProjectsFilterMenu", () => {
     expect(screen.getByText("active")).toBeInTheDocument();
     expect(screen.getByText("Title (A-Z)")).toBeInTheDocument();
   });
+
+  it("supports custom labels and hides the scope selector when disabled", () => {
+    const statusDropdown = createDropdownStub<string>();
+    const sortDropdown = createDropdownStub<SortOption>();
+
+    render(
+      <ProjectsFilterMenu
+        filtersOpen
+        filtersRef={createRef<HTMLDivElement>()}
+        filtersId="filters"
+        scope="all"
+        onScopeChange={vi.fn()}
+        query=""
+        onQueryChange={vi.fn()}
+        toggleFilters={vi.fn()}
+        statusOptions={[{ value: "", label: "All statuses" }]}
+        statusTriggerLabel="All statuses"
+        statusDropdown={statusDropdown}
+        showStatusDropdown={false}
+        sortOptions={[{ value: "dateNewest", label: "Date (Newest)" }]}
+        sortTriggerLabel="Date (Newest)"
+        sortDropdown={sortDropdown}
+        triggerLabel="Filter"
+        showScopeSelector={false}
+        popoverAlign="start"
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /filter/i })).toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: /scope/i })).not.toBeInTheDocument();
+  });
 });
 
 

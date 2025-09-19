@@ -12,7 +12,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  flex: 0 1 calc(20% - var(--space-5));
+  width: var(--project-tile-size, 164px);
+  max-width: var(--project-tile-size, 164px);
+  flex: 0 0 var(--project-tile-size, 164px);
 }
 
 .project-container-welcome .project-title {
@@ -141,9 +143,9 @@
 
 /* Responsive Design */
 @media (max-width: var(--breakpoint-xl)) {
-  .project-container-welcome,
   .new-project-thumbnail {
-    flex: 0 1 calc(25% - var(--space-5));
+    width: var(--project-tile-size, 164px);
+    max-width: var(--project-tile-size, 164px);
   }
 }
 
@@ -151,6 +153,8 @@
   .project-thumbnail,
   .new-project-thumbnail {
     --shape-radius: 20px;
+    width: var(--project-tile-size, 164px);
+    max-width: var(--project-tile-size, 164px);
   }
   
   .project-title {

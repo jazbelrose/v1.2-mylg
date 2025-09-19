@@ -91,6 +91,7 @@
 }
 
 .all-projects-container-welcome {
+  --project-tile-size: clamp(148px, 16vw, 192px);
   flex: 1;
   display: flex;
   flex-wrap: wrap;
@@ -101,6 +102,24 @@
   max-height: 100vh;
   max-height: 100dvh;
   overflow-y: auto;
+}
+
+@media (max-width: var(--breakpoint-xl)) {
+  .all-projects-container-welcome {
+    --project-tile-size: clamp(128px, 22vw, 168px);
+  }
+}
+
+@media (max-width: var(--breakpoint-md)) {
+  .all-projects-container-welcome {
+    --project-tile-size: clamp(104px, 30vw, 140px);
+  }
+}
+
+@media (max-width: var(--breakpoint-sm)) {
+  .all-projects-container-welcome {
+    --project-tile-size: clamp(92px, 34vw, 124px);
+  }
 }
 
 .projects-header {

@@ -13,7 +13,7 @@ import Cropper, { Area } from "react-easy-crop";
 import "react-easy-crop/react-easy-crop.css";
 import Modal from "@/shared/ui/ModalWithStack";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft, faPen } from "@fortawesome/free-solid-svg-icons";
+import { faPen } from "@fortawesome/free-solid-svg-icons";
 import {
   Pipette,
   Folder,
@@ -48,6 +48,7 @@ import type { Project } from "@/app/contexts/DataProvider";
 import MobileProjectHeader from "./MobileProjectHeader";
 import { useProjectTabs } from "./useProjectTabs";
 import type { TeamMember } from "./types";
+import Squircle from "@/shared/ui/Squircle";
 
 // Helper function for safe string conversion
 function toString(value: unknown): string {
@@ -944,121 +945,95 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         />
       ) : (
         <div className="project-header">
-        <div className="header-content">
-          <div className="left-side">
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              className="back-icon interactive"
-              onClick={showWelcomeScreen}
-              title="Back to Projects"
-              aria-label="Back to Projects"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => handleKeyDown(e, showWelcomeScreen)}
-            />
-
-            <div
-              onClick={() => openThumbnailModal(false)}
-              onKeyDown={(e) => handleKeyDown(e, () => openThumbnailModal(false))}
-              role="button"
-              tabIndex={0}
-              title="Change Project Thumbnail"
-              aria-label="Change Project Thumbnail"
-              style={{ cursor: "pointer", marginRight: "15px" }}
-              className="interactive project-logo-wrapper"
-            >
-              {localActiveProject?.thumbnails &&
-              localActiveProject.thumbnails.length > 0 ? (
-                <img
-                  src={getFileUrl(localActiveProject.thumbnails[0])}
-                  alt="Project Thumbnail"
-                  className="project-logo"
-                />
-              ) : (
-                <svg id="InitialSVG" viewBox="0 50 300 300" className="project-logo">
-                  <g>
-                    <ellipse
-                      className="initial-ellipse"
-                      cx="141.79"
-                      cy="192.67"
-                      rx="135"
-                      ry="135"
-                    />
-                    <text
-                      className="initial"
-                      x="141.5"
-                      y="185"
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                    >
-                      {projectInitial.toUpperCase()}
-                    </text>
-                  </g>
-                </svg>
-              )}
-            </div>
-
-            <div className="single-project-title">
-              <h2 className="project-title-heading">
-                {localActiveProject ? localActiveProject.title : "Summary"}
-              </h2>
-            </div>
-
-            <svg
-              id="StatusSVG"
-              viewBox="0 0 400 400"
-              onClick={openEditStatusModal}
-              onKeyDown={(e) => handleKeyDown(e, openEditStatusModal)}
-              role="button"
-              tabIndex={0}
-              aria-label={`Status: ${displayStatus} Complete`}
-              className="interactive status-svg"
-              style={{ cursor: "pointer" }}
-            >
-              <title>{`Status: ${displayStatus} Complete`}</title>
-              <text
-                className="project-status"
-                transform={`translate(${
-                  localActiveProject?.status !== "100%" ? 75 : 56.58
-                } 375.21)`}
-              >
-                <tspan x="22.5" y="-136">
-                  {displayStatus}
-                </tspan>
-              </text>
-              {localActiveProject && (
-                <ellipse
-                  cx="200"
-                  cy="200"
-                  rx="160"
-                  ry="160"
-                  fill="none"
-                  strokeWidth="15"
-                  strokeDasharray={`${
-                    (parseStatusToNumber(localActiveProject.status) / 100) * 1002
-                  }, 1004`}
-                  style={{
-                    stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
-                  }}
+          <div className="header-content">
+            <div className="left-side">
+              <div className="project-logo-wrapper">
+                <Squircle
+                  as="button"
+                  type="button"
+                  onClick={() => openThumbnailModal(false)}
+                  title="Change Project Thumbnail"
+                  aria-label="Change Project Thumbnail"
+                  className="interactive project-logo-button"
+                  radius={18}
+                  smoothing={0.88}
                 >
-                  {parseStatusToNumber(localActiveProject.status) < 100 && (
-                    <animate
-                      attributeName="stroke-dasharray"
-                      from="0, 1004"
-                      to={`${
-                        (parseStatusToNumber(localActiveProject.status) / 100) *
-                        1002
-                      }, 1004`}
-                      dur="1s"
-                      begin="0s"
-                      fill="freeze"
+                  {localActiveProject?.thumbnails &&
+                  localActiveProject.thumbnails.length > 0 ? (
+                    <img
+                      src={getFileUrl(localActiveProject.thumbnails[0])}
+                      alt="Project Thumbnail"
+                      className="project-logo-image"
                     />
+                  ) : (
+                    <span className="project-logo-initial">
+                      {projectInitial.toUpperCase()}
+                    </span>
                   )}
-                </ellipse>
-              )}
-            </svg>
+                </Squircle>
+              </div>
 
-            <AvatarStack members={teamMembers} onClick={openTeamModal} />
+              <div className="single-project-title">
+                <h2 className="project-title-heading">
+                  {localActiveProject ? localActiveProject.title : "Summary"}
+                </h2>
+              </div>
+
+              <svg
+                id="StatusSVG"
+                viewBox="0 0 400 400"
+                onClick={openEditStatusModal}
+                onKeyDown={(e) => handleKeyDown(e, openEditStatusModal)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Status: ${displayStatus} Complete`}
+                className="interactive status-svg"
+                style={{ cursor: "pointer" }}
+              >
+                <title>{`Status: ${displayStatus} Complete`}</title>
+                <text
+                  className="project-status"
+                  transform={`translate(${
+                    localActiveProject?.status !== "100%" ? 75 : 56.58
+                  } 375.21)`}
+                >
+                  <tspan x="22.5" y="-136">
+                    {displayStatus}
+                  </tspan>
+                </text>
+                {localActiveProject && (
+                  <ellipse
+                    cx="200"
+                    cy="200"
+                    rx="160"
+                    ry="160"
+                    fill="none"
+                    strokeWidth="15"
+                    strokeDasharray={`${
+                      (parseStatusToNumber(localActiveProject.status) / 100) * 1002
+                    }, 1004`}
+                    style={{
+                      stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
+                    }}
+                  >
+                    {parseStatusToNumber(localActiveProject.status) < 100 && (
+                      <animate
+                        attributeName="stroke-dasharray"
+                        from="0, 1004"
+                        to={`${
+                          (parseStatusToNumber(localActiveProject.status) / 100) *
+                          1002
+                        }, 1004`}
+                        dur="1s"
+                        begin="0s"
+                        fill="freeze"
+                      />
+                    )}
+                  </ellipse>
+                )}
+              </svg>
+
+              <AvatarStack members={teamMembers} onClick={openTeamModal} />
 
             <div
               className="finish-line-header interactive"

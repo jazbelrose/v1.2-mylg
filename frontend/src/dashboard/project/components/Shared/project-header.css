@@ -7,18 +7,60 @@
 }
 
 .project-logo {
-  width: clamp(51px, 8vw, 51px);
-  height: clamp(51px, 8vw, 51px);
+  width: clamp(32px, 3vw, 36px);
+  height: clamp(32px, 3vw, 36px);
   border-radius: 50%;
   object-fit: cover;
   transition: width 0.2s, height 0.2s;
+  padding: 0px;
+  box-sizing: border-box;
 }
 
 .project-logo-wrapper {
   display: flex;
   align-items: center;
+  margin: 2px 6px;
+  
 }
 
+.project-logo-button {
+  --shape-radius: 18px;
+  --shape-smoothing: 0.88;
+  width: clamp(36px, 4vw, 44px);
+  aspect-ratio: 1 / 1;
+  border: none;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-strong, #111827);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: clamp(1rem, 1.5vw + 0.2rem, 1.4rem);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.project-logo-button:hover {
+  transform: scale(1.02);
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.project-logo-button:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.35);
+  outline-offset: 2px;
+}
+
+.project-logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.project-logo-initial {
+  line-height: 1;
+}
 
 .status-svg {
   width: clamp(40px, 5vw, 60px) !important;

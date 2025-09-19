@@ -25,6 +25,7 @@ import { getFileUrl } from '../../../shared/utils/api';
 import desktopStyles from './ProjectsPanelDesktop.module.css';
 import mobileStyles from '@/dashboard/home/components/projects-panel.module.css';
 import { MICRO_WOBBLE_SCALE, SPRING_FAST } from '@/shared/ui/motionTokens';
+import Squircle from '@/shared/ui/Squircle';
 
 const DEFAULT_RECENTS_LIMIT = 12;
 
@@ -257,6 +258,48 @@ const AllProjects: React.FC = () => {
 
   const isSingleProject = filteredProjects.length === 1;
 
+  const renderProjectThumbnail = useCallback(
+    (project: Project, variant: 'grid' | 'list') => {
+      const hasImage =
+        !imageErrors[project.projectId] &&
+        Array.isArray(project.thumbnails) &&
+        project.thumbnails.length > 0;
+      const thumbnailKey = hasImage ? project.thumbnails?.[0] : undefined;
+      const altText = `Thumbnail of ${project.title?.trim() || 'Untitled project'}`;
+      const baseClass = variant === 'grid' ? 'project-thumbnail' : 'project-list-thumb';
+      const mediaClass =
+        variant === 'grid' ? 'project-thumbnail-media' : 'project-list-thumb-media';
+      const radius = variant === 'grid' ? 28 : 14;
+      const smoothing = variant === 'grid' ? 0.82 : 0.88;
+
+      return (
+        <Squircle
+          radius={radius}
+          smoothing={smoothing}
+          className={baseClass}
+        >
+          {thumbnailKey ? (
+            <img
+              src={getFileUrl(thumbnailKey)}
+              alt={altText}
+              className={mediaClass}
+              loading="lazy"
+              decoding="async"
+              onError={() => handleThumbnailError(project.projectId)}
+            />
+          ) : (
+            <SVGThumbnail
+              initial={project.title?.trim()?.charAt(0)?.toUpperCase() || '#'}
+              className={mediaClass}
+              roundness={0.92}
+            />
+          )}
+        </Squircle>
+      );
+    },
+    [handleThumbnailError, imageErrors],
+  );
+
   let content: React.ReactNode;
 
   if (isLoading) {
@@ -343,27 +386,7 @@ const AllProjects: React.FC = () => {
               project.title?.trim() || 'Untitled project'
             }`}
           >
-            {!imageErrors[project.projectId] &&
-            project.thumbnails &&
-            project.thumbnails.length > 0 ? (
-              <img
-                src={getFileUrl(project.thumbnails[0])}
-                alt={`Thumbnail of ${
-                  project.title?.trim() || 'Untitled project'
-                }`}
-                className="project-thumbnail"
-                loading="lazy"
-                decoding="async"
-                onError={() => handleThumbnailError(project.projectId)}
-              />
-            ) : (
-              <SVGThumbnail
-                initial={
-                  project.title?.trim()?.charAt(0)?.toUpperCase() || '#'
-                }roundness={1} 
-                className="project-thumbnail"
-              />
-            )}
+            {renderProjectThumbnail(project, 'grid')}
             <h6 className="project-title">
               {project.title?.trim() || 'Untitled project'}
             </h6>
@@ -435,27 +458,7 @@ const AllProjects: React.FC = () => {
                 project.title?.trim() || 'Untitled project'
               }`}
             >
-              {!imageErrors[project.projectId] &&
-              project.thumbnails &&
-              project.thumbnails.length > 0 ? (
-                <img
-                  src={getFileUrl(project.thumbnails[0])}
-                  alt={`Thumbnail of ${
-                    project.title?.trim() || 'Untitled project'
-                  }`}
-                  className="project-list-thumb"
-                  loading="lazy"
-                  decoding="async"
-                  onError={() => handleThumbnailError(project.projectId)}
-                />
-              ) : (
-                <SVGThumbnail
-                  initial={
-                    project.title?.trim()?.charAt(0)?.toUpperCase() || '#'
-                  }
-                  className="project-list-thumb"
-                />
-              )}
+              {renderProjectThumbnail(project, 'list')}
               <div className="project-list-info">
                 <div className="project-title-row">
                   <span className="project-list-title">

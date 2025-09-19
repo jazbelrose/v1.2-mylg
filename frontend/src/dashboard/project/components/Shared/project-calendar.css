@@ -392,7 +392,7 @@
 .project-calendar-wrapper .calendar-content {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 16px 0px;
+  padding: 12px 4px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -440,7 +440,7 @@
 .project-calendar-wrapper .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
+  gap: 4px;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -450,15 +450,15 @@
 .project-calendar-wrapper .calendar-weeks {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .project-calendar-wrapper .calendar-week {
   position: relative;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
-  padding-bottom: 16px;
+  gap: 4px;
+  padding-bottom: 12px;
   overflow: visible;
 }
 
@@ -472,15 +472,15 @@
 
 .project-calendar-wrapper .calendar-day {
   position: relative;
-  min-height: 78px;
-  padding: 10px 10px 20px;
+  min-height: 56px;
+  padding: 8px 12px 14px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.02);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 .project-calendar-wrapper .calendar-day:hover {
@@ -508,7 +508,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 8px;
+  bottom: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -534,14 +534,14 @@
 
 @media (max-width: 768px) {
   .project-calendar-wrapper .calendar-content {
-    padding: 14px;
+    padding: 8px 2px;
   }
   .project-calendar-wrapper .calendar-week {
     padding-bottom: 12px;
   }
   .project-calendar-wrapper .calendar-day {
-    min-height: 64px;
-    padding: 8px 8px 16px;
+    min-height: 56px;
+    padding: 6px 10px 12px;
   }
   .project-calendar-wrapper .day-dots {
     bottom: 5px;

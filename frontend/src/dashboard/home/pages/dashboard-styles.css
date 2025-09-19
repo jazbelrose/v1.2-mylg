@@ -78,7 +78,7 @@
   .dashboard-wrapper.welcome-screen {
     flex: 1 1 auto;
     min-height: 0;
-    padding: 16px;
+    padding: 0;
   }
 }
 

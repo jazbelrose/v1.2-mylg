@@ -31,6 +31,10 @@ resources:
                 - "https://mylg.studio"
                 - "http://localhost:3000"
                 - "http://localhost:5173"
+                - "http://192.168.1.172:5173"
+                - "http://192.168.1.200:5173"
+                - "http://192.168.1.172:3000"
+                - "http://192.168.1.200:3000"
               MaxAge: 3000
         PublicAccessBlockConfiguration:
           BlockPublicAcls: false
@@ -71,6 +75,10 @@ resources:
                 - "http://localhost:3000"
                 - "https://beta.mylg.studio"
                 - "https://mylg.studio"
+                - "http://192.168.1.172:5173"
+                - "http://192.168.1.200:5173"
+                - "http://192.168.1.172:3000"
+                - "http://192.168.1.200:3000"
             OriginOverride: true
 
     # ---- CloudFront Distribution ----

@@ -13,7 +13,7 @@ import { useData } from "@/app/contexts/useData";
 import { enqueueProjectUpdate } from "@/shared/utils/requestQueue";
 import SpinnerOverlay from "@/shared/ui/SpinnerOverlay";
 import { toast } from "react-toastify";
-import { API_BASE_URL } from "@/shared/utils/api";
+import { apiFetch, PROJECTS_SERVICE_URL } from "@/shared/utils/api";
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("#root");
@@ -52,16 +52,17 @@ const QuickLinksComponent = forwardRef<QuickLinksRef, QuickLinksProps>(
     const [error, setError] = useState("");
     const [saving, setSaving] = useState(false);
 
-    const apiUrl = `${API_BASE_URL}/editProject?projectId=${activeProject?.projectId}`;
+    const projectId = activeProject?.projectId;
+    const apiUrl = projectId
+      ? `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/quick-links`
+      : null;
 
     const fetchQuickLinks = useCallback(async () => {
-      if (!activeProject?.projectId) return;
+      if (!apiUrl) return;
       setLoading(true);
       setError("");
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("Failed to fetch quick links");
-        const data = await response.json();
+        const data = await apiFetch<{ quickLinks?: QuickLink[] }>(apiUrl);
         if (Array.isArray(data.quickLinks)) {
           setLinks([...data.quickLinks]);
         }
@@ -72,7 +73,7 @@ const QuickLinksComponent = forwardRef<QuickLinksRef, QuickLinksProps>(
       } finally {
         setLoading(false);
       }
-    }, [activeProject?.projectId, apiUrl]);
+    }, [apiUrl]);
 
     // Sync with project data when activeProject changes
     useEffect(() => {

@@ -7,7 +7,7 @@ import GalleryComponent from "@/dashboard/project/components/Gallery/GalleryComp
 
 import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPageLayout";
 import Timeline from "@/dashboard/project/components/Timeline/Timeline";
-import ProjectCalendar from "@/dashboard/project/components/Shared/ProjectCalendar";
+import CalendarOverviewCard from "@/dashboard/project/components/Shared/CalendarOverviewCard";
 import QuickLinksComponent from "@/dashboard/project/components/Shared/QuickLinksComponent";
 import type { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickLinksComponent";
 import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
@@ -231,7 +231,7 @@ const SingleProject: React.FC = () => {
                   <GalleryComponent />
                 </div>
                 <div className="calendar-column">
-                  <ProjectCalendar
+                  <CalendarOverviewCard
                     project={activeProject as {
                       projectId: string;
                       title?: string;

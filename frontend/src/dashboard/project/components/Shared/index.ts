@@ -1,6 +1,6 @@
 // Shared Components Barrel Export
 export { default as ProjectHeader } from './ProjectHeader';
-export { default as ProjectCalendar } from './ProjectCalendar';
+export { default as CalendarOverviewCard } from './CalendarOverviewCard';
 export { default as ProjectPageLayout } from './ProjectPageLayout';
 export { default as QuickLinksComponent } from './QuickLinksComponent';
 export type { QuickLinksRef } from './QuickLinksComponent';

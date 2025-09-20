@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ProjectPageLayout, ProjectHeader, TimelineChart, ProjectCalendar, QuickLinksComponent, FileManager as FileManagerComponent } from '@/dashboard/project/components';
+import { ProjectPageLayout, ProjectHeader, TimelineChart, QuickLinksComponent, FileManager as FileManagerComponent } from '@/dashboard/project/components';
+import ProjectCalendar from './ProjectCalendar';
 import { useData } from '@/app/contexts/useData';
 import { useSocket } from '@/app/contexts/SocketContext';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';

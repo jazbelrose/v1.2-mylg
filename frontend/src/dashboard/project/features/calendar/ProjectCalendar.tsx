@@ -31,6 +31,7 @@ import {
 // Frontend no longer persists timeline events directly; backend handles persistence
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { notify } from "@/shared/ui/ToastNotifications";
+import EventPill from "../../components/Shared/EventPill";
 
 type TimelineEvent = {
   id: string;
@@ -106,11 +107,6 @@ const UNIT_OPTIONS = [
   "SQFT",
   "KG",
 ] as const;
-
-const DOT_SIZE = 10;
-const DOT_STROKE = 2;
-const DOT_MAX_VISIBLE = 4;
-const DOT_OVERLAP_PX = 3;
 
 const MOBILE_QUERY = "(max-width: 640px)";
 const POPPER_GAP = 12;
@@ -269,6 +265,7 @@ const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonP
       isSelected ? "selected" : "",
       isFlashing ? "tile-highlight" : "",
       inRange ? "in-range" : "",
+      hasEvents ? "has-badge" : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -1523,7 +1520,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 
                   {week.map(({ date, key, inMonth }) => {
                     const dayEvents = eventsByDate[key] || [];
-                    const dayDots = dayEvents.map((e, idx) => project?.color || getColor(e.description || String(idx)));
                     const isSelected = selectedKey === key;
                     const isToday = todayKey === key;
                     const isFlashing = flashKey === key;
@@ -1533,6 +1529,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
                       (sum, ev) => sum + Number(ev.hours || 0),
                       0
                     );
+                    const eventCount = dayEvents.length;
                     const label = formatDateLabel(date);
 
                     return (
@@ -1553,29 +1550,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
                         >
                           <div className="tile-date-number">{date.getDate()}</div>
 
-                          <div className="day-dots">
-                            {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
-                              <svg
-                                key={`${key}-dot-${idx}`}
-                                width={DOT_SIZE}
-                                height={DOT_SIZE}
-                                viewBox="0 0 24 24"
-                                style={{
-                                  marginLeft: idx ? -DOT_OVERLAP_PX : 0,
-                                  filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
-                                  zIndex: 20 - idx,
-                                }}
-                                aria-hidden
-                              >
-                                <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
-                                <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
-                                <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
-                              </svg>
-                            ))}
-                            {dayDots.length > DOT_MAX_VISIBLE && (
-                              <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
-                            )}
-                          </div>
+                          <EventPill count={eventCount} color={project?.color} />
 
                           {isHovered && dayEvents.length > 0 && (
                             <div className="tile-tooltip visible">

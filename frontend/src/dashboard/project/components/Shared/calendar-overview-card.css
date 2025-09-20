@@ -496,6 +496,9 @@
   outline: none;
   appearance: none;
 }
+.calendar-overview-card-wrapper .calendar-day.has-badge {
+  padding-right: 18px;
+}
 .calendar-overview-card-wrapper .calendar-day:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.14);
@@ -540,6 +543,32 @@
   gap: 4px;
 }
 
+.calendar-overview-card-wrapper .event-pill {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1;
+  border-width: 1px;
+  border-style: solid;
+  pointer-events: none;
+}
+
+.calendar-overview-card-wrapper .event-pill svg {
+  font-size: 0.6rem;
+}
+
+.calendar-overview-card-wrapper .event-pill-count {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
 
 /* Contiguous capsule behind a week row */
 .calendar-overview-card-wrapper .calendar-week-track {
@@ -574,6 +603,12 @@
   }
   .calendar-overview-card-wrapper .day-dots {
     bottom: 5px;
+  }
+  .calendar-overview-card-wrapper .event-pill {
+    bottom: 5px;
+    right: 6px;
+    font-size: 0.6rem;
+    padding: 2px 5px;
   }
   .calendar-overview-card-wrapper .tile-date-number {
     font-size: 0.85rem;

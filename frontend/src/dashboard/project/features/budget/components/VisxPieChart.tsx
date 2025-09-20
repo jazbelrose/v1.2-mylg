@@ -183,9 +183,7 @@ function AnimatedArc({
         vectorEffect="non-scaling-stroke"
         strokeLinejoin="round"
         strokeMiterlimit={2}
-      >
-        <title>{String(arc.data.name)}</title>
-      </animated.path>
+      />
     </animated.g>
   );
 }
@@ -414,18 +412,18 @@ function VisxPieChart({
                   position: "fixed",
                   zIndex: 9999,
                   pointerEvents: "none",
-                  background: "rgba(0,0,0,0.9)",
-                  color: "#fff",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 10,
-                  padding: "8px 10px",
-                  boxShadow: "0 2px 12px 0 rgba(0,0,0,0.18)",
-                  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                  fontSize: 13,
+                  backgroundColor: "rgba(30, 30, 30, 0.9)",
+                  color: "white",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  borderRadius: "8px",
+                  padding: "8px 12px",
+                  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.3)",
+                  backdropFilter: "blur(4px)",
+                  fontSize: "0.75rem",
                   fontWeight: 500,
-                  lineHeight: 1.25,
+                  lineHeight: 1.1,
                   minWidth: 60,
-                  maxWidth: 320,
+                  maxWidth: 160,
                   wordBreak: "break-word",
                 }}
               >

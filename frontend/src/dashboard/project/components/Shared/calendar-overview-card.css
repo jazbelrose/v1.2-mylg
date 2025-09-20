@@ -530,17 +530,20 @@
 }
 
 
+/* Contiguous capsule behind a week row */
 .calendar-overview-card-wrapper .calendar-week-track {
   position: absolute;
-  height: 56px;
-  border-radius: 20px;
-  bottom: 10px;
-  
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  height: 80%;                 /* centered behind tiles */
+  inset-inline: 4px;           /* respect your 4px gaps */
+  bottom: 12px;
+  border-radius: 14px;
+  background: var(--range-fill);
+  outline: 1px solid var(--range-stroke);
+  outline-offset: -1px;
+  box-shadow: none;
   pointer-events: none;
   z-index: 1;
 }
-
 .calendar-overview-card-wrapper .timeline-bar {
   width: 100%;
   height: 6px;

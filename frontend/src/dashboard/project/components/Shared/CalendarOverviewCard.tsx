@@ -837,7 +837,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
 
   const trackFillColor = useMemo(() => withAlpha(projectColor, 0.12), [projectColor]);
   const trackBorderColor = useMemo(() => withAlpha(projectColor, 0.45), [projectColor]);
-  const trackGlowColor = useMemo(() => withAlpha(projectColor, 0.18), [projectColor]);
+  const trackGlowColor = 'none';
 
   const monthStart = useMemo(
     () => new Date(activeStartDate.getFullYear(), activeStartDate.getMonth(), 1),
@@ -1589,7 +1589,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                         width: `${weekTrack.width}%`,
                         background: trackFillColor,
                         borderColor: trackBorderColor,
-                        boxShadow: `0 0 0 1px ${trackBorderColor}, 0 8px 18px ${trackGlowColor}`,
+                        boxShadow: `0 0 0 1px ${trackBorderColor}`,
                       }}
                       aria-hidden
                     />

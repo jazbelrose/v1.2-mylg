@@ -39,7 +39,6 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
   const [groupBy] = useState<"invoiceGroup" | "none">("invoiceGroup");
   const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false);
   const [invoiceRevision, setInvoiceRevision] = useState<BudgetHeaderData | null>(null);
-  const [activeSlice, setActiveSlice] = useState<{ datum: PieDatum; index: number } | null>(null);
 
   // Use context selectors for memoized data
   const stats = getStats();
@@ -77,28 +76,6 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
     (d: PieDatum) => `${d.name}: ${formatDatumValue(d)}`,
     [formatDatumValue]
   );
-
-  const handleSliceChange = useCallback(
-    (slice: { datum: PieDatum; index: number } | null) => {
-      setActiveSlice(slice);
-    },
-    []
-  );
-
-  const activeColor = useMemo(() => {
-    if (!activeSlice) return null;
-    return colors[activeSlice.index % colors.length] ?? null;
-  }, [activeSlice, colors]);
-
-  const activePercent = useMemo(() => {
-    if (!activeSlice || !totalPieValue) return null;
-    const percent = (activeSlice.datum.value / totalPieValue) * 100;
-    if (percent >= 10) {
-      return `${Math.round(percent)}`;
-    }
-    const rounded = Math.round(percent * 10) / 10;
-    return `${rounded}`.replace(/\.0$/, "");
-  }, [activeSlice, totalPieValue]);
 
   const openInvoicePreview = async (): Promise<void> => {
     if (!projectId) return;
@@ -236,30 +213,7 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
                   colors={colors}
                   formatTooltip={formatTooltip}
                   colorMode="sequential"
-                  onActiveSliceChange={handleSliceChange}
                 />
-              </div>
-
-              <div className="budget-legend" aria-live="polite">
-                {activeSlice ? (
-                  <>
-                    <div className="budget-legend-header">
-                      <span
-                        className="budget-legend-dot"
-                        style={{ background: activeColor ?? "transparent" }}
-                      />
-                      <span className="budget-legend-title">{activeSlice.datum.name}</span>
-                    </div>
-                    <div className="budget-legend-value">{formatDatumValue(activeSlice.datum)}</div>
-                    {activePercent !== null && (
-                      <div className="budget-legend-percent">{`${activePercent}% of total`}</div>
-                    )}
-                  </>
-                ) : (
-                  <span className="budget-legend-placeholder">
-                    Hover or tap a slice to see budget details
-                  </span>
-                )}
               </div>
             </div>
           </>

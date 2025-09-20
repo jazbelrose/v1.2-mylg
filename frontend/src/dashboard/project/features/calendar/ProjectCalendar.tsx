@@ -153,8 +153,6 @@ function getDateKey(date?: Date | null): string | null {
   return `${y}-${m}-${d}`;
 }
 
-const fmt = (date: Date): string => getDateKey(date) || "";
-
 function formatDateLabel(date: Date): string {
   return date.toLocaleDateString(undefined, {
     weekday: "long",
@@ -1215,7 +1213,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     setEndDateInput(key);
   };
 
-  const openAddEventModal = (
+  const openAddEventModal = useCallback((
     e?: ReactMouseEvent<HTMLButtonElement>,
     dateKeyParam?: string
   ) => {
@@ -1242,7 +1240,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     setStartDateInput(key);
     setEndDateInput(key);
     setShowModal(true);
-  };
+  }, [closeDayOverlay, selectedDate, setEventDesc, setEventHours, setEditId, setCreateLineItem, setCategory, setElementKey, setElementId, setQuantity, setUnit, setBudgetedCost, setMarkup, setFinalCost, setSelectedDate, setStartDateInput, setEndDateInput, setShowModal]);
 
   const handleWrapperClick = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (showModal) return;
@@ -1288,7 +1286,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     else setMarkup("");
   };
 
-  const openEditEventModal = (id: string) => {
+  const openEditEventModal = useCallback((id: string) => {
     const ev = events.find((e) => e.id === id);
     if (!ev) return;
 
@@ -1327,7 +1325,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
       setCreateLineItem(false);
     }
     setShowModal(true);
-  };
+  }, [events, selectedDate, budgetItems, setSelectedDate, setEventDesc, setEventHours, setStartDateInput, setEndDateInput, setEditId, setCreateLineItem, setCategory, setElementKey, setElementId, setQuantity, setUnit, setBudgetedCost, setMarkup, setFinalCost, setShowModal]);
 
   const goToPrevMonthView = useCallback(() => {
     const prev = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
@@ -1360,7 +1358,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
   const handleDayOpen = useCallback(
     (
       anchor: HTMLButtonElement,
-      { date, dayKey, inMonth }: { date: Date; dayKey: string; inMonth: boolean }
+      { date, dayKey }: { date: Date; dayKey: string }
     ) => {
       if (!dayKey) return;
 
@@ -1392,7 +1390,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     ]
   );
 
-  const handleDeleteEvent = async (id: string) => {
+  const handleDeleteEvent = useCallback(async (id: string) => {
     const updated = events.filter((ev) => ev.id !== id);
     setEvents(updated);
     setDescOptions(extractDescOptions(updated));
@@ -1430,7 +1428,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
         )
       );
     }
-  };
+  }, [events, setEvents, setDescOptions, extractDescOptions, project.projectId, ws, activeProject?.title, user?.firstName, user?.userId]);
 
   const handleOverlayNew = useCallback(() => {
     const key = overlayDayKey || getDateKey(selectedDate);

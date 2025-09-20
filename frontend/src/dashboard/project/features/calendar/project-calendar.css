@@ -165,97 +165,10 @@
   font-size: 6px;
 }
 
-.project-calendar-wrapper .events-nav {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 clamp(8px, 3vw, 20px);
-  margin-top: 0;
-}
-
-.project-calendar-wrapper .events-nav button {
-  background: none;
-  border: none;
-  color: #FA3356;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.project-calendar-wrapper .events-nav button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-
-.project-calendar-wrapper .events-log {
-  padding: clamp(4px, 0.8vh, 8px);
-  color: white;
-  font-size: clamp(0.75rem, 1.5vh, 0.85rem);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  max-height: 25vh;
-  overflow-y: auto;
-}
-.project-calendar-wrapper .events-log ul {
-  margin: 0;
-  padding-left: 0;
-  list-style: none;
-}
-
-.project-calendar-wrapper .event-item {
-  display: flex;
-  align-items: center;
-  font-size: 0.85rem;
-}
-.project-calendar-wrapper .list-dot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  font-size: 7px;
-  margin-right: 4px;
-}
-.project-calendar-wrapper .events-log-date {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #FA3356;
-  cursor: pointer;
-}
-
 .add-event-button {
   display: block;
   width: 100%;
   margin-top: auto;
-}
-
-.edit-event-btn {
-  margin-left: 6px;
-  background: none;
-  border: none;
-  color: #fa3356;
-  cursor: pointer;
-}
-
-.delete-event-btn {
-  margin-left: 4px;
-  background: none;
-  border: none;
-  color: #fa3356;
-  cursor: pointer;
-}
-
-.events-log-totals {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 5px;
-}
-
-
-.add-event-title {
-  font-size: 16px;
 }
 
 
@@ -382,10 +295,6 @@
   }
   .project-calendar-wrapper .tile-date-number {
     font-size: clamp(0.5rem, 1vh, 0.7rem);
-  }
-  .project-calendar-wrapper .events-log {
-    font-size: 0.75rem;
-    padding: clamp(2px, 0.5vh, 4px);
   }
 }
 

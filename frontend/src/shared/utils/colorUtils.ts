@@ -76,6 +76,22 @@ export function hexToRgba(hex: string): string {
   return `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
 }
 
+// Add alpha to a hex color and return as rgba string
+export function withAlpha(hex: string, alpha: number): string {
+  if (!hex) return '';
+  let v = hex.replace('#', '');
+  if (v.length === 3) {
+    v = v
+      .split('')
+      .map((c) => c + c)
+      .join('');
+  }
+  const r = parseInt(v.slice(0, 2), 16);
+  const g = parseInt(v.slice(2, 4), 16);
+  const b = parseInt(v.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Convert a hex color to HSL components
 export function hexToHsl(hex: string): { h: number; s: number; l: number } {
   let v = hex.replace('#', '');

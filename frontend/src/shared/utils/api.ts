@@ -256,7 +256,6 @@ const BASE_ENDPOINTS = {
     
     // Legacy endpoints that may need special handling or removal
     NEWSLETTER_SUBSCRIBE_URL: 'https://jmmn5p5yhe.execute-api.us-west-1.amazonaws.com/default/notifyNewSubscriber',
-    DELETE_FILE_FROM_S3_URL: 'https://k6utve4soj.execute-api.us-west-1.amazonaws.com/default/DeleteFilesFromS3',
     ZIP_FILES_URL: 'https://o01t8q8mjk.execute-api.us-west-1.amazonaws.com/default/zipFiles',
   },
   staging: {},
@@ -290,7 +289,6 @@ export const {
   NEWSLETTER_SUBSCRIBE_URL,
   MESSAGES_INBOX_URL,
   MESSAGES_THREADS_URL,
-  DELETE_FILE_FROM_S3_URL,
   ZIP_FILES_URL,
   DELETE_PROJECT_MESSAGE_URL,
   GET_PROJECT_MESSAGES_URL,
@@ -314,6 +312,13 @@ export const {
   USER_INVITES_URL,
   TASKS_API_URL,
 } = API_ENDPOINTS as Record<string, string>;
+
+/**
+ * POST /projects/{projectId}/files/delete
+ * Removes one or more project files via the v1.2 projects service.
+ */
+export const projectFileDeleteUrl = (projectId: string): string =>
+  `${PROJECTS_URL}/${projectId}/files/delete`;
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helpers

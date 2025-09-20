@@ -42,6 +42,7 @@ env:
   # ---- Galleries / uploads
   GALLERIES_TABLE: Galleries
   GALLERIES_PROJECT_GSI: projectId-index
+  FILE_BUCKET: mylg-files-v12
 
   # ---- WebSocket
   CONNECTIONS_TABLE: Connections

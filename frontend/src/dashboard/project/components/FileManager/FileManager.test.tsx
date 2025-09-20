@@ -75,13 +75,13 @@ vi.mock("@/shared/utils/api", () => {
   return {
     API_BASE_URL: "base",
     ZIP_FILES_URL: "zip",
-    DELETE_FILE_FROM_S3_URL: "delete",
     DELETE_PROJECT_MESSAGE_URL: "delMsg",
     GET_PROJECT_MESSAGES_URL: "getMsgs",
     EDIT_MESSAGE_URL: "editMsg",
     getFileUrl: buildUrl,
     normalizeFileUrl: (u: string) => buildUrl(u),
     fileUrlsToKeys: (urls: string[]) => urls.map(toKey),
+    projectFileDeleteUrl: (projectId: string) => `delete/${projectId}`,
     apiFetch: vi.fn(() =>
       Promise.resolve({ ok: true, json: vi.fn().mockResolvedValue([]) })
     ),
@@ -151,7 +151,9 @@ test.skip("deleting a file via toast confirmation updates the list without closi
   });
 
   expect(screen.getByRole("dialog")).toBeInTheDocument();
-  expect(apiFetchMock.mock.calls.some((call) => call[0] === "delete")).toBe(true);
+  expect(
+    apiFetchMock.mock.calls.some((call) => typeof call[0] === "string" && call[0].startsWith("delete/"))
+  ).toBe(true);
 });
 
 test("sorts files by selected option including kind", async () => {

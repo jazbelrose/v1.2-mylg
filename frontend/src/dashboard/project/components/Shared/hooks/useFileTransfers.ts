@@ -169,12 +169,14 @@ export const useFileTransfers = ({
     (projectId: string, file: File) =>
       uploadQueue(async () => {
         const filename = `projects/${projectId}/${folderKey}/${file.name}`;
-        await uploadData({
+        const uploadTask = uploadData({
           key: filename,
           data: file,
           options: { accessLevel: "guest" },
         });
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        await uploadTask.result;
+
         const storageKey = filename.startsWith("public/") ? filename : `public/${filename}`;
         const fileUrl = getFileUrl(storageKey);
         return { fileName: file.name, url: normalizeFileUrl(fileUrl) };
@@ -189,6 +191,13 @@ export const useFileTransfers = ({
         setIsLoading(false);
         return;
       }
+      const projectId = activeProject?.projectId as string | undefined;
+      if (!projectId) {
+        notify("error", "Unable to determine the active project. Please refresh and try again.");
+        setIsLoading(false);
+        return;
+      }
+
       const notificationId = notifyLoading("Uploading files...");
 
       const placeholders: (FileItem | null)[] = files.map((file) => ({
@@ -200,7 +209,6 @@ export const useFileTransfers = ({
 
       setSelectedFiles((prev) => [...prev, ...(placeholders as FileItem[])]);
 
-      const projectId = activeProject?.projectId as string;
       await Promise.all(
         files.map((file, idx) =>
           uploadFileToS3(projectId, file)
@@ -237,7 +245,7 @@ export const useFileTransfers = ({
       if (folderKey !== "uploads") {
         const payload = finalFiles.map((f) => ({ fileName: f.fileName, url: f.url }));
         try {
-          await updateFolderFiles(activeProject.projectId as string, payload);
+          await updateFolderFiles(projectId, payload);
         } catch (error) {
           console.error("Error updating file metadata:", error);
           notify("warning", "Files uploaded but metadata update failed");

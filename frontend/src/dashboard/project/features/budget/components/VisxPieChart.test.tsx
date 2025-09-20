@@ -26,15 +26,23 @@ vi.mock("@visx/event", () => ({
   localPoint: vi.fn(),
 }));
 
-vi.mock("@react-spring/web", () => ({
-  animated: {
-    path: "path",
-    circle: "circle",
-    text: "text",
-  },
-  useSpring: vi.fn(() => ({})),
-  to: vi.fn(),
-}));
+vi.mock("@react-spring/web", () => {
+  const start = vi.fn();
+  return {
+    animated: {
+      path: "path",
+      circle: "circle",
+      text: "text",
+      g: "g",
+    },
+    useSpring: vi.fn(() => [
+      { startAngle: 0, endAngle: 0, x: 0, y: 0 },
+      { start },
+    ]),
+    to: vi.fn(),
+    SpringValue: class {},
+  };
+});
 
 vi.mock("@/shared/utils/budgetUtils", () => ({
   formatUSD: (value: number) => `$${value}`,

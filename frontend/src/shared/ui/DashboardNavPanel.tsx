@@ -131,7 +131,7 @@ const DashboardNavPanel: React.FC<DashboardNavPanelProps> = ({
               aria-label="Go to marketing home"
             >
               <span className="dashboard-nav-panel__brand-mark">M!</span>
-              <span className="dashboard-nav-panel__brand-text">MYLG</span>
+              <span className="dashboard-nav-panel__brand-text">MYLG!</span>
             </Link>
             {onToggleCollapse ? (
               <button

@@ -7,6 +7,7 @@ import React, {
   MouseEvent,
   FormEvent,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import "./project-calendar.css";
 import Modal from "../../../../shared/ui/ModalWithStack";
@@ -108,6 +109,19 @@ const DOT_STROKE = 2;
 const DOT_MAX_VISIBLE = 4;
 const DOT_OVERLAP_PX = 3;
 
+const WRAPPER_INTERACTIVE_SELECTOR = [
+  "button",
+  "a",
+  "input",
+  "select",
+  "textarea",
+  "[role=\"button\"]",
+  "[role=\"link\"]",
+  "[data-stop-card-nav]",
+  ".calendar-day",
+  ".calendar-day-wrapper",
+].join(", ");
+
 function safeParse(dateStr?: string | null): Date | null {
   if (!dateStr) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
@@ -150,6 +164,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
   showEventList = true,
   onWrapperClick,
 }) => {
+  const navigate = useNavigate();
   const { activeProject, user } = useData();
   const { ws } = useSocket() || {};
 
@@ -631,7 +646,18 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
       ignoreNextWrapperClickRef.current = false;
       return;
     }
-    onWrapperClick?.(e);
+
+    const target = e.target as Node | null;
+    if (target instanceof Element && target.closest(WRAPPER_INTERACTIVE_SELECTOR)) {
+      return;
+    }
+
+    if (onWrapperClick) {
+      onWrapperClick();
+      return;
+    }
+
+    navigate("/dashboard/calendar");
   };
 
   const handleDescChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1231,16 +1257,3 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 };
 
 export default ProjectCalendar;
-
-
-
-
-
-
-
-
-
-
-
-
-

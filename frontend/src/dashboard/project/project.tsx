@@ -77,6 +77,7 @@ const SingleProject: React.FC = () => {
     navigate("/dashboard");
   }, [navigate]);
 
+
   const openCalendarPage = useCallback(() => {
     if (!activeProject) return;
     navigate(

@@ -16,7 +16,7 @@ import Modal from "../../../../shared/ui/ModalWithStack";
 import { useData } from "../../../../app/contexts/useData";
 import { useSocket } from "../../../../app/contexts/useSocket";
 import { normalizeMessage } from "../../../../shared/utils/websocketUtils";
-import { getColor } from "../../../../shared/utils/colorUtils";
+import { getColor, withAlpha } from "../../../../shared/utils/colorUtils";
 import { startOfWeek, endOfWeek, addDays, rangePct } from "@/dashboard/home/utils/dateUtils";
 import { createBudgetItem, updateBudgetItem, createEvent as createEventApi, updateEvent as updateEventApi, deleteEvent as deleteEventApi } from "../../../../shared/utils/api";
 import { slugify } from "../../../../shared/utils/slug";
@@ -154,8 +154,6 @@ function getDateKey(date?: Date | null): string | null {
   return `${y}-${m}-${d}`;
 }
 
-const fmt = (date: Date): string => getDateKey(date) || "";
-
 function formatDateLabel(date: Date): string {
   return date.toLocaleDateString(undefined, {
     weekday: "long",
@@ -244,6 +242,7 @@ interface CalendarDayButtonProps {
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   children: React.ReactNode;
+  style?: React.CSSProperties;
 }
 
 const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonProps>(
@@ -262,6 +261,7 @@ const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonP
       onMouseEnter,
       onMouseLeave,
       children,
+      style,
     },
     ref
   ) => {
@@ -302,6 +302,7 @@ const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonP
         onKeyDown={handleKeyDown}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
+        style={style}
       >
         {children}
       </button>
@@ -833,6 +834,10 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
     () => project?.color || getColor(project?.projectId || project?.title || "project"),
     [project?.color, project?.projectId, project?.title]
   );
+
+  const trackFillColor = useMemo(() => withAlpha(projectColor, 0.12), [projectColor]);
+  const trackBorderColor = useMemo(() => withAlpha(projectColor, 0.45), [projectColor]);
+  const trackGlowColor = useMemo(() => withAlpha(projectColor, 0.18), [projectColor]);
 
   const monthStart = useMemo(
     () => new Date(activeStartDate.getFullYear(), activeStartDate.getMonth(), 1),
@@ -1374,7 +1379,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
   const handleDayOpen = useCallback(
     (
       anchor: HTMLButtonElement,
-      { date, dayKey, inMonth }: { date: Date; dayKey: string; inMonth: boolean }
+      { date, dayKey }: { date: Date; dayKey: string; inMonth: boolean }
     ) => {
       if (!dayKey) return;
 
@@ -1582,7 +1587,9 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                       style={{
                         left: `${weekTrack.left}%`,
                         width: `${weekTrack.width}%`,
-                        backgroundColor: projectColor,
+                        background: trackFillColor,
+                        borderColor: trackBorderColor,
+                        boxShadow: `0 0 0 1px ${trackBorderColor}, 0 8px 18px ${trackGlowColor}`,
                       }}
                       aria-hidden
                     />
@@ -1601,6 +1608,13 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                       0
                     );
                     const label = formatDateLabel(date);
+                    const dayStyle = isSelected
+                      ? ({
+                          "--calendar-day-fill": trackFillColor,
+                          "--calendar-day-ring": trackBorderColor,
+                          "--calendar-day-glow": trackGlowColor,
+                        } as React.CSSProperties)
+                      : undefined;
 
                     return (
                       <div key={key} className="calendar-day-wrapper">
@@ -1617,6 +1631,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                           onOpen={handleDayOpen}
                           onMouseEnter={!isMobile ? () => queueHover(date) : undefined}
                           onMouseLeave={!isMobile ? queueHoverClear : undefined}
+                          style={dayStyle}
                         >
                           <div className="tile-date-number">{date.getDate()}</div>
 

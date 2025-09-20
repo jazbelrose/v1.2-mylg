@@ -837,7 +837,9 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
 
   const trackFillColor = useMemo(() => withAlpha(projectColor, 0.12), [projectColor]);
   const trackBorderColor = useMemo(() => withAlpha(projectColor, 0.45), [projectColor]);
-  const trackGlowColor = 'none';
+  const selectedDayFillColor = useMemo(() => withAlpha(projectColor, 0.18), [projectColor]);
+  const selectedDayRingColor = useMemo(() => withAlpha(projectColor, 0.5), [projectColor]);
+  const selectedDayGlowColor = useMemo(() => withAlpha(projectColor, 0.28), [projectColor]);
 
   const monthStart = useMemo(
     () => new Date(activeStartDate.getFullYear(), activeStartDate.getMonth(), 1),
@@ -1610,9 +1612,9 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                     const label = formatDateLabel(date);
                     const dayStyle = isSelected
                       ? ({
-                          "--calendar-day-fill": trackFillColor,
-                          "--calendar-day-ring": trackBorderColor,
-                          "--calendar-day-glow": trackGlowColor,
+                          "--calendar-day-fill": selectedDayFillColor,
+                          "--calendar-day-ring": selectedDayRingColor,
+                          "--calendar-day-glow": selectedDayGlowColor,
                         } as React.CSSProperties)
                       : undefined;
 

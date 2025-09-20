@@ -529,15 +529,29 @@
 .calendar-overview-card-wrapper .calendar-day--muted {
   opacity: 0.5;
 }
-.calendar-overview-card-wrapper .day-dots {
+.calendar-overview-card-wrapper .calendar-day.has-badge {
+  padding-right: 18px;
+}
+.calendar-overview-card-wrapper .event-pill {
   position: absolute;
-  left: 0;
-  right: 0;
+  right: 6px;
   bottom: 6px;
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1;
+  background: transparent;
+}
+.calendar-overview-card-wrapper .event-pill__icon {
+  font-size: 0.7rem;
+}
+.calendar-overview-card-wrapper .event-pill__count {
+  line-height: 1;
 }
 
 
@@ -572,7 +586,7 @@
     min-height: 56px;
     padding: 6px 10px 12px;
   }
-  .calendar-overview-card-wrapper .day-dots {
+  .calendar-overview-card-wrapper .event-pill {
     bottom: 5px;
   }
   .calendar-overview-card-wrapper .tile-date-number {

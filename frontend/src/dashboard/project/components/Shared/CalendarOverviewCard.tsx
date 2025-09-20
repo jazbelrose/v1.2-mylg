@@ -17,6 +17,7 @@ import { useData } from "../../../../app/contexts/useData";
 import { useSocket } from "../../../../app/contexts/useSocket";
 import { normalizeMessage } from "../../../../shared/utils/websocketUtils";
 import { getColor, withAlpha } from "../../../../shared/utils/colorUtils";
+import EventPill from "./EventPill";
 import { startOfWeek, endOfWeek, addDays, rangePct } from "@/dashboard/home/utils/dateUtils";
 import { createBudgetItem, updateBudgetItem, createEvent as createEventApi, updateEvent as updateEventApi, deleteEvent as deleteEventApi } from "../../../../shared/utils/api";
 import { slugify } from "../../../../shared/utils/slug";
@@ -107,11 +108,6 @@ const UNIT_OPTIONS = [
   "SQFT",
   "KG",
 ] as const;
-
-const DOT_SIZE = 10;
-const DOT_STROKE = 2;
-const DOT_MAX_VISIBLE = 4;
-const DOT_OVERLAP_PX = 3;
 
 const MOBILE_QUERY = "(max-width: 640px)";
 const POPPER_GAP = 12;
@@ -237,6 +233,7 @@ interface CalendarDayButtonProps {
   isFlashing: boolean;
   inRange: boolean;
   hasEvents: boolean;
+  hasBadge?: boolean;
   label: string;
   onOpen: (anchor: HTMLButtonElement, meta: { date: Date; dayKey: string; inMonth: boolean }) => void;
   onMouseEnter?: () => void;
@@ -256,6 +253,7 @@ const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonP
       isFlashing,
       inRange,
       hasEvents,
+      hasBadge,
       label,
       onOpen,
       onMouseEnter,
@@ -272,6 +270,7 @@ const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonP
       isSelected ? "selected" : "",
       isFlashing ? "tile-highlight" : "",
       inRange ? "in-range" : "",
+      hasBadge ? "has-badge" : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -1599,7 +1598,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
 
                   {week.map(({ date, key, inMonth }) => {
                     const dayEvents = eventsByDate[key] || [];
-                    const dayDots = dayEvents.map((e, idx) => project?.color || getColor(e.description || String(idx)));
+                    const eventCount = dayEvents.length;
                     const isSelected = selectedKey === key;
                     const isToday = todayKey === key;
                     const isFlashing = flashKey === key;
@@ -1628,7 +1627,8 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                           isToday={isToday}
                           isFlashing={isFlashing}
                           inRange={inRange}
-                          hasEvents={dayEvents.length > 0}
+                          hasEvents={eventCount > 0}
+                          hasBadge={eventCount > 0}
                           label={`Events on ${label}`}
                           onOpen={handleDayOpen}
                           onMouseEnter={!isMobile ? () => queueHover(date) : undefined}
@@ -1637,29 +1637,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                         >
                           <div className="tile-date-number">{date.getDate()}</div>
 
-                          <div className="day-dots">
-                            {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
-                              <svg
-                                key={`${key}-dot-${idx}`}
-                                width={DOT_SIZE}
-                                height={DOT_SIZE}
-                                viewBox="0 0 24 24"
-                                style={{
-                                  marginLeft: idx ? -DOT_OVERLAP_PX : 0,
-                                  filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
-                                  zIndex: 20 - idx,
-                                }}
-                                aria-hidden
-                              >
-                                <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
-                                <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
-                                <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
-                              </svg>
-                            ))}
-                            {dayDots.length > DOT_MAX_VISIBLE && (
-                              <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
-                            )}
-                          </div>
+                          <EventPill count={eventCount} color={projectColor} />
 
                           {isHovered && dayEvents.length > 0 && (
                             <div className="tile-tooltip visible">

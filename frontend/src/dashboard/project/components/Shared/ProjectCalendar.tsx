@@ -117,6 +117,7 @@ const MOBILE_QUERY = "(max-width: 640px)";
 const POPPER_GAP = 12;
 const FOCUSABLE_SELECTOR =
   'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const INTERACTIVE_SAFE_PAD = 12;
 
 const WRAPPER_INTERACTIVE_SELECTOR = [
   "button",
@@ -734,6 +735,8 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
   const hoverTimer = useRef<number | null>(null);
   const calendarWrapperRef = useRef<HTMLDivElement | null>(null);
   const ignoreNextWrapperClickRef = useRef(false);
+  const [wrapperHover, setWrapperHover] = useState(false);
+  const lastInteractiveRectRef = useRef<DOMRect | null>(null);
 
   const {
     anchor: overlayAnchor,
@@ -757,6 +760,68 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     },
     [closeDayOverlayInternal, isDayOverlayOpen]
   );
+
+  const updateWrapperHover = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (isDayOverlayOpen) {
+        lastInteractiveRectRef.current = null;
+        setWrapperHover(false);
+        return;
+      }
+
+      const target = event.target as Element | null;
+      const interactiveEl = target?.closest(WRAPPER_INTERACTIVE_SELECTOR) as HTMLElement | null;
+
+      if (interactiveEl) {
+        const rect = interactiveEl.getBoundingClientRect();
+        lastInteractiveRectRef.current = new DOMRect(
+          rect.left - INTERACTIVE_SAFE_PAD,
+          rect.top - INTERACTIVE_SAFE_PAD,
+          rect.width + INTERACTIVE_SAFE_PAD * 2,
+          rect.height + INTERACTIVE_SAFE_PAD * 2
+        );
+        setWrapperHover(false);
+        return;
+      }
+
+      const safeRect = lastInteractiveRectRef.current;
+      if (safeRect) {
+        const { clientX, clientY } = event;
+        if (
+          clientX >= safeRect.left &&
+          clientX <= safeRect.right &&
+          clientY >= safeRect.top &&
+          clientY <= safeRect.bottom
+        ) {
+          setWrapperHover(false);
+          return;
+        }
+      }
+
+      lastInteractiveRectRef.current = null;
+      setWrapperHover(true);
+    },
+    [isDayOverlayOpen]
+  );
+
+  const handleWrapperMouseEnter = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      updateWrapperHover(event);
+    },
+    [updateWrapperHover]
+  );
+
+  const handleWrapperMouseMove = useCallback(
+    (event: ReactMouseEvent<HTMLDivElement>) => {
+      updateWrapperHover(event);
+    },
+    [updateWrapperHover]
+  );
+
+  const handleWrapperMouseLeave = useCallback(() => {
+    lastInteractiveRectRef.current = null;
+    setWrapperHover(false);
+  }, []);
 
   const { budgetHeader, budgetItems, setBudgetItems } = useBudget();
 
@@ -1472,7 +1537,13 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
   );
 
   return (
-    <div className="dashboard-item project-calendar-wrapper" onClick={handleWrapperClick}>
+    <div
+      className={`dashboard-item project-calendar-wrapper${wrapperHover ? " calendar-card-hover" : ""}`}
+      onClick={handleWrapperClick}
+      onMouseEnter={handleWrapperMouseEnter}
+      onMouseMove={handleWrapperMouseMove}
+      onMouseLeave={handleWrapperMouseLeave}
+    >
 
       <div ref={calendarWrapperRef} className="calendar-content">
         <div className="month-widget">

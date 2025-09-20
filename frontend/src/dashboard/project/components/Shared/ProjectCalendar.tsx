@@ -1240,7 +1240,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     const parsed = safeParse(key);
     if (parsed) {
       setSelectedDate(parsed);
-      setActiveStartDate(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
     }
     setStartDateInput(key);
     setEndDateInput(key);
@@ -1385,9 +1384,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
       }
 
       handleDateSelection(date);
-      if (!inMonth) {
-        setActiveStartDate(new Date(date.getFullYear(), date.getMonth(), 1));
-      }
       userNavigatedRef.current = true;
       lastActiveDayRef.current = anchor;
       openDayOverlay(anchor, date, dayKey);

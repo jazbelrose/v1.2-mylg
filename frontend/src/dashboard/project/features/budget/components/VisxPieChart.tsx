@@ -253,9 +253,6 @@ function VisxPieChart({
   const lastInteractionRef = React.useRef<InteractionMode | null>(null);
   const lastNotifiedIndexRef = React.useRef<number | null>(null);
 
-  // State for center hover popover
-  const [isCenterHovered, setIsCenterHovered] = React.useState(false);
-
   const notifyActiveChange = React.useCallback(
     (index: number | null) => {
       if (index === lastNotifiedIndexRef.current) {
@@ -401,10 +398,7 @@ function VisxPieChart({
                   stroke: "rgba(0,0,0,0.7)",
                   strokeWidth: 0.5,
                   paintOrder: "stroke",
-                  cursor: "pointer",
                 }}
-                onMouseEnter={() => setIsCenterHovered(true)}
-                onMouseLeave={() => setIsCenterHovered(false)}
               >
                 {formatUSD(total)}
               </text>
@@ -434,65 +428,6 @@ function VisxPieChart({
                 }}
               >
                 {formatTooltip(tooltipData)}
-              </TooltipInPortal>
-            )}
-
-            {isCenterHovered && data.length > 0 && (
-              <TooltipInPortal
-                top={(containerRef.current?.getBoundingClientRect().top || 0) + height / 2 + 20}
-                left={(containerRef.current?.getBoundingClientRect().left || 0) + width / 2}
-                style={{
-                  position: "fixed",
-                  zIndex: 9999,
-                  pointerEvents: "none",
-                  backgroundColor: "rgba(30, 30, 30, 0.95)",
-                  color: "white",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  borderRadius: "8px",
-                  padding: "12px 16px",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
-                  backdropFilter: "blur(4px)",
-                  fontSize: "0.8rem",
-                  fontWeight: 500,
-                  lineHeight: 1.4,
-                  maxWidth: 280,
-                  wordBreak: "break-word",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div style={{ fontWeight: 600, marginBottom: "8px", textAlign: "center" }}>
-                  Budget Breakdown
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {data.map((item, index) => {
-                    const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0";
-                    return (
-                      <div
-                        key={item.name}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          fontSize: "0.75rem",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "2px",
-                            backgroundColor: palette[index % palette.length],
-                            flexShrink: 0,
-                          }}
-                        />
-                        <span style={{ flex: 1, minWidth: 0 }}>{item.name}</span>
-                        <span style={{ fontWeight: 600, color: "#ccc" }}>
-                          {percentage}%
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
               </TooltipInPortal>
             )}
           </div>

@@ -67,7 +67,6 @@ interface ProjectCalendarProps {
   project: Project;
   initialFlashDate?: string | null;
   onDateSelect?: (dateKey: string | null) => void;
-  showEventList?: boolean;
   onWrapperClick?: () => void;
 }
 
@@ -670,7 +669,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
   project,
   initialFlashDate,
   onDateSelect,
-  showEventList = true,
   onWrapperClick,
 }) => {
   const navigate = useNavigate();
@@ -1331,18 +1329,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     setShowModal(true);
   };
 
-  const focusCalendarOnDate = useCallback((date?: Date | null) => {
-    if (!date) return;
-    const anchor = new Date(date.getFullYear(), date.getMonth(), 1);
-    setFlashDate(date);
-    setActiveStartDate(anchor);
-    userNavigatedRef.current = true;
-    calendarWrapperRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  }, []);
-
   const goToPrevMonthView = useCallback(() => {
     const prev = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
     setActiveStartDate(prev);
@@ -1404,57 +1390,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
       overlayDayKey,
       project?.projectId,
     ]
-  );
-
-  const eventsForSelected = eventsByDate[getDateKey(selectedDate)!] || [];
-  const eventDateKeys = useMemo(
-    () => Object.keys(eventsByDate).sort(),
-    [eventsByDate]
-  );
-  const currentKey = getDateKey(selectedDate)!;
-
-  const goToPrevEventDate = useCallback(() => {
-    const prev = [...eventDateKeys].reverse().find((d) => d < currentKey);
-    if (prev) {
-      const date = safeParse(prev)!;
-      handleDateSelection(date);
-      focusCalendarOnDate(date);
-    }
-  }, [eventDateKeys, currentKey, handleDateSelection, focusCalendarOnDate]);
-
-  const goToNextEventDate = useCallback(() => {
-    const next = eventDateKeys.find((d) => d > currentKey);
-    if (next) {
-      const date = safeParse(next)!;
-      handleDateSelection(date);
-      focusCalendarOnDate(date);
-    }
-  }, [eventDateKeys, currentKey, handleDateSelection, focusCalendarOnDate]);
-
-  const hasPrevEvent = eventDateKeys.some((d) => d < currentKey);
-  const hasNextEvent = eventDateKeys.some((d) => d > currentKey);
-
-  // Arrow key navigation (not when modal open)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (showModal) return;
-      if (e.key === "ArrowLeft") {
-        goToPrevEventDate();
-      } else if (e.key === "ArrowRight") {
-        goToNextEventDate();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showModal, eventDateKeys, currentKey, goToNextEventDate, goToPrevEventDate]);
-
-  const totalHoursForDay = eventsForSelected.reduce(
-    (sum, ev) => sum + Number(ev.hours || 0),
-    0
-  );
-  const totalHoursForProject = events.reduce(
-    (sum, ev) => sum + Number(ev.hours || 0),
-    0
   );
 
   const handleDeleteEvent = async (id: string) => {
@@ -1700,63 +1635,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
           )
         )}
 
-        {showEventList && (
-          <>
-            <div className="events-nav">
-              <button onClick={goToPrevEventDate} disabled={!hasPrevEvent}>
-                <FontAwesomeIcon icon={faChevronLeft} />
-              </button>
-              <button onClick={goToNextEventDate} disabled={!hasNextEvent}>
-                <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </div>
-
-            <div className="events-log">
-              <h3 className="events-log-date">
-                Events on {getDateKey(selectedDate)}
-              </h3>
-
-              {eventsForSelected.length === 0 ? (
-                <div>No events</div>
-              ) : (
-                <ul>
-                  {eventsForSelected.map((e, idx) => {
-                    const idKey = e.description || String(idx);
-                    const color = project?.color || getColor(idKey);
-                    return (
-                      <li className="event-item" key={e.id || `${idx}`}>
-                        <FontAwesomeIcon
-                          icon={faClock}
-                          className="list-dot"
-                          style={{ color }}
-                        />
-                        {e.description?.toUpperCase()} ({e.hours}{" "}
-                        {Number(e.hours) === 1 ? "HR" : "HRS"})
-                        <button
-                          className="edit-event-btn"
-                          onClick={() => openEditEventModal(e.id)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="delete-event-btn"
-                          onClick={() => handleDeleteEvent(e.id)}
-                        >
-                          Delete
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-
-              <div className="events-log-totals">
-                <span>Day Total: {totalHoursForDay} hrs</span>
-                <span>Project Total: {totalHoursForProject} hrs</span>
-              </div>
-            </div>
-          </>
-        )}
       </div>
 
       <Modal

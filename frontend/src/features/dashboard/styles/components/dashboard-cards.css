@@ -86,12 +86,51 @@
   display: flex;
   align-items: center;
   margin-left: 10px;
+  gap: 16px;
 }
 
 .budget-chart {
   width: min(40vh, 40vw, 220px);
   height: min(40vh, 40vw, 220px);
   position: relative;
+}
+
+.budget-active-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+  font-size: clamp(0.72rem, 1.6vw, 0.9rem);
+  gap: 4px;
+}
+
+.budget-active-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: clamp(0.85rem, 1.8vw, 1rem);
+}
+
+.budget-active-dot {
+  width: clamp(6px, 1vh, 8px);
+  height: clamp(6px, 1vh, 8px);
+}
+
+.budget-active-value {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 600;
+}
+
+.budget-active-percent {
+  font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+  opacity: 0.8;
+}
+
+.budget-active-placeholder {
+  font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+  opacity: 0.7;
 }
 
 .budget-legend {
@@ -151,6 +190,14 @@
     flex-direction: column;
     align-items: center;
     margin-left: 0;
+    gap: 12px;
+  }
+  .budget-active-summary {
+    align-items: center;
+    text-align: center;
+  }
+  .budget-active-title {
+    justify-content: center;
   }
   .budget-legend {
     flex-direction: row;

@@ -15,6 +15,16 @@ import { useData } from "@/app/contexts/useData";
 
 const EXPLODE_PX = 8;
 
+type HoverPointerType = "mouse" | "pen";
+
+const HOVER_POINTERS: HoverPointerType[] = ["mouse", "pen"];
+
+function isHoverPointer(pointerType: string): pointerType is HoverPointerType {
+  return HOVER_POINTERS.includes(pointerType as HoverPointerType);
+}
+
+export type SliceInteractionType = "hover" | "touch" | "keyboard";
+
 export type PieDatum = {
   name: string;
   value: number;
@@ -36,6 +46,8 @@ interface AnimatedArcProps {
   clampTooltip: (x: number, y: number, tooltipWidth?: number, tooltipHeight?: number) => ClampResult;
   rafRef: React.MutableRefObject<number | null>;
   explodePx?: number;
+  isActive: boolean;
+  onInteraction?: (datum: PieDatum | null, type: SliceInteractionType) => void;
 }
 
 function AnimatedArc({
@@ -48,6 +60,8 @@ function AnimatedArc({
   clampTooltip,
   rafRef,
   explodePx = EXPLODE_PX,
+  isActive,
+  onInteraction,
 }: AnimatedArcProps) {
   const [springs, api] = useSpring(() => ({
     startAngle: 0,
@@ -56,64 +70,112 @@ function AnimatedArc({
     y: 0,
   }));
 
+  const [cx, cy] = React.useMemo(() => pie.path.centroid(arc), [pie, arc]);
+  const len = Math.max(1, Math.hypot(cx, cy));
+  const isSingle = pie.arcs.length === 1;
+
   React.useEffect(() => {
-    api.start({ startAngle: arc.startAngle, endAngle: arc.endAngle });
-  }, [arc, api]);
+    if (isSingle) {
+      api.start({
+        startAngle: arc.startAngle + (isActive ? -0.01 : 0),
+        endAngle: arc.endAngle + (isActive ? 0.01 : 0),
+        x: 0,
+        y: 0,
+      });
+      return;
+    }
+
+    api.start({
+      startAngle: arc.startAngle,
+      endAngle: arc.endAngle,
+      x: isActive ? (cx / len) * explodePx : 0,
+      y: isActive ? (cy / len) * explodePx : 0,
+    });
+  }, [api, arc, cx, cy, len, explodePx, isActive, isSingle]);
 
   const pathD = springTo(
     [springs.startAngle as SpringValue<number>, springs.endAngle as SpringValue<number>],
     (startAngle, endAngle) => pie.path({ ...arc, startAngle, endAngle })
   );
 
-  const [cx, cy] = React.useMemo(() => pie.path.centroid(arc), [pie, arc]);
-  const len = Math.max(1, Math.hypot(cx, cy));
   const translate = springTo(
     [springs.x as SpringValue<number>, springs.y as SpringValue<number>],
     (x, y) => `translate(${x}, ${y})`
   );
-  const isSingle = pie.arcs.length === 1;
+  const showHoverTooltip = React.useCallback(
+    (event: React.PointerEvent<SVGGElement>) => {
+      if (!isHoverPointer(event.pointerType)) {
+        return;
+      }
+
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        const pt = localPoint(event) || { x: 0, y: 0 };
+        const host = containerRef.current;
+        if (host) {
+          const rect = host.getBoundingClientRect();
+          const screenX = rect.left + pt.x;
+          const screenY = rect.top + pt.y;
+          const { left, top } = clampTooltip(screenX, screenY);
+          showTooltip({
+            tooltipData: arc.data,
+            tooltipLeft: left,
+            tooltipTop: top,
+          });
+        }
+      });
+    },
+    [arc.data, clampTooltip, containerRef, rafRef, showTooltip]
+  );
+
+  const clearHoverTooltip = React.useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    hideTooltip();
+  }, [hideTooltip, rafRef]);
 
   return (
     <animated.g
       transform={translate}
-      onMouseEnter={() => {
-        if (isSingle) {
-          api.start({
-            startAngle: arc.startAngle - 0.01,
-            endAngle: arc.endAngle + 0.01,
-          });
-        } else {
-          api.start({ x: (cx / len) * explodePx, y: (cy / len) * explodePx });
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+      onPointerUp={(event) => {
+        event.stopPropagation();
+        if (event.pointerType === "touch") {
+          onInteraction?.(isActive ? null : arc.data, "touch");
         }
       }}
-      onMouseMove={(e) => {
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(() => {
-          const pt = localPoint(e) || { x: 0, y: 0 };
-          const host = containerRef.current;
-          if (host) {
-            const rect = host.getBoundingClientRect();
-            const screenX = rect.left + pt.x;
-            const screenY = rect.top + pt.y;
-            const { left, top } = clampTooltip(screenX, screenY);
-            showTooltip({
-              tooltipData: arc.data,
-              tooltipLeft: left,
-              tooltipTop: top,
-            });
-          }
-        });
+      onPointerEnter={(event) => {
+        if (isHoverPointer(event.pointerType)) {
+          onInteraction?.(arc.data, "hover");
+          showHoverTooltip(event);
+        }
       }}
-      onMouseLeave={() => {
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        api.start(
-          isSingle
-            ? { startAngle: arc.startAngle, endAngle: arc.endAngle }
-            : { x: 0, y: 0 }
-        );
-        hideTooltip();
+      onPointerMove={showHoverTooltip}
+      onPointerLeave={(event) => {
+        if (isHoverPointer(event.pointerType)) {
+          onInteraction?.(null, "hover");
+        }
+        clearHoverTooltip();
+      }}
+      onFocus={() => {
+        onInteraction?.(arc.data, "keyboard");
+      }}
+      onBlur={() => {
+        onInteraction?.(null, "keyboard");
+        clearHoverTooltip();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          event.stopPropagation();
+          onInteraction?.(isActive ? null : arc.data, "keyboard");
+        }
       }}
       style={{ cursor: "pointer" }}
+      role="button"
+      tabIndex={0}
+      aria-pressed={isActive}
     >
       <animated.path
         d={pathD}
@@ -139,6 +201,8 @@ export interface VisxPieChartProps {
   baseColor?: string;
   colorMode?: "sequential" | "categorical";
   projectId?: string;
+  activeSliceName?: string | null;
+  onActiveSliceChange?: (datum: PieDatum | null, type: SliceInteractionType) => void;
 }
 
 // Generic pie/donut chart rendered with visx. Used by budget components and header summaries.
@@ -151,6 +215,8 @@ function VisxPieChart({
   baseColor,
   colorMode = "sequential",
   projectId,
+  activeSliceName = null,
+  onActiveSliceChange,
 }: VisxPieChartProps) {
   const { activeProject } = useData();
   const projectBase: string = String(
@@ -246,6 +312,8 @@ function VisxPieChart({
                         clampTooltip={clampTooltip}
                         rafRef={rafRef}
                         explodePx={EXPLODE_PX}
+                        isActive={Boolean(activeSliceName && arc.data.name === activeSliceName)}
+                        onInteraction={onActiveSliceChange}
                       />
                     ))
                   }
@@ -311,7 +379,9 @@ export default memo(VisxPieChart, (prevProps, nextProps) => {
     prevProps.donutRatio !== nextProps.donutRatio ||
     prevProps.baseColor !== nextProps.baseColor ||
     prevProps.colorMode !== nextProps.colorMode ||
-    prevProps.projectId !== nextProps.projectId
+    prevProps.projectId !== nextProps.projectId ||
+    prevProps.activeSliceName !== nextProps.activeSliceName ||
+    prevProps.onActiveSliceChange !== nextProps.onActiveSliceChange
   ) {
     return false;
   }

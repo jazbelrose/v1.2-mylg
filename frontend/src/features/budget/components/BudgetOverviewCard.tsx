@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 
 import { CircleDollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileInvoiceDollar, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import ClientInvoicePreviewModal from "@/features/project/components/ClientInvoicePreviewModal";
 import { useBudget } from "@/features/budget/context/BudgetContext";
-import VisxPieChart from "@/features/budget/components/VisxPieChart";
+import VisxPieChart, { SliceInteractionType } from "@/features/budget/components/VisxPieChart";
 import { generateSequentialPalette, getColor } from "@/shared/utils/colorUtils";
 
 
@@ -39,6 +39,9 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
   const [groupBy] = useState<"invoiceGroup" | "none">("invoiceGroup");
   const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false);
   const [invoiceRevision, setInvoiceRevision] = useState<BudgetHeaderData | null>(null);
+  const [hoverSliceName, setHoverSliceName] = useState<string | null>(null);
+  const [persistentSliceName, setPersistentSliceName] = useState<string | null>(null);
+  const [hasUserSelection, setHasUserSelection] = useState(false);
 
   // Use context selectors for memoized data
   const stats = getStats();
@@ -52,6 +55,61 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
   const pieDataSorted = useMemo(
     () => [...pieData].sort((a, b) => b.value - a.value),
     [pieData]
+  );
+
+  const fallbackSliceName = useMemo(() => pieDataSorted[0]?.name ?? null, [pieDataSorted]);
+
+  useEffect(() => {
+    setPersistentSliceName((prev) => {
+      if (prev && pieDataSorted.some((d) => d.name === prev)) {
+        return prev;
+      }
+      return fallbackSliceName;
+    });
+  }, [pieDataSorted, fallbackSliceName]);
+
+  useEffect(() => {
+    setHasUserSelection((prev) => {
+      if (!prev) return prev;
+      if (!persistentSliceName) return false;
+      return pieDataSorted.some((d) => d.name === persistentSliceName);
+    });
+  }, [pieDataSorted, persistentSliceName]);
+
+  const displayedSliceName = hoverSliceName ?? persistentSliceName ?? fallbackSliceName;
+  const chartActiveSliceName = hoverSliceName ?? (hasUserSelection ? persistentSliceName : null);
+  const activeIndex = useMemo(
+    () => (displayedSliceName ? pieDataSorted.findIndex((d) => d.name === displayedSliceName) : -1),
+    [displayedSliceName, pieDataSorted]
+  );
+  const activeDatum = activeIndex >= 0 ? pieDataSorted[activeIndex] : undefined;
+  const activeColor = activeIndex >= 0 && colors.length > 0 ? colors[activeIndex % colors.length] : undefined;
+  const activePercent = activeDatum && totalPieValue > 0 ? (activeDatum.value / totalPieValue) * 100 : null;
+
+  const formattedPercent = useMemo(() => {
+    if (activePercent == null) return null;
+    const digits = activePercent >= 10 ? 0 : 1;
+    return `${activePercent.toFixed(digits)}% of total`;
+  }, [activePercent]);
+
+  const handleSliceInteraction = useCallback(
+    (datum: PieDatum | null, interactionType: SliceInteractionType) => {
+      if (interactionType === "hover") {
+        setHoverSliceName(datum?.name ?? null);
+        return;
+      }
+
+      setHoverSliceName(null);
+
+      if (datum) {
+        setPersistentSliceName(datum.name);
+        setHasUserSelection(true);
+      } else {
+        setPersistentSliceName(fallbackSliceName);
+        setHasUserSelection(false);
+      }
+    },
+    [fallbackSliceName]
   );
 
   const colors = useMemo(() => {
@@ -207,20 +265,35 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
                   colors={colors}
                   formatTooltip={formatTooltip}
                   colorMode="sequential"
+                  activeSliceName={chartActiveSliceName}
+                  onActiveSliceChange={handleSliceInteraction}
                 />
               </div>
-
-              <ul className="budget-legend">
-                {pieDataSorted.map((m, i) => (
-                  <li key={m.name} className="budget-legend-item">
+              <div className="budget-active-summary" aria-live="polite">
+                <div className="budget-active-title">
+                  {activeColor && (
                     <span
-                      className="budget-legend-dot"
-                      style={{ background: colors[i % colors.length] }}
+                      className="budget-legend-dot budget-active-dot"
+                      style={{ background: activeColor }}
                     />
-                    {m.name}
-                  </li>
-                ))}
-              </ul>
+                  )}
+                  <span>{activeDatum ? activeDatum.name : "Explore budget"}</span>
+                </div>
+                {activeDatum ? (
+                  <>
+                    <span className="budget-active-value">
+                      {formatUSD(Math.round(activeDatum.value))}
+                    </span>
+                    {formattedPercent && (
+                      <span className="budget-active-percent">{formattedPercent}</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="budget-active-placeholder">
+                    Hover or tap a slice to see details.
+                  </span>
+                )}
+              </div>
             </div>
           </>
         )

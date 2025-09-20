@@ -28,6 +28,7 @@ import {
   faClock,
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
+import EventPill from "./EventPill";
 // Frontend no longer persists timeline events directly; backend handles persistence
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { notify } from "@/shared/ui/ToastNotifications";
@@ -108,11 +109,6 @@ const UNIT_OPTIONS = [
   "KG",
 ] as const;
 
-const DOT_SIZE = 10;
-const DOT_STROKE = 2;
-const DOT_MAX_VISIBLE = 4;
-const DOT_OVERLAP_PX = 3;
-
 const MOBILE_QUERY = "(max-width: 640px)";
 const POPPER_GAP = 12;
 const FOCUSABLE_SELECTOR =
@@ -153,8 +149,6 @@ function getDateKey(date?: Date | null): string | null {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
-
-const fmt = (date: Date): string => getDateKey(date) || "";
 
 function formatDateLabel(date: Date): string {
   return date.toLocaleDateString(undefined, {
@@ -272,6 +266,7 @@ const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonP
       isSelected ? "selected" : "",
       isFlashing ? "tile-highlight" : "",
       inRange ? "in-range" : "",
+      hasEvents ? "has-badge" : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -1374,7 +1369,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
   const handleDayOpen = useCallback(
     (
       anchor: HTMLButtonElement,
-      { date, dayKey, inMonth }: { date: Date; dayKey: string; inMonth: boolean }
+      { date, dayKey }: { date: Date; dayKey: string; inMonth: boolean }
     ) => {
       if (!dayKey) return;
 
@@ -1590,7 +1585,11 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
 
                   {week.map(({ date, key, inMonth }) => {
                     const dayEvents = eventsByDate[key] || [];
-                    const dayDots = dayEvents.map((e, idx) => project?.color || getColor(e.description || String(idx)));
+                    const eventCount = dayEvents.length;
+                    const eventColor =
+                      eventCount > 0
+                        ? project?.color || (project?.projectId ? getColor(project.projectId) : undefined)
+                        : undefined;
                     const isSelected = selectedKey === key;
                     const isToday = todayKey === key;
                     const isFlashing = flashKey === key;
@@ -1620,29 +1619,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                         >
                           <div className="tile-date-number">{date.getDate()}</div>
 
-                          <div className="day-dots">
-                            {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
-                              <svg
-                                key={`${key}-dot-${idx}`}
-                                width={DOT_SIZE}
-                                height={DOT_SIZE}
-                                viewBox="0 0 24 24"
-                                style={{
-                                  marginLeft: idx ? -DOT_OVERLAP_PX : 0,
-                                  filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
-                                  zIndex: 20 - idx,
-                                }}
-                                aria-hidden
-                              >
-                                <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
-                                <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
-                                <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
-                              </svg>
-                            ))}
-                            {dayDots.length > DOT_MAX_VISIBLE && (
-                              <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
-                            )}
-                          </div>
+                          <EventPill count={eventCount} color={eventColor} className="calendar-event-pill" />
 
                           {isHovered && dayEvents.length > 0 && (
                             <div className="tile-tooltip visible">

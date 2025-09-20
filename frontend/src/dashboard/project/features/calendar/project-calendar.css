@@ -111,7 +111,7 @@
 
 .project-calendar-wrapper .react-calendar__tile {
   min-width: clamp(60px, 12vh, 80px);
-  min-height: clamp(60px, 12vh, 80px);
+  min-height: clamp(55px, 11vh, 70px) !important;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -123,7 +123,7 @@
 }
 
 .project-calendar-wrapper .react-calendar__month-view__days {
-  gap: 2px;
+  gap: 6px;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   width: 100%;
@@ -133,7 +133,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: clamp(60px, 12vh, 80px);
+  min-height: clamp(55px, 11vh, 70px) !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -197,8 +197,8 @@
   border-radius: 8px;
   transition: 0.3s;
   flex: 1;
-  margin: 2px;
-  max-width: calc(100% / 7 - 4px);
+  margin: 3px !important;
+  max-width: calc(100% / 7 - 6px) !important;
 }
 
 .project-calendar-wrapper .react-calendar__month-view__days__day:hover {
@@ -290,7 +290,7 @@
 
 @media (max-height: 750px) {
   .project-calendar-wrapper .calendar-day {
-    min-height: clamp(30px, 7vh, 50px);
+    min-height: clamp(40px, 8vh, 55px) !important;
     padding-bottom: clamp(2px, 0.5vh, 3px);
   }
   .project-calendar-wrapper .tile-date-number {

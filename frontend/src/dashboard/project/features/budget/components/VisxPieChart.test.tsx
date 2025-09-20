@@ -26,6 +26,10 @@ vi.mock("@visx/event", () => ({
   localPoint: vi.fn(),
 }));
 
+vi.mock("framer-motion", () => ({
+  useReducedMotion: vi.fn(() => false),
+}));
+
 vi.mock("@react-spring/web", () => ({
   animated: {
     path: "path",

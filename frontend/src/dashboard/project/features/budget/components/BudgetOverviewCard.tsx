@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 
 import { CircleDollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,35 @@ type BudgetHeaderData = {
 };
 
 type PieDatum = { name: string; value: number };
+
+const formatPercentLabel = (percent: number): string => {
+  if (!Number.isFinite(percent)) return "0";
+  const digits = percent > 0 && percent < 10 ? 1 : 0;
+  return percent.toLocaleString("en-US", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+};
+
+const summarizeSlice = (datum: PieDatum | null, total: number) => {
+  if (!datum) {
+    const amount = formatUSD(total);
+    return {
+      title: "Total",
+      detail: amount,
+      tooltip: `Total — ${amount}`,
+    };
+  }
+
+  const amount = formatUSD(datum.value);
+  const percent = formatPercentLabel(total ? (datum.value / total) * 100 : 0);
+
+  return {
+    title: datum.name,
+    detail: `— ${amount} (${percent}%)`,
+    tooltip: `${datum.name} — ${amount} (${percent}%)`,
+  };
+};
 
 interface BudgetOverviewCardProps {
   projectId?: string;
@@ -63,13 +92,60 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
     return generateSequentialPalette(base, pieDataSorted.length).reverse();
   }, [pieDataSorted.length, projectId, activeProject?.color]);
 
-  const formatTooltip = useCallback(
-    (d: PieDatum) => {
-      const isPercent = groupBy === "none" && d.name === "Effective Markup";
-      const rounded = Math.round(d.value);
-      return `${d.name}: ${isPercent ? `${rounded}%` : formatUSD(rounded)}`;
+  const computeSummary = useCallback(
+    (datum: PieDatum | null, total: number) => {
+      if (!datum) {
+        return summarizeSlice(null, total);
+      }
+      if (groupBy === "none" && datum.name === "Effective Markup") {
+        const percent = formatPercentLabel(datum.value);
+        return {
+          title: datum.name,
+          detail: `— ${percent}%`,
+          tooltip: `${datum.name} — ${percent}%`,
+        };
+      }
+      return summarizeSlice(datum, total);
     },
     [groupBy]
+  );
+
+  const [activeDatum, setActiveDatum] = useState<PieDatum | null>(null);
+  const [activeSummary, setActiveSummary] = useState(
+    () => computeSummary(null, totalPieValue).tooltip
+  );
+
+  useEffect(() => {
+    setActiveSummary(computeSummary(activeDatum, totalPieValue).tooltip);
+  }, [activeDatum, computeSummary, totalPieValue]);
+
+  const formatTooltip = useCallback(
+    (d: PieDatum) => computeSummary(d, totalPieValue).tooltip,
+    [computeSummary, totalPieValue]
+  );
+
+  const renderCenterLabel = useCallback(
+    ({ activeDatum: current, total }: { activeDatum: PieDatum | null; total: number }) => {
+      const summary = computeSummary(current, total);
+      return (
+        <>
+          <tspan x="0" dy="-0.2em">
+            {summary.title}
+          </tspan>
+          <tspan x="0" dy="1.2em">
+            {summary.detail}
+          </tspan>
+        </>
+      );
+    },
+    [computeSummary]
+  );
+
+  const handleActiveDatumChange = useCallback(
+    (datum: PieDatum | null, _meta: { key: string | null; percent: number | null }) => {
+      setActiveDatum(datum);
+    },
+    []
   );
 
   const openInvoicePreview = async (): Promise<void> => {
@@ -208,20 +284,15 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
                   colors={colors}
                   formatTooltip={formatTooltip}
                   colorMode="sequential"
+                  interactive
+                  getKey={(datum) => datum.name}
+                  onActiveDatumChange={handleActiveDatumChange}
+                  renderCenterLabel={renderCenterLabel}
                 />
+                <div className="budget-chart-caption" aria-live="polite">
+                  {activeSummary}
+                </div>
               </div>
-
-              <ul className="budget-legend">
-                {pieDataSorted.map((m, i) => (
-                  <li key={m.name} className="budget-legend-item">
-                    <span
-                      className="budget-legend-dot"
-                      style={{ background: colors[i % colors.length] }}
-                    />
-                    {m.name}
-                  </li>
-                ))}
-              </ul>
             </div>
           </>
         )

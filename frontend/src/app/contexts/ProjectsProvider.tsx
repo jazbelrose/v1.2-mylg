@@ -391,7 +391,8 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const updateProjectFields = async (projectId: string, fields: Partial<Project>) => {
     try {
       await updateProjectFieldsApi(projectId, fields);
-      const merge = (project?: Project | null) => {
+      let mergedProject: Project | undefined;
+      const merge = <T extends Project | null | undefined>(project: T): T => {
         if (!project || project.projectId !== projectId) return project;
         const updated: Project = { ...project };
         Object.entries(fields).forEach(([key, value]) => {
@@ -402,12 +403,21 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
             updated[key] = value as never;
           }
         });
-        return updated;
+        mergedProject = updated;
+        return updated as T;
       };
 
-      setActiveProject((prev) => merge(prev) ?? prev);
-      setProjects((prev) => (Array.isArray(prev) ? prev.map((p) => merge(p)!) : prev));
-      setUserProjects((prev) => (Array.isArray(prev) ? prev.map((p) => merge(p)!) : prev));
+      setActiveProject((prev) => merge(prev));
+      setProjects((prev) => (Array.isArray(prev) ? prev.map((p) => merge(p)) : prev));
+      setUserProjects((prev) => (Array.isArray(prev) ? prev.map((p) => merge(p)) : prev));
+
+      if (mergedProject) {
+        try {
+          localStorage.setItem(`project-${projectId}`, JSON.stringify(mergedProject));
+        } catch {
+          /* ignore */
+        }
+      }
     } catch (error) {
       console.error("Error updating project fields:", error);
     }

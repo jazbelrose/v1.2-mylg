@@ -3,12 +3,12 @@ import type React from "react";
 import { uploadData, list } from "aws-amplify/storage";
 import {
   API_BASE_URL,
-  DELETE_FILE_FROM_S3_URL,
   ZIP_FILES_URL,
   apiFetch,
   fileUrlsToKeys,
   getFileUrl,
   normalizeFileUrl,
+  projectFileDeleteUrl,
 } from "../../../../../shared/utils/api";
 import { notify, notifyLoading, updateNotification } from "../../../../../shared/ui/ToastNotifications";
 import pLimit from "../../../../../shared/utils/pLimit";
@@ -325,18 +325,18 @@ export const useFileTransfers = ({
     const fileUrlsToDelete = Array.from(selectedItems);
     if (!fileUrlsToDelete.length) return;
     const fileKeysToDelete = fileUrlsToKeys(fileUrlsToDelete);
+    if (!activeProject?.projectId) return;
+    const { projectId } = activeProject;
     setIsConfirmingDelete(false);
 
-    const messages = projectMessages[activeProject.projectId as string] || [];
+    const messages = projectMessages[projectId] || [];
     await removeReferences(fileUrlsToDelete, messages);
 
     const notificationId = notifyLoading("Deleting files...");
     try {
-      await apiFetch(DELETE_FILE_FROM_S3_URL, {
+      await apiFetch(projectFileDeleteUrl(projectId), {
         method: "POST",
         body: JSON.stringify({
-          projectId: activeProject.projectId,
-          field: folderKey,
           fileKeys: fileKeysToDelete,
         }),
         headers: { "Content-Type": "application/json" },

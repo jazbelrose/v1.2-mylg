@@ -23,10 +23,10 @@ import { uploadData, list } from "aws-amplify/storage";
 import {
   updateUserProfile,
   S3_PUBLIC_BASE,
-  DELETE_FILE_FROM_S3_URL,
   apiFetch,
   fileUrlsToKeys,
   getFileUrl,
+  projectFileDeleteUrl,
 } from "@/shared/utils/api";
 import { v4 as uuid } from "uuid";
 import { useData } from "@/app/contexts/useData";
@@ -249,15 +249,14 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     const fileUrls = Array.from(selectedInvoices);
     const fileKeys = fileUrlsToKeys(fileUrls);
     if (!fileKeys.length || !project?.projectId) return;
+    const { projectId } = project;
     setIsConfirmingDelete(false);
     const toastId = toast.loading("Deleting invoices...");
     try {
-      await apiFetch(DELETE_FILE_FROM_S3_URL, {
+      await apiFetch(projectFileDeleteUrl(projectId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          projectId: project.projectId,
-          field: "invoices",
           fileKeys,
         }),
       });

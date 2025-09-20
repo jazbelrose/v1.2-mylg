@@ -73,6 +73,12 @@ provider:
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:GALLERIES_TABLE}
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:GALLERIES_TABLE}/index/*
 
+        - Effect: Allow
+          Action:
+            - s3:DeleteObject
+          Resource:
+            - arn:aws:s3:::${env:FILE_BUCKET}/*
+
 functions:
   projectsRouter:
     name: ${self:custom.app}-${self:custom.ver}-projects-router-${sls:stage}
@@ -116,6 +122,11 @@ functions:
       - httpApi:
           path: /projects/{proxy+}
           method: DELETE
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /projects/{projectId}/files/delete
+          method: POST
           authorizer:
             name: jwtAuthorizer
       - httpApi:

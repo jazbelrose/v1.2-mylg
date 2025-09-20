@@ -2,10 +2,12 @@
 import { corsHeadersFromEvent, preflightFromEvent, json } from "/opt/nodejs/utils/cors.mjs";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 
 /* ------------ ENV ------------ */
 const REGION = process.env.AWS_REGION || "us-west-2";
+const FILE_BUCKET = process.env.FILE_BUCKET || "mylg-files-v12";
 
 // Core projects table
 const PROJECTS_TABLE = process.env.PROJECTS_TABLE || "Projects";
@@ -40,6 +42,8 @@ const SCANS_ALLOWED = (process.env.SCANS_ALLOWED || "true").toLowerCase() === "t
 const ddb = DynamoDBDocument.from(new DynamoDBClient({ region: REGION }), {
   marshallOptions: { removeUndefinedValues: true },
 });
+
+const s3 = new S3Client({ region: REGION });
 
 /* ------------ utils ------------ */
 const M = (e) => e?.requestContext?.http?.method?.toUpperCase?.() || e?.httpMethod?.toUpperCase?.() || "GET";
@@ -681,6 +685,43 @@ const deleteEvent = async (_e, C, { projectId, eventId }) => {
   return json(204, C, "");
 };
 
+/* ---------- Project file management ---------- */
+const deleteProjectFiles = async (e, C, { projectId }) => {
+  const body = B(e);
+  const keys = Array.isArray(body.fileKeys) ? body.fileKeys.filter(Boolean) : [];
+  if (!projectId) return json(400, C, { error: "projectId is required" });
+  if (!keys.length) return json(400, C, { error: "fileKeys must be a non-empty array" });
+
+  const objects = [...new Set(keys)].map((Key) => ({ Key }));
+
+  try {
+    const result = await s3.send(
+      new DeleteObjectsCommand({
+        Bucket: FILE_BUCKET,
+        Delete: { Objects: objects },
+      }),
+    );
+
+    const deleted = (result.Deleted || []).map((item) => item.Key).filter(Boolean);
+    const errors = (result.Errors || []).map((err) => ({
+      key: err.Key,
+      code: err.Code,
+      message: err.Message,
+    }));
+
+    return json(200, C, {
+      ok: errors.length === 0,
+      projectId,
+      deleted,
+      errors,
+    });
+  } catch (err) {
+    console.error("delete_project_files_error", { projectId, keys, err });
+    const message = err?.message || "Failed to delete files";
+    return json(500, C, { error: message });
+  }
+};
+
 // Back-compat timeline shims
 const getTimeline = (e, C, g) => {
   const e2 = { ...e, queryStringParameters: { ...(Q(e) || {}), view: "timeline" } };
@@ -983,6 +1024,9 @@ const routes = [
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,              h: getTask },
   { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,              h: patchTask },
   { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/tasks\/(?<taskId>[^/]+)$/i,              h: deleteTask },
+
+  // Files
+  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/files\/delete$/i,                       h: deleteProjectFiles },
 
   // Events (unified)
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/events$/i,                               h: listEvents },

@@ -39,6 +39,7 @@ Serverless backend using AWS Lambda, API Gateway (HTTP API v2), and WebSocket AP
   - `/projects` - Projects endpoints
   - `/projects/{proxy+}` - Projects proxy routes
   - `/projects/health` - Health check
+  - `/projects/{projectId}/files/delete` - Delete one or more project files
   - `/budgets/{proxy+}` - Budget endpoints
 
 - **User Service**: `https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com`

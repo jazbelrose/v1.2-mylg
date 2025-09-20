@@ -42,11 +42,11 @@ import PromptModal from "../../../shared/ui/PromptModal";
 import PDFPreview from "@/dashboard/project/components/Shared/PDFPreview";
 import {
   GET_PROJECT_MESSAGES_URL,
-  DELETE_FILE_FROM_S3_URL,
   apiFetch,
   getFileUrl,
   normalizeFileUrl,
   fileUrlsToKeys,
+  projectFileDeleteUrl,
 } from "../../../shared/utils/api";
 import { getFileNameFromUrl } from "../../../shared/utils/fileUtils";
 
@@ -96,7 +96,7 @@ type GetProjectMessagesResponse =
   | { Items?: Message[] }
   | Message[];
 
-type DeleteS3FilesResponse = { ok?: boolean; [k: string]: unknown };
+type DeleteProjectFilesResponse = { ok?: boolean; deleted?: string[]; errors?: unknown };
 
 type ProjectMessagesMap = Record<string, Message[]>;
 
@@ -757,13 +757,11 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
           .filter(Boolean) ?? []),
         ...(message.file?.url ? fileUrlsToKeys([message.file.url]) : []),
       ];
-      if (fileKeys.length) {
-        await apiFetch<DeleteS3FilesResponse>(DELETE_FILE_FROM_S3_URL, {
+      if (fileKeys.length && projectId) {
+        await apiFetch<DeleteProjectFilesResponse>(projectFileDeleteUrl(projectId), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            projectId,
-            field: folderKey,
             fileKeys,
           }),
         });

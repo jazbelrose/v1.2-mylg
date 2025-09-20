@@ -26,6 +26,12 @@ export type PieDatum = {
 
 type ClampResult = { left: number; top: number };
 
+type CenterTooltipState = {
+  open: boolean;
+  left: number;
+  top: number;
+};
+
 interface AnimatedArcProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   arc: any;
@@ -42,6 +48,7 @@ interface AnimatedArcProps {
   isActive: boolean;
   onActivate: (index: number, mode: InteractionMode) => void;
   onDeactivate: (index: number, mode: InteractionMode) => void;
+  shouldAnimateAngles: boolean;
 }
 
 function AnimatedArc({
@@ -58,6 +65,7 @@ function AnimatedArc({
   isActive,
   onActivate,
   onDeactivate,
+  shouldAnimateAngles,
 }: AnimatedArcProps) {
   const [springs, api] = useSpring(() => ({
     startAngle: 0,
@@ -76,8 +84,10 @@ function AnimatedArc({
       endAngle: isSingle && isActive ? arc.endAngle + 0.01 : arc.endAngle,
       x: !isSingle ? (cx / len) * (isActive ? explodePx : 0) : 0,
       y: !isSingle ? (cy / len) * (isActive ? explodePx : 0) : 0,
+      immediate: (key) =>
+        !shouldAnimateAngles && (key === "startAngle" || key === "endAngle"),
     });
-  }, [arc, api, cx, cy, len, isSingle, isActive, explodePx]);
+  }, [api, arc, cx, cy, explodePx, isActive, isSingle, len, shouldAnimateAngles]);
 
   const pathD = springTo(
     [springs.startAngle as SpringValue<number>, springs.endAngle as SpringValue<number>],
@@ -228,7 +238,53 @@ function VisxPieChart({
     return generateSequentialPalette(projectBase, data.length).reverse();
   }, [colors, colorMode, projectBase, data]);
 
+  // Track value changes so arc angles only animate on initial mount or real data updates.
+  const dataSignature = React.useMemo(
+    () => data.map((datum) => `${String(datum.name)}:${datum.value}`).join("|"),
+    [data]
+  );
+  const previousDataSignatureRef = React.useRef<string | null>(null);
+  const shouldAnimateAngles = previousDataSignatureRef.current !== dataSignature;
+
+  React.useEffect(() => {
+    previousDataSignatureRef.current = dataSignature;
+  }, [dataSignature]);
+
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  const percentageFormatter = React.useMemo(
+    () =>
+      new Intl.NumberFormat(undefined, {
+        style: "percent",
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 0,
+      }),
+    []
+  );
+
+  const decoratedData = React.useMemo(() => {
+    const sortedData =
+      colorMode === "sequential" ? [...data].sort((a, b) => b.value - a.value) : [...data];
+    return sortedData.map((datum, sortedIndex) => ({
+      datum,
+      color: palette[sortedIndex % palette.length],
+      ratio: total > 0 ? datum.value / total : 0,
+    }));
+  }, [data, palette, total, colorMode]);
+
+  const [centerTooltipState, setCenterTooltipState] = React.useState<CenterTooltipState>({
+    open: false,
+    left: 0,
+    top: 0,
+  });
+
+  const hideCenterTooltip = React.useCallback(() => {
+    setCenterTooltipState((prev) => (prev.open ? { ...prev, open: false } : prev));
+  }, []);
+
+  React.useEffect(() => {
+    hideCenterTooltip();
+  }, [data, total, hideCenterTooltip]);
 
   // useTooltip for state/handlers
   const {
@@ -344,6 +400,35 @@ function VisxPieChart({
         const outerRadius = Math.max(0, radius - EXPLODE_PX);
         const innerRadius = Math.round(outerRadius * donutRatio);
 
+        const showCenterTooltip = () => {
+          const host = containerRef.current;
+          if (!host) return;
+          const rect = host.getBoundingClientRect();
+          const centerX = rect.left + width / 2;
+          const centerY = rect.top + height / 2;
+          setCenterTooltipState({
+            open: true,
+            left: centerX,
+            top: centerY,
+          });
+          hideTooltip();
+        };
+
+        const handleCenterPointer = () => {
+          showCenterTooltip();
+        };
+
+        const handleCenterLeave = (event: React.PointerEvent<SVGGElement | SVGTextElement>) => {
+          if (event.pointerType === "touch") {
+            event.preventDefault();
+          }
+          hideCenterTooltip();
+        };
+
+        const handleCenterFocus = () => {
+          showCenterTooltip();
+        };
+
         return (
           <div
             ref={containerRef}
@@ -370,13 +455,14 @@ function VisxPieChart({
                         key={`${String(arc.data.name)}-${i}`}
                         arc={arc}
                         pie={pieProps}
-                        color={palette[i % palette.length]}
+                        color={decoratedData[i]?.color ?? palette[i % palette.length]}
                         showTooltip={showTooltip}
                         hideTooltip={hideTooltip}
                         containerRef={containerRef}
                         clampTooltip={clampTooltip}
                         rafRef={rafRef}
                         explodePx={EXPLODE_PX}
+                        shouldAnimateAngles={shouldAnimateAngles}
                         index={i}
                         isActive={derivedActiveIndex === i}
                         onActivate={activateSlice}
@@ -386,22 +472,54 @@ function VisxPieChart({
                   }
                 </Pie>
               </Group>
-              <text
-                x={width / 2}
-                y={height / 2}
-                dy={4}
-                textAnchor="middle"
-                style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  fill: "#fff",
-                  stroke: "rgba(0,0,0,0.7)",
-                  strokeWidth: 0.5,
-                  paintOrder: "stroke",
+              <g
+                role="button"
+                tabIndex={0}
+                aria-label="View category allocation"
+                onPointerEnter={handleCenterPointer}
+                onPointerMove={handleCenterPointer}
+                onPointerLeave={handleCenterLeave}
+                onPointerDown={(event) => {
+                  if (event.pointerType === "touch") {
+                    event.preventDefault();
+                    showCenterTooltip();
+                  }
                 }}
+                onPointerUp={(event) => {
+                  if (event.pointerType === "touch") {
+                    event.preventDefault();
+                    hideCenterTooltip();
+                  }
+                }}
+                onPointerCancel={(event) => {
+                  if (event.pointerType === "touch") {
+                    event.preventDefault();
+                    hideCenterTooltip();
+                  }
+                }}
+                onFocus={handleCenterFocus}
+                onBlur={hideCenterTooltip}
+                onClick={(event) => event.stopPropagation()}
+                style={{ cursor: "pointer" }}
               >
-                {formatUSD(total)}
-              </text>
+                <circle cx={width / 2} cy={height / 2} r={Math.max(0, innerRadius - 4)} fill="transparent" />
+                <text
+                  x={width / 2}
+                  y={height / 2}
+                  dy={4}
+                  textAnchor="middle"
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 700,
+                    fill: "#fff",
+                    stroke: "rgba(0,0,0,0.7)",
+                    strokeWidth: 0.5,
+                    paintOrder: "stroke",
+                  }}
+                >
+                  {formatUSD(total)}
+                </text>
+              </g>
             </svg>
 
             {tooltipOpen && tooltipData && (
@@ -428,6 +546,83 @@ function VisxPieChart({
                 }}
               >
                 {formatTooltip(tooltipData)}
+              </TooltipInPortal>
+            )}
+
+            {centerTooltipState.open && (
+              <TooltipInPortal
+                top={centerTooltipState.top}
+                left={centerTooltipState.left}
+                style={{
+                  position: "fixed",
+                  zIndex: 10000,
+                  pointerEvents: "none",
+                  backgroundColor: "rgba(30, 30, 30, 0.92)",
+                  color: "white",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  borderRadius: "10px",
+                  padding: "12px 14px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
+                  backdropFilter: "blur(4px)",
+                  fontSize: "0.75rem",
+                  fontWeight: 500,
+                  lineHeight: 1.2,
+                  maxWidth: 220,
+                  transform: "translate(-50%, -50%)",
+                  textAlign: "left",
+                }}
+              >
+                <div style={{ marginBottom: decoratedData.length ? 8 : 0, fontWeight: 600 }}>Budget allocation</div>
+                {decoratedData.length ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                    }}
+                  >
+                    {decoratedData.map(({ datum, color, ratio }, index) => (
+                      <div
+                        key={`${String(datum.name)}-${index}`}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            minWidth: 0,
+                          }}
+                        >
+                          <span
+                            aria-hidden="true"
+                            style={{
+                              display: "inline-block",
+                              width: 10,
+                              height: 10,
+                              borderRadius: 999,
+                              backgroundColor: color,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {datum.name}
+                          </span>
+                        </div>
+                        <span style={{ marginLeft: 12, flexShrink: 0 }}>
+                          {total > 0 ? percentageFormatter.format(ratio) : "0%"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontStyle: "italic", opacity: 0.8 }}>No categories available</div>
+                )}
               </TooltipInPortal>
             )}
           </div>

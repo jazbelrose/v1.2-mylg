@@ -404,8 +404,8 @@ function VisxPieChart({
           const host = containerRef.current;
           if (!host) return;
           const rect = host.getBoundingClientRect();
-          const centerX = rect.left + width / 2;
-          const centerY = rect.top + height / 2;
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
           setCenterTooltipState({
             open: true,
             left: centerX,
@@ -553,6 +553,9 @@ function VisxPieChart({
               <TooltipInPortal
                 top={centerTooltipState.top}
                 left={centerTooltipState.left}
+                detectBounds={false}
+                offsetTop={0}
+                offsetLeft={0}
                 style={{
                   position: "fixed",
                   zIndex: 10000,

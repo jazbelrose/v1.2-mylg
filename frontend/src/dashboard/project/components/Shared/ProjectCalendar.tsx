@@ -1,12 +1,14 @@
 import React, {
   useState,
   useEffect,
+  useLayoutEffect,
   useRef,
   useMemo,
   useCallback,
-  MouseEvent,
+  MouseEvent as ReactMouseEvent,
   FormEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import "./project-calendar.css";
@@ -24,9 +26,11 @@ import {
   faChevronLeft,
   faChevronRight,
   faClock,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 // Frontend no longer persists timeline events directly; backend handles persistence
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
+import { notify } from "@/shared/ui/ToastNotifications";
 
 type TimelineEvent = {
   id: string;
@@ -109,6 +113,11 @@ const DOT_STROKE = 2;
 const DOT_MAX_VISIBLE = 4;
 const DOT_OVERLAP_PX = 3;
 
+const MOBILE_QUERY = "(max-width: 640px)";
+const POPPER_GAP = 12;
+const FOCUSABLE_SELECTOR =
+  'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 const WRAPPER_INTERACTIVE_SELECTOR = [
   "button",
   "a",
@@ -143,6 +152,505 @@ function getDateKey(date?: Date | null): string | null {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+const fmt = (date: Date): string => getDateKey(date) || "";
+
+function formatDateLabel(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function isElementWithin(node: Node | null, container?: HTMLElement | null): boolean {
+  if (!node || !container) return false;
+  return container === node || container.contains(node as Node);
+}
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return false;
+    }
+    return window.matchMedia(MOBILE_QUERY).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const matcher = window.matchMedia(MOBILE_QUERY);
+    const listener = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    setIsMobile(matcher.matches);
+    matcher.addEventListener("change", listener);
+    return () => matcher.removeEventListener("change", listener);
+  }, []);
+
+  return isMobile;
+}
+
+interface DayOverlayState {
+  anchor: HTMLButtonElement | null;
+  date: Date;
+  dayKey: string;
+}
+
+function useDayOverlay() {
+  const [state, setState] = useState<DayOverlayState | null>(null);
+  const isMobile = useIsMobile();
+
+  const open = useCallback((anchor: HTMLButtonElement, date: Date, dayKey: string) => {
+    setState({ anchor, date, dayKey });
+  }, []);
+
+  const close = useCallback(() => {
+    setState(null);
+  }, []);
+
+  return {
+    anchor: state?.anchor || null,
+    date: state?.date || null,
+    dayKey: state?.dayKey || null,
+    isOpen: Boolean(state),
+    isMobile,
+    open,
+    close,
+  } as const;
+}
+
+type DayOverlayAnalyticsAction = "open" | "create" | "edit";
+
+function trackCalendarDay(action: DayOverlayAnalyticsAction, payload: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const analytics = (window as typeof window & { analytics?: { track?: (event: string, data?: Record<string, unknown>) => void } }).analytics;
+  analytics?.track?.(`project_calendar_day_${action}`, {
+    source: "calendar-day",
+    ...payload,
+  });
+}
+
+interface CalendarDayButtonProps {
+  date: Date;
+  dayKey: string;
+  inMonth: boolean;
+  isSelected: boolean;
+  isToday: boolean;
+  isFlashing: boolean;
+  inRange: boolean;
+  hasEvents: boolean;
+  label: string;
+  onOpen: (anchor: HTMLButtonElement, meta: { date: Date; dayKey: string; inMonth: boolean }) => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  children: React.ReactNode;
+}
+
+const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonProps>(
+  (
+    {
+      date,
+      dayKey,
+      inMonth,
+      isSelected,
+      isToday,
+      isFlashing,
+      inRange,
+      hasEvents,
+      label,
+      onOpen,
+      onMouseEnter,
+      onMouseLeave,
+      children,
+    },
+    ref
+  ) => {
+    const className = [
+      "calendar-day",
+      inMonth ? "" : "calendar-day--muted",
+      isToday ? "today" : "",
+      isSelected ? "selected" : "",
+      isFlashing ? "tile-highlight" : "",
+      inRange ? "in-range" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const handleOpen = (event: ReactMouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      onOpen(event.currentTarget, { date, dayKey, inMonth });
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        handleOpen(event);
+      }
+    };
+
+    const suffix = hasEvents ? ", has events" : ", no events";
+
+    return (
+      <button
+        type="button"
+        ref={ref}
+        data-stopnav
+        className={className}
+        aria-pressed={isSelected}
+        aria-haspopup="dialog"
+        aria-label={`${label}${suffix}`}
+        onClick={handleOpen}
+        onKeyDown={handleKeyDown}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        {children}
+      </button>
+    );
+  }
+);
+
+CalendarDayButton.displayName = "CalendarDayButton";
+
+interface DayOverlayContentProps {
+  headerId: string;
+  dateLabel: string;
+  events: TimelineEvent[];
+  onClose: () => void;
+  onNew: () => void;
+  onEdit: (event: TimelineEvent) => void;
+  onDelete: (event: TimelineEvent) => void;
+}
+
+const DayOverlayContent: React.FC<DayOverlayContentProps> = ({
+  headerId,
+  dateLabel,
+  events,
+  onClose,
+  onNew,
+  onEdit,
+  onDelete,
+}) => {
+  const hasEvents = events.length > 0;
+
+  return (
+    <div className="day-overlay-surface" role="document">
+      <header className="day-overlay-header">
+        <h2 id={headerId} className="day-overlay-title">
+          Events on {dateLabel}
+        </h2>
+        <button
+          type="button"
+          className="day-overlay-close"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <FontAwesomeIcon icon={faTimes} />
+        </button>
+      </header>
+
+      <div className="day-overlay-body">
+        {hasEvents ? (
+          <ul className="day-overlay-events" role="list">
+            {events.map((event) => {
+              const hoursLabel = (() => {
+                if (event.hours === undefined || event.hours === null || event.hours === "") {
+                  return null;
+                }
+                const hoursNumber = Number(event.hours);
+                if (Number.isNaN(hoursNumber)) return `${event.hours}`;
+                const suffix = hoursNumber === 1 ? "hr" : "hrs";
+                return `${hoursNumber} ${suffix}`;
+              })();
+
+              return (
+                <li key={event.id} className="day-overlay-event">
+                  <div className="day-overlay-event-info">
+                    <span className="day-overlay-event-title">
+                      {event.description || "Untitled event"}
+                    </span>
+                    {hoursLabel && (
+                      <span className="day-overlay-event-hours">{hoursLabel}</span>
+                    )}
+                  </div>
+                  <div className="day-overlay-event-actions">
+                    <button
+                      type="button"
+                      className="day-overlay-event-edit"
+                      onClick={() => onEdit(event)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="day-overlay-event-delete"
+                      onClick={() => onDelete(event)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="day-overlay-empty">No events yet</div>
+        )}
+      </div>
+
+      <button
+        type="button"
+        className={`day-overlay-new ${hasEvents ? "" : "day-overlay-new--primary"}`.trim()}
+        onClick={onNew}
+      >
+        + New event
+      </button>
+    </div>
+  );
+};
+
+interface DayPopoverProps extends DayOverlayContentProps {
+  anchor: HTMLButtonElement;
+  onClose: () => void;
+}
+
+const DayPopover: React.FC<DayPopoverProps> = ({ anchor, onClose, ...contentProps }) => {
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [style, setStyle] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [ready, setReady] = useState(false);
+
+  useLayoutEffect(() => {
+    const node = popoverRef.current;
+    if (!node) return;
+    setReady(false);
+    const assignPosition = () => {
+      const rect = anchor.getBoundingClientRect();
+      const popRect = node.getBoundingClientRect();
+      let top = rect.bottom + POPPER_GAP;
+      let left = rect.left + rect.width / 2 - popRect.width / 2;
+
+      if (top + popRect.height > window.innerHeight - 16) {
+        top = Math.max(rect.top - popRect.height - POPPER_GAP, 16);
+      }
+      if (left + popRect.width > window.innerWidth - 16) {
+        left = window.innerWidth - popRect.width - 16;
+      }
+      if (left < 16) left = 16;
+
+      setStyle({ top, left });
+      setReady(true);
+    };
+
+    assignPosition();
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(assignPosition);
+      observer.observe(node);
+      observer.observe(anchor);
+    }
+
+    window.addEventListener("scroll", assignPosition, true);
+    window.addEventListener("resize", assignPosition);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("scroll", assignPosition, true);
+      window.removeEventListener("resize", assignPosition);
+    };
+  }, [anchor]);
+
+  useEffect(() => {
+    const handlePointer = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (isElementWithin(target, popoverRef.current || undefined)) return;
+      if (isElementWithin(target, anchor)) return;
+      onClose();
+    };
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+      if (event.key === "Tab") {
+        const container = popoverRef.current;
+        if (!container) return;
+        const focusables = Array.from(
+          container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+        ).filter((el) => !el.hasAttribute("disabled"));
+
+        if (!focusables.length) {
+          event.preventDefault();
+          return;
+        }
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+
+        if (event.shiftKey) {
+          if (active === first || !container.contains(active)) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else if (active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("touchstart", handlePointer);
+    document.addEventListener("keydown", handleKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("touchstart", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [anchor, onClose]);
+
+  useLayoutEffect(() => {
+    const container = popoverRef.current;
+    if (!container) return;
+    const focusable = container.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    (focusable || container).focus({ preventScroll: true });
+  }, []);
+
+  return createPortal(
+    <div
+      ref={popoverRef}
+      className="day-popover"
+      style={{
+        top: style.top,
+        left: style.left,
+        visibility: ready ? "visible" : "hidden",
+        opacity: ready ? 1 : 0,
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={contentProps.headerId}
+      tabIndex={-1}
+    >
+      <DayOverlayContent onClose={onClose} {...contentProps} />
+    </div>,
+    document.body
+  );
+};
+
+interface DaySheetProps extends DayOverlayContentProps {
+  onClose: () => void;
+}
+
+const DaySheet: React.FC<DaySheetProps> = ({ onClose, ...contentProps }) => {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const startYRef = useRef<number | null>(null);
+  const translateRef = useRef(0);
+
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const container = sheetRef.current;
+    if (!container) return;
+    const focusable = container.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    (focusable || container).focus({ preventScroll: true });
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+      if (event.key === "Tab") {
+        const container = sheetRef.current;
+        if (!container) return;
+        const focusables = Array.from(
+          container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+        ).filter((el) => !el.hasAttribute("disabled"));
+
+        if (!focusables.length) {
+          event.preventDefault();
+          return;
+        }
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement as HTMLElement | null;
+
+        if (event.shiftKey) {
+          if (active === first || !container.contains(active)) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else if (active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    startYRef.current = event.touches[0]?.clientY ?? null;
+    translateRef.current = 0;
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (startYRef.current === null || !sheetRef.current) return;
+    const currentY = event.touches[0]?.clientY ?? 0;
+    const delta = currentY - startYRef.current;
+    if (delta < 0) return;
+    translateRef.current = delta;
+    sheetRef.current.style.transform = `translateY(${delta}px)`;
+  };
+
+  const handleTouchEnd = () => {
+    if (!sheetRef.current) return;
+    const delta = translateRef.current;
+    sheetRef.current.style.transform = "";
+    startYRef.current = null;
+    translateRef.current = 0;
+    if (delta > 120) {
+      onClose();
+    }
+  };
+
+  const handleBackdrop = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
+  return createPortal(
+    <div className="day-sheet-backdrop" role="presentation" onMouseDown={handleBackdrop} onClick={handleBackdrop}>
+      <div
+        ref={sheetRef}
+        className="day-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={contentProps.headerId}
+        tabIndex={-1}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="day-sheet-grabber" aria-hidden />
+        <DayOverlayContent onClose={onClose} {...contentProps} />
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 function computeFinalCost(
   qty: number | string,
@@ -227,6 +735,29 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
   const calendarWrapperRef = useRef<HTMLDivElement | null>(null);
   const ignoreNextWrapperClickRef = useRef(false);
 
+  const {
+    anchor: overlayAnchor,
+    date: overlayDate,
+    dayKey: overlayDayKey,
+    isOpen: isDayOverlayOpen,
+    isMobile,
+    open: openDayOverlay,
+    close: closeDayOverlayInternal,
+  } = useDayOverlay();
+  const lastActiveDayRef = useRef<HTMLButtonElement | null>(null);
+
+  const closeDayOverlay = useCallback(
+    (options?: { focus?: boolean }) => {
+      const wasOpen = isDayOverlayOpen;
+      closeDayOverlayInternal();
+      if (!wasOpen || options?.focus === false) return;
+      if (lastActiveDayRef.current) {
+        lastActiveDayRef.current.focus({ preventScroll: true });
+      }
+    },
+    [closeDayOverlayInternal, isDayOverlayOpen]
+  );
+
   const { budgetHeader, budgetItems, setBudgetItems } = useBudget();
 
   const [flashDate, setFlashDate] = useState<Date | null>(
@@ -309,14 +840,6 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     }
   }, [initialFlashDate]);
 
-  const isMobile = useMemo(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(hover: none)").matches,
-    []
-  );
-
   // Join the project's WS room
   useEffect(() => {
     if (!ws || !project?.projectId) return;
@@ -387,6 +910,13 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
         return acc;
       }, {}),
     [events]
+  );
+
+  const overlayEvents = overlayDayKey ? eventsByDate[overlayDayKey] || [] : [];
+  const overlayDateLabel = overlayDate ? formatDateLabel(overlayDate) : "";
+  const overlayHeaderId = useMemo(
+    () => (overlayDayKey ? `project-calendar-day-${overlayDayKey}` : "project-calendar-day"),
+    [overlayDayKey]
   );
 
   const extractDescOptions = useCallback((evts: TimelineEvent[]) => {
@@ -533,45 +1063,45 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     ) {
       const dateKey = getDateKey(d)!;
       const id = i === 0 && editId !== null ? editId : uuid();
-        const ev: TimelineEvent = {
-          id,
-          eventId: id,
-          date: dateKey,
-          description: desc,
-          hours: Number(eventHours),
-          createdAt: nowIso,
-          createdBy: user?.userId,
-          ...(budgetItemId ? { budgetItemId } : {}),
-        };
+      const ev: TimelineEvent = {
+        id,
+        eventId: id,
+        date: dateKey,
+        description: desc,
+        hours: Number(eventHours),
+        createdAt: nowIso,
+        createdBy: user?.userId,
+        ...(budgetItemId ? { budgetItemId } : {}),
+      };
       updated.push(ev);
     }
 
     const existingIds = new Set(events.map((ev) => ev.id));
-      const persisted: TimelineEvent[] = [];
-      for (const ev of updated) {
-        const eventId = ev.id || uuid();
-        const payload = {
-          projectId: project.projectId,
-          eventId,
-          id: eventId,
-          date: ev.date,
-          description: ev.description,
-          hours: Number(ev.hours || 0),
-          createdAt: ev.createdAt || new Date().toISOString(),
-          createdBy: ev.createdBy || user?.userId,
-          ...(ev.budgetItemId ? { budgetItemId: ev.budgetItemId } : {}),
-        } as TimelineEvent & { projectId: string; eventId: string };
-        try {
-          if (existingIds.has(ev.id)) {
-            await updateEventApi(payload);
-          } else {
-            await createEventApi(project.projectId, payload);
-          }
-          persisted.push(payload);
-        } catch (err) {
-          console.error('Error saving event', err);
+    const persisted: TimelineEvent[] = [];
+    for (const ev of updated) {
+      const eventId = ev.id || uuid();
+      const payload = {
+        projectId: project.projectId,
+        eventId,
+        id: eventId,
+        date: ev.date,
+        description: ev.description,
+        hours: Number(ev.hours || 0),
+        createdAt: ev.createdAt || new Date().toISOString(),
+        createdBy: ev.createdBy || user?.userId,
+        ...(ev.budgetItemId ? { budgetItemId: ev.budgetItemId } : {}),
+      } as TimelineEvent & { projectId: string; eventId: string };
+      try {
+        if (existingIds.has(ev.id)) {
+          await updateEventApi(payload);
+        } else {
+          await createEventApi(project.projectId, payload);
         }
+        persisted.push(payload);
+      } catch (err) {
+        console.error('Error saving event', err);
       }
+    }
 
       setEvents(persisted);
       setDescOptions(extractDescOptions(persisted));
@@ -598,6 +1128,9 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
         );
       }
 
+      notify("success", "Saved");
+      closeDayOverlay();
+
 
     // Reset modal state
     setShowModal(false);
@@ -619,9 +1152,13 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     setEndDateInput(key);
   };
 
-  const openAddEventModal = (e?: MouseEvent<HTMLButtonElement>) => {
+  const openAddEventModal = (
+    e?: ReactMouseEvent<HTMLButtonElement>,
+    dateKeyParam?: string
+  ) => {
     e?.stopPropagation();
     e?.preventDefault();
+    closeDayOverlay({ focus: false });
     setEventDesc("");
     setEventHours("");
     setEditId(null);
@@ -634,14 +1171,23 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     setBudgetedCost("");
     setMarkup("");
     setFinalCost("");
-    const key = getDateKey(selectedDate) || "";
+    const key = dateKeyParam || getDateKey(selectedDate) || "";
+    const parsed = safeParse(key);
+    if (parsed) {
+      setSelectedDate(parsed);
+      setActiveStartDate(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
+    }
     setStartDateInput(key);
     setEndDateInput(key);
     setShowModal(true);
   };
 
-  const handleWrapperClick = (e: MouseEvent<HTMLDivElement>) => {
+  const handleWrapperClick = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (showModal) return;
+    if (isDayOverlayOpen) {
+      closeDayOverlay();
+      return;
+    }
     if (ignoreNextWrapperClickRef.current) {
       ignoreNextWrapperClickRef.current = false;
       return;
@@ -761,18 +1307,42 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     };
   }, []);
 
-  const handleDayClick = useCallback(
-    (date: Date, inMonth: boolean) => {
+  const handleDayOpen = useCallback(
+    (
+      anchor: HTMLButtonElement,
+      { date, dayKey, inMonth }: { date: Date; dayKey: string; inMonth: boolean }
+    ) => {
+      if (!dayKey) return;
+
+      if (isDayOverlayOpen && overlayDayKey === dayKey) {
+        closeDayOverlay();
+        return;
+      }
+
       handleDateSelection(date);
       if (!inMonth) {
         setActiveStartDate(new Date(date.getFullYear(), date.getMonth(), 1));
       }
       userNavigatedRef.current = true;
+      lastActiveDayRef.current = anchor;
+      openDayOverlay(anchor, date, dayKey);
       if (isMobile) {
-        setHoverDate(date);
+        setHoverDate(null);
       }
+      trackCalendarDay("open", {
+        date: dayKey,
+        projectId: project?.projectId,
+      });
     },
-    [handleDateSelection, isMobile]
+    [
+      closeDayOverlay,
+      handleDateSelection,
+      isDayOverlayOpen,
+      isMobile,
+      openDayOverlay,
+      overlayDayKey,
+      project?.projectId,
+    ]
   );
 
   const eventsForSelected = eventsByDate[getDateKey(selectedDate)!] || [];
@@ -866,6 +1436,41 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     }
   };
 
+  const handleOverlayNew = useCallback(() => {
+    const key = overlayDayKey || getDateKey(selectedDate);
+    if (!key) return;
+    trackCalendarDay("create", {
+      date: key,
+      projectId: project?.projectId,
+    });
+    openAddEventModal(undefined, key);
+  }, [overlayDayKey, openAddEventModal, project?.projectId, selectedDate]);
+
+  const handleOverlayEdit = useCallback(
+    (event: TimelineEvent) => {
+      if (!event?.id) return;
+      trackCalendarDay("edit", {
+        date: event.date,
+        projectId: project?.projectId,
+        eventId: event.id,
+      });
+      closeDayOverlay({ focus: false });
+      openEditEventModal(event.id);
+    },
+    [closeDayOverlay, openEditEventModal, project?.projectId]
+  );
+
+  const handleOverlayDelete = useCallback(
+    (event: TimelineEvent) => {
+      if (!event?.id) return;
+      const label = event.description ? `"${event.description}"` : "this event";
+      const confirmed = window.confirm(`Delete ${label}?`);
+      if (!confirmed) return;
+      handleDeleteEvent(event.id);
+    },
+    [handleDeleteEvent]
+  );
+
   return (
     <div className="dashboard-item project-calendar-wrapper" onClick={handleWrapperClick}>
 
@@ -924,32 +1529,27 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
                     const isFlashing = flashKey === key;
                     const isHovered = hoverKey === key;
                     const inRange = rangeSet.has(key);
-                    const dayClassName = [
-                      "calendar-day",
-                      inMonth ? "" : "calendar-day--muted",
-                      isToday ? "today" : "",
-                      isSelected ? "selected" : "",
-                      isFlashing ? "tile-highlight" : "",
-                      inRange ? "in-range" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ");
                     const totalHours = dayEvents.reduce(
                       (sum, ev) => sum + Number(ev.hours || 0),
                       0
                     );
+                    const label = formatDateLabel(date);
+
                     return (
                       <div key={key} className="calendar-day-wrapper">
-                        <div
-                          className={dayClassName}
+                        <CalendarDayButton
+                          date={date}
+                          dayKey={key}
+                          inMonth={inMonth}
+                          isSelected={isSelected}
+                          isToday={isToday}
+                          isFlashing={isFlashing}
+                          inRange={inRange}
+                          hasEvents={dayEvents.length > 0}
+                          label={`Events on ${label}`}
+                          onOpen={handleDayOpen}
                           onMouseEnter={!isMobile ? () => queueHover(date) : undefined}
                           onMouseLeave={!isMobile ? queueHoverClear : undefined}
-                          onClick={() => handleDayClick(date, inMonth)}
-                          onPointerUp={(evt) => {
-                            if (evt.pointerType === "touch") handleDayClick(date, inMonth);
-                          }}
-                          role="button"
-                          aria-label={date.toDateString()}
                         >
                           <div className="tile-date-number">{date.getDate()}</div>
 
@@ -997,7 +1597,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
                               <div className="tooltip-info">{totalHours} hrs</div>
                             </div>
                           )}
-                        </div>
+                        </CalendarDayButton>
                       </div>
                     );
                   })}
@@ -1007,6 +1607,31 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
           </div>
         </div>
 
+
+        {isDayOverlayOpen && overlayAnchor && overlayDate && overlayDayKey && (
+          isMobile ? (
+            <DaySheet
+              headerId={overlayHeaderId}
+              dateLabel={overlayDateLabel}
+              events={overlayEvents}
+              onClose={() => closeDayOverlay()}
+              onNew={handleOverlayNew}
+              onEdit={handleOverlayEdit}
+              onDelete={handleOverlayDelete}
+            />
+          ) : (
+            <DayPopover
+              anchor={overlayAnchor}
+              headerId={overlayHeaderId}
+              dateLabel={overlayDateLabel}
+              events={overlayEvents}
+              onClose={() => closeDayOverlay()}
+              onNew={handleOverlayNew}
+              onEdit={handleOverlayEdit}
+              onDelete={handleOverlayDelete}
+            />
+          )
+        )}
 
         {showEventList && (
           <>
@@ -1067,17 +1692,9 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
         )}
       </div>
 
-      <button
-        type="button"
-        className="address-button add-event-button"
-        onClick={openAddEventModal}
-      >
-        Add Event
-      </button>
-
       <Modal
         isOpen={showModal}
-        onRequestClose={(event?: MouseEvent) => {
+        onRequestClose={(event?: ReactMouseEvent) => {
           if (event?.type === "click") {
             ignoreNextWrapperClickRef.current = true;
           }

@@ -28,6 +28,7 @@ import { MICRO_WOBBLE_SCALE, SPRING_FAST } from '@/shared/ui/motionTokens';
 import Squircle from '@/shared/ui/Squircle';
 
 const DEFAULT_RECENTS_LIMIT = 12;
+const VIEW_MODE_STORAGE_KEY = 'all-projects-view-mode';
 
 interface Project extends ProjectLike {
   pinned?: boolean;
@@ -96,9 +97,18 @@ const AllProjects: React.FC = () => {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    if (typeof window === 'undefined') return 'list';
+    const stored = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    return stored === 'grid' || stored === 'list' ? stored : 'list';
+  });
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
+  }, [viewMode]);
 
   const queryMatcher = useCallback(
     (

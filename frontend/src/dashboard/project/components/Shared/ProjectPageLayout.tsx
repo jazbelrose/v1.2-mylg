@@ -213,7 +213,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
 
         {!floatingThread && !isMobile && (
           <>
-            <div className="thread-resizer" aria-hidden="true" />
+            
 
             <div
               style={{

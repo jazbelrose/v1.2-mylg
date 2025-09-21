@@ -12,6 +12,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = (props) => {
       {...props}
       wrapperClassName="dashboard-item project-calendar-wrapper"
       dayHeaderIdPrefix="project-calendar-day"
+      onWrapperClick={() => {}}
     />
   );
 };

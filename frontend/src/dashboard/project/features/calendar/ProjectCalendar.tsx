@@ -1516,6 +1516,7 @@ const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
                         left: `${weekTrack.left}%`,
                         width: `${weekTrack.width}%`,
                         backgroundColor: projectColor,
+                        opacity: 0.2,
                       }}
                       aria-hidden
                     />

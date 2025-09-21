@@ -1583,7 +1583,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
                         left: `${weekTrack.left}%`,
                         width: `${weekTrack.width}%`,
                         backgroundColor: projectColor,
-                        opacity: 0.1, 
+                        opacity: 0.2, 
                       }}
                       aria-hidden
                     />

@@ -81,6 +81,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
   ) => {
     const {
       activeProject,
+      setActiveProject,
       user,
       isAdmin,
       isBuilder,
@@ -224,6 +225,16 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       );
 
       addCustomFolder(newFolder);
+      setActiveProject((prevProject) => {
+        if (!prevProject || prevProject.projectId !== projectId) return prevProject;
+        const record = prevProject as Record<string, unknown>;
+        const existingFiles = Array.isArray(record[newFolder.key]) ? (record[newFolder.key] as unknown[]) : [];
+        return {
+          ...prevProject,
+          customFolders: updatedCustomFolders,
+          [newFolder.key]: existingFiles,
+        };
+      });
       setFolderKey(newFolder.key);
       setSelectedFiles([]);
       setSelectedItems(new Set());
@@ -252,6 +263,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       setSelectedFiles,
       setSelectedItems,
       setIsSelectMode,
+      setActiveProject,
     ]);
 
     const openFilesModal = useCallback(async () => {

@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import { vi, test, expect, beforeEach } from "vitest";
 
+type Mock = ReturnType<typeof vi.fn>;
+
 // -- Types ---------------------------------------------------------------------
 interface MockS3Item {
   key: string;
@@ -24,6 +26,7 @@ interface MockDataValue {
   activeProject: MockProject;
   user: MockUser;
   isAdmin: boolean;
+  setActiveProject: Mock;
 }
 vi.mock("lucide-react", () => ({
   Folder: () => null,
@@ -77,6 +80,7 @@ vi.mock("@/shared/utils/api", () => {
     ZIP_FILES_URL: "zip",
     DELETE_PROJECT_MESSAGE_URL: "delMsg",
     GET_PROJECT_MESSAGES_URL: "getMsgs",
+    EDIT_PROJECT_URL: "editProject",
     EDIT_MESSAGE_URL: "editMsg",
     getFileUrl: buildUrl,
     normalizeFileUrl: (u: string) => buildUrl(u),
@@ -99,10 +103,9 @@ vi.mock('@/shared/ui/ToastNotifications', () => ({
 // Import mocked modules after mocks are defined
 import { NotificationContainer } from '@/shared/ui/ToastNotifications';
 
-type Mock = ReturnType<typeof vi.fn>;
-
 let useDataMock: Mock;
 let apiFetchMock: Mock;
+let setActiveProjectMock: Mock;
 
 // -- Setup ----------------------------------------------------------------------
 beforeEach(async () => {
@@ -113,6 +116,7 @@ beforeEach(async () => {
   apiFetchMock = apiModule.apiFetch as Mock;
 
   useDataMock.mockReset();
+  setActiveProjectMock = vi.fn();
   useDataMock.mockReturnValue({
     activeProject: {
       projectId: '1',
@@ -124,6 +128,7 @@ beforeEach(async () => {
     },
     user: { userId: 'u1', role: 'admin' },
     isAdmin: true,
+    setActiveProject: setActiveProjectMock,
   } as MockDataValue);
 
   apiFetchMock.mockReset();
@@ -200,6 +205,41 @@ test("sorts files by selected option including kind", async () => {
       "file3.txt",
     ]);
   });
+});
+
+test("creating a new folder persists it to the active project", async () => {
+  const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("Custom Folder");
+
+  try {
+    render(
+      <>
+        <NotificationContainer />
+        <FileManagerComponent folder="invoices" />
+      </>
+    );
+
+    await userEvent.click(screen.getByText("Invoices"));
+
+    const createButton = await screen.findByText("New Folder");
+    await userEvent.click(createButton);
+
+    await waitFor(() => {
+      expect(setActiveProjectMock).toHaveBeenCalled();
+    });
+
+    const updater = setActiveProjectMock.mock.calls[0][0] as (prev: unknown) => unknown;
+    const previous = { projectId: "1", customFolders: [] };
+    const updated = updater(previous) as { customFolders?: unknown; [key: string]: unknown };
+
+    expect(updated).toMatchObject({
+      customFolders: expect.arrayContaining([
+        { key: "custom-folder", name: "Custom Folder" },
+      ]),
+      "custom-folder": [],
+    });
+  } finally {
+    promptSpy.mockRestore();
+  }
 });
 
 test("filters files by kind", async () => {

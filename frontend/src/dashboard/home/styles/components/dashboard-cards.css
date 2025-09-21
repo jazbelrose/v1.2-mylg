@@ -251,13 +251,29 @@
   .budget-overview-header {
     gap: 6px;
   }
+  .budget-title-row {
+    gap: 8px;
+  }
+  .budget-title-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .budget-title-text {
+    font-size: clamp(1rem, 4.5vw, 1.2rem);
+  }
+  .budget-revision {
+    font-size: 0.75rem;
+  }
   .budget-summary {
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 6px;
   }
   .budget-amount {
-    font-size: clamp(1.25rem, 6vw, 2rem);
+    font-size: clamp(1.1rem, 5.5vw, 1.6rem);
+  }
+  .budget-updated {
+    font-size: clamp(0.7rem, 3vw, 0.85rem);
   }
   .budget-chart-wrapper,
   .budget-loading-chart,

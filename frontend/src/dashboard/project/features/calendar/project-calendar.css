@@ -370,7 +370,7 @@
 .project-calendar-wrapper .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+  gap: 36px;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -388,7 +388,7 @@
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 4px;
-  padding-bottom: 18px;
+  padding-bottom: 16px;
   overflow: visible;
 }
 
@@ -402,11 +402,11 @@
 
 .project-calendar-wrapper .calendar-day {
   position: relative;
-  min-height: 56px;
+
   padding: 8px 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: 50px;
+  border: none;
+  background: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -429,9 +429,10 @@
   box-shadow: 0 0 0 3px rgba(250, 51, 86, 0.15);
 }
 .project-calendar-wrapper .calendar-day.today {
-  outline: 1px solid rgba(255, 255, 255, 0.18);
+  outline: 2px solid rgba(255, 255, 255, 0.18);
 }
 .project-calendar-wrapper .calendar-day.selected {
+  border: 1px dashed rgba(255, 255, 255, 0.1);
   background: rgba(250, 51, 86, 0.18);
   border-color: rgba(250, 51, 86, 0.5);
   box-shadow: 0 12px 24px rgba(250, 51, 86, 0.25);
@@ -460,7 +461,7 @@
 
 .project-calendar-wrapper .calendar-week-track {
   position: absolute;
-  height: 78px;
+  height: 72px;
   border-radius: 50px;
   bottom: 15px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
@@ -496,7 +497,7 @@
 
 .project-calendar-wrapper .calendar-day.in-range {
   border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  background: none;
 }
 
 .day-popover {

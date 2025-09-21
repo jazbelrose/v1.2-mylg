@@ -47,7 +47,6 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
 }) => {
   const projectHeaderRef = React.useRef<HTMLDivElement | null>(null);
   const layoutRef = React.useRef<HTMLDivElement | null>(null);
-  const resizingRef = React.useRef<boolean>(false);
 
   const themeStyle = React.useMemo<React.CSSProperties | undefined>(() => {
     if (!theme) return undefined;
@@ -72,7 +71,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
 
   const safeProjectId = projectId ?? "";
 
-  const [threadWidth, setThreadWidth] = React.useState<number>(MIN_THREAD_WIDTH);
+  const threadWidth = MIN_THREAD_WIDTH;
   const [headerHeights, setHeaderHeights] = React.useState<{ global: number; project: number }>({
     global: 0,
     project: 0,
@@ -127,28 +126,6 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Handle drag-resize for the thread pane
-  React.useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      if (!resizingRef.current || !layoutRef.current) return;
-      const rect = layoutRef.current.getBoundingClientRect();
-      let newWidth = rect.right - e.clientX;
-      newWidth = Math.min(MAX_THREAD_WIDTH, Math.max(MIN_THREAD_WIDTH, newWidth));
-      setThreadWidth(newWidth);
-    };
-
-    const stopResize = () => {
-      resizingRef.current = false;
-    };
-
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", stopResize);
-    return () => {
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", stopResize);
-    };
-  }, []);
-
   // Persist floatingThread state
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -180,11 +157,6 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
       window.removeEventListener("project-open-chat", handleOpenChat);
     };
   }, [setFloatingThread, setChatOpenSignal]);
-
-  const startResize = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    resizingRef.current = true;
-  };
 
   const viewportUnit = React.useMemo(() => {
     if (typeof window === "undefined") {
@@ -241,15 +213,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
 
         {!floatingThread && !isMobile && (
           <>
-            <div
-              className="thread-resizer"
-              role="separator"
-              aria-orientation="vertical"
-              aria-label="Resize chat panel"
-              onMouseDown={startResize}
-              // Make it keyboard focusable if you later add keyboard resizing
-              tabIndex={0}
-            />
+            <div className="thread-resizer" aria-hidden="true" />
 
             <div
               style={{

@@ -108,25 +108,34 @@ body.chat-panel-docked {
 
 .chat-panel-resizer {
   position: absolute;
-  width: 20px;
-  height: 20px;
-  right: 10px;
-  bottom: 10px;
-  cursor: nwse-resize;
-  opacity: 0.3;
+  width: 36px;
+  height: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 6px;
+  cursor: ns-resize;
+  opacity: 0.4;
   transition: opacity 0.2s;
 }
 
 .chat-panel-resizer:hover {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .chat-panel-resizer::after {
   content: "";
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyMCcgaGVpZ2h0PScyMCcgZmlsbD0nbm9uZScgc3Ryb2tlPSd3aGl0ZScgc3Ryb2tlLXdpZHRoPScyJz48bGluZSB4MT0nNCcgeTE9JzIwJyB4Mj0nMjAnIHkyPSc0Jy8+PGxpbmUgeDE9JzEwJyB5MT0nMjAnIHgyPScyMCcgeTI9JzEwJy8+PGxpbmUgeDE9JzE2JyB5MT0nMjAnIHgyPScyMCcgeTI9JzE2Jy8+PC9zdmc+") no-repeat center;
+  inset: 4px 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.45) 40%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255, 255, 255, 0.45) 60%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
 }
 
 

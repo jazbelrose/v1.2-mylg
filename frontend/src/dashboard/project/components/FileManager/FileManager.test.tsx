@@ -242,6 +242,29 @@ test("creating a new folder persists it to the active project", async () => {
   }
 });
 
+test("creating a new folder displays it immediately in the UI", async () => {
+  const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("Instant Folder");
+
+  try {
+    render(
+      <>
+        <NotificationContainer />
+        <FileManagerComponent folder="invoices" />
+      </>
+    );
+
+    await userEvent.click(screen.getByText("Invoices"));
+
+    const createButton = await screen.findByText("New Folder");
+    await userEvent.click(createButton);
+
+    const folderButton = await screen.findByRole("button", { name: "Instant Folder" });
+    expect(folderButton).toBeInTheDocument();
+  } finally {
+    promptSpy.mockRestore();
+  }
+});
+
 test("filters files by kind", async () => {
   render(
     <>

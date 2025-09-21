@@ -150,7 +150,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       handleTouchEnd,
       sortOptionsList,
       customFolders,
-      addCustomFolder,
+      syncCustomFolders,
     } = state;
 
     const { removeReferences } = useFileMessenger({
@@ -224,7 +224,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
         new Map<string, FolderOption>([...customFolders, newFolder].map((folder) => [folder.key, folder])).values()
       );
 
-      addCustomFolder(newFolder);
+      syncCustomFolders(updatedCustomFolders);
       setActiveProject((prevProject) => {
         if (!prevProject || prevProject.projectId !== projectId) return prevProject;
         const record = prevProject as Record<string, unknown>;
@@ -256,7 +256,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       }
     }, [
       activeProject?.projectId,
-      addCustomFolder,
+      syncCustomFolders,
       customFolders,
       folderDisplayList,
       setFolderKey,

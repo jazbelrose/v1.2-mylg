@@ -322,6 +322,32 @@ export const useFileManagerState = ({
     [setLocalActiveProject]
   );
 
+  const syncCustomFolders = useCallback(
+    (folders: FolderOption[]) => {
+      const uniqueFolders = Array.from(new Map(folders.map((folder) => [folder.key, folder])).values());
+
+      setCustomFolders(uniqueFolders);
+
+      setLocalActiveProject((prevProject: Project) => {
+        const baseProject = (prevProject ?? {}) as Project;
+        const nextProject: Project = {
+          ...baseProject,
+          customFolders: uniqueFolders,
+        } as Project;
+
+        uniqueFolders.forEach((folder) => {
+          const previousValue = (baseProject as Record<string, unknown>)[folder.key];
+          (nextProject as Record<string, unknown>)[folder.key] = Array.isArray(previousValue)
+            ? (previousValue as unknown[])
+            : [];
+        });
+
+        return nextProject;
+      });
+    },
+    [setLocalActiveProject]
+  );
+
   return {
     fileInputRef,
     scrollerRef,
@@ -379,6 +405,7 @@ export const useFileManagerState = ({
     sortOptionsList: SORT_OPTIONS,
     customFolders,
     addCustomFolder,
+    syncCustomFolders,
   };
 };
 

@@ -5,6 +5,7 @@ import React, {
   useMemo,
   DragEvent,
   KeyboardEvent,
+  ChangeEvent,
 } from "react";
 import { useData } from "@/app/contexts/useData";
 import { useAuth } from "@/app/contexts/useAuth";
@@ -12,7 +13,7 @@ import {useSocket } from "@/app/contexts/useSocket";
 import SpinnerOverlay from "@/shared/ui/SpinnerOverlay";
 import OptimisticImage from "@/shared/ui/OptimisticImage";
 import { normalizeMessage } from "@/shared/utils/websocketUtils";
-import { ChevronDown, ChevronUp, Dock, Move } from "lucide-react";
+import { ChevronDown, ChevronUp, Dock, Move, Plus, Smile } from "lucide-react";
 import { uploadData } from "aws-amplify/storage";
 import MessageItem, { ChatMessage } from "./MessageItem";
 import "./project-messages-thread.css";
@@ -21,6 +22,7 @@ import {
   mergeAndDedupeMessages,
 } from "../../../shared/utils/messageUtils";
 import { getWithTTL, setWithTTL } from "../../../shared/utils/storageWithTTL";
+import { DEFAULT_EMOJIS } from "./constants";
 import {
   FaFilePdf,
   FaFileExcel,
@@ -298,6 +300,12 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
   const [newMessage, setNewMessage] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth <= 768;
+  });
 
   // File preview modal
   const [isPreviewModalOpen, setPreviewModalOpen] = useState(false);
@@ -578,6 +586,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       try {
         ws.send(JSON.stringify(normalizeMessage(messageData, "sendMessage")));
         setNewMessage("");
+        setShowEmojiPicker(false);
       } catch (error) {
         console.error("Error sending WS message:", error);
         setSendError("Can’t reach the server—your edits are safe; we’ll retry.");
@@ -609,139 +618,170 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
   };
 
   // Drag & drop uploads
-  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const files = Array.from(event.dataTransfer.files);
-    if (!files.length) return;
+  const processFileUpload = async (file: File) => {
+    if (!projectId) return;
 
-    for (const file of files) {
-      const tempUrl = URL.createObjectURL(file);
-      const optimisticId = Date.now() + "-" + file.name;
-      const timestamp = new Date().toISOString();
-      const key = `public/projects/${projectId}/${folderKey}/${file.name}`;
+    const tempUrl = URL.createObjectURL(file);
+    const optimisticId = Date.now() + "-" + file.name;
+    const timestamp = new Date().toISOString();
+    const key = `public/projects/${projectId}/${folderKey}/${file.name}`;
 
-      const optimisticMessage: Message = {
-        action: "sendMessage",
-        conversationType: "project",
-        conversationId: `project#${projectId}`,
-        senderId: userData?.userId,
-        text: tempUrl, // legacy path
-        file: { fileName: file.name, url: tempUrl, finalUrl: null },
-        attachments: [ // NEW: explicit attachment optimistic
-          {
-            fileName: file.name,
-            url: tempUrl,
-            key,
-            mimeType: file.type,
-            size: file.size,
-          },
-        ],
-        timestamp,
-        optimisticId,
-        optimistic: true,
-      };
+    const optimisticMessage: Message = {
+      action: "sendMessage",
+      conversationType: "project",
+      conversationId: `project#${projectId}`,
+      senderId: userData?.userId,
+      text: tempUrl, // legacy path
+      file: { fileName: file.name, url: tempUrl, finalUrl: null },
+      attachments: [
+        {
+          fileName: file.name,
+          url: tempUrl,
+          key,
+          mimeType: file.type,
+          size: file.size,
+        },
+      ],
+      timestamp,
+      optimisticId,
+      optimistic: true,
+    };
+
+    setProjectMessages((prev: ProjectMessagesMap) => {
+      const msgs: Message[] = Array.isArray(prev[projectId])
+        ? prev[projectId]
+        : [];
+      const merged = mergeAndDedupeMessages(msgs, [optimisticMessage]) as Message[];
+      setWithTTL(pmKey(projectId), merged);
+      return { ...prev, [projectId]: merged };
+    });
+
+    try {
+      const uploadedFile = await handleFileUpload(projectId, file);
+      if (!uploadedFile) throw new Error("File upload failed");
 
       setProjectMessages((prev: ProjectMessagesMap) => {
         const msgs: Message[] = Array.isArray(prev[projectId])
           ? prev[projectId]
           : [];
-        const merged = mergeAndDedupeMessages(msgs, [optimisticMessage]) as Message[];
-        setWithTTL(pmKey(projectId), merged);
-        return { ...prev, [projectId]: merged };
-      });
-
-      try {
-        const uploadedFile = await handleFileUpload(projectId, file);
-        if (!uploadedFile) throw new Error("File upload failed");
-
-        setProjectMessages((prev: ProjectMessagesMap) => {
-          const msgs: Message[] = Array.isArray(prev[projectId])
-            ? prev[projectId]
-            : [];
-          const updated = msgs.map((msg) =>
-            msg.optimisticId === optimisticId
-              ? {
-                  ...msg,
-                  text: uploadedFile.url, // legacy snippet
-                  file: {
-                    ...msg.file!,
-                    finalUrl: uploadedFile.url,
+        const updated = msgs.map((msg) =>
+          msg.optimisticId === optimisticId
+            ? {
+                ...msg,
+                text: uploadedFile.url, // legacy snippet
+                file: {
+                  ...msg.file!,
+                  finalUrl: uploadedFile.url,
+                  url: uploadedFile.url,
+                  key: uploadedFile.key,
+                },
+                attachments: [
+                  {
+                    fileName: uploadedFile.fileName,
                     url: uploadedFile.url,
                     key: uploadedFile.key,
                   },
-                  attachments: [
-                    {
-                      fileName: uploadedFile.fileName,
-                      url: uploadedFile.url,
-                      key: uploadedFile.key,
-                      // mimeType/size unknown after upload; omit
-                    },
-                  ],
-                  optimistic: false,
-                }
-              : msg
-          );
-          setWithTTL(pmKey(projectId), updated);
-          return { ...prev, [projectId]: updated };
-        });
+                ],
+                optimistic: false,
+              }
+            : msg
+        );
+        setWithTTL(pmKey(projectId), updated);
+        return { ...prev, [projectId]: updated };
+      });
 
-        // Send via WebSocket with retry logic
-        const messageData: Message = {
-          action: "sendMessage",
-          conversationType: "project",
-          conversationId: `project#${projectId}`,
-          title: activeProject?.title,
-          senderId: userData?.userId,
-          text: uploadedFile.url, // legacy
-          file: uploadedFile,     // legacy
-          attachments: [
-            {
-              key: uploadedFile.key,
-              name: uploadedFile.fileName,
-              type: file.type,
-            },
-          ], // NEW
-          timestamp,
-          optimisticId,
-          username: user?.firstName || "Someone",
-        };
+      const messageData: Message = {
+        action: "sendMessage",
+        conversationType: "project",
+        conversationId: `project#${projectId}`,
+        title: activeProject?.title,
+        senderId: userData?.userId,
+        text: uploadedFile.url, // legacy
+        file: uploadedFile, // legacy
+        attachments: [
+          {
+            key: uploadedFile.key,
+            name: uploadedFile.fileName,
+            type: file.type,
+          },
+        ],
+        timestamp,
+        optimisticId,
+        username: user?.firstName || "Someone",
+      };
 
-        const maxAttempts = 5;
-        const trySendFileMessage = (attempts = 0) => {
-          if (!ws || ws.readyState !== WebSocket.OPEN) {
-            if (attempts < maxAttempts) {
-              setTimeout(() => trySendFileMessage(attempts + 1), 1000);
-            } else {
-              console.error(
-                "Failed to send file message after",
-                maxAttempts,
-                "attempts."
-              );
-            }
-            return;
+      const maxAttempts = 5;
+      const trySendFileMessage = (attempts = 0) => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          if (attempts < maxAttempts) {
+            setTimeout(() => trySendFileMessage(attempts + 1), 1000);
+          } else {
+            console.error(
+              "Failed to send file message after",
+              maxAttempts,
+              "attempts."
+            );
           }
-          try {
-            ws.send(JSON.stringify(normalizeMessage(messageData, "sendMessage")));
-            console.log("✅ File message successfully sent!");
-          } catch (error) {
-            console.error("❌ Error sending file WebSocket message:", error);
-          }
-        };
-        trySendFileMessage();
-      } catch (error) {
-        console.error("Upload failed:", error);
-        setProjectMessages((prev: ProjectMessagesMap) => {
-          const msgs: Message[] = Array.isArray(prev[projectId])
-            ? prev[projectId]
-            : [];
-          const updated = msgs.filter((msg) => msg.optimisticId !== optimisticId);
-          setWithTTL(pmKey(projectId), updated);
-          return { ...prev, [projectId]: updated };
-        });
-      } finally {
-        URL.revokeObjectURL(tempUrl);
-      }
+          return;
+        }
+        try {
+          ws.send(JSON.stringify(normalizeMessage(messageData, "sendMessage")));
+          console.log("✅ File message successfully sent!");
+        } catch (error) {
+          console.error("❌ Error sending file WebSocket message:", error);
+        }
+      };
+      trySendFileMessage();
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setProjectMessages((prev: ProjectMessagesMap) => {
+        const msgs: Message[] = Array.isArray(prev[projectId])
+          ? prev[projectId]
+          : [];
+        const updated = msgs.filter((msg) => msg.optimisticId !== optimisticId);
+        setWithTTL(pmKey(projectId), updated);
+        return { ...prev, [projectId]: updated };
+      });
+    } finally {
+      URL.revokeObjectURL(tempUrl);
     }
+  };
+
+  const processFiles = async (files: File[]) => {
+    for (const file of files) {
+      await processFileUpload(file);
+    }
+  };
+
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const files = Array.from(event.dataTransfer.files);
+    if (!files.length) return;
+
+    await processFiles(files);
+  };
+
+  const handleFileInputChange = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const { files } = event.target;
+    if (!files?.length) return;
+
+    await processFiles(Array.from(files));
+    event.target.value = "";
+  };
+
+  const triggerFileDialog = () => {
+    fileInputRef.current?.click();
+  };
+
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker((prev) => !prev);
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setNewMessage((prev) => `${prev}${emoji}`);
+    setShowEmojiPicker(false);
   };
 
   // Delete
@@ -845,6 +885,20 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
     );
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const updateIsMobile = () => setIsMobile(window.innerWidth <= 768);
+    updateIsMobile();
+    window.addEventListener("resize", updateIsMobile);
+    return () => window.removeEventListener("resize", updateIsMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setShowEmojiPicker(false);
+    }
+  }, [open]);
+
   return (
     <>
       <div
@@ -887,7 +941,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
           <h3 className="project-thread-title">
             # {activeProject?.title || projectId} Thread
           </h3>
-          <div>
+          <div className="thread-header-actions">
             {floating && (
               <button
                 className="icon-btn"
@@ -898,14 +952,16 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
                 {open ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
               </button>
             )}
-            <button
-              className="icon-btn"
-              onClick={() => setFloating((f) => !f)}
-              aria-label={floating ? "Dock" : "Float"}
-              title={floating ? "Dock" : "Float"}
-            >
-              {floating ? <Dock size={16} /> : <Move size={16} />}
-            </button>
+            {!isMobile && (
+              <button
+                className="icon-btn"
+                onClick={() => setFloating((f) => !f)}
+                aria-label={floating ? "Dock" : "Float"}
+                title={floating ? "Dock" : "Float"}
+              >
+                {floating ? <Dock size={16} /> : <Move size={16} />}
+              </button>
+            )}
           </div>
         </div>
 
@@ -956,22 +1012,62 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
 
         {open && (
           <div className="message-input-container">
-            <input
-              type="text"
-              placeholder="Type a message or drag files here..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  sendMessage();
-                }
-              }}
-              className="message-input"
-            />
+            <div className="message-input-inner">
+              <button
+                type="button"
+                className="message-icon-button"
+                onClick={triggerFileDialog}
+                aria-label="Add attachment"
+              >
+                <Plus size={18} />
+              </button>
+              <input
+                type="text"
+                placeholder="Message"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                className="message-input"
+              />
+              <button
+                type="button"
+                className="message-icon-button"
+                onClick={toggleEmojiPicker}
+                aria-label="Insert emoji"
+              >
+                <Smile size={18} />
+              </button>
+              {showEmojiPicker && (
+                <div className="emoji-picker" role="menu">
+                  {DEFAULT_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="emoji-button"
+                      onClick={() => handleEmojiSelect(emoji)}
+                      aria-label={`Insert ${emoji}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button onClick={sendMessage} className="send-button">
               Send it
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="message-file-input"
+              onChange={handleFileInputChange}
+              multiple
+            />
           </div>
         )}
 

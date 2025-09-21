@@ -149,6 +149,14 @@
   background-color: #1c1c1c;
 }
 
+.message-input-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  flex: 1;
+}
+
 .message-input {
   flex-grow: 1;
   padding: 10px;
@@ -159,6 +167,64 @@
   z-index: 1;
 }
 
+.message-icon-button {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.message-icon-button:hover,
+.message-icon-button:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.message-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.emoji-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: #333;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+}
+
+.emoji-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+}
+
+.emoji-button:hover,
+.emoji-button:focus {
+  transform: scale(1.1);
+}
+
 .send-button {
   padding: 10px 15px;
   background: #FA3356;
@@ -167,6 +233,27 @@
   color: #fff;
   cursor: pointer;
   z-index: 1;
+  white-space: nowrap;
+}
+
+.thread-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+@media (max-width: 767px) {
+  .message-input-container {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .message-icon-button {
+    padding: 4px;
+  }
+
+  .send-button {
+    padding: 8px 12px;
+  }
 }
 
 

@@ -157,6 +157,45 @@
   flex: 1;
 }
 
+.message-action-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.message-action-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 6;
+}
+
+.message-action-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
+
+.message-action-menu-button:hover,
+.message-action-menu-button:focus {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+
 .message-input {
   flex-grow: 1;
   padding: 10px;
@@ -199,7 +238,7 @@
 .emoji-picker {
   position: absolute;
   bottom: calc(100% + 8px);
-  right: 0;
+  left: 0;
   background: #333;
   padding: 6px;
   border-radius: 8px;
@@ -226,6 +265,9 @@
 }
 
 .send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 10px 15px;
   background: #FA3356;
   border: none;
@@ -235,7 +277,6 @@
   z-index: 1;
   white-space: nowrap;
 }
-
 .thread-header-actions {
   display: flex;
   gap: 6px;

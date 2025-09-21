@@ -13,7 +13,16 @@ import {useSocket } from "@/app/contexts/useSocket";
 import SpinnerOverlay from "@/shared/ui/SpinnerOverlay";
 import OptimisticImage from "@/shared/ui/OptimisticImage";
 import { normalizeMessage } from "@/shared/utils/websocketUtils";
-import { ChevronDown, ChevronUp, Dock, Move, Plus, Smile } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Dock,
+  Move,
+  Paperclip,
+  Plus,
+  Send,
+  Smile,
+} from "lucide-react";
 import { uploadData } from "aws-amplify/storage";
 import MessageItem, { ChatMessage } from "./MessageItem";
 import "./project-messages-thread.css";
@@ -301,7 +310,9 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const actionMenuRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth <= 768;
@@ -341,6 +352,33 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
       setWithTTL(pmKey(projectId), messages);
     }
   }, [messages, projectId]);
+
+  useEffect(() => {
+    if (!showActionMenu) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        actionMenuRef.current &&
+        !actionMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowActionMenu(false);
+      }
+    };
+
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowActionMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showActionMenu]);
 
   const openPreviewModal = (file: FileObj) => {
     setSelectedPreviewFile(file);
@@ -771,12 +809,25 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
     event.target.value = "";
   };
 
+  const toggleActionMenu = () => {
+    setShowActionMenu((prev) => {
+      const next = !prev;
+      if (next) {
+        setShowEmojiPicker(false);
+      }
+      return next;
+    });
+  };
+
   const triggerFileDialog = () => {
+    setShowActionMenu(false);
+    setShowEmojiPicker(false);
     fileInputRef.current?.click();
   };
 
   const toggleEmojiPicker = () => {
     setShowEmojiPicker((prev) => !prev);
+    setShowActionMenu(false);
   };
 
   const handleEmojiSelect = (emoji: string) => {
@@ -1013,14 +1064,62 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
         {open && (
           <div className="message-input-container">
             <div className="message-input-inner">
-              <button
-                type="button"
-                className="message-icon-button"
-                onClick={triggerFileDialog}
-                aria-label="Add attachment"
+              <div
+                className="message-action-wrapper"
+                ref={actionMenuRef}
               >
-                <Plus size={18} />
-              </button>
+                <button
+                  type="button"
+                  className="message-icon-button"
+                  onClick={toggleActionMenu}
+                  aria-label="Open message actions"
+                  aria-haspopup="true"
+                  aria-expanded={showActionMenu}
+                >
+                  <Plus size={18} />
+                </button>
+                {showActionMenu && (
+                  <div
+                    className="message-action-menu"
+                    role="menu"
+                    aria-label="Message actions"
+                  >
+                    <button
+                      type="button"
+                      className="message-action-menu-button"
+                      onClick={triggerFileDialog}
+                      role="menuitem"
+                    >
+                      <Paperclip size={14} />
+                      <span>File</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="message-action-menu-button"
+                      onClick={toggleEmojiPicker}
+                      role="menuitem"
+                    >
+                      <Smile size={14} />
+                      <span>Emoji</span>
+                    </button>
+                  </div>
+                )}
+                {showEmojiPicker && (
+                  <div className="emoji-picker" role="menu">
+                    {DEFAULT_EMOJIS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        className="emoji-button"
+                        onClick={() => handleEmojiSelect(emoji)}
+                        aria-label={`Insert ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <input
                 type="text"
                 placeholder="Message"
@@ -1034,32 +1133,14 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
                 }}
                 className="message-input"
               />
-              <button
-                type="button"
-                className="message-icon-button"
-                onClick={toggleEmojiPicker}
-                aria-label="Insert emoji"
-              >
-                <Smile size={18} />
-              </button>
-              {showEmojiPicker && (
-                <div className="emoji-picker" role="menu">
-                  {DEFAULT_EMOJIS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      className="emoji-button"
-                      onClick={() => handleEmojiSelect(emoji)}
-                      aria-label={`Insert ${emoji}`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
-            <button onClick={sendMessage} className="send-button">
-              Send it
+            <button
+              type="button"
+              onClick={sendMessage}
+              className="send-button"
+              aria-label="Send message"
+            >
+              <Send size={18} />
             </button>
             <input
               ref={fileInputRef}

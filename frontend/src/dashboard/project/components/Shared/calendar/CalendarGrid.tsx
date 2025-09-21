@@ -4,7 +4,7 @@ import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons
 import { endOfWeek, rangePct, startOfWeek } from "@/dashboard/home/utils/dateUtils";
 import { getColor } from "@/shared/utils/colorUtils";
 import CalendarDayButton from "./CalendarDayButton";
-import { DOT_MAX_VISIBLE, DOT_OVERLAP_PX, DOT_SIZE, DOT_STROKE } from "./constants";
+import { DOT_SIZE, DOT_STROKE } from "./constants";
 import type { TimelineEvent } from "./types";
 import { formatDateLabel } from "./utils";
 
@@ -102,7 +102,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
 
               {week.map(({ date, key, inMonth }) => {
                 const dayEvents = eventsByDate[key] || [];
-                const dayDots = dayEvents.map((event, idx) => projectColor || getColor(event.description || String(idx)));
+                const primaryEvent = dayEvents[0];
+                const iconColor =
+                  projectColor ||
+                  (primaryEvent ? getColor(primaryEvent.description || primaryEvent.id || key) : undefined);
+                const hasEvents = dayEvents.length > 0;
                 const isSelected = selectedKey === key;
                 const isToday = todayKey === key;
                 const isFlashing = flashKey === key;
@@ -119,33 +123,39 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                       isToday={isToday}
                       isFlashing={isFlashing}
                       inRange={inRange}
-                      hasEvents={dayEvents.length > 0}
+                      hasEvents={hasEvents}
                       label={`Events on ${label}`}
                       onOpen={onDayOpen}
                     >
                       <div className="tile-date-number">{date.getDate()}</div>
 
                       <div className="day-dots">
-                        {dayDots.slice(0, DOT_MAX_VISIBLE).map((color, idx) => (
+                        {hasEvents && (
                           <svg
-                            key={`${key}-dot-${idx}`}
+                            key={`${key}-dot`}
                             width={DOT_SIZE}
                             height={DOT_SIZE}
                             viewBox="0 0 24 24"
-                            style={{
-                              marginLeft: idx ? -DOT_OVERLAP_PX : 0,
-                              filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))",
-                              zIndex: 20 - idx,
-                            }}
+                            style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,.45))" }}
                             aria-hidden
                           >
                             <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.65)" />
-                            <circle cx="12" cy="12" r={10 - DOT_STROKE} fill="none" stroke={color} strokeWidth={DOT_STROKE} />
-                            <path d="M12 7v5l3 2" stroke={color} strokeWidth={DOT_STROKE} fill="none" strokeLinecap="round" />
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r={10 - DOT_STROKE}
+                              fill="none"
+                              stroke={iconColor}
+                              strokeWidth={DOT_STROKE}
+                            />
+                            <path
+                              d="M12 7v5l3 2"
+                              stroke={iconColor}
+                              strokeWidth={DOT_STROKE}
+                              fill="none"
+                              strokeLinecap="round"
+                            />
                           </svg>
-                        ))}
-                        {dayDots.length > DOT_MAX_VISIBLE && (
-                          <span className="day-dot-more">+{dayDots.length - DOT_MAX_VISIBLE}</span>
                         )}
                       </div>
                     </CalendarDayButton>

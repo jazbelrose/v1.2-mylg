@@ -1,13 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MOBILE_QUERY } from "./constants";
 
-interface DayOverlayState {
-  anchor: HTMLButtonElement | null;
-  date: Date;
-  dayKey: string;
-}
-
-export function useIsMobile() {
+function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === "undefined" || !window.matchMedia) {
       return false;
@@ -27,6 +21,12 @@ export function useIsMobile() {
   return isMobile;
 }
 
+interface DayOverlayState {
+  anchor: HTMLButtonElement | null;
+  date: Date;
+  dayKey: string;
+}
+
 export function useDayOverlay() {
   const [state, setState] = useState<DayOverlayState | null>(null);
   const isMobile = useIsMobile();
@@ -39,13 +39,16 @@ export function useDayOverlay() {
     setState(null);
   }, []);
 
-  return {
-    anchor: state?.anchor || null,
-    date: state?.date || null,
-    dayKey: state?.dayKey || null,
-    isOpen: Boolean(state),
-    isMobile,
-    open,
-    close,
-  } as const;
+  return useMemo(
+    () => ({
+      anchor: state?.anchor || null,
+      date: state?.date || null,
+      dayKey: state?.dayKey || null,
+      isOpen: Boolean(state),
+      isMobile,
+      open,
+      close,
+    }),
+    [state, isMobile, open, close]
+  );
 }

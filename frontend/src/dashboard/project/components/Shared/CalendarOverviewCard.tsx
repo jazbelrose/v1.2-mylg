@@ -4,15 +4,9 @@ import CalendarBase, { CalendarBaseProps } from "./calendar/CalendarBase";
 
 export type { Project, TimelineEvent } from "./calendar/CalendarBase";
 
-export interface CalendarOverviewCardProps
-  extends Omit<CalendarBaseProps, "wrapperClassName" | "dayHeaderIdPrefix" | "showEventList"> {
-  showEventList?: boolean;
-}
+type CalendarOverviewCardProps = Omit<CalendarBaseProps, "wrapperClassName" | "dayHeaderIdPrefix">;
 
-const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
-  showEventList = true,
-  ...props
-}) => {
+const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({ showEventList = true, ...props }) => {
   return (
     <CalendarBase
       {...props}

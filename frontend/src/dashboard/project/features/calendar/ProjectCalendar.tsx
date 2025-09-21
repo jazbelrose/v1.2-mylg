@@ -1,16 +1,16 @@
 import React from "react";
 import "./project-calendar.css";
-import CalendarBase, { CalendarBaseProps } from "@/dashboard/project/components/Shared/calendar/CalendarBase";
+import CalendarBase, { CalendarBaseProps } from "../../components/Shared/calendar/CalendarBase";
 
-export type { Project, TimelineEvent } from "@/dashboard/project/components/Shared/calendar/CalendarBase";
+export type { Project, TimelineEvent } from "../../components/Shared/calendar/CalendarBase";
 
-export type ProjectCalendarProps = Omit<CalendarBaseProps, "wrapperClassName" | "dayHeaderIdPrefix" | "showEventList">;
+type ProjectCalendarProps = Omit<CalendarBaseProps, "wrapperClassName" | "dayHeaderIdPrefix" | "showEventList">;
 
 const ProjectCalendar: React.FC<ProjectCalendarProps> = (props) => {
   return (
     <CalendarBase
       {...props}
-      wrapperClassName="project-calendar-wrapper"
+      wrapperClassName="dashboard-item project-calendar-wrapper"
       dayHeaderIdPrefix="project-calendar-day"
     />
   );

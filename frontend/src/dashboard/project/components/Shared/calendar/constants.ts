@@ -1,6 +1,4 @@
-import type { CategoryOption, UnitOption } from "./types";
-
-export const CATEGORY_OPTIONS: readonly CategoryOption[] = [
+export const CATEGORY_OPTIONS = [
   "AUDIO-VISUAL",
   "CLIENT-SERVICES-VIP",
   "CONTINGENCY-MISC",
@@ -23,9 +21,9 @@ export const CATEGORY_OPTIONS: readonly CategoryOption[] = [
   "TRUCKING",
   "VENUE-LOCATION-FEES",
   "WAREHOUSE",
-];
+] as const;
 
-export const UNIT_OPTIONS: readonly UnitOption[] = [
+export const UNIT_OPTIONS = [
   "Each",
   "Hrs",
   "Days",
@@ -35,7 +33,7 @@ export const UNIT_OPTIONS: readonly UnitOption[] = [
   "LF",
   "SQFT",
   "KG",
-];
+] as const;
 
 export const DOT_SIZE = 10;
 export const DOT_STROKE = 2;
@@ -46,6 +44,7 @@ export const MOBILE_QUERY = "(max-width: 640px)";
 export const POPPER_GAP = 12;
 export const FOCUSABLE_SELECTOR =
   'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export const INTERACTIVE_SAFE_PAD = 12;
 
 export const WRAPPER_INTERACTIVE_SELECTOR = [
@@ -56,7 +55,7 @@ export const WRAPPER_INTERACTIVE_SELECTOR = [
   "textarea",
   "[role=\"button\"]",
   "[role=\"link\"]",
-  "[data-stop-card-nav]",
+  "[data-stopnav]",
   ".calendar-day",
   ".calendar-day-wrapper",
 ].join(", ");

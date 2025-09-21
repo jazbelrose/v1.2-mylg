@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import type { TimelineEvent } from "./types";
 import { FOCUSABLE_SELECTOR, POPPER_GAP } from "./constants";
-import { isElementWithin } from "./utils";
+import { formatHours, isElementWithin } from "./utils";
 
 export interface DayOverlayContentProps {
   headerId: string;
@@ -42,21 +42,17 @@ export const DayOverlayContent: React.FC<DayOverlayContentProps> = ({
         {hasEvents ? (
           <ul className="day-overlay-events" role="list">
             {events.map((event) => {
-              const hoursLabel = (() => {
-                if (event.hours === undefined || event.hours === null || event.hours === "") {
-                  return null;
-                }
-                const hoursNumber = Number(event.hours);
-                if (Number.isNaN(hoursNumber)) return `${event.hours}`;
-                const suffix = hoursNumber === 1 ? "hr" : "hrs";
-                return `${hoursNumber} ${suffix}`;
-              })();
-
+              const hoursLabel = formatHours(event.hours);
               return (
                 <li key={event.id} className="day-overlay-event">
-                  <div className="day-overlay-event-title">{event.description}</div>
-                  {hoursLabel && <div className="day-overlay-event-hours">{hoursLabel}</div>}
-
+                  <div className="day-overlay-event-info">
+                    <span className="day-overlay-event-title">
+                      {event.description || "Untitled event"}
+                    </span>
+                    {hoursLabel && (
+                      <span className="day-overlay-event-hours">{hoursLabel}</span>
+                    )}
+                  </div>
                   <div className="day-overlay-event-actions">
                     <button type="button" onClick={() => onEdit(event)}>
                       Edit
@@ -70,15 +66,13 @@ export const DayOverlayContent: React.FC<DayOverlayContentProps> = ({
             })}
           </ul>
         ) : (
-          <p className="day-overlay-empty">No events for this date yet.</p>
+          <div className="day-overlay-empty">No events yet</div>
         )}
       </div>
 
-      <footer className="day-overlay-footer">
-        <button type="button" className="day-overlay-new" onClick={onNew}>
-          + New event
-        </button>
-      </footer>
+      <button type="button" className="day-overlay-new" onClick={onNew}>
+        + New event
+      </button>
     </div>
   );
 };
@@ -195,11 +189,12 @@ export const DayPopover: React.FC<DayPopoverProps> = ({ anchor, onClose, ...cont
   return createPortal(
     <div
       ref={popoverRef}
-      className={`day-overlay-popover${ready ? " ready" : ""}`}
+      className={`day-popover${ready ? " ready" : ""}`}
       style={{ top: style.top, left: style.left }}
       role="dialog"
       aria-modal="true"
       aria-labelledby={contentProps.headerId}
+      tabIndex={-1}
     >
       <DayOverlayContent onClose={onClose} {...contentProps} />
     </div>,
@@ -213,6 +208,22 @@ export interface DaySheetProps extends DayOverlayContentProps {
 
 export const DaySheet: React.FC<DaySheetProps> = ({ onClose, ...contentProps }) => {
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const focusable = sheet.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    (focusable || sheet).focus({ preventScroll: true });
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -223,13 +234,6 @@ export const DaySheet: React.FC<DaySheetProps> = ({ onClose, ...contentProps }) 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
-
-  useLayoutEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    const focusable = sheet.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-    (focusable || sheet).focus({ preventScroll: true });
-  }, []);
 
   return createPortal(
     <div className="day-sheet" role="dialog" aria-modal="true" aria-labelledby={contentProps.headerId}>

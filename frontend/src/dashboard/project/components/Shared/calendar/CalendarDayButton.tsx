@@ -1,6 +1,6 @@
 import React, { MouseEvent as ReactMouseEvent } from "react";
 
-export interface CalendarDayButtonProps {
+interface CalendarDayButtonProps {
   date: Date;
   dayKey: string;
   inMonth: boolean;
@@ -15,10 +15,19 @@ export interface CalendarDayButtonProps {
 }
 
 const CalendarDayButton = React.forwardRef<HTMLButtonElement, CalendarDayButtonProps>(
-  (
-    { date, dayKey, inMonth, isSelected, isToday, isFlashing, inRange, hasEvents, label, onOpen, children },
-    ref
-  ) => {
+  ({
+    date,
+    dayKey,
+    inMonth,
+    isSelected,
+    isToday,
+    isFlashing,
+    inRange,
+    hasEvents,
+    label,
+    onOpen,
+    children,
+  }, ref) => {
     const className = [
       "calendar-day",
       inMonth ? "" : "calendar-day--muted",

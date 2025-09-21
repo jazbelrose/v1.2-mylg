@@ -154,8 +154,6 @@ function getDateKey(date?: Date | null): string | null {
   return `${y}-${m}-${d}`;
 }
 
-const fmt = (date: Date): string => getDateKey(date) || "";
-
 function formatDateLabel(date: Date): string {
   return date.toLocaleDateString(undefined, {
     weekday: "long",
@@ -1374,7 +1372,7 @@ const CalendarOverviewCard: React.FC<CalendarOverviewCardProps> = ({
   const handleDayOpen = useCallback(
     (
       anchor: HTMLButtonElement,
-      { date, dayKey, inMonth }: { date: Date; dayKey: string; inMonth: boolean }
+      { date, dayKey }: { date: Date; dayKey: string; inMonth: boolean }
     ) => {
       if (!dayKey) return;
 

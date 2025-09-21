@@ -86,6 +86,78 @@
   width: 100%;
 }
 
+.budget-overview-card {
+  gap: 16px;
+  align-items: stretch;
+}
+
+.budget-overview-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.budget-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.budget-title-icon {
+  color: currentColor;
+}
+
+.budget-title-text {
+  font-size: clamp(1.2rem, 3vw, 1.75rem);
+  font-weight: 600;
+}
+
+.budget-revision {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.budget-spinner {
+  margin-top: 4px;
+}
+
+.budget-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.budget-amount {
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  font-weight: 700;
+}
+
+.budget-invoice-icon {
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.budget-updated {
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  color: #9ca3af;
+}
+
+.budget-loading-chart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+  min-height: 160px;
+  flex: 0 0 auto;
+}
+
+.budget-chart-wrapper {
+  margin-left: 10px;
+}
+
 .chart-legend-container {
   display: flex;
   align-items: stretch;
@@ -166,23 +238,41 @@
 /* Mobile adjustments for dashboard cards */
 @media (max-width: var(--breakpoint-sm)) {
   .dashboard-item.budget {
-    padding: 15px;
-    flex-direction: row;
-    align-items: flex-start;
-    min-height: 200px;
-  }
-  .budget-component-container {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-  .chart-legend-container {
+    padding: 12px 16px;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    min-height: auto;
+    gap: 12px;
+  }
+  .budget-overview-card {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .budget-overview-header {
+    gap: 6px;
+  }
+  .budget-summary {
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .budget-amount {
+    font-size: clamp(1.25rem, 6vw, 2rem);
+  }
+  .budget-chart-wrapper,
+  .budget-loading-chart,
+  .chart-legend-container {
     margin-left: 0;
+    justify-content: center;
+  }
+  .budget-chart {
+    width: min(220px, 65vw);
+    height: min(220px, 65vw);
   }
   .budget-legend {
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: center;
     margin: 8px 0 0;
   }
   .budget-legend-item {
@@ -190,7 +280,6 @@
     font-size: 0.7rem;
     line-height: 0.9;
   }
-  .dashboard-item.budget span,
   .dashboard-item.view-gallery span {
     font-size: 18px;
   }

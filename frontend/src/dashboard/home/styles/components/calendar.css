@@ -55,6 +55,18 @@
   min-width: 0;
 }
 
+@media (max-width: var(--breakpoint-md)) {
+  .budget-calendar-layout {
+    flex-direction: column !important;
+  }
+
+  .budget-calendar-layout .budget-column,
+  .budget-calendar-layout .calendar-column {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+
 /* Timeline + Location row layout */
 .timeline-location-row {
   display: flex;

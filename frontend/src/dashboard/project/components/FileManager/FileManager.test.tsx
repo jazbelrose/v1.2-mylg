@@ -85,23 +85,34 @@ vi.mock("@/shared/utils/api", () => {
     apiFetch: vi.fn(() =>
       Promise.resolve({ ok: true, json: vi.fn().mockResolvedValue([]) })
     ),
+    updateProjectFields: vi.fn(() => Promise.resolve({})),
   };
 });
 // -- Imports that use the mocks -------------------------------------------------
 import FileManagerComponent from "./FileManager";
 
+const toastMocks = vi.hoisted(() => ({
+  notify: vi.fn(),
+  notifyLoading: vi.fn(),
+  updateNotification: vi.fn(),
+}));
+
 // Mock NotificationContainer since it's just a wrapper
-vi.mock('@/shared/ui/ToastNotifications', () => ({
+vi.mock("@/shared/ui/ToastNotifications", () => ({
   NotificationContainer: () => null,
+  notify: toastMocks.notify,
+  notifyLoading: toastMocks.notifyLoading,
+  updateNotification: toastMocks.updateNotification,
 }));
 
 // Import mocked modules after mocks are defined
-import { NotificationContainer } from '@/shared/ui/ToastNotifications';
+import { NotificationContainer } from "@/shared/ui/ToastNotifications";
 
 type Mock = ReturnType<typeof vi.fn>;
 
 let useDataMock: Mock;
 let apiFetchMock: Mock;
+let updateProjectFieldsMock: Mock;
 
 // -- Setup ----------------------------------------------------------------------
 beforeEach(async () => {
@@ -110,6 +121,7 @@ beforeEach(async () => {
 
   const apiModule = await import('@/shared/utils/api');
   apiFetchMock = apiModule.apiFetch as Mock;
+  updateProjectFieldsMock = apiModule.updateProjectFields as Mock;
 
   useDataMock.mockReset();
   useDataMock.mockReturnValue({
@@ -127,6 +139,11 @@ beforeEach(async () => {
 
   apiFetchMock.mockReset();
   apiFetchMock.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue([]) });
+  updateProjectFieldsMock.mockReset();
+  updateProjectFieldsMock.mockResolvedValue({});
+  toastMocks.notify.mockReset();
+  toastMocks.notifyLoading.mockReset();
+  toastMocks.updateNotification.mockReset();
 });
 
 // -- Tests ----------------------------------------------------------------------
@@ -199,6 +216,39 @@ test("sorts files by selected option including kind", async () => {
       "file3.txt",
     ]);
   });
+});
+
+test("allows creating a custom folder", async () => {
+  const user = userEvent.setup();
+  const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("Specs");
+
+  try {
+    render(
+      <>
+        <NotificationContainer />
+        <FileManagerComponent folder="invoices" />
+      </>
+    );
+
+    await user.click(screen.getByText("Invoices"));
+
+    const createButton = await screen.findByLabelText("Create folder");
+    await user.click(createButton);
+
+    await waitFor(() => {
+      expect(updateProjectFieldsMock).toHaveBeenCalled();
+    });
+
+    expect(updateProjectFieldsMock).toHaveBeenCalledWith("1", {
+      fileManagerFolders: expect.arrayContaining([
+        expect.objectContaining({ key: "specs", name: "Specs" }),
+      ]),
+    });
+
+    expect(screen.getByRole("button", { name: /Specs/ })).toBeInTheDocument();
+  } finally {
+    promptSpy.mockRestore();
+  }
 });
 
 test("filters files by kind", async () => {

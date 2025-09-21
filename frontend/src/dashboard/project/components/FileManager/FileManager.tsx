@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useMemo } from "react";
 import Modal from "../../../../shared/ui/ModalWithStack";
 import ConfirmModal from "@/shared/ui/ConfirmModal";
 import { FileText, Download, Layout, Upload as UploadIcon, PenTool } from "lucide-react";
@@ -14,6 +14,8 @@ import { useFileMessenger } from "../Shared/hooks/useFileMessenger";
 import { useFileTransfers } from "../Shared/hooks/useFileTransfers";
 import type { Message } from "@/app/contexts/DataProvider";
 import type { FileManagerProps, FileManagerRef, FolderOption } from "./FileManagerTypes";
+import { notify } from "@/shared/ui/ToastNotifications";
+import { updateProjectFields } from "@/shared/utils/api";
 
 export type { FileManagerProps, FileManagerRef, FileItem } from "./FileManagerTypes";
 
@@ -112,6 +114,8 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       setFilterOption,
       filterOptionsList,
       displayedFiles,
+      customFolders,
+      setCustomFolders,
       handleSelectionChange,
       handleSelectAll,
       isSelected,
@@ -125,6 +129,15 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       handleTouchEnd,
       sortOptionsList,
     } = state;
+
+    const folderOptions = useMemo(() => {
+      const seen = new Set<string>();
+      return [...SYSTEM_FOLDERS, ...customFolders].filter((option) => {
+        if (!option?.key || seen.has(option.key)) return false;
+        seen.add(option.key);
+        return true;
+      });
+    }, [customFolders]);
 
     const { removeReferences } = useFileMessenger({
       activeProject: activeProject || {},
@@ -161,6 +174,87 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       projectMessages: projectMessages as Record<string, Message[]>,
       canDelete,
     });
+
+    const handleCreateFolder = useCallback(async () => {
+      if (!canUpload) {
+        notify("error", "You do not have permission to create folders.");
+        return;
+      }
+
+      if (typeof window === "undefined") return;
+
+      const rawName = window.prompt("New folder name");
+      if (rawName == null) return;
+
+      const normalizedName = rawName.replace(/\s+/g, " ").trim();
+      if (!normalizedName) {
+        notify("warning", "Folder name cannot be empty.");
+        return;
+      }
+
+      if (
+        folderOptions.some((folderOption) => folderOption.name.toLowerCase() === normalizedName.toLowerCase())
+      ) {
+        notify("warning", "A folder with that name already exists.");
+        return;
+      }
+
+      const baseSlug = normalizedName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      const fallbackSlug = baseSlug || normalizedName.toLowerCase().replace(/\s+/g, "-") || "folder";
+
+      const existingKeys = new Set(folderOptions.map((option) => option.key));
+      let candidateKey = fallbackSlug;
+      let suffix = 1;
+      while (!candidateKey || existingKeys.has(candidateKey)) {
+        candidateKey = `${fallbackSlug || "folder"}-${suffix}`;
+        suffix += 1;
+      }
+
+      const newFolder: FolderOption = { key: candidateKey, name: normalizedName };
+      const previousFolders = customFolders;
+      const previousKey = folderKey;
+
+      const projectId = activeProject?.projectId as string | undefined;
+      if (!projectId) {
+        notify("error", "Select a project before creating folders.");
+        return;
+      }
+
+      const updatedCustomFolders = [...previousFolders, newFolder];
+
+      setCustomFolders(updatedCustomFolders);
+      setFolderKey(candidateKey);
+      setLocalActiveProject((prev) => ({
+        ...(prev || {}),
+        fileManagerFolders: updatedCustomFolders,
+      }));
+
+      try {
+        await updateProjectFields(projectId, { fileManagerFolders: updatedCustomFolders });
+        notify("success", `Created folder "${normalizedName}".`);
+      } catch (error) {
+        console.error("Failed to persist new folder", error);
+        notify("error", "We couldn't save the new folder. Please try again.");
+        setCustomFolders(previousFolders);
+        setLocalActiveProject((prev) => ({
+          ...(prev || {}),
+          fileManagerFolders: previousFolders,
+        }));
+        setFolderKey(previousKey);
+      }
+    }, [
+      activeProject?.projectId,
+      canUpload,
+      customFolders,
+      folderKey,
+      folderOptions,
+      setCustomFolders,
+      setFolderKey,
+      setLocalActiveProject,
+    ]);
 
     const openFilesModal = useCallback(async () => {
       setFilesModalOpen(true);
@@ -208,7 +302,7 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
         >
           <FileManagerToolbar
             folderKey={folderKey}
-            systemFolders={SYSTEM_FOLDERS}
+            folders={folderOptions}
             onFolderChange={setFolderKey}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
@@ -222,6 +316,8 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
             layoutIcon={layoutIconToUse}
             onClose={closeFilesModal}
             renderFolderIcon={getFolderIcon}
+            canCreateFolders={canUpload}
+            onCreateFolder={handleCreateFolder}
           />
 
           <FileManagerContent

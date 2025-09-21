@@ -15,6 +15,7 @@ import type {
   SortOption,
   ViewMode,
 } from "../../FileManager/FileManagerTypes";
+import type { FolderOption } from "../../FileManager/FileManagerTypes";
 
 interface UseFileManagerStateParams
   extends Pick<FileManagerProps, "folder" | "displayName" | "isOpen" | "onRequestClose"> {
@@ -29,6 +30,23 @@ const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
   { value: "kind-asc", label: "Type (A-Z)" },
   { value: "kind-desc", label: "Type (Z-A)" },
 ];
+
+const sanitizeFolderOptions = (value: unknown): FolderOption[] => {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const normalized: FolderOption[] = [];
+
+  (value as Array<Record<string, unknown>>).forEach((item) => {
+    const key = typeof item?.key === "string" ? item.key.trim() : "";
+    const name = typeof item?.name === "string" ? item.name.trim() : "";
+
+    if (!key || !name || seen.has(key)) return;
+    seen.add(key);
+    normalized.push({ key, name });
+  });
+
+  return normalized;
+};
 
 export const useFileManagerState = ({
   folder = "uploads",
@@ -59,6 +77,9 @@ export const useFileManagerState = ({
   const [sortOption, setSortOption] = useState<SortOption>("name-asc");
   const [filterOption, setFilterOption] = useState<FilterValue>("all");
   const [localActiveProject, setLocalActiveProject] = useState<Project>(activeProject || {});
+  const [customFolders, setCustomFolders] = useState<FolderOption[]>(() =>
+    sanitizeFolderOptions((activeProject as Record<string, unknown> | undefined)?.fileManagerFolders)
+  );
 
   const renderedName = useMemo(
     () => displayName || folderKey.charAt(0).toUpperCase() + folderKey.slice(1),
@@ -72,6 +93,12 @@ export const useFileManagerState = ({
   useEffect(() => {
     setLocalActiveProject(activeProject || {});
   }, [activeProject]);
+
+  useEffect(() => {
+    setCustomFolders(
+      sanitizeFolderOptions((activeProject as Record<string, unknown> | undefined)?.fileManagerFolders)
+    );
+  }, [activeProject?.fileManagerFolders]);
 
   useEffect(() => {
     if (typeof isOpen === "boolean") {
@@ -303,6 +330,8 @@ export const useFileManagerState = ({
     filterOptionsList,
     displayedFiles,
     sortFiles,
+    customFolders,
+    setCustomFolders,
     handleSelectionChange,
     handleSelectAll,
     isSelected,

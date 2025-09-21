@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faFolderPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import Dropdown from "./Dropdown";
 import type { FilterValue, FolderOption, SortOption } from "./FileManagerTypes";
@@ -7,7 +7,7 @@ import styles from "./file-manager.module.css";
 
 interface FileManagerToolbarProps {
   folderKey: string;
-  systemFolders: FolderOption[];
+  folders: FolderOption[];
   onFolderChange: (key: string) => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -21,11 +21,13 @@ interface FileManagerToolbarProps {
   layoutIcon: IconDefinition;
   onClose: () => void;
   renderFolderIcon: (key: string, size?: number) => React.ReactNode;
+  canCreateFolders?: boolean;
+  onCreateFolder?: () => void;
 }
 
 export const FileManagerToolbar = ({
   folderKey,
-  systemFolders,
+  folders,
   onFolderChange,
   searchTerm,
   onSearchChange,
@@ -39,11 +41,13 @@ export const FileManagerToolbar = ({
   layoutIcon,
   onClose,
   renderFolderIcon,
+  canCreateFolders = false,
+  onCreateFolder,
 }: FileManagerToolbarProps) => {
   return (
     <div className={styles.modalHeader}>
       <div className={styles.folderTabs}>
-        {systemFolders.map((folder) => (
+        {folders.map((folder) => (
           <button
             key={folder.key}
             className={`${styles.tabButton} ${folderKey === folder.key ? styles.activeTab : ""}`}
@@ -69,6 +73,16 @@ export const FileManagerToolbar = ({
           onChange={onFilterChange}
         />
         <Dropdown label="Sort files" options={sortOptions} value={sortOption} onChange={onSortChange} />
+        {canCreateFolders && (
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={onCreateFolder}
+            aria-label="Create folder"
+          >
+            <FontAwesomeIcon icon={faFolderPlus} />
+          </button>
+        )}
         <button className={styles.iconButton} onClick={onToggleView} aria-label="Toggle view">
           <FontAwesomeIcon icon={layoutIcon} />
         </button>

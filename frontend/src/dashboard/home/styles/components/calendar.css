@@ -58,11 +58,15 @@
 @media (max-width: var(--breakpoint-md)) {
   .budget-calendar-layout {
     flex-direction: column !important;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    align-items: stretch;
   }
 
   .budget-calendar-layout .budget-column,
   .budget-calendar-layout .calendar-column {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     width: 100%;
   }
 }

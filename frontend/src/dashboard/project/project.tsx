@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import ProjectHeader from "@/dashboard/project/components/Shared/ProjectHeader";
 
 import BudgetOverviewCard from "@/dashboard/project/features/budget/components/BudgetOverviewCard";
@@ -27,6 +33,31 @@ interface LocationState {
   flashDate?: string;
 }
 
+const MOBILE_VIEW_QUERY = "(max-width: 768px)";
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return false;
+    }
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+
+    const matcher = window.matchMedia(query);
+    const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
+
+    setMatches(matcher.matches);
+    matcher.addEventListener("change", handler);
+
+    return () => matcher.removeEventListener("change", handler);
+  }, [query]);
+
+  return matches;
+}
+
 const SingleProject: React.FC = () => {
   const {
     activeProject,
@@ -44,6 +75,7 @@ const SingleProject: React.FC = () => {
   const [filesOpen, setFilesOpen] = useState<boolean>(false);
   const quickLinksRef = useRef<QuickLinksRef>(null);
   const { ws } = useSocket();
+  const isMobileViewport = useMediaQuery(MOBILE_VIEW_QUERY);
 
   const projectNameFromPath = useMemo(() => {
     const segments = location.pathname.split("/").filter(Boolean);
@@ -267,11 +299,13 @@ const SingleProject: React.FC = () => {
                 </div>
               </div>
 
-              <Timeline
-                activeProject={activeProject as Project & { status: string; milestoneTitles?: string[] }}
-                parseStatusToNumber={parseStatusToNumber}
-                onActiveProjectChange={handleActiveProjectChange}
-              />
+              {!isMobileViewport && (
+                <Timeline
+                  activeProject={activeProject as Project & { status: string; milestoneTitles?: string[] }}
+                  parseStatusToNumber={parseStatusToNumber}
+                  onActiveProjectChange={handleActiveProjectChange}
+                />
+              )}
 
               <div className="dashboard-layout timeline-location-row">
                 <div className="location-wrapper">

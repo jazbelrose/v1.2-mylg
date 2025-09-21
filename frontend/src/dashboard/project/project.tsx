@@ -260,43 +260,81 @@ const SingleProject: React.FC = () => {
                 <div className="budget-column">
                   <BudgetOverviewCard projectId={activeProject?.projectId} />
 
+                  {isMobileViewport ? (
+                    <CalendarOverviewCard
+                      project={activeProject as {
+                        projectId: string;
+                        title?: string;
+                        color?: string;
+                        dateCreated?: string;
+                        productionStart?: string;
+                        finishline?: string;
+                        timelineEvents?: Array<{
+                          id: string;
+                          eventId?: string;
+                          date: string;
+                          description?: string;
+                          hours?: number | string;
+                          budgetItemId?: string | null;
+                          createdAt?: string;
+                          payload?: Record<string, unknown>;
+                        }>;
+                        address?: string;
+                        company?: string;
+                        clientName?: string;
+                        invoiceBrandName?: string;
+                        invoiceBrandAddress?: string;
+                        clientAddress?: string;
+                        invoiceBrandPhone?: string;
+                        clientPhone?: string;
+                        clientEmail?: string;
+                      }}
+                      initialFlashDate={flashDate}
+                      showEventList={false}
+                      onWrapperClick={openCalendarPage}
+                      onDateSelect={noop}
+                    />
+                  ) : null}
+
                   <GalleryComponent />
                 </div>
-                <div className="calendar-column">
-                  <CalendarOverviewCard
-                    project={activeProject as {
-                      projectId: string;
-                      title?: string;
-                      color?: string;
-                      dateCreated?: string;
-                      productionStart?: string;
-                      finishline?: string;
-                      timelineEvents?: Array<{
-                        id: string;
-                        eventId?: string;
-                        date: string;
-                        description?: string;
-                        hours?: number | string;
-                        budgetItemId?: string | null;
-                        createdAt?: string;
-                        payload?: Record<string, unknown>;
-                      }>;
-                      address?: string;
-                      company?: string;
-                      clientName?: string;
-                      invoiceBrandName?: string;
-                      invoiceBrandAddress?: string;
-                      clientAddress?: string;
-                      invoiceBrandPhone?: string;
-                      clientPhone?: string;
-                      clientEmail?: string;
-                    }}
-                    initialFlashDate={flashDate}
-                    showEventList={false}
-                    onWrapperClick={openCalendarPage}
-                    onDateSelect={noop}
-                  />
-                </div>
+                {!isMobileViewport && (
+                  <div className="calendar-column">
+                    <CalendarOverviewCard
+                      project={activeProject as {
+                        projectId: string;
+                        title?: string;
+                        color?: string;
+                        dateCreated?: string;
+                        productionStart?: string;
+                        finishline?: string;
+                        timelineEvents?: Array<{
+                          id: string;
+                          eventId?: string;
+                          date: string;
+                          description?: string;
+                          hours?: number | string;
+                          budgetItemId?: string | null;
+                          createdAt?: string;
+                          payload?: Record<string, unknown>;
+                        }>;
+                        address?: string;
+                        company?: string;
+                        clientName?: string;
+                        invoiceBrandName?: string;
+                        invoiceBrandAddress?: string;
+                        clientAddress?: string;
+                        invoiceBrandPhone?: string;
+                        clientPhone?: string;
+                        clientEmail?: string;
+                      }}
+                      initialFlashDate={flashDate}
+                      showEventList={false}
+                      onWrapperClick={openCalendarPage}
+                      onDateSelect={noop}
+                    />
+                  </div>
+                )}
               </div>
 
               {!isMobileViewport && (

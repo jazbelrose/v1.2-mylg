@@ -110,13 +110,12 @@
 }
 
 .budget-title-text {
-  font-size: clamp(1.2rem, 3vw, 1.75rem);
-  font-weight: 600;
+  font-size: clamp(1rem, 3vw, 1.75rem);
 }
 
 .budget-revision {
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: #666666;
 }
 
 .budget-spinner {
@@ -132,7 +131,6 @@
 
 .budget-amount {
   font-size: clamp(1.5rem, 4vw, 3rem);
-  font-weight: 700;
 }
 
 .budget-invoice-icon {
@@ -141,8 +139,8 @@
 }
 
 .budget-updated {
-  font-size: clamp(0.85rem, 2vw, 1.1rem);
-  color: #9ca3af;
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  color: #fa3356;
 }
 
 .budget-loading-chart {

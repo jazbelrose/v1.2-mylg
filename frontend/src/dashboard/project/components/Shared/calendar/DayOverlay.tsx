@@ -54,10 +54,18 @@ export const DayOverlayContent: React.FC<DayOverlayContentProps> = ({
                     )}
                   </div>
                   <div className="day-overlay-event-actions">
-                    <button type="button" onClick={() => onEdit(event)}>
+                    <button
+                      type="button"
+                      className="day-overlay-event-edit"
+                      onClick={() => onEdit(event)}
+                    >
                       Edit
                     </button>
-                    <button type="button" onClick={() => onDelete(event)}>
+                    <button
+                      type="button"
+                      className="day-overlay-event-delete"
+                      onClick={() => onDelete(event)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -70,7 +78,11 @@ export const DayOverlayContent: React.FC<DayOverlayContentProps> = ({
         )}
       </div>
 
-      <button type="button" className="day-overlay-new" onClick={onNew}>
+      <button
+        type="button"
+        className={`day-overlay-new ${hasEvents ? "" : "day-overlay-new--primary"}`.trim()}
+        onClick={onNew}
+      >
         + New event
       </button>
     </div>

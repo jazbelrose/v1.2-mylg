@@ -11,6 +11,7 @@ import type {
   FileItem,
   FileManagerProps,
   FilterValue,
+  FolderOption,
   Project,
   SortOption,
   ViewMode,
@@ -20,6 +21,29 @@ interface UseFileManagerStateParams
   extends Pick<FileManagerProps, "folder" | "displayName" | "isOpen" | "onRequestClose"> {
   activeProject?: Project;
 }
+
+const parseCustomFolders = (value: unknown): FolderOption[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((folder) => {
+      if (!folder) return null;
+      if (typeof folder === "string") {
+        return { key: folder, name: folder } satisfies FolderOption;
+      }
+      if (typeof folder === "object" && "key" in folder) {
+        const key = String((folder as { key: unknown }).key || "").trim();
+        if (!key) return null;
+        const name =
+          typeof (folder as { name?: unknown }).name === "string"
+            ? ((folder as { name?: string }).name || key)
+            : key;
+        return { key, name } satisfies FolderOption;
+      }
+      return null;
+    })
+    .filter((folder): folder is FolderOption => Boolean(folder?.key));
+};
 
 const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
   { value: "name-asc", label: "Name (A-Z)" },
@@ -59,9 +83,16 @@ export const useFileManagerState = ({
   const [sortOption, setSortOption] = useState<SortOption>("name-asc");
   const [filterOption, setFilterOption] = useState<FilterValue>("all");
   const [localActiveProject, setLocalActiveProject] = useState<Project>(activeProject || {});
+  const [customFolders, setCustomFolders] = useState<FolderOption[]>(
+    () => parseCustomFolders((activeProject as { customFolders?: unknown })?.customFolders)
+  );
 
   const renderedName = useMemo(
-    () => displayName || folderKey.charAt(0).toUpperCase() + folderKey.slice(1),
+    () => {
+      if (displayName) return displayName;
+      if (folderKey === "uploads") return "Project Files";
+      return folderKey.charAt(0).toUpperCase() + folderKey.slice(1);
+    },
     [displayName, folderKey]
   );
 
@@ -72,6 +103,10 @@ export const useFileManagerState = ({
   useEffect(() => {
     setLocalActiveProject(activeProject || {});
   }, [activeProject]);
+
+  useEffect(() => {
+    setCustomFolders(parseCustomFolders((localActiveProject as { customFolders?: unknown })?.customFolders));
+  }, [localActiveProject]);
 
   useEffect(() => {
     if (typeof isOpen === "boolean") {
@@ -263,6 +298,30 @@ export const useFileManagerState = ({
 
   const layoutIconToUse = viewMode === "grid" ? faList : faThLarge;
 
+  const addCustomFolder = useCallback(
+    (folder: FolderOption) => {
+      setCustomFolders((prev) => {
+        if (prev.some((existing) => existing.key === folder.key)) {
+          return prev;
+        }
+        return [...prev, folder];
+      });
+
+      setLocalActiveProject((prevProject: Project) => {
+        const currentFolders = parseCustomFolders((prevProject as { customFolders?: unknown })?.customFolders);
+        if (currentFolders.some((existing) => existing.key === folder.key)) {
+          return prevProject;
+        }
+        return {
+          ...prevProject,
+          customFolders: [...currentFolders, folder],
+          [folder.key]: (prevProject as Record<string, unknown>)[folder.key] ?? [],
+        } as Project;
+      });
+    },
+    [setLocalActiveProject]
+  );
+
   return {
     fileInputRef,
     scrollerRef,
@@ -318,6 +377,8 @@ export const useFileManagerState = ({
     handleTouchEnd,
     setFilesModalOpenDirect: setFilesModalOpen,
     sortOptionsList: SORT_OPTIONS,
+    customFolders,
+    addCustomFolder,
   };
 };
 

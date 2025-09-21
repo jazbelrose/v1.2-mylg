@@ -1,14 +1,13 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faFolderPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import Dropdown from "./Dropdown";
-import type { FilterValue, FolderOption, SortOption } from "./FileManagerTypes";
+import type { FilterValue, SortOption } from "./FileManagerTypes";
 import styles from "./file-manager.module.css";
 
 interface FileManagerToolbarProps {
   folderKey: string;
-  systemFolders: FolderOption[];
-  onFolderChange: (key: string) => void;
+  activeFolderName: string;
   searchTerm: string;
   onSearchChange: (value: string) => void;
   filterOption: FilterValue;
@@ -21,12 +20,13 @@ interface FileManagerToolbarProps {
   layoutIcon: IconDefinition;
   onClose: () => void;
   renderFolderIcon: (key: string, size?: number) => React.ReactNode;
+  onCreateFolder: () => void;
+  canCreateFolder: boolean;
 }
 
 export const FileManagerToolbar = ({
   folderKey,
-  systemFolders,
-  onFolderChange,
+  activeFolderName,
   searchTerm,
   onSearchChange,
   filterOption,
@@ -39,22 +39,28 @@ export const FileManagerToolbar = ({
   layoutIcon,
   onClose,
   renderFolderIcon,
+  onCreateFolder,
+  canCreateFolder,
 }: FileManagerToolbarProps) => {
   return (
     <div className={styles.modalHeader}>
-      <div className={styles.folderTabs}>
-        {systemFolders.map((folder) => (
-          <button
-            key={folder.key}
-            className={`${styles.tabButton} ${folderKey === folder.key ? styles.activeTab : ""}`}
-            onClick={() => onFolderChange(folder.key)}
-          >
-            {renderFolderIcon(folder.key, 16)} {folder.name}
-          </button>
-        ))}
+      <div className={styles.modalTitle}>
+        <div className={styles.titleText}>
+          {renderFolderIcon("uploads", 18)}
+          <h2>Project Files</h2>
+        </div>
+        {folderKey !== "uploads" && (
+          <span className={styles.activeFolderBadge}>{activeFolderName}</span>
+        )}
       </div>
 
       <div className={styles.actions}>
+        {canCreateFolder && (
+          <button className={styles.primaryButton} onClick={onCreateFolder} type="button">
+            <FontAwesomeIcon icon={faFolderPlus} />
+            <span className={styles.buttonLabel}>New Folder</span>
+          </button>
+        )}
         <input
           type="text"
           placeholder="Search"

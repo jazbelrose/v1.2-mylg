@@ -455,6 +455,13 @@
   color: rgba(255, 255, 255, 0.48);
 }
 
+.calendar-overview-card-wrapper .calendar-weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 .calendar-overview-card-wrapper .calendar-weeks {
   display: flex;
   flex-direction: column;

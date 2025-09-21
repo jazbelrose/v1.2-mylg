@@ -364,11 +364,18 @@
 .project-calendar-wrapper .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 36px;
+  gap: 4px;
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.48);
+}
+
+.project-calendar-wrapper .calendar-weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .project-calendar-wrapper .calendar-weeks {

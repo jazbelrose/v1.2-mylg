@@ -23,6 +23,8 @@ import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 
+const MOBILE_LAYOUT_WIDTH = 640;
+
 interface LocationState {
   flashDate?: string;
 }
@@ -44,6 +46,11 @@ const SingleProject: React.FC = () => {
   const [filesOpen, setFilesOpen] = useState<boolean>(false);
   const quickLinksRef = useRef<QuickLinksRef>(null);
   const { ws } = useSocket();
+
+  const [isMobileBudgetLayout, setIsMobileBudgetLayout] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth <= MOBILE_LAYOUT_WIDTH;
+  });
 
   const projectNameFromPath = useMemo(() => {
     const segments = location.pathname.split("/").filter(Boolean);
@@ -77,7 +84,6 @@ const SingleProject: React.FC = () => {
     navigate("/dashboard");
   }, [navigate]);
 
-
   const openCalendarPage = useCallback(() => {
     if (!activeProject) return;
     navigate(
@@ -103,6 +109,18 @@ const SingleProject: React.FC = () => {
     },
     [fetchProjectDetails]
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleResize = () => {
+      setIsMobileBudgetLayout(window.innerWidth <= MOBILE_LAYOUT_WIDTH);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   // Keep the active project in sync with the ID from the route.
   useEffect(() => {
@@ -181,6 +199,42 @@ const SingleProject: React.FC = () => {
     };
   }, [ws, activeProject?.projectId]);
 
+  const calendarOverviewCard = (
+    <CalendarOverviewCard
+      project={activeProject as {
+        projectId: string;
+        title?: string;
+        color?: string;
+        dateCreated?: string;
+        productionStart?: string;
+        finishline?: string;
+        timelineEvents?: Array<{
+          id: string;
+          eventId?: string;
+          date: string;
+          description?: string;
+          hours?: number | string;
+          budgetItemId?: string | null;
+          createdAt?: string;
+          payload?: Record<string, unknown>;
+        }>;
+        address?: string;
+        company?: string;
+        clientName?: string;
+        invoiceBrandName?: string;
+        invoiceBrandAddress?: string;
+        clientAddress?: string;
+        invoiceBrandPhone?: string;
+        clientPhone?: string;
+        clientEmail?: string;
+      }}
+      initialFlashDate={flashDate}
+      showEventList={false}
+      onWrapperClick={openCalendarPage}
+      onDateSelect={noop}
+    />
+  );
+
   // Render
   return (
     <ProjectPageLayout
@@ -227,44 +281,13 @@ const SingleProject: React.FC = () => {
               <div className="dashboard-layout budget-calendar-layout">
                 <div className="budget-column">
                   <BudgetOverviewCard projectId={activeProject?.projectId} />
+                  {isMobileBudgetLayout && (
+                    <div className="budget-calendar-mobile-card">{calendarOverviewCard}</div>
+                  )}
 
                   <GalleryComponent />
                 </div>
-                <div className="calendar-column">
-                  <CalendarOverviewCard
-                    project={activeProject as {
-                      projectId: string;
-                      title?: string;
-                      color?: string;
-                      dateCreated?: string;
-                      productionStart?: string;
-                      finishline?: string;
-                      timelineEvents?: Array<{
-                        id: string;
-                        eventId?: string;
-                        date: string;
-                        description?: string;
-                        hours?: number | string;
-                        budgetItemId?: string | null;
-                        createdAt?: string;
-                        payload?: Record<string, unknown>;
-                      }>;
-                      address?: string;
-                      company?: string;
-                      clientName?: string;
-                      invoiceBrandName?: string;
-                      invoiceBrandAddress?: string;
-                      clientAddress?: string;
-                      invoiceBrandPhone?: string;
-                      clientPhone?: string;
-                      clientEmail?: string;
-                    }}
-                    initialFlashDate={flashDate}
-                    showEventList={false}
-                    onWrapperClick={openCalendarPage}
-                    onDateSelect={noop}
-                  />
-                </div>
+                {!isMobileBudgetLayout && <div className="calendar-column">{calendarOverviewCard}</div>}
               </div>
 
               <Timeline

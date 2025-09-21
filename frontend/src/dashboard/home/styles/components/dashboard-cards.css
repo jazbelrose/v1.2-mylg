@@ -86,6 +86,58 @@
   width: 100%;
 }
 
+.budget-overview-card {
+  gap: 16px;
+}
+
+.budget-overview-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.budget-overview-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.budget-overview-icon {
+  flex-shrink: 0;
+}
+
+.budget-overview-revision {
+  margin-left: 8px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.budget-overview-spinner {
+  margin-top: 8px;
+}
+
+.budget-overview-amount {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.budget-overview-invoice-icon {
+  font-size: 1.75rem;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.budget-overview-date {
+  margin-top: 8px;
+}
+
+.budget-calendar-mobile-card {
+  width: 100%;
+}
+
 .chart-legend-container {
   display: flex;
   align-items: stretch;
@@ -171,14 +223,48 @@
     align-items: flex-start;
     min-height: 200px;
   }
+  .budget-overview-card {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .budget-overview-summary {
+    gap: 4px;
+  }
+  .budget-overview-header {
+    gap: 8px;
+  }
+  .budget-overview-revision {
+    margin-left: 6px;
+    font-size: 0.8rem;
+  }
+  .budget-overview-spinner {
+    margin-top: 6px;
+  }
+  .budget-overview-amount {
+    margin-top: 4px;
+  }
+  .budget-overview-invoice-icon {
+    margin-left: 4px;
+  }
+  .budget-overview-date {
+    margin-top: 4px;
+  }
+  .budget-calendar-mobile-card {
+    display: flex;
+  }
+  .budget-calendar-mobile-card > * {
+    flex: 1 1 auto;
+  }
   .budget-component-container {
     flex-direction: row;
     align-items: flex-start;
+    flex-wrap: wrap;
   }
   .chart-legend-container {
     flex-direction: column;
     align-items: center;
     margin-left: 0;
+    gap: 8px;
   }
   .budget-legend {
     flex-direction: row;
@@ -209,6 +295,10 @@
   .dashboard-item.notes span {
     display: block;
     white-space: pre-wrap;
+  }
+  .budget-chart {
+    width: min(140px, 45vw);
+    height: min(140px, 45vw);
   }
 }
 

@@ -114,30 +114,16 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
 
   return (
     <div
-      className="dashboard-item budget budget-component-container"
+      className="dashboard-item budget budget-component-container budget-overview-card"
       onClick={isAdmin ? openBudgetPage : undefined}
       style={{ cursor: isAdmin ? "pointer" : "default", position: "relative" }}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-        }}
-      >
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-          }}
-        >
-          <CircleDollarSign size={26} style={{ marginRight: "12px" }} />
+      <div className="budget-overview-summary">
+        <span className="budget-overview-header">
+          <CircleDollarSign size={26} className="budget-overview-icon" />
           Budget
           {budgetHeader?.clientRevisionId != null && (
-            <span style={{ marginLeft: "8px", fontSize: "0.9rem", color: "#666" }}>
-              {`Rev.${budgetHeader.clientRevisionId}`}
-            </span>
+            <span className="budget-overview-revision">{`Rev.${budgetHeader.clientRevisionId}`}</span>
           )}
         </span>
 
@@ -145,24 +131,17 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
           <FontAwesomeIcon
             icon={faSpinner}
             spin
-            style={{ marginTop: "8px" }}
+            className="budget-overview-spinner"
             aria-label="Loading budget"
           />
         ) : (
           <>
-            <span
-              style={{
-                marginTop: "8px",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
+            <span className="budget-overview-amount">
               {budgetHeader ? formatUSD(ballparkValue) : "Not available"}
               {budgetHeader && (
                 <FontAwesomeIcon
                   icon={faFileInvoiceDollar}
-                  style={{ fontSize: "1.75rem", cursor: "pointer", marginLeft: "8px" }}
+                  className="budget-overview-invoice-icon"
                   title="Invoice preview"
                   aria-label="Invoice preview"
                   role="button"
@@ -182,7 +161,7 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
               )}
             </span>
 
-            <span style={{ marginTop: "8px" }}>
+            <span className="budget-overview-date">
               {(() => {
                 const createdAt = budgetHeader?.createdAt;
                 return createdAt ? new Date(createdAt as string | number | Date).toLocaleDateString() : "No date";

@@ -93,6 +93,7 @@ import FileManagerComponent from "./FileManager";
 // Mock NotificationContainer since it's just a wrapper
 vi.mock('@/shared/ui/ToastNotifications', () => ({
   NotificationContainer: () => null,
+  notify: vi.fn(),
 }));
 
 // Import mocked modules after mocks are defined

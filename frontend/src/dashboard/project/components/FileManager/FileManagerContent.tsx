@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faDownload, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { Upload } from "lucide-react";
 import Spinner from "../../../../shared/ui/Spinner";
-import type { FileItem, ViewMode } from "./FileManagerTypes";
+import type { FileItem, FolderOption, ViewMode } from "./FileManagerTypes";
 import {
   getFilePreviewIcon,
   getThumbnailUrl,
@@ -31,6 +31,10 @@ interface FileManagerContentProps {
   onDeleteSingle: (url: string) => void;
   canDelete: boolean;
   folderKey: string;
+  folders: FolderOption[];
+  onFolderOpen: (key: string) => void;
+  onBackToRoot: () => void;
+  renderFolderIcon: (key: string, size?: number) => React.ReactNode;
 }
 
 const renderPreview = (file: FileItem, folderKey: string) => {
@@ -74,6 +78,10 @@ export const FileManagerContent = ({
   onDeleteSingle,
   canDelete,
   folderKey,
+  folders,
+  onFolderOpen,
+  onBackToRoot,
+  renderFolderIcon,
 }: FileManagerContentProps) => {
   return (
     <div
@@ -84,6 +92,34 @@ export const FileManagerContent = ({
       onDrop={onDrop}
     >
       {isDragging && <div className={styles.dragOverlay}>Drop files to upload</div>}
+
+      <div className={styles.folderSection}>
+        <div className={styles.folderSectionHeader}>
+          <h3>Folders</h3>
+          {folderKey !== "uploads" && (
+            <button className={styles.secondaryButton} onClick={onBackToRoot} type="button">
+              Back to Project Files
+            </button>
+          )}
+        </div>
+        {folders.length === 0 ? (
+          <div className={styles.emptyFoldersMessage}>No additional folders yet.</div>
+        ) : (
+          <div className={styles.folderGrid}>
+            {folders.map((folder) => (
+              <button
+                type="button"
+                key={folder.key}
+                className={`${styles.folderTile} ${folderKey === folder.key ? styles.activeFolderTile : ""}`}
+                onClick={() => onFolderOpen(folder.key)}
+              >
+                <span className={styles.folderIcon}>{renderFolderIcon(folder.key, 24)}</span>
+                <span className={styles.folderLabel}>{folder.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {isLoading && (
         <div className={styles.loadingOverlay}>

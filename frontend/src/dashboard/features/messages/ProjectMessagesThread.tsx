@@ -962,7 +962,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
           width: "100%",
           height: floating ? (open ? "100%" : "50px") : "100%",
           overflow: floating && !open ? "hidden" : "visible",
-          borderRadius: open ? "20px" : "10px",
+          
           backgroundColor: "transparent",
           position: floating ? "relative" : "sticky",
           top: floating ? undefined : headerOffset,

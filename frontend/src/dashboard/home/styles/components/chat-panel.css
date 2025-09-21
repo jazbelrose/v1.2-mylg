@@ -33,7 +33,7 @@ body.chat-panel-docked {
 .chat-panel.floating {
   position: fixed;
   height: 400px;
-  border-radius: 20px;
+  border-radius: 32px;
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
   
   transition: height 0.3s ease;

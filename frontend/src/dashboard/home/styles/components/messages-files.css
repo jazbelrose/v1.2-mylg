@@ -4,7 +4,7 @@
   width: 100%;
   height: 100%;
   display: flex;
-  border-radius: 20px;
+  border-radius: 32px;
   overflow: hidden;
   flex: 1;
   display: flex;
@@ -19,7 +19,7 @@
   width: 100%;
   height: 100%;
   border: 2px solid white;
-  border-radius: 20px;
+  border-radius: 32px;
   padding: 10px;
   background: rgba(255, 255, 255, 0.02);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
@@ -41,7 +41,7 @@
   flex-direction: column;
   padding-right: 5px;
   
-  border-radius: 20px;
+  border-radius: 32px;
   padding: 16px;
   background: rgba(255, 255, 255, 0.02);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
@@ -54,7 +54,7 @@
 }
 
 .project-messages.closed {
-  border-radius: 10px;
+  border-radius: 20px;
 }
 
 .project-messages.dragging {

@@ -24,6 +24,41 @@ import { ProjectsContext } from "./ProjectsContext";
 import type { ProjectsValue, DMReadStatusMap } from "./ProjectsContextValue";
 import type { Project, TimelineEvent, Message } from "./DataProvider";
 
+const mergeProjectWithFallback = (
+  primary: Project,
+  fallback?: Project | null
+): Project => {
+  if (!fallback) return primary;
+
+  const merged: Project = { ...fallback, ...primary };
+
+  (Object.keys(primary) as Array<keyof Project>).forEach((key) => {
+    if (primary[key] === undefined && fallback[key] !== undefined) {
+      merged[key] = fallback[key] as never;
+    }
+  });
+
+  if (primary.timelineEvents !== undefined) {
+    merged.timelineEvents = primary.timelineEvents;
+  } else if (fallback.timelineEvents !== undefined && merged.timelineEvents === undefined) {
+    merged.timelineEvents = fallback.timelineEvents;
+  }
+
+  if (Array.isArray(primary.thumbnails)) {
+    merged.thumbnails = primary.thumbnails;
+  } else if (
+    (primary.thumbnails === undefined || primary.thumbnails === null) &&
+    Array.isArray(fallback.thumbnails)
+  ) {
+    merged.thumbnails = fallback.thumbnails;
+  }
+
+  return merged;
+};
+
+const projectNeedsDetailHydration = (project: Project | null | undefined): project is Project =>
+  Boolean(project) && (project.description === undefined || project.customFolders === undefined);
+
 export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
 
@@ -180,57 +215,39 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
         const detailed = await Promise.all(
           withIds.map(async (proj) => {
-            // Try to hydrate from localStorage first
-            if (proj.description === undefined) {
+            let hydrated = proj;
+            const cacheKey = `project-${proj.projectId}`;
+
+            if (projectNeedsDetailHydration(hydrated)) {
               try {
-                const cached = localStorage.getItem(`project-${proj.projectId}`);
+                const cached = localStorage.getItem(cacheKey);
                 if (cached) {
                   const parsed = JSON.parse(cached) as Project;
-                  if (parsed.description !== undefined) {
-                    const merged: Project = {
-                      ...proj,
-                      ...parsed,
-                      thumbnails: proj.thumbnails ?? parsed.thumbnails,
-                    };
-                    try {
-                      localStorage.setItem(`project-${proj.projectId}`, JSON.stringify(merged));
-                    } catch {
-                      /* ignore */
-                    }
-                    return merged;
-                  }
+                  hydrated = mergeProjectWithFallback(hydrated, parsed);
                 }
-              } catch {
-                /* ignore */
-              }
-
-              // Fall back to deep fetch when not cached
-              try {
-                const fetched = (await fetchProjectById(proj.projectId)) as Project | undefined;
-                if (fetched) {
-                  const merged: Project = {
-                    ...proj,
-                    ...fetched,
-                    timelineEvents: proj.timelineEvents,
-                  };
-                  try {
-                    localStorage.setItem(`project-${proj.projectId}`, JSON.stringify(merged));
-                  } catch {
-                    /* ignore */
-                  }
-                  return merged;
-                }
-              } catch (err) {
-                console.error("Failed to fetch project details", err);
-              }
-            } else {
-              try {
-                localStorage.setItem(`project-${proj.projectId}`, JSON.stringify(proj));
               } catch {
                 /* ignore */
               }
             }
-            return proj;
+
+            if (projectNeedsDetailHydration(hydrated)) {
+              try {
+                const fetched = (await fetchProjectById(proj.projectId)) as Project | null;
+                if (fetched) {
+                  hydrated = mergeProjectWithFallback(hydrated, fetched);
+                }
+              } catch (err) {
+                console.error("Failed to fetch project details", err);
+              }
+            }
+
+            try {
+              localStorage.setItem(cacheKey, JSON.stringify(hydrated));
+            } catch {
+              /* ignore */
+            }
+
+            return hydrated;
           })
         );
 
@@ -265,25 +282,23 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
       }
       let project = projects.find((p) => p.projectId === projectId);
 
-      // Attempt to hydrate from localStorage when description is missing
-      if (project?.description === undefined) {
+      // Attempt to hydrate from localStorage when important fields are missing
+      if (projectNeedsDetailHydration(project)) {
         try {
           const cached = localStorage.getItem(`project-${projectId}`);
           if (cached) {
             const parsed = JSON.parse(cached) as Project;
-            if (parsed.description !== undefined) {
-              project = { ...project, ...parsed } as Project;
-              setProjects((prev) => {
-                if (!Array.isArray(prev)) return prev;
-                const idx = prev.findIndex((p) => p.projectId === projectId);
-                if (idx !== -1) {
-                  const updated = [...prev];
-                  updated[idx] = project as Project;
-                  return updated;
-                }
-                return [...prev, project as Project];
-              });
-            }
+            project = mergeProjectWithFallback(project, parsed);
+            setProjects((prev) => {
+              if (!Array.isArray(prev)) return prev;
+              const idx = prev.findIndex((p) => p.projectId === projectId);
+              if (idx !== -1) {
+                const updated = [...prev];
+                updated[idx] = project;
+                return updated;
+              }
+              return [...prev, project];
+            });
           }
         } catch {
           /* ignore */
@@ -293,17 +308,25 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
       if (
         !project ||
         !Array.isArray(project.team) ||
-        project.description === undefined
+        project.description === undefined ||
+        project.customFolders === undefined
       ) {
         try {
           const fetched = (await fetchProjectById(projectId)) as Project | undefined;
           if (fetched) {
+            const previousProject = project;
             try {
               const events = (await fetchEvents(projectId)) as TimelineEvent[];
-              project = { ...fetched, timelineEvents: events };
+              project = mergeProjectWithFallback(
+                { ...fetched, timelineEvents: events },
+                previousProject
+              );
             } catch (err) {
               console.error("Failed to fetch events", err);
-              project = { ...fetched, timelineEvents: [] };
+              project = mergeProjectWithFallback(
+                { ...fetched, timelineEvents: [] },
+                previousProject
+              );
             }
 
             setProjects((prev) => {
@@ -311,10 +334,10 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
               const idx = prev.findIndex((p) => p.projectId === projectId);
               if (idx !== -1) {
                 const updated = [...prev];
-                updated[idx] = project as Project;
+                updated[idx] = project;
                 return updated;
               }
-              return [...prev, project as Project];
+              return [...prev, project];
             });
           }
         } catch (err) {
@@ -323,10 +346,16 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
       } else if (!Array.isArray(project.timelineEvents)) {
         try {
           const events = (await fetchEvents(projectId)) as TimelineEvent[];
-          project = { ...project, timelineEvents: events };
+          project = mergeProjectWithFallback(
+            { ...project, timelineEvents: events },
+            project
+          );
         } catch (err) {
           console.error("Failed to fetch events", err);
-          project = { ...project, timelineEvents: [] };
+          project = mergeProjectWithFallback(
+            { ...project, timelineEvents: [] },
+            project
+          );
         }
       }
 

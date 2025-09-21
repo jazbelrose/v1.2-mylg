@@ -452,7 +452,7 @@ const AllProjects: React.FC = () => {
     content = (
       <ul className="projects-list">
         {filteredProjects.map((project: Project) => {
-          const statusText = formatStatus(project.status);
+          const statusText = formatStatus(String(project.status || ''));
           const team = normalizeTeam(project.team);
           const progress = Number(statusText.replace('%', ''));
           const showProgress =

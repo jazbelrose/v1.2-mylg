@@ -94,13 +94,19 @@ interface PopoverTriggerProps {
   asChild?: boolean;
 }
 
+interface PopoverTriggerProps {
+  children: React.ReactElement;
+  asChild?: boolean;
+}
+
 export const PopoverTrigger = React.forwardRef<HTMLElement, PopoverTriggerProps>(
   ({ children, asChild = false }, forwardedRef) => {
     const { open, setOpen, triggerRef } = usePopoverContext();
 
     const child = asChild
-      ? children
-      : React.cloneElement(children, { type: "button" });
+      ? (children as React.ReactElement)
+      // @ts-expect-error children may not have type prop
+      : React.cloneElement(children as React.ReactElement, { type: "button" });
 
     const refCallback = (node: HTMLElement | null) => {
       triggerRef.current = node;
@@ -113,13 +119,14 @@ export const PopoverTrigger = React.forwardRef<HTMLElement, PopoverTriggerProps>
     };
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+      // @ts-expect-error child.props may not have onClick
       child.props.onClick?.(event);
       if (!event.defaultPrevented) {
         setOpen(!open);
       }
     };
 
-    return React.cloneElement(child, {
+    return React.cloneElement(child, { // @ts-expect-error cloneElement with ref
       ref: refCallback,
       "aria-expanded": open,
       onClick: handleClick,

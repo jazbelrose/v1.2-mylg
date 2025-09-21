@@ -334,7 +334,7 @@ export const useFileTransfers = ({
     if (!fileUrlsToDelete.length) return;
     const fileKeysToDelete = fileUrlsToKeys(fileUrlsToDelete);
     if (!activeProject?.projectId) return;
-    const { projectId } = activeProject;
+    const projectId = activeProject.projectId as string;
     setIsConfirmingDelete(false);
 
     const messages = projectMessages[projectId] || [];
@@ -369,7 +369,7 @@ export const useFileTransfers = ({
       updateNotification(notificationId, "error", "Failed to delete selected files. Please try again.");
     }
   }, [
-    activeProject.projectId,
+    activeProject,
     folderKey,
     projectMessages,
     removeReferences,

@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { uploadData } from "aws-amplify/storage";
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import ProjectName from "@/dashboard/NewProject/NewProjectName";
-import NewProjectBudget from "@/dashboard/NewProject/NewProjectBudget";
-import NewProjectFinishline from "@/dashboard/NewProject/NewProjectFinishLine";
-import NewProjectUploadFiles from "@/dashboard/NewProject/NewProjectUploadFiles";
-import NewProjectAddress from "@/dashboard/NewProject/NewProjectAddress";
-import NewProjectDescription from "@/dashboard/NewProject/NewProjectDescription";
+import ProjectName from "@/dashboard/NewProject/components/NewProjectName";
+import NewProjectBudget from "@/dashboard/NewProject/components/NewProjectBudget";
+import NewProjectFinishline from "@/dashboard/NewProject/components/NewProjectFinishLine";
+import NewProjectUploadFiles from "@/dashboard/NewProject/components/NewProjectUploadFiles";
+import NewProjectAddress from "@/dashboard/NewProject/components/NewProjectAddress";
+import NewProjectDescription from "@/dashboard/NewProject/components/NewProjectDescription";
 import { useData } from "@/app/contexts/useData";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";

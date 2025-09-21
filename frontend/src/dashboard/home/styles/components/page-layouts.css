@@ -35,11 +35,10 @@
   box-sizing: border-box;
 }
 
-/* Thread resizer between content and chat panel */
+/* Thread divider between content and chat panel */
 .thread-resizer {
   margin: 0 5px;
   width: 2px;
-  cursor: col-resize;
   background: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
 }

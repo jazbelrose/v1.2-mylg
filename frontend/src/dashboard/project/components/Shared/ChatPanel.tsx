@@ -250,20 +250,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   const onResize = (e: MouseEvent) => {
     if (!resizingRef.current || !panelRef.current) return;
     const rect = panelRef.current.getBoundingClientRect();
-    let newWidth = e.clientX - rect.left;
     let newHeight = e.clientY - rect.top;
 
-    const MIN_W = 360;
     const MIN_H = 280;
-    const maxWidth = window.innerWidth - rect.left;
     const maxHeight = window.innerHeight - rect.top;
 
-    newWidth = Math.min(maxWidth, Math.max(MIN_W, newWidth));
     newHeight = Math.min(maxHeight, Math.max(MIN_H, newHeight));
 
-    setSize({ width: newWidth, height: newHeight });
+    setSize((prev) => ({ ...prev, height: newHeight }));
     setPosition((pos) => ({
-      x: Math.max(0, Math.min(pos.x, window.innerWidth - newWidth)),
+      x: Math.max(0, Math.min(pos.x, window.innerWidth - rect.width)),
       y: Math.max(0, Math.min(pos.y, window.innerHeight - newHeight)),
     }));
   };

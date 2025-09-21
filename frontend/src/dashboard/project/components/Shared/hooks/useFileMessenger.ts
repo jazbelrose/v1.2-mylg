@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { API_BASE_URL, apiFetch } from "../../../../../shared/utils/api";
+import { EDIT_PROJECT_URL, apiFetch } from "../../../../../shared/utils/api";
 import { normalizeMessage } from "../../../../../shared/utils/websocketUtils";
 import type { Message } from "../../../../../app/contexts/DataProvider";
 import type { Project } from "../../FileManager/FileManagerTypes";
@@ -79,8 +79,8 @@ export const useFileMessenger = ({
 
       if (descChanged) {
         try {
-          await apiFetch(`${API_BASE_URL}/editProject?projectId=${activeProject.projectId}`, {
-            method: "PUT",
+          await apiFetch(`${EDIT_PROJECT_URL}/${activeProject.projectId}`, {
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ description }),
           });

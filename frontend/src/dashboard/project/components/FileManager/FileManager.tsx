@@ -14,7 +14,7 @@ import { useFileMessenger } from "../Shared/hooks/useFileMessenger";
 import { useFileTransfers } from "../Shared/hooks/useFileTransfers";
 import type { Message } from "@/app/contexts/DataProvider";
 import type { FileManagerProps, FileManagerRef, FolderOption } from "./FileManagerTypes";
-import { apiFetch, API_BASE_URL } from "@/shared/utils/api";
+import { apiFetch, EDIT_PROJECT_URL } from "@/shared/utils/api";
 import { notify } from "@/shared/ui/ToastNotifications";
 
 export type { FileManagerProps, FileManagerRef, FileItem } from "./FileManagerTypes";
@@ -230,8 +230,8 @@ const FileManagerComponent = forwardRef<FileManagerRef, FileManagerProps>(
       setIsSelectMode(false);
 
       try {
-        await apiFetch(`${API_BASE_URL}/editProject?projectId=${projectId}`, {
-          method: "PUT",
+        await apiFetch(`${EDIT_PROJECT_URL}/${projectId}`, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             customFolders: updatedCustomFolders,

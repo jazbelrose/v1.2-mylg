@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import type React from "react";
 import { uploadData, list } from "aws-amplify/storage";
 import {
-  API_BASE_URL,
+  EDIT_PROJECT_URL,
   ZIP_FILES_URL,
   apiFetch,
   fileUrlsToKeys,
@@ -63,10 +63,10 @@ export const useFileTransfers = ({
   const updateFolderFiles = useCallback(
     (projectId: string, updatedFiles: Array<{ fileName: string; url: string }>) =>
       editQueue(async () => {
-        const apiUrl = `${API_BASE_URL}/editProject?projectId=${projectId}`;
+        const apiUrl = `${EDIT_PROJECT_URL}/${projectId}`;
         const payload: Record<string, unknown> = { [folderKey]: updatedFiles };
         await apiFetch(apiUrl, {
-          method: "PUT",
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });

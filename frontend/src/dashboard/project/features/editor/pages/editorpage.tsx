@@ -286,13 +286,17 @@ const EditorPage: React.FC = () => {
                 <AnimatePresence mode="wait">
                   {activeTab === "brief" && (
                     <motion.div
+                      className="editor-mode-panel"
                       key="brief"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="dashboard-layout" style={{ paddingBottom: "5px" }}>
+                      <div
+                        className="dashboard-layout editor-mode-layout"
+                        style={{ paddingBottom: "5px" }}
+                      >
                         {activeProject?.description ? (
                           <LexicalEditor
                             key={activeProject.projectId}
@@ -308,13 +312,17 @@ const EditorPage: React.FC = () => {
                   )}
                   {activeTab === "canvas" && (
                     <motion.div
+                      className="editor-mode-panel"
                       key="canvas"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="dashboard-layout" style={{ paddingBottom: "5px" }}>
+                      <div
+                        className="dashboard-layout editor-mode-layout"
+                        style={{ paddingBottom: "5px" }}
+                      >
                         <div style={{ maxWidth: "1920px", width: "100%" }}>
                           <div
                             className="editor-container"
@@ -328,13 +336,17 @@ const EditorPage: React.FC = () => {
                   )}
                   {activeTab === "moodboard" && (
                     <motion.div
+                      className="editor-mode-panel"
                       key="moodboard"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="dashboard-layout" style={{ paddingBottom: "5px", height: "100%" }}>
+                      <div
+                        className="dashboard-layout editor-mode-layout"
+                        style={{ paddingBottom: "5px" }}
+                      >
                         <MoodboardCanvas
                           projectId={activeProject?.projectId}
                           userId={userId ?? undefined}

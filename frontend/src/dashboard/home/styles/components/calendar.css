@@ -87,6 +87,28 @@
   }
 }
 
+@media (max-width: var(--breakpoint-sm)) {
+  .budget-calendar-layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .budget-calendar-layout .budget-column,
+  .budget-calendar-layout .calendar-column,
+  .budget-calendar-layout .budget-calendar-mobile-card {
+    width: 100%;
+  }
+
+  .budget-calendar-layout .budget-column > .dashboard-item,
+  .budget-calendar-layout .calendar-column > .dashboard-item {
+    width: 100%;
+  }
+
+  .budget-calendar-mobile-card {
+    display: block;
+  }
+}
+
 /* Timeline + Location row layout */
 .timeline-location-row {
   display: flex;

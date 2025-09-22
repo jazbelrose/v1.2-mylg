@@ -154,6 +154,39 @@
   position: relative;
 }
 
+@media (max-width: var(--breakpoint-2xl)) {
+  .dashboard-item.budget {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .budget-component-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .chart-legend-container {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .budget-chart {
+    width: min(32vh, 32vw, 200px);
+    height: min(32vh, 32vw, 200px);
+    margin: 0 auto;
+  }
+
+  .budget-legend {
+    width: 100%;
+    min-width: unset;
+    align-items: center;
+  }
+}
+
 .budget-legend {
   display: flex;
   flex-direction: column;
@@ -222,8 +255,8 @@
 @media (max-width: var(--breakpoint-sm)) {
   .dashboard-item.budget {
     padding: 15px;
-    flex-direction: row;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: stretch;
     min-height: 200px;
   }
   .budget-overview-card {
@@ -253,15 +286,15 @@
     margin-top: 4px;
   }
   .budget-calendar-mobile-card {
-    display: flex;
+    display: block;
   }
   .budget-calendar-mobile-card > * {
-    flex: 1 1 auto;
+    width: 100%;
   }
   .budget-component-container {
-    flex-direction: row;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
   }
   .chart-legend-container {
     flex-direction: column;

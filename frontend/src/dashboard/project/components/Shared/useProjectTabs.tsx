@@ -1,13 +1,11 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Coins, Calendar as CalendarIcon, PenTool } from "lucide-react";
 import { useData } from "@/app/contexts/useData";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 
 export type ProjectTabItem = {
   key: string;
   label: string;
-  icon: React.ReactNode;
   path: string;
   matches: (pathname: string) => boolean;
 };
@@ -81,52 +79,61 @@ export const useProjectTabs = (
     [hasProject, projectId, projectTitle]
   );
 
-  const tabs = React.useMemo(
-    () =>
-      [
-        {
-          key: "overview",
-          label: "Overview",
-          icon: <LayoutDashboard size={16} />,
-          path: basePath,
-          visible: true,
-          matches: (pathname: string) => pathname === basePath,
-        },
-        {
-          key: "budget",
-          label: "Budget",
-          icon: <Coins size={16} />,
-          path: budgetPath,
-          visible: showBudgetTab,
-          matches: (pathname: string) => pathname.startsWith(budgetPath),
-        },
-        {
-          key: "calendar",
-          label: "Calendar",
-          icon: <CalendarIcon size={16} />,
-          path: calendarPath,
-          visible: showCalendarTab,
-          matches: (pathname: string) => pathname.startsWith(calendarPath),
-        },
-        {
-          key: "editor",
-          label: "Editor",
-          icon: <PenTool size={16} />,
-          path: editorPath,
-          visible: showEditorTab,
-          matches: (pathname: string) => pathname.startsWith(editorPath),
-        },
-      ].filter((tab) => tab.visible),
-    [
-      basePath,
-      budgetPath,
-      calendarPath,
-      editorPath,
-      showBudgetTab,
-      showCalendarTab,
-      showEditorTab,
-    ]
-  );
+  const tabs = React.useMemo<ProjectTabItem[]>(() => {
+    const tabDefinitions = [
+      {
+        key: "overview",
+        label: "Overview",
+        path: basePath,
+        matches: (pathname: string) => pathname === basePath,
+        visible: true,
+      },
+      {
+        key: "budget",
+        label: "Budget",
+        path: budgetPath,
+        matches: (pathname: string) => pathname.startsWith(budgetPath),
+        visible: showBudgetTab,
+      },
+      {
+        key: "calendar",
+        label: "Calendar",
+        path: calendarPath,
+        matches: (pathname: string) => pathname.startsWith(calendarPath),
+        visible: showCalendarTab,
+      },
+      {
+        key: "editor",
+        label: "Editor",
+        path: editorPath,
+        matches: (pathname: string) => pathname.startsWith(editorPath),
+        visible: showEditorTab,
+      },
+    ];
+
+    return tabDefinitions.reduce<ProjectTabItem[]>((acc, tab) => {
+      if (!tab.visible) {
+        return acc;
+      }
+
+      acc.push({
+        key: tab.key,
+        label: tab.label,
+        path: tab.path,
+        matches: tab.matches,
+      });
+
+      return acc;
+    }, []);
+  }, [
+    basePath,
+    budgetPath,
+    calendarPath,
+    editorPath,
+    showBudgetTab,
+    showCalendarTab,
+    showEditorTab,
+  ]);
 
   const storageKey = React.useMemo(
     () => `project-tabs-prev:${projectId || "unknown"}`,

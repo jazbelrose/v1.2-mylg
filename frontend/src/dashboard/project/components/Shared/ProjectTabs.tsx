@@ -93,7 +93,6 @@ const ProjectTabs = ({
             className={isActive ? "active" : ""}
             aria-pressed={isActive}
           >
-            {tab.icon}
             <span>{tab.label}</span>
           </button>
         );

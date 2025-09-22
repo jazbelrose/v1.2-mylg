@@ -107,8 +107,8 @@
 .project-header:not(.new-project-header) {
   position: relative;
   width: 100%;
-  padding: clamp(20px, 2.5vw, 32px);
-  margin-bottom: clamp(16px, 3vw, 40px);
+  padding: 32px;
+
   background: var(--project-header-bg, var(--bg2, #111213));
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
@@ -116,6 +116,8 @@
   color: rgba(255, 255, 255, 0.95);
   overflow: hidden;
   isolation: isolate;
+  margin-top: 16px;
+  margin-bottom: 18px;
 }
 
 .project-header:not(.new-project-header)::after {

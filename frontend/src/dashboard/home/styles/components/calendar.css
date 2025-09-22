@@ -38,10 +38,10 @@
 
 /* Budget + Calendar two-column layout */
 .budget-calendar-layout {
-  --budget-calendar-gap: 5px;
-  --budget-calendar-min-calendar: 420px;
+  --budget-calendar-gap: 18px;
+  --budget-calendar-min-calendar: 400px;
   --budget-calendar-max-calendar: 520px;
-  --budget-calendar-stack-budget: 360px;
+  --budget-calendar-stack-budget: 420px;
 
   display: grid;
   gap: var(--budget-calendar-gap);
@@ -69,9 +69,15 @@
   grid-area: calendar;
   display: flex;
   flex-direction: column;
+  gap: var(--budget-calendar-gap);
   min-inline-size: 0;
   container-type: inline-size;
   container-name: calendar-panel;
+}
+
+.budget-calendar-layout .budget-column > *,
+.budget-calendar-layout .calendar-column > * {
+  width: 100%;
 }
 
 @container budget-calendar (max-width: calc(
@@ -84,6 +90,27 @@
     grid-template-areas:
       "budget"
       "calendar";
+  }
+}
+
+@media (max-width: var(--breakpoint-sm)) {
+  .budget-calendar-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "budget"
+      "calendar";
+    gap: 20px;
+  }
+
+  .budget-calendar-layout .budget-column,
+  .budget-calendar-layout .calendar-column {
+    width: 100%;
+    gap: 20px;
+  }
+
+  .budget-calendar-layout .budget-column > *,
+  .budget-calendar-layout .calendar-column > * {
+    width: 100%;
   }
 }
 

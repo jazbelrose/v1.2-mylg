@@ -278,7 +278,11 @@ const SingleProject: React.FC = () => {
               />
             )}
 
-              <div className="dashboard-layout budget-calendar-layout">
+              <div
+                className={`dashboard-layout budget-calendar-layout${
+                  isMobileBudgetLayout ? " budget-calendar-layout--stacked" : ""
+                }`}
+              >
                 <div className="budget-column">
                   <BudgetOverviewCard projectId={activeProject?.projectId} />
                   {isMobileBudgetLayout && (

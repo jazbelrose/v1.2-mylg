@@ -57,6 +57,25 @@
   container-name: budget-calendar;
 }
 
+.budget-calendar-layout--stacked {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "budget"
+    "calendar";
+}
+
+.budget-calendar-layout--stacked .budget-column,
+.budget-calendar-layout--stacked .calendar-column {
+  width: 100%;
+  min-inline-size: 0;
+  gap: var(--budget-calendar-gap);
+}
+
+.budget-calendar-layout--stacked .calendar-column {
+  display: flex;
+  flex-direction: column;
+}
+
 .budget-calendar-layout .budget-column {
   grid-area: budget;
   display: flex;

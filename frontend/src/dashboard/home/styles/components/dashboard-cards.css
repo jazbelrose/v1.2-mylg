@@ -27,6 +27,7 @@
   background-color: #111;
   color: #fff;
   transition: background-color 0.2s ease;
+  overflow: visible;
 }
 
 .dashboard-item.budget span {

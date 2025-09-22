@@ -91,24 +91,27 @@ const centerPopoverStyles: React.CSSProperties = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  background: "rgba(30, 30, 30, 0.94)",
+  background: "rgba(15, 23, 42, 0.55)",
   color: "#f8fafc",
-  borderRadius: "12px",
-  padding: "14px 16px",
-  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.55)",
+  borderRadius: "16px",
+  padding: "16px 18px",
+  boxShadow: "0 20px 45px rgba(15, 23, 42, 0.45)",
   minWidth: "220px",
   maxWidth: "260px",
-  zIndex: 2,
+  zIndex: 20,
   pointerEvents: "auto",
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+  border: "1px solid rgba(148, 163, 184, 0.25)",
 };
 
 const centerPopoverHeaderStyles: React.CSSProperties = {
   fontWeight: 600,
   marginBottom: "10px",
-  fontSize: "0.8rem",
+  fontSize: "0.78rem",
   textTransform: "uppercase",
-  letterSpacing: "0.04em",
-  opacity: 0.9,
+  letterSpacing: "0.08em",
+  opacity: 0.85,
 };
 
 const centerPopoverListStyles: React.CSSProperties = {
@@ -141,6 +144,9 @@ const centerPopoverSwatchStyles: React.CSSProperties = {
 const centerPopoverPercentStyles: React.CSSProperties = {
   flexShrink: 0,
   fontVariantNumeric: "tabular-nums",
+  fontSize: "0.72rem",
+  fontWeight: 600,
+  color: "rgba(226, 232, 240, 0.85)",
 };
 
 const tooltipStyles: React.CSSProperties = {

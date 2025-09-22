@@ -234,7 +234,12 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
     <div
       className="dashboard-item budget budget-component-container budget-overview-card"
       onClick={isAdmin ? openBudgetPage : undefined}
-      style={{ cursor: isAdmin ? "pointer" : "default", position: "relative" }}
+      style={{
+        cursor: isAdmin ? "pointer" : "default",
+        position: "relative",
+        overflow: "visible",
+        zIndex: 2,
+      }}
     >
       <div className="budget-overview-summary">
         <span className="budget-overview-header">

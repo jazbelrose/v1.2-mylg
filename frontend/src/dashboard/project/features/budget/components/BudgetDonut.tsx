@@ -52,8 +52,8 @@ const srOnlyStyles: React.CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-const centerButtonBaseBackground = "rgba(15, 23, 42, 0.6)";
-const centerButtonBaseShadow = "0 8px 20px rgba(15, 23, 42, 0.45)";
+const centerButtonBaseBackground = "rgba(17, 17, 17, 0.6)";
+const centerButtonBaseShadow = "0 8px 20px rgba(17, 17, 17, 0.45)";
 
 const centerButtonStyles: React.CSSProperties = {
   position: "absolute",
@@ -65,16 +65,16 @@ const centerButtonStyles: React.CSSProperties = {
   alignItems: "center",
   gap: "4px",
   border: "none",
-  background: centerButtonBaseBackground,
-  borderRadius: "999px",
+  background: "transparent",
+  borderRadius: "50%",
   padding: "10px 18px",
   color: "inherit",
   cursor: "pointer",
   pointerEvents: "auto",
   transition: "background 150ms ease, box-shadow 150ms ease",
-  boxShadow: centerButtonBaseShadow,
+  
+ 
 };
-
 const centerLabelStyles: React.CSSProperties = {
   fontSize: "0.75rem",
   color: "#cbd5f5",
@@ -149,15 +149,16 @@ const centerPopoverPercentStyles: React.CSSProperties = {
 };
 
 const tooltipStyles: React.CSSProperties = {
-  background: "#111",
+  background: "rgba(17, 17, 17, 0.8)", // Semi-transparent for frosted effect
   color: "#f8fafc",
   borderRadius: "6px",
   border: "1px solid rgba(148, 163, 184, 0.4)",
   padding: "6px 10px",
   fontSize: "0.75rem",
   boxShadow: "0 6px 18px rgba(15, 23, 42, 0.45)",
+  backdropFilter: "blur(10px)", // Add blur for frosted effect
+  WebkitBackdropFilter: "blur(10px)", // Safari support
 };
-
 const renderActiveShape = (props: Record<string, unknown>) => {
   const outerRadius = typeof props.outerRadius === "number" ? props.outerRadius : 0;
   return <Sector {...(props as never)} outerRadius={outerRadius + 8} />;

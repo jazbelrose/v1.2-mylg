@@ -62,6 +62,17 @@
   line-height: 1;
 }
 
+.project-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-header-actions {
+  display: flex;
+  align-items: center;
+}
+
 .status-svg {
   width: clamp(40px, 5vw, 60px) !important;
   height: clamp(40px, 5vw, 60px) !important;

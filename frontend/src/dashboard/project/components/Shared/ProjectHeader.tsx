@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useLayoutEffect,
   useMemo,
- 
+
   FormEvent,
 } from "react";
 import "./project-header.css";
@@ -31,6 +31,8 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import { HexColorPicker, HexColorInput } from "react-colorful";
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
+
+import { cn } from "@/lib/utils";
 
 
 import {
@@ -83,6 +85,260 @@ function safeParse(dateStr?: string | null): Date | null {
   }
   return null;
 }
+
+interface HeaderActionButtonProps {
+  onClick: () => void;
+  onKeyDown: (event: React.KeyboardEvent, action: () => void) => void;
+  title: string;
+  ariaLabel: string;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const HeaderActionButton: React.FC<HeaderActionButtonProps> = ({
+  onClick,
+  onKeyDown,
+  title,
+  ariaLabel,
+  children,
+  className,
+  style,
+}) => (
+  <div
+    onClick={onClick}
+    onKeyDown={(event) => onKeyDown(event, onClick)}
+    role="button"
+    tabIndex={0}
+    title={title}
+    aria-label={ariaLabel}
+    className={cn("interactive", className)}
+    style={{ cursor: "pointer", ...style }}
+  >
+    {children}
+  </div>
+);
+
+interface ProjectThumbnailButtonProps {
+  thumbnailKey?: string;
+  projectInitial: string;
+  onOpenThumbnail: () => void;
+}
+
+const ProjectThumbnailButton: React.FC<ProjectThumbnailButtonProps> = ({
+  thumbnailKey,
+  projectInitial,
+  onOpenThumbnail,
+}) => (
+  <div className="project-logo-wrapper">
+    <Squircle
+      as="button"
+      type="button"
+      onClick={onOpenThumbnail}
+      title="Change Project Thumbnail"
+      aria-label="Change Project Thumbnail"
+      className="interactive project-logo-button"
+      radius={18}
+      smoothing={0.88}
+    >
+      {thumbnailKey ? (
+        <img
+          src={getFileUrl(thumbnailKey)}
+          alt="Project Thumbnail"
+          className="project-logo-image"
+        />
+      ) : (
+        <span className="project-logo-initial">{projectInitial.toUpperCase()}</span>
+      )}
+    </Squircle>
+  </div>
+);
+
+interface ProjectStatusIndicatorProps {
+  status: Project["status"] | undefined;
+  displayStatus: string;
+  parseStatusToNumber: (status: string | number | undefined) => number;
+  onOpenStatus: () => void;
+  onKeyDown: (event: React.KeyboardEvent, action: () => void) => void;
+}
+
+const ProjectStatusIndicator: React.FC<ProjectStatusIndicatorProps> = ({
+  status,
+  displayStatus,
+  parseStatusToNumber,
+  onOpenStatus,
+  onKeyDown,
+}) => (
+  <svg
+    id="StatusSVG"
+    viewBox="0 0 400 400"
+    onClick={onOpenStatus}
+    onKeyDown={(event) => onKeyDown(event, onOpenStatus)}
+    role="button"
+    tabIndex={0}
+    aria-label={`Status: ${displayStatus} Complete`}
+    className="interactive status-svg"
+    style={{ cursor: "pointer" }}
+  >
+    <title>{`Status: ${displayStatus} Complete`}</title>
+    <text
+      className="project-status"
+      transform={`translate(${status !== "100%" ? 75 : 56.58} 375.21)`}
+    >
+      <tspan x="22.5" y="-136">
+        {displayStatus}
+      </tspan>
+    </text>
+    {status && (
+      <ellipse
+        cx="200"
+        cy="200"
+        rx="160"
+        ry="160"
+        fill="none"
+        strokeWidth="15"
+        strokeDasharray={`${
+          (parseStatusToNumber(status) / 100) * 1002
+        }, 1004`}
+        style={{
+          stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
+        }}
+      >
+        {parseStatusToNumber(status) < 100 && (
+          <animate
+            attributeName="stroke-dasharray"
+            from="0, 1004"
+            to={`${(parseStatusToNumber(status) / 100) * 1002}, 1004`}
+            dur="1s"
+            begin="0s"
+            fill="freeze"
+          />
+        )}
+      </ellipse>
+    )}
+  </svg>
+);
+
+interface DesktopHeaderViewProps {
+  project: Project | null | undefined;
+  projectInitial: string;
+  displayStatus: string;
+  parseStatusToNumber: (status: string | number | undefined) => number;
+  rangeLabel: string;
+  teamMembers: TeamMember[];
+  onOpenThumbnail: () => void;
+  onOpenStatus: () => void;
+  onOpenTeam: () => void;
+  onOpenFinishLine: () => void;
+  onOpenSettings: () => void;
+  onOpenQuickLinks: () => void;
+  onOpenFiles: () => void;
+  onKeyDown: (event: React.KeyboardEvent, action: () => void) => void;
+  projectId?: string;
+  projectTitle?: string;
+}
+
+const DesktopHeaderView: React.FC<DesktopHeaderViewProps> = ({
+  project,
+  projectInitial,
+  displayStatus,
+  parseStatusToNumber,
+  rangeLabel,
+  teamMembers,
+  onOpenThumbnail,
+  onOpenStatus,
+  onOpenTeam,
+  onOpenFinishLine,
+  onOpenSettings,
+  onOpenQuickLinks,
+  onOpenFiles,
+  onKeyDown,
+  projectId,
+  projectTitle,
+}) => {
+  const thumbnailKey = project?.thumbnails?.[0] as string | undefined;
+  const projectName = project?.title || "Summary";
+
+  return (
+    <header className="project-header">
+      <div className="header-content">
+        <div className="left-side">
+          <div className="project-identity">
+            <ProjectThumbnailButton
+              thumbnailKey={thumbnailKey}
+              projectInitial={projectInitial}
+              onOpenThumbnail={onOpenThumbnail}
+            />
+
+            <div className="single-project-title">
+              <h2 className="project-title-heading">{projectName}</h2>
+            </div>
+          </div>
+
+          <ProjectStatusIndicator
+            status={project?.status}
+            displayStatus={displayStatus}
+            parseStatusToNumber={parseStatusToNumber}
+            onOpenStatus={onOpenStatus}
+            onKeyDown={onKeyDown}
+          />
+
+          <AvatarStack members={teamMembers} onClick={onOpenTeam} />
+
+          <div
+            className="finish-line-header interactive"
+            onClick={onOpenFinishLine}
+            onKeyDown={(event) => onKeyDown(event, onOpenFinishLine)}
+            role="button"
+            tabIndex={0}
+            title="Production dates"
+            aria-label="Production dates"
+            style={{ cursor: "pointer" }}
+          >
+            <span>{rangeLabel}</span>
+          </div>
+
+          <div className="project-header-actions">
+            <HeaderActionButton
+              onClick={onOpenSettings}
+              onKeyDown={onKeyDown}
+              title="Project settings"
+              ariaLabel="Project settings"
+              style={{ margin: "10px" }}
+            >
+              <Settings size={20} className="settings-icon" />
+            </HeaderActionButton>
+
+            <HeaderActionButton
+              onClick={onOpenQuickLinks}
+              onKeyDown={onKeyDown}
+              title="Quick links"
+              ariaLabel="Quick links"
+            >
+              <Link2 size={20} />
+            </HeaderActionButton>
+
+            <HeaderActionButton
+              onClick={onOpenFiles}
+              onKeyDown={onKeyDown}
+              title="Open file manager"
+              ariaLabel="Open file manager"
+              style={{ margin: "10px" }}
+            >
+              <Folder size={20} />
+            </HeaderActionButton>
+          </div>
+        </div>
+
+        <div className="right-side">
+          <div className="project-nav-tabs" style={{ padding: "0 10px 10px" }}>
+            <ProjectTabs projectId={projectId || ""} projectTitle={projectTitle} />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
 
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   parseStatusToNumber,
@@ -944,201 +1200,65 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           onSelectTab={(tab) => confirmNavigate(tab.path)}
         />
       ) : (
-        <div className="project-header">
-          <div className="header-content">
-            <div className="left-side">
-              <div className="project-logo-wrapper">
-                <Squircle
-                  as="button"
-                  type="button"
-                  onClick={() => openThumbnailModal(false)}
-                  title="Change Project Thumbnail"
-                  aria-label="Change Project Thumbnail"
-                  className="interactive project-logo-button"
-                  radius={18}
-                  smoothing={0.88}
-                >
-                  {localActiveProject?.thumbnails &&
-                  localActiveProject.thumbnails.length > 0 ? (
-                    <img
-                      src={getFileUrl(localActiveProject.thumbnails[0])}
-                      alt="Project Thumbnail"
-                      className="project-logo-image"
-                    />
-                  ) : (
-                    <span className="project-logo-initial">
-                      {projectInitial.toUpperCase()}
-                    </span>
-                  )}
-                </Squircle>
-              </div>
-
-              <div className="single-project-title">
-                <h2 className="project-title-heading">
-                  {localActiveProject ? localActiveProject.title : "Summary"}
-                </h2>
-              </div>
-
-              <svg
-                id="StatusSVG"
-                viewBox="0 0 400 400"
-                onClick={openEditStatusModal}
-                onKeyDown={(e) => handleKeyDown(e, openEditStatusModal)}
-                role="button"
-                tabIndex={0}
-                aria-label={`Status: ${displayStatus} Complete`}
-                className="interactive status-svg"
-                style={{ cursor: "pointer" }}
-              >
-                <title>{`Status: ${displayStatus} Complete`}</title>
-                <text
-                  className="project-status"
-                  transform={`translate(${
-                    localActiveProject?.status !== "100%" ? 75 : 56.58
-                  } 375.21)`}
-                >
-                  <tspan x="22.5" y="-136">
-                    {displayStatus}
-                  </tspan>
-                </text>
-                {localActiveProject && (
-                  <ellipse
-                    cx="200"
-                    cy="200"
-                    rx="160"
-                    ry="160"
-                    fill="none"
-                    strokeWidth="15"
-                    strokeDasharray={`${
-                      (parseStatusToNumber(localActiveProject.status) / 100) * 1002
-                    }, 1004`}
-                    style={{
-                      stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
-                    }}
-                  >
-                    {parseStatusToNumber(localActiveProject.status) < 100 && (
-                      <animate
-                        attributeName="stroke-dasharray"
-                        from="0, 1004"
-                        to={`${
-                          (parseStatusToNumber(localActiveProject.status) / 100) *
-                          1002
-                        }, 1004`}
-                        dur="1s"
-                        begin="0s"
-                        fill="freeze"
-                      />
-                    )}
-                  </ellipse>
-                )}
-              </svg>
-
-              <AvatarStack members={teamMembers} onClick={openTeamModal} />
-
-            <div
-              className="finish-line-header interactive"
-              onClick={openFinishLineModal}
-              onKeyDown={(e) => handleKeyDown(e, openFinishLineModal)}
-              role="button"
-              tabIndex={0}
-              title="Production dates"
-              aria-label="Production dates"
-              style={{ cursor: "pointer" }}
-            >
-              <span>{rangeLabel}</span>
-            </div>
-
-            <div
-              onClick={openSettingsModal}
-              onKeyDown={(e) => handleKeyDown(e, openSettingsModal)}
-              role="button"
-              tabIndex={0}
-              title="Project settings"
-              aria-label="Project settings"
-              className="interactive"
-              style={{ cursor: "pointer", margin: "10px" }}
-            >
-              <Settings size={20} className="settings-icon" />
-            </div>
-
-            <div
-              onClick={onOpenQuickLinks}
-              onKeyDown={(e) => handleKeyDown(e, onOpenQuickLinks)}
-              role="button"
-              tabIndex={0}
-              title="Quick links"
-              aria-label="Quick links"
-              className="interactive"
-              style={{ cursor: "pointer" }}
-            >
-              <Link2 size={20} />
-            </div>
-
-            <div
-              onClick={onOpenFiles}
-              onKeyDown={(e) => handleKeyDown(e, onOpenFiles)}
-              role="button"
-              tabIndex={0}
-              title="Open file manager"
-              aria-label="Open file manager"
-              className="interactive"
-              style={{ cursor: "pointer", margin: "10px" }}
-            >
-              <Folder size={20} />
-            </div>
-
-            <Modal
-              isOpen={isConfirmDeleteModalOpen}
-              onRequestClose={closeDeleteConfirmationModal}
-              contentLabel="Confirm Delete Project"
-              closeTimeoutMS={300}
-              className={{
-                base: styles.modalContent,
-                afterOpen: styles.modalContentAfterOpen,
-                beforeClose: styles.modalContentBeforeClose,
-              }}
-              overlayClassName={styles.modalOverlay}
-            >
-              <h4 style={{ fontSize: "1rem", paddingBottom: "20px" }}>
-                Are you sure you want to delete this project?
-              </h4>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "10px",
-                  marginTop: "20px",
-                }}
-              >
-                <button
-                  className="modal-button primary"
-                  onClick={handleDeleteProject}
-                  style={{ borderRadius: "5px" }}
-                >
-                  Yes
-                </button>
-                <button
-                  className="modal-button secondary"
-                  onClick={closeDeleteConfirmationModal}
-                  style={{ borderRadius: "5px" }}
-                >
-                  No
-                </button>
-              </div>
-            </Modal>
-          </div>
-
-          <div className="right-side">
-            <div className="project-nav-tabs" style={{ padding: "0 10px 10px" }}>
-              <ProjectTabs
-                projectId={localActiveProject?.projectId || projectId}
-                projectTitle={localActiveProject?.title}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+        <DesktopHeaderView
+          project={localActiveProject}
+          projectInitial={projectInitial}
+          displayStatus={displayStatus}
+          parseStatusToNumber={parseStatusToNumber}
+          rangeLabel={rangeLabel}
+          teamMembers={teamMembers}
+          onOpenThumbnail={() => openThumbnailModal(false)}
+          onOpenStatus={openEditStatusModal}
+          onOpenTeam={openTeamModal}
+          onOpenFinishLine={openFinishLineModal}
+          onOpenSettings={openSettingsModal}
+          onOpenQuickLinks={onOpenQuickLinks}
+          onOpenFiles={onOpenFiles}
+          onKeyDown={handleKeyDown}
+          projectId={localActiveProject?.projectId || projectId}
+          projectTitle={localActiveProject?.title}
+        />
       )}
+
+      <Modal
+        isOpen={isConfirmDeleteModalOpen}
+        onRequestClose={closeDeleteConfirmationModal}
+        contentLabel="Confirm Delete Project"
+        closeTimeoutMS={300}
+        className={{
+          base: styles.modalContent,
+          afterOpen: styles.modalContentAfterOpen,
+          beforeClose: styles.modalContentBeforeClose,
+        }}
+        overlayClassName={styles.modalOverlay}
+      >
+        <h4 style={{ fontSize: "1rem", paddingBottom: "20px" }}>
+          Are you sure you want to delete this project?
+        </h4>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "10px",
+            marginTop: "20px",
+          }}
+        >
+          <button
+            className="modal-button primary"
+            onClick={handleDeleteProject}
+            style={{ borderRadius: "5px" }}
+          >
+            Yes
+          </button>
+          <button
+            className="modal-button secondary"
+            onClick={closeDeleteConfirmationModal}
+            style={{ borderRadius: "5px" }}
+          >
+            No
+          </button>
+        </div>
+      </Modal>
 
       {/* Edit Name */}
       <Modal
@@ -1761,7 +1881,7 @@ interface ProjectTabsProps {
   projectTitle?: string | null;
 }
 
-const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) => {
+function ProjectTabs({ projectId, projectTitle }: ProjectTabsProps) {
   const tabRefs = useRef<HTMLButtonElement[]>([]);
   const [sliderStyle, setSliderStyle] = useState<{ width: number; left: number }>(
     { width: 0, left: 0 }
@@ -1825,8 +1945,8 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) =>
         aria-hidden="true"
       />
 
-        {tabs.map((tab, index) => {
-          const isActive = index === activeIndex;
+      {tabs.map((tab, index) => {
+        const isActive = index === activeIndex;
         return (
           <button
             key={tab.key}
@@ -1845,7 +1965,7 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) =>
       })}
     </div>
   );
-};
+}
 
 export default React.memo(ProjectHeader);
 

@@ -4,8 +4,8 @@
   justify-content: space-between;
   height: 100%;
   min-height: 0;
-  padding: 14px 16px;
-  gap: 12px;
+  padding: 13px 15px;
+  gap: 11px;
   color: rgba(255, 255, 255, 0.92);
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
@@ -20,12 +20,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 7px;
 }
 
 .title {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -34,7 +34,7 @@
   border: none;
   background: none;
   color: rgba(255, 255, 255, 0.75);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-decoration: none;
   padding: 4px 0;
@@ -52,7 +52,7 @@
 
 .statRow {
   display: flex;
-  gap: 8px;
+  gap: 7px;
 }
 
 .stat {
@@ -60,16 +60,16 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  padding: 10px 12px;
-  border-radius: 18px;
+  gap: 3px;
+  padding: 9px 11px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  min-height: 64px;
+  min-height: 58px;
 }
 
 .statValue {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
 }
 
@@ -97,24 +97,24 @@
 
 .status {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.65);
-  line-height: 1.3;
+  line-height: 1.28;
 }
 
 @media (max-width: 480px) {
   .card {
-    padding: 12px 14px;
-    gap: 10px;
+    padding: 11px 13px;
+    gap: 9px;
   }
 
   .statRow {
-    gap: 6px;
+    gap: 5px;
   }
 
   .stat {
-    padding: 10px;
-    border-radius: 16px;
+    padding: 9px;
+    border-radius: 15px;
   }
 }
 

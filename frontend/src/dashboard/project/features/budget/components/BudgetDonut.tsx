@@ -30,7 +30,6 @@ type TooltipNameType = number | string;
 export interface BudgetDonutProps {
   data: BudgetDonutSlice[];
   total: number;
-  totalLabel?: string;
   totalFormatter?: (value: number) => string;
   formatTooltip?: (slice: BudgetDonutDatum) => string;
   palette?: string[];
@@ -79,11 +78,6 @@ const centerButtonStyles: React.CSSProperties = {
   transition: "background 150ms ease, box-shadow 150ms ease",
 
 
-};
-const centerLabelStyles: React.CSSProperties = {
-  fontSize: "0.75rem",
-  color: "#cbd5f5",
-  letterSpacing: "0.02em",
 };
 
 const centerValueStyles: React.CSSProperties = {
@@ -182,7 +176,6 @@ const slicesAreEqual = (a: BudgetDonutSlice[], b: BudgetDonutSlice[]) => {
 const BudgetDonut: React.FC<BudgetDonutProps> = ({
   data,
   total,
-  totalLabel = "Total",
   totalFormatter = (value) => value.toLocaleString(),
   formatTooltip,
   palette,
@@ -445,7 +438,6 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         aria-haspopup="dialog"
         aria-expanded={isCenterOpen}
       >
-        {totalLabel ? <span style={centerLabelStyles}>{totalLabel}</span> : null}
         <span style={centerValueStyles}>{formattedTotal}</span>
       </button>
 
@@ -522,7 +514,6 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
 
 export default React.memo(BudgetDonut, (prev, next) => {
   if (prev.total !== next.total) return false;
-  if (prev.totalLabel !== next.totalLabel) return false;
   if (prev.totalFormatter !== next.totalFormatter) return false;
   if (prev.formatTooltip !== next.formatTooltip) return false;
   if (prev.ariaLabel !== next.ariaLabel) return false;

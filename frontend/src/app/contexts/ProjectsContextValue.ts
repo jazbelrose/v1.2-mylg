@@ -13,7 +13,7 @@ export interface ProjectsValue {
   setActiveProject: React.Dispatch<React.SetStateAction<Project | null>>;
   selectedProjects: string[];
   setSelectedProjects: React.Dispatch<React.SetStateAction<string[]>>;
-  fetchProjectDetails: (projectId: string) => Promise<void>;
+  fetchProjectDetails: (projectId: string) => Promise<boolean>;
   fetchProjects: (retryCount?: number) => Promise<void>;
   fetchUserProfile: () => Promise<void>;
   fetchRecentActivity: (limit?: number) => Promise<

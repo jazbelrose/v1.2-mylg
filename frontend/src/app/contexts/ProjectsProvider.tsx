@@ -278,9 +278,10 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
     async (projectId) => {
       if (!projects || !Array.isArray(projects)) {
         console.error("Projects data is not available yet.");
-        return;
+        return false;
       }
       let project = projects.find((p) => p.projectId === projectId);
+      let fetchFailed = false;
 
       // Attempt to hydrate from localStorage when important fields are missing
       if (projectNeedsDetailHydration(project)) {
@@ -341,6 +342,7 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
             });
           }
         } catch (err) {
+          fetchFailed = true;
           console.error("Error fetching project details", err);
         }
       } else if (!Array.isArray(project.timelineEvents)) {
@@ -379,10 +381,14 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
         } catch {
           /* ignore */
         }
-      } else {
-        console.error(`Project with projectId: ${projectId} not found`);
-        setActiveProject(null);
+        return true;
       }
+
+      console.error(`Project with projectId: ${projectId} not found`);
+      if (!fetchFailed) {
+        setActiveProject((prev) => (prev?.projectId === projectId ? null : prev));
+      }
+      return false;
     },
     [projects, addIdsToEvents]
   );

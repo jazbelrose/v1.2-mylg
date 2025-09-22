@@ -10,6 +10,16 @@ import type { Project } from "@/app/contexts/DataProvider";
 import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 
+type DetailFetchStatus = "idle" | "loading" | "success" | "error";
+
+const projectNeedsDetailHydration = (project?: Project | null): boolean =>
+  Boolean(
+    project &&
+      (project.description === undefined ||
+        project.customFolders === undefined ||
+        !Array.isArray(project.team))
+  );
+
 const MoodboardPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -23,6 +33,40 @@ const MoodboardPage: React.FC = () => {
   } = useData();
 
   const [activeProject, setActiveProject] = useState<Project | null>(initialProject ?? null);
+  const [detailFetchStatusById, setDetailFetchStatusById] = useState<Record<string, DetailFetchStatus>>({});
+
+  const requestProjectDetails = useCallback(
+    async (id: string | undefined | null) => {
+      if (!id) return;
+
+      let shouldFetch = false;
+      setDetailFetchStatusById((prev) => {
+        const current = prev[id];
+        if (current === "loading" || current === "success" || current === "error") {
+          return prev;
+        }
+        shouldFetch = true;
+        return { ...prev, [id]: "loading" };
+      });
+
+      if (!shouldFetch) return;
+
+      try {
+        const success = await fetchProjectDetails(id);
+        setDetailFetchStatusById((prev) => {
+          const nextStatus: DetailFetchStatus = success ? "success" : "error";
+          if (prev[id] === nextStatus) return prev;
+          return { ...prev, [id]: nextStatus };
+        });
+      } catch {
+        setDetailFetchStatusById((prev) => {
+          if (prev[id] === "error") return prev;
+          return { ...prev, [id]: "error" };
+        });
+      }
+    },
+    [fetchProjectDetails]
+  );
 
   const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
   const projectPalette = useProjectPalette(coverImage, {
@@ -35,10 +79,42 @@ const MoodboardPage: React.FC = () => {
 
   useEffect(() => {
     if (!projectId) return;
-    if (!initialProject || initialProject.projectId !== projectId) {
-      void fetchProjectDetails(projectId);
+
+    const matchingProject =
+      (initialProject && initialProject.projectId === projectId ? initialProject : null) ??
+      (activeProject && activeProject.projectId === projectId ? activeProject : null);
+
+    if (matchingProject && !projectNeedsDetailHydration(matchingProject)) {
+      setDetailFetchStatusById((prev) => {
+        if (prev[projectId] === "success") return prev;
+        return { ...prev, [projectId]: "success" };
+      });
+      return;
     }
-  }, [projectId, initialProject, fetchProjectDetails]);
+
+    if (detailFetchStatusById[projectId] === "error") {
+      return;
+    }
+
+    void requestProjectDetails(projectId);
+  }, [
+    projectId,
+    initialProject,
+    activeProject,
+    detailFetchStatusById,
+    requestProjectDetails,
+  ]);
+
+  useEffect(() => {
+    if (!activeProject?.projectId) return;
+    if (projectNeedsDetailHydration(activeProject)) return;
+
+    const targetId = activeProject.projectId;
+    setDetailFetchStatusById((prev) => {
+      if (prev[targetId] === "success") return prev;
+      return { ...prev, [targetId]: "success" };
+    });
+  }, [activeProject]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -61,9 +137,12 @@ const MoodboardPage: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (!activeProject?.projectId) return;
-    void fetchProjectDetails(activeProject.projectId);
-  }, [activeProject?.projectId, fetchProjectDetails]);
+    const targetId = activeProject?.projectId;
+    if (!targetId) return;
+    if (targetId === projectId) return;
+
+    void requestProjectDetails(targetId);
+  }, [activeProject?.projectId, projectId, requestProjectDetails]);
 
   const parseStatusToNumber = useCallback((status: string | number | undefined | null) => {
     if (status === undefined || status === null) return 0;

@@ -136,6 +136,8 @@
 
 .budget-calendar-mobile-card {
   width: 100%;
+  container-type: inline-size;
+  container-name: calendar-panel;
 }
 
 .chart-legend-container {

@@ -1,4 +1,12 @@
 .all-projects-calendar-wrapper {
+  --calendar-gap: 8px;
+  --calendar-date-size: 0.9rem;
+  --calendar-title-size: 0.7rem;
+  --calendar-dot-size: 10px;
+  --calendar-dot-gap: 1px;
+  --calendar-lane-space: 8px;
+  --calendar-timeline-height: 8px;
+
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -48,8 +56,8 @@
 }
 
 .all-projects-calendar-wrapper .react-calendar__tile {
-  min-width: 100px;
-  min-height: 11.5vh;
+  min-width: 0;
+  min-height: 0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -60,14 +68,18 @@
   margin: 0;
   /* Ensure hover menus are not clipped */
   overflow: visible;
+  width: 100%;
+  aspect-ratio: 1 / 1;
 }
 
 .all-projects-calendar-wrapper .react-calendar__month-view__days {
-  gap: 0;
+  display: grid;
+  gap: var(--calendar-gap);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 /* Date styling (re-rendered) */
 .all-projects-calendar-wrapper .tile-date {
-  font-size: 0.9rem;
+  font-size: var(--calendar-date-size);
   color: white;
 }
 
@@ -80,11 +92,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-bottom: calc(var(--lane-count, 1) * 8px);
+  padding-bottom: calc(var(--lane-count, 1) * var(--calendar-lane-space));
 }
 
 .all-projects-calendar-wrapper .tile-date-number {
-  font-size: 0.8rem;
+  font-size: calc(var(--calendar-date-size) * 0.9);
   color: white;
   text-align: center;
   margin-top: 2px;
@@ -95,7 +107,7 @@
 .all-projects-calendar-wrapper .tile-dots {
   display: flex;
   flex-wrap: wrap;
-  gap: 1px;
+  gap: var(--calendar-dot-gap);
   justify-content: center;
   margin-bottom: 1px;
 }
@@ -111,8 +123,8 @@
 }
 .all-projects-calendar-wrapper .project-dot {
   /* Align with chevron and thumbnail */
-  width: 10px;
-  height: 10px;
+  width: var(--calendar-dot-size);
+  height: var(--calendar-dot-size);
   font-size: 0.7rem;
   display: flex;
   align-items: center;
@@ -137,11 +149,11 @@
   right: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: calc(var(--calendar-dot-gap) + 1px);
 }
 
 .all-projects-calendar-wrapper .timeline-bar {
-  height: 8px;
+  height: var(--calendar-timeline-height);
   border-radius: 0;
 }
 
@@ -168,7 +180,7 @@
 
 /* Project title styling */
 .all-projects-calendar-wrapper .tile-title {
-  font-size: 0.7rem;
+  font-size: var(--calendar-title-size);
   color: white;
   text-align: center;
   overflow: hidden;
@@ -181,7 +193,7 @@
 .all-projects-calendar-wrapper .react-calendar__tile--active {
   background-color: rgba(250, 51, 86, 0.15) !important;
   color: white !important;
-   border-radius: 5px !important;
+  border-radius: 5px !important;
   border: none;
   box-shadow: 0 0 0 2px #FA3356, 0 0 6px rgba(250, 51, 86, 0.6);
   animation: calendar-flash 0.3s ease-out;
@@ -193,6 +205,32 @@
   }
   to {
     box-shadow: 0 0 6px rgba(250, 51, 86, 0.6);
+  }
+}
+
+@container calendar-panel (max-width: 560px) {
+  .all-projects-calendar-wrapper {
+    --calendar-gap: 6px;
+    --calendar-date-size: 0.8rem;
+    --calendar-title-size: 0.65rem;
+    --calendar-dot-size: 8px;
+    --calendar-lane-space: 7px;
+    --calendar-timeline-height: 6px;
+  }
+}
+
+@container calendar-panel (max-width: 480px) {
+  .all-projects-calendar-wrapper {
+    --calendar-gap: 4px;
+    --calendar-date-size: 0.75rem;
+    --calendar-title-size: 0.6rem;
+    --calendar-dot-size: 7px;
+    --calendar-dot-gap: 0.75px;
+    --calendar-lane-space: 6px;
+    --calendar-timeline-height: 5px;
+  }
+  .all-projects-calendar-wrapper .tile-dots {
+    margin-bottom: 0;
   }
 }
 
@@ -399,13 +437,9 @@
     height: 25px;
     margin-bottom: 1em;
   }
-
-  
-/* Colored dots representing projects */
-.all-projects-calendar-wrapper .tile-dots {
- 
-  margin-bottom: 0px;
-}
+  .all-projects-calendar-wrapper .tile-dots {
+    margin-bottom: 0;
+  }
 }
 
 @media (max-width: 760px) {
@@ -423,27 +457,6 @@
   .all-projects-calendar-wrapper .react-calendar__month-view__weekdays {
     font-size: 10px;
   }
-  .all-projects-calendar-wrapper .react-calendar__tile {
-    min-width: 40px;
-    /* Use viewport height units so six rows roughly fill the screen */
-    min-height: 12vh;
-  }
-  .all-projects-calendar-wrapper .tile-minimal {
-    padding-bottom: calc(var(--lane-count, 1) * 5px);
-  }
-  .all-projects-calendar-wrapper .tile-date {
-    font-size: 0.75rem;
-  }
-  .all-projects-calendar-wrapper .tile-date-number {
-    font-size: 0.6rem;
-  }
-  .all-projects-calendar-wrapper .tile-title {
-    font-size: 0.55rem;
-    max-width: 100%;
-  }
-  .all-projects-calendar-wrapper .timeline-bar {
-    height: 4px;
-  }
 }
 
 /* iPhone compact widths - match projects panel consistency */
@@ -456,11 +469,7 @@
   .all-projects-calendar-wrapper .react-calendar {
     padding: 8px 8px 0;
   }
-  
-  .all-projects-calendar-wrapper .react-calendar__tile {
-    min-width: 38px;
-    min-height: 11vh;
-  }
+
 }
 
 .all-projects-calendar-wrapper .dashboard-content,

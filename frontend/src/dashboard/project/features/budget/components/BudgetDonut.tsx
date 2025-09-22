@@ -63,17 +63,22 @@ const centerButtonStyles: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
+  justifyContent: "center",
   gap: "4px",
   border: "none",
   background: "transparent",
   borderRadius: "50%",
-  padding: "10px 18px",
+  padding: "12px",
+  width: "min(50%, 120px)",
+  aspectRatio: "1 / 1",
+  boxSizing: "border-box",
+  textAlign: "center",
   color: "inherit",
   cursor: "pointer",
   pointerEvents: "auto",
   transition: "background 150ms ease, box-shadow 150ms ease",
-  
- 
+
+
 };
 const centerLabelStyles: React.CSSProperties = {
   fontSize: "0.75rem",

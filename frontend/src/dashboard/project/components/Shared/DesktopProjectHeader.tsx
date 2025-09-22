@@ -57,142 +57,115 @@ const DesktopProjectHeader = ({
   getFileUrlForThumbnail,
 }: DesktopProjectHeaderProps) => {
   const thumbnailKey = project?.thumbnails?.[0] as string | undefined;
+  const projectTitle = project?.title || "Summary";
+  const progressPercentage = Number.isFinite(progressValue)
+    ? Math.min(Math.max(progressValue, 0), 100)
+    : 0;
+  const completeLabel = `${Math.round(progressPercentage)}% Complete`;
 
   return (
-    <div className="project-header">
-      <div className="header-content">
-        <div className="left-side">
-          <div className="project-logo-wrapper">
-            <Squircle
-              as="button"
-              type="button"
-              onClick={onOpenThumbnail}
-              title="Change Project Thumbnail"
-              aria-label="Change Project Thumbnail"
-              className="interactive project-logo-button"
-              radius={18}
-              smoothing={0.88}
-            >
-              {thumbnailKey ? (
-                <img
-                  src={getFileUrlForThumbnail(thumbnailKey)}
-                  alt="Project Thumbnail"
-                  className="project-logo-image"
-                />
-              ) : (
-                <span className="project-logo-initial">{projectInitial.toUpperCase()}</span>
-              )}
-            </Squircle>
-          </div>
-
-          <div className="single-project-title">
-            <h2 className="project-title-heading">{project?.title || "Summary"}</h2>
-          </div>
-
-          <svg
-            id="StatusSVG"
-            viewBox="0 0 400 400"
-            onClick={onOpenStatus}
-            onKeyDown={(event) => handleKeyDown(event, onOpenStatus)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Status: ${displayStatus} Complete`}
-            className="interactive status-svg"
-            style={{ cursor: "pointer" }}
-          >
-            <title>{`Status: ${displayStatus} Complete`}</title>
-            <text
-              className="project-status"
-              transform={`translate(${progressValue !== 100 ? 75 : 56.58} 375.21)`}
-            >
-              <tspan x="22.5" y="-136">
-                {displayStatus}
-              </tspan>
-            </text>
-            {progressValue >= 0 && (
-              <ellipse
-                cx="200"
-                cy="200"
-                rx="160"
-                ry="160"
-                fill="none"
-                strokeWidth="15"
-                strokeDasharray={`${(progressValue / 100) * 1002}, 1004`}
-                style={{
-                  stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
-                }}
+    <header className="desktop-project-header">
+      <div className="desktop-project-header__inner">
+        <div className="desktop-project-header__top">
+          <div className="desktop-project-header__identity">
+            <div className="project-logo-wrapper">
+              <Squircle
+                as="button"
+                type="button"
+                onClick={onOpenThumbnail}
+                title="Change Project Thumbnail"
+                aria-label="Change Project Thumbnail"
+                className="interactive project-logo-button desktop-project-header__logo-button"
+                radius={18}
+                smoothing={0.88}
               >
-                {progressValue < 100 && (
-                  <animate
-                    attributeName="stroke-dasharray"
-                    from="0, 1004"
-                    to={`${(progressValue / 100) * 1002}, 1004`}
-                    dur="1s"
-                    begin="0s"
-                    fill="freeze"
+                {thumbnailKey ? (
+                  <img
+                    src={getFileUrlForThumbnail(thumbnailKey)}
+                    alt="Project Thumbnail"
+                    className="project-logo-image"
                   />
+                ) : (
+                  <span className="project-logo-initial">{projectInitial.toUpperCase()}</span>
                 )}
-              </ellipse>
-            )}
-          </svg>
+              </Squircle>
+            </div>
 
-          <AvatarStack members={teamMembers} onClick={onOpenTeam} />
+            <div className="desktop-project-header__identity-text">
+              <div className="desktop-project-header__title-row">
+                <h2 className="desktop-project-header__title">{projectTitle}</h2>
+                <button
+                  type="button"
+                  className="desktop-project-header__status-badge interactive"
+                  onClick={onOpenStatus}
+                  onKeyDown={(event) => handleKeyDown(event, onOpenStatus)}
+                  aria-label={`Update status (${displayStatus})`}
+                >
+                  {displayStatus}
+                </button>
+              </div>
 
-          <div
-            className="finish-line-header interactive"
-            onClick={onOpenFinishLine}
-            onKeyDown={(event) => handleKeyDown(event, onOpenFinishLine)}
-            role="button"
-            tabIndex={0}
-            title="Production dates"
-            aria-label="Production dates"
-            style={{ cursor: "pointer" }}
-          >
-            <span>{rangeLabel}</span>
+              <button
+                type="button"
+                className="desktop-project-header__range interactive"
+                onClick={onOpenFinishLine}
+                onKeyDown={(event) => handleKeyDown(event, onOpenFinishLine)}
+                aria-label="Edit production dates"
+              >
+                {rangeLabel}
+              </button>
+            </div>
           </div>
 
-          <div
-            onClick={onOpenSettings}
-            onKeyDown={(event) => handleKeyDown(event, onOpenSettings)}
-            role="button"
-            tabIndex={0}
-            title="Project settings"
-            aria-label="Project settings"
-            className="interactive"
-            style={{ cursor: "pointer", margin: "10px" }}
-          >
-            <Settings size={20} className="settings-icon" />
-          </div>
+          <div className="desktop-project-header__meta">
+            <div className="desktop-project-header__progress" aria-live="polite">
+              <div className="desktop-project-header__progress-bar" aria-hidden="true">
+                <div
+                  className="desktop-project-header__progress-fill"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+              <span className="desktop-project-header__progress-label">{completeLabel}</span>
+            </div>
 
-          <div
-            onClick={onOpenQuickLinks}
-            onKeyDown={(event) => handleKeyDown(event, onOpenQuickLinks)}
-            role="button"
-            tabIndex={0}
-            title="Quick links"
-            aria-label="Quick links"
-            className="interactive"
-            style={{ cursor: "pointer" }}
-          >
-            <Link2 size={20} />
-          </div>
+            <div className="desktop-project-header__team">
+              <AvatarStack members={teamMembers} onClick={onOpenTeam} />
+            </div>
 
-          <div
-            onClick={onOpenFiles}
-            onKeyDown={(event) => handleKeyDown(event, onOpenFiles)}
-            role="button"
-            tabIndex={0}
-            title="Open file manager"
-            aria-label="Open file manager"
-            className="interactive"
-            style={{ cursor: "pointer", margin: "10px" }}
-          >
-            <Folder size={20} />
+            <div className="desktop-project-header__icon-buttons">
+              <button
+                type="button"
+                className="desktop-project-header__icon-button interactive"
+                onClick={onOpenSettings}
+                onKeyDown={(event) => handleKeyDown(event, onOpenSettings)}
+                aria-label="Project settings"
+              >
+                <Settings size={18} />
+              </button>
+              <button
+                type="button"
+                className="desktop-project-header__icon-button interactive"
+                onClick={onOpenQuickLinks}
+                onKeyDown={(event) => handleKeyDown(event, onOpenQuickLinks)}
+                aria-label="Quick links"
+              >
+                <Link2 size={18} />
+              </button>
+              <button
+                type="button"
+                className="desktop-project-header__icon-button interactive"
+                onClick={onOpenFiles}
+                onKeyDown={(event) => handleKeyDown(event, onOpenFiles)}
+                aria-label="Open file manager"
+              >
+                <Folder size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="right-side">
-          <div className="project-nav-tabs" style={{ padding: "0 10px 10px" }}>
+        <nav className="desktop-project-header__nav" aria-label="Project navigation">
+          <div className="project-nav-tabs">
             <ProjectTabs
               tabs={navigation.tabs}
               activeIndex={navigation.activeIndex}
@@ -201,9 +174,9 @@ const DesktopProjectHeader = ({
               confirmNavigate={navigation.confirmNavigate}
             />
           </div>
-        </div>
+        </nav>
       </div>
-    </div>
+    </header>
   );
 };
 

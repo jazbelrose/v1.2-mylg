@@ -1,53 +1,90 @@
-.single-project-title .project-title-heading {
-  font-size: clamp(1.5rem, 2vw + 1rem, 2.5rem);
-  font-weight: 600;
-  margin: 0;
-  line-height: 1.1;
-  word-break: break-word;
+.desktop-project-header {
+  width: 100%;
+  background-color: #0c0c0c;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.project-logo {
-  width: clamp(32px, 3vw, 36px);
-  height: clamp(32px, 3vw, 36px);
-  border-radius: 50%;
-  object-fit: cover;
-  transition: width 0.2s, height 0.2s;
-  padding: 0px;
-  box-sizing: border-box;
+.desktop-project-header__inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.desktop-project-header__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 32px;
+}
+
+.desktop-project-header__identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.desktop-project-header__identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.desktop-project-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.desktop-project-header__title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+  line-height: 1.1;
+  word-break: break-word;
 }
 
 .project-logo-wrapper {
   display: flex;
   align-items: center;
-  margin: 2px 6px;
-  
 }
 
 .project-logo-button {
   --shape-radius: 18px;
   --shape-smoothing: 0.88;
-  width: clamp(36px, 4vw, 44px);
-  aspect-ratio: 1 / 1;
+  width: 56px;
+  height: 56px;
   border: none;
   padding: 0;
-  background: rgba(15, 23, 42, 0.06);
-  color: var(--text-strong, #111827);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: clamp(1rem, 1.5vw + 0.2rem, 1.4rem);
+  font-size: 1.4rem;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.desktop-project-header__logo-button {
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .project-logo-button:hover {
   transform: scale(1.02);
-  background: rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .project-logo-button:focus-visible {
-  outline: 2px solid rgba(15, 23, 42, 0.35);
+  outline: 2px solid rgba(255, 255, 255, 0.35);
   outline-offset: 2px;
 }
 
@@ -55,52 +92,183 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
+  border-radius: 12px;
 }
 
 .project-logo-initial {
   line-height: 1;
 }
 
-.status-svg {
-  width: clamp(40px, 5vw, 60px) !important;
-  height: clamp(40px, 5vw, 60px) !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-  max-width: 60px !important;
-  max-height: 60px !important;
-  transition: width 0.2s, height 0.2s;
-  vertical-align: middle;
+.desktop-project-header__status-badge {
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: none;
+  background: #fa3356;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
+.desktop-project-header__status-badge:hover {
+  background: #ff4d6c;
+}
 
-@media (max-width: 600px) {
-  .status-svg {
-    width: clamp(32px, 10vw, 44px) !important;
-    height: clamp(32px, 10vw, 44px) !important;
-    min-width: 32px !important;
-    min-height: 32px !important;
-    max-width: 44px !important;
-    max-height: 44px !important;
+.desktop-project-header__status-badge:focus-visible {
+  outline: 2px solid rgba(250, 51, 86, 0.4);
+  outline-offset: 2px;
+}
+
+.desktop-project-header__range {
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.95rem;
+}
+
+.desktop-project-header__range:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.desktop-project-header__range:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
+.desktop-project-header__meta {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.desktop-project-header__progress {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desktop-project-header__progress-bar {
+  position: relative;
+  height: 8px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.desktop-project-header__progress-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, #fa3356, #ff6a7f);
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.desktop-project-header__progress-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.desktop-project-header__team {
+  display: flex;
+  align-items: center;
+}
+
+.desktop-project-header__icon-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.desktop-project-header__icon-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.desktop-project-header__icon-button:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.desktop-project-header__icon-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
+.desktop-project-header__nav {
+  padding: 16px 32px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.desktop-project-header__nav .project-nav-tabs {
+  width: 100%;
+}
+
+.desktop-project-header__nav .segmented-control {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+.desktop-project-header__nav .segmented-control button {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.desktop-project-header__nav .segmented-control button.active {
+  color: #fff;
+}
+
+.desktop-project-header__nav .segmented-control.with-slider .tab-slider {
+  background-color: #fa3356;
+  border-radius: 9999px;
+  box-shadow: 0 6px 16px rgba(250, 51, 86, 0.35);
+}
+
+.desktop-project-header__nav .segmented-control svg {
+  color: inherit;
+}
+
+@media (max-width: 960px) {
+  .desktop-project-header__top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .desktop-project-header__meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .desktop-project-header__progress {
+    width: 100%;
   }
 }
 
 @media (max-width: 600px) {
-  .project-logo {
-    width: clamp(40px, 15vw, 44px);
-    height: clamp(40px, 15vw, 44px);
+  .desktop-project-header__top {
+    padding: 24px;
+    gap: 24px;
+  }
+
+  .desktop-project-header__nav {
+    padding: 12px 24px 20px;
   }
 }
-
-@media (max-width: 600px) {
-  .single-project-title .project-title-heading {
-    font-size: clamp(1.1rem, 5vw, 1.7rem);
-  }
-}
-
-
-
-
-
-
-

@@ -162,8 +162,7 @@ const DesktopProjectHeader = ({
             tabIndex={0}
             title="Project settings"
             aria-label="Project settings"
-            className="interactive"
-            style={{ cursor: "pointer", margin: "10px" }}
+            className="interactive icon-button"
           >
             <Settings size={20} className="settings-icon" />
           </div>
@@ -175,8 +174,7 @@ const DesktopProjectHeader = ({
             tabIndex={0}
             title="Quick links"
             aria-label="Quick links"
-            className="interactive"
-            style={{ cursor: "pointer" }}
+            className="interactive icon-button"
           >
             <Link2 size={20} />
           </div>
@@ -188,15 +186,14 @@ const DesktopProjectHeader = ({
             tabIndex={0}
             title="Open file manager"
             aria-label="Open file manager"
-            className="interactive"
-            style={{ cursor: "pointer", margin: "10px" }}
+            className="interactive icon-button"
           >
             <Folder size={20} />
           </div>
         </div>
 
         <div className="right-side">
-          <div className="project-nav-tabs" style={{ padding: "0 10px 10px" }}>
+          <div className="project-nav-tabs">
             <ProjectTabs
               tabs={navigation.tabs}
               activeIndex={navigation.activeIndex}

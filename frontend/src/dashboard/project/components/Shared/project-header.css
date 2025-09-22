@@ -223,18 +223,19 @@
 .project-header:not(.new-project-header) .project-nav-tabs .segmented-control {
   width: auto;
   justify-content: center;
-  padding: 6px;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 4px;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 12px 32px rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 10px 24px rgba(0, 0, 0, 0.25);
 }
 
 .project-header:not(.new-project-header) .project-nav-tabs .segmented-control button {
-  padding: 10px 22px;
+  padding: 8px 16px;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  font-size: 0.9rem;
+  letter-spacing: 0.005em;
   color: rgba(255, 255, 255, 0.76);
   border-radius: 999px;
   transition: color 0.2s ease;
@@ -252,7 +253,7 @@
 .project-header:not(.new-project-header) .project-nav-tabs .tab-slider {
   background: #ffffff;
   border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
 }
 
 .project-header:not(.new-project-header) .icon-button {

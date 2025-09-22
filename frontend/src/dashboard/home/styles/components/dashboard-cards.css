@@ -84,7 +84,10 @@
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
+  gap: clamp(12px, 2vw, 24px);
   width: 100%;
+  container-type: inline-size;
+  container-name: budget-card;
 }
 
 .budget-overview-card {
@@ -95,6 +98,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  flex: 1 1 320px;
+  min-width: 0;
 }
 
 .budget-overview-header {
@@ -143,14 +148,15 @@
 
 .chart-legend-container {
   display: flex;
-  align-items: stretch;
-  margin-left: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-left: clamp(10px, 2vw, 18px);
   gap: 12px;
 }
 
 .budget-chart {
-  width: min(40vh, 40vw, 220px);
-  height: min(40vh, 40vw, 220px);
+  width: min(40vh, 36vw, 220px);
+  height: min(40vh, 36vw, 220px);
   position: relative;
 }
 
@@ -192,11 +198,37 @@
   color: #9ca3af;
 }
 
+
 .budget-legend-placeholder {
   font-size: clamp(0.68rem, 1.4vh, 0.85rem);
   color: #9ca3af;
   line-height: 1.35;
   max-width: clamp(120px, 18vw, 200px);
+}
+
+@container budget-card (max-width: 1120px) {
+  .budget-component-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chart-legend-container {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .budget-chart {
+    margin-inline: auto;
+    width: clamp(160px, 48cqw, 220px);
+    height: clamp(160px, 48cqw, 220px);
+  }
+}
+
+@container budget-card (max-width: 760px) {
+  .budget-chart {
+    width: clamp(140px, 60cqw, 200px);
+    height: clamp(140px, 60cqw, 200px);
+  }
 }
 
 @media (max-height: 750px) {
@@ -222,12 +254,12 @@
 @media (max-width: var(--breakpoint-sm)) {
   .dashboard-item.budget {
     padding: 15px;
-    flex-direction: row;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
     min-height: 200px;
   }
   .budget-overview-card {
-    flex-wrap: wrap;
     gap: 12px;
   }
   .budget-overview-summary {
@@ -253,15 +285,15 @@
     margin-top: 4px;
   }
   .budget-calendar-mobile-card {
-    display: flex;
+    display: block;
   }
   .budget-calendar-mobile-card > * {
-    flex: 1 1 auto;
+    width: 100%;
   }
   .budget-component-container {
-    flex-direction: row;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
   }
   .chart-legend-container {
     flex-direction: column;

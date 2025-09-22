@@ -18,7 +18,7 @@ export { default as EventEditModal } from "./components/EventEditModal";
 export { default as HeaderStats } from "./components/HeaderStats";
 export { default as InvoicePreviewModal } from "./components/InvoicePreviewModal";
 export { default as RevisionModal } from "./components/RevisionModal";
-export { default as VisxPieChart } from "./components/VisxPieChart";
+export { default as BudgetDonut } from "./components/BudgetDonut";
 
 // Context
 export { default as BudgetProvider } from "./context/BudgetProvider";

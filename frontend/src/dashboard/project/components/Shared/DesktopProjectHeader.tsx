@@ -152,7 +152,21 @@ const DesktopProjectHeader = ({
               </ellipse>
             )}
           </svg>
+        </div>
 
+        <div className="project-nav-center">
+          <div className="project-nav-tabs">
+            <ProjectTabs
+              tabs={navigation.tabs}
+              activeIndex={navigation.activeIndex}
+              getFromIndex={navigation.getFromIndex}
+              storageKey={navigation.storageKey}
+              confirmNavigate={navigation.confirmNavigate}
+            />
+          </div>
+        </div>
+
+        <div className="right-side">
           <AvatarStack members={teamMembers} onClick={onOpenTeam} />
 
           <div
@@ -189,18 +203,6 @@ const DesktopProjectHeader = ({
             className="interactive icon-button"
           >
             <Folder size={20} />
-          </div>
-        </div>
-
-        <div className="right-side">
-          <div className="project-nav-tabs">
-            <ProjectTabs
-              tabs={navigation.tabs}
-              activeIndex={navigation.activeIndex}
-              getFromIndex={navigation.getFromIndex}
-              storageKey={navigation.storageKey}
-              confirmNavigate={navigation.confirmNavigate}
-            />
           </div>
         </div>
       </div>

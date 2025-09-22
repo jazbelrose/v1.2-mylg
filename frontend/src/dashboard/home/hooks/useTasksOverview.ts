@@ -53,8 +53,10 @@ export type TasksOverviewEvent = {
   id: string;
   title: string;
   time?: string;
+  projectId?: string;
   project?: string;
   color?: string;
+  dueDate?: Date;
 };
 
 export type TasksOverviewGroup = {
@@ -284,14 +286,15 @@ export function useTasksOverview() {
           groupMap.set(key, group);
         }
 
-        group.items.push({
-          id: task.id,
-          title: task.title,
-          time: task.timeLabel,
-          project: task.projectName,
-          color: task.projectColor,
-          due,
-        });
+          group.items.push({
+            id: task.id,
+            title: task.title,
+            time: task.timeLabel,
+            projectId: task.projectId,
+            project: task.projectName,
+            color: task.projectColor,
+            due,
+          });
       }
     });
 
@@ -306,8 +309,10 @@ export function useTasksOverview() {
             id: item.id,
             title: item.title,
             time: item.time,
+            projectId: item.projectId,
             project: item.project,
             color: item.color,
+            dueDate: item.due,
           })),
       }));
 
@@ -319,6 +324,9 @@ export function useTasksOverview() {
       });
 
     const primaryProjectId = sortedByUrgency[0]?.projectId ?? tasks[0]?.projectId ?? null;
+    const primaryProjectName = primaryProjectId
+      ? tasks.find((task) => task.projectId === primaryProjectId)?.projectName ?? null
+      : null;
 
     return {
       completed: completedCount,
@@ -326,6 +334,7 @@ export function useTasksOverview() {
       overdue: overdueCount,
       groups: sortedGroups,
       primaryProjectId,
+      primaryProjectName,
     };
   }, [tasks]);
 
@@ -353,6 +362,8 @@ export function useTasksOverview() {
     handleNavigateToPrimary,
     handleViewAll,
     canNavigateToProject,
+    primaryProjectId,
+    primaryProjectName,
   };
 }
 

@@ -38,6 +38,7 @@ type UseProjectFiltersResult = {
   query: string;
   setQuery: (value: string) => void;
   statusFilter: string;
+  setStatusFilter: (value: string) => void;
   statusOptions: DropdownOption<string>[];
   statusTriggerLabel: string;
   statusDropdown: DropdownHelpers<string>;
@@ -234,6 +235,7 @@ export const useProjectFilters = ({
     query,
     setQuery,
     statusFilter,
+    setStatusFilter,
     statusOptions,
     statusTriggerLabel,
     statusDropdown,

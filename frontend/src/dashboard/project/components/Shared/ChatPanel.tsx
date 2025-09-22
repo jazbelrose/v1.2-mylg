@@ -47,14 +47,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   );
 
   const [size, setSize] = useState<Size>(() => {
-    if (typeof window === "undefined") return { width: 360, height: 400 };
+    if (typeof window === "undefined") return { width: 320, height: 400 };
     try {
       const stored = localStorage.getItem("chatPanelSize");
       if (stored) return JSON.parse(stored) as Size;
     } catch {
       /* ignore */
     }
-    return { width: 360, height: 400 };
+    return { width: 320, height: 400 };
   });
 
   const [position, setPosition] = useState<Pos>(() => {
@@ -65,7 +65,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     } catch {
       /* ignore */
     }
-    const panelWidth = 360;
+    const panelWidth = 320;
     const panelHeight = 400;
     return {
       x: window.innerWidth - panelWidth - 32,
@@ -158,7 +158,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     if (typeof document === "undefined") return;
     const body = document.body;
     if (open && !floating) {
-      const width = panelRef.current?.offsetWidth ?? 350;
+      const width = panelRef.current?.offsetWidth ?? 320;
       body.classList.add("chat-panel-docked");
       body.style.setProperty("--chat-panel-width", `${width}px`);
     } else {
@@ -288,7 +288,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         right: "auto",
         width: size.width,
         height: size.height,
-        minWidth: 300,
+        minWidth: 280,
         minHeight: open ? 280 : headerHeight,
       }
     : { ["--chat-panel-top"]: `${headerOffset}px`, height: dockedHeight ? `${dockedHeight}px` : undefined };

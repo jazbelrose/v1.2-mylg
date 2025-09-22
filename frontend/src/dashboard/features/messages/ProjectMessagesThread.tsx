@@ -1023,9 +1023,9 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
             style={{
               flexGrow: 1,
               overflowY: "auto",
-              padding: "10px",
+              padding: "8px",
               borderRadius: "5px",
-              marginBottom: "10px",
+              marginBottom: "8px",
               display: "flex",
               flexDirection: "column",
               justifyContent:

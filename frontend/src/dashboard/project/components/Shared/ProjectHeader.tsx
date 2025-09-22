@@ -1,62 +1,27 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
- 
-  FormEvent,
-} from "react";
+import React, { useEffect, useState } from "react";
+
 import "./project-header.css";
-import Cropper, { Area } from "react-easy-crop";
-import "react-easy-crop/react-easy-crop.css";
-import Modal from "@/shared/ui/ModalWithStack";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen } from "@fortawesome/free-solid-svg-icons";
-import {
-  Pipette,
-  Folder,
-  Link2,
-  Settings,
-  Pencil,
-  Image as ImageIcon,
-  Palette,
-  Trash,
-} from "lucide-react";
-import { uploadData } from "aws-amplify/storage";
-import { useData } from "@/app/contexts/useData";
-import { useSocket } from "@/app/contexts/useSocket";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
-import { HexColorPicker, HexColorInput } from "react-colorful";
-import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
-
-import {
-  POST_PROJECT_TO_USER_URL,
-  apiFetch,
-  fetchUserProfilesBatch,
-  fileUrlsToKeys,
-  getFileUrl,
-  type UserProfile,
-} from "@/shared/utils/api";
-import AvatarStack from "@/shared/ui/AvatarStack";
+import MobileProjectHeader from "@/dashboard/project/components/Shared/MobileProjectHeader";
 import TeamModal from "@/dashboard/project/components/Shared/TeamModal";
-import { enqueueProjectUpdate } from "@/shared/utils/requestQueue";
-import type { Project } from "@/app/contexts/DataProvider";
-import MobileProjectHeader from "./MobileProjectHeader";
-import { useProjectTabs } from "./useProjectTabs";
-import type { TeamMember } from "./types";
-import Squircle from "@/shared/ui/Squircle";
 
-// Helper function for safe string conversion
-function toString(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
+import DesktopProjectHeader from "./project-header/DesktopProjectHeader";
+import { useProjectHeaderBase } from "./project-header/hooks/useProjectHeaderBase";
+import { useProjectHeaderModals } from "./project-header/hooks/useProjectHeaderModals";
+import { hexToRgb } from "./project-header/utils";
+import ColorModal from "./project-header/modals/ColorModal";
+import DeleteConfirmationModal from "./project-header/modals/DeleteConfirmationModal";
+import EditNameModal from "./project-header/modals/EditNameModal";
+import EditStatusModal from "./project-header/modals/EditStatusModal";
+import FinishLineModal from "./project-header/modals/FinishLineModal";
+import InvoiceInfoModal from "./project-header/modals/InvoiceInfoModal";
+import SettingsModal from "./project-header/modals/SettingsModal";
+import ThumbnailModal from "./project-header/modals/ThumbnailModal";
+
+import type { Project } from "@/app/contexts/DataProvider";
 
 interface ProjectHeaderProps {
-  title?: string; // not used directly but kept for parity
+  title?: string;
   parseStatusToNumber: (status: string | number | undefined) => number;
   userId: string;
   onProjectDeleted: (projectId: string) => void;
@@ -65,23 +30,6 @@ interface ProjectHeaderProps {
   onActiveProjectChange?: (project: Project) => void;
   onOpenFiles: () => void;
   onOpenQuickLinks: () => void;
-}
-
-// Cache team member profiles per project
-const teamMembersCache = new Map<string, TeamMember[]>();
-
-// Safely parse various date string formats into a Date object (YYYY-MM-DD or native formats)
-function safeParse(dateStr?: string | null): Date | null {
-  if (!dateStr) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [y, m, d] = dateStr.split("-").map((p) => parseInt(p, 10));
-    return new Date(y, m - 1, d);
-  }
-  const parsed = new Date(dateStr);
-  if (!Number.isNaN(parsed.getTime())) {
-    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-  }
-  return null;
 }
 
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({
@@ -94,21 +42,6 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   onOpenFiles,
   onOpenQuickLinks,
 }) => {
-  const {
-    user,
-    setActiveProject,
-    updateProjectFields,
-    isAdmin,
-    setProjects,
-    setUserProjects,
-  } = useData();
-  const [saving, setSaving] = useState(false);
-  const { ws } = useSocket() || {};
-  const { refreshUser } = useData();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { projectId = "" } = useParams<{ projectId: string }>();
-
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -130,795 +63,115 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     };
   }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
+  const handleKeyDown = (event: React.KeyboardEvent, action: () => void) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
       action();
     }
   };
 
-  // Store active project locally for instant UI updates
-  const [localActiveProject, setLocalActiveProject] = useState<Project>(
-    activeProject || ({} as Project)
-  );
+  const base = useProjectHeaderBase({
+    activeProject,
+    onActiveProjectChange,
+  });
 
-  // Keep local state in sync with incoming activeProject changes
-  useEffect(() => {
-    const thumbs = fileUrlsToKeys(activeProject?.thumbnails || []);
-    setLocalActiveProject(
-      activeProject ? { ...activeProject, thumbnails: thumbs } : ({} as Project)
-    );
-    setUpdatedName(activeProject?.title || "");
-    setUpdatedStatus(activeProject?.status?.toString?.() || "");
-    setSelectedColor((activeProject?.color as string) || "#FA3356");
-    setSelectedFinishLineDate(toString(activeProject?.finishline));
-    setSelectedProductionStartDate(
-      toString(activeProject?.productionStart) || toString(activeProject?.dateCreated)
-    );
-    setInvoiceBrandName(toString(activeProject?.invoiceBrandName));
-    setInvoiceBrandAddress(toString(activeProject?.invoiceBrandAddress));
-    setInvoiceBrandPhone(toString(activeProject?.invoiceBrandPhone));
-    setClientName(toString(activeProject?.clientName));
-    setClientAddress(toString(activeProject?.clientAddress));
-    setClientPhone(toString(activeProject?.clientPhone));
-    setClientEmail(toString(activeProject?.clientEmail));
-  }, [activeProject]);
+  const modals = useProjectHeaderModals({
+    activeProject,
+    base,
+    showWelcomeScreen,
+    onProjectDeleted,
+    userId,
+  });
 
-  // Update URL when project title changes locally or via WebSocket
-  useEffect(() => {
-    if (!localActiveProject?.title || !localActiveProject.projectId) return;
-    if (!projectId || localActiveProject.projectId !== projectId) return;
-
-    const currentPath = location.pathname.split(/[?#]/)[0];
-    const segments = currentPath.split("/").filter(Boolean);
-    const projectsIndex = segments.indexOf("projects");
-
-    let suffix = "";
-    if (projectsIndex !== -1) {
-      const afterProjectId = segments.slice(projectsIndex + 2);
-      if (afterProjectId.length > 0) {
-        const [firstSegment, ...restSegments] = afterProjectId;
-        const expectedSlug = encodeURIComponent(
-          (localActiveProject.title ?? "").trim()
-        );
-        const knownSuffixes = new Set([
-          "budget",
-          "calendar",
-          "moodboard",
-          "editor",
-        ]);
-
-        let suffixSegments: string[] = [];
-        const slugMatchesExpected =
-          expectedSlug.length > 0 && firstSegment === expectedSlug;
-
-        if (slugMatchesExpected) {
-          suffixSegments = restSegments;
-        } else if (knownSuffixes.has(firstSegment.toLowerCase())) {
-          suffixSegments = [firstSegment, ...restSegments];
-        } else if (restSegments.length > 0) {
-          suffixSegments = restSegments;
-        }
-
-        if (suffixSegments.length > 0) {
-          suffix = `/${suffixSegments.join("/")}`;
-        }
-      }
-    }
-
-    const canonicalPath = getProjectDashboardPath(
-      localActiveProject.projectId,
-      localActiveProject.title,
-      suffix
-    );
-    if (currentPath === canonicalPath) return;
-
-    navigate(canonicalPath, { replace: true });
-  }, [
-    localActiveProject?.title,
-    localActiveProject?.projectId,
+  const {
+    saving,
     projectId,
-    navigate,
-    location.pathname,
-  ]);
+    projectInitial,
+    displayStatus,
+    rangeLabel,
+    mobileRangeLabel,
+    tabs,
+    activeTabKey,
+    confirmNavigate,
+    teamMembers,
+    isTeamModalOpen,
+    setIsTeamModalOpen,
+    isAdmin,
+    invoiceBrandName,
+    setInvoiceBrandName,
+    invoiceBrandAddress,
+    setInvoiceBrandAddress,
+    invoiceBrandPhone,
+    setInvoiceBrandPhone,
+    clientName,
+    setClientName,
+    clientAddress,
+    setClientAddress,
+    clientPhone,
+    setClientPhone,
+    clientEmail,
+    setClientEmail,
+    selectedFinishLineDate,
+    setSelectedFinishLineDate,
+    selectedProductionStartDate,
+    setSelectedProductionStartDate,
+    selectedColor,
+    setSelectedColor,
+    updatedName,
+    setUpdatedName,
+    updatedStatus,
+    setUpdatedStatus,
+    localActiveProject,
+  } = base;
 
-  // Derive project initial
-  const projectInitial =
-    localActiveProject?.title && localActiveProject.title.length > 0
-      ? localActiveProject.title.charAt(0)
-      : "";
+  const {
+    isEditNameModalOpen,
+    isEditStatusModalOpen,
+    isFinishLineModalOpen,
+    isInvoiceInfoModalOpen,
+    isConfirmDeleteModalOpen,
+    isSettingsModalOpen,
+    isColorModalOpen,
+    isThumbnailModalOpen,
+    setIsSettingsModalOpen,
+    openEditNameModal,
+    closeEditNameModal,
+    handleUpdateName,
+    openEditStatusModal,
+    handleUpdateStatus,
+    openFinishLineModal,
+    handleUpdateFinishLine,
+    openDeleteConfirmationModal,
+    closeDeleteConfirmationModal,
+    handleDeleteProject,
+    openThumbnailModal,
+    closeThumbnailModal,
+    handleThumbnailFileChange,
+    handleThumbDragOver,
+    handleThumbDragLeave,
+    handleThumbDrop,
+    handleRemoveThumbnail,
+    handleUploadThumbnail,
+    thumbnailInputRef,
+    thumbnailState,
+    setThumbnailCrop,
+    setThumbnailZoom,
+    setThumbnailCroppedArea,
+    openColorModal,
+    closeColorModal,
+    handleSaveColor,
+    openInvoiceInfoModal,
+    closeInvoiceInfoModal,
+    handleSaveInvoiceInfo,
+    openSettingsModal,
+    pickColorFromScreen,
+    closeFinishLineModal,
+    closeEditStatusModal,
+  } = modals;
 
-  // Ensure displayStatus ends with %
-  const displayStatus =
-    localActiveProject?.status &&
-    !localActiveProject.status.toString().trim().endsWith("%")
-      ? `${localActiveProject.status}%`
-      : (localActiveProject?.status as string) || "0%";
-
-  const startDate = useMemo(
-    () =>
-      safeParse(
-        (localActiveProject?.productionStart as string) || (localActiveProject?.dateCreated as string)
-      ),
-    [localActiveProject?.productionStart, localActiveProject?.dateCreated]
-  );
-  const endDate = useMemo(
-    () => safeParse(localActiveProject?.finishline as string),
-    [localActiveProject?.finishline]
-  );
-
-  const totalHoursForProject = useMemo(
-    () =>
-      (localActiveProject?.timelineEvents || []).reduce(
-        (sum, ev) => sum + Number(ev.hours || 0),
-        0
-      ),
-    [localActiveProject?.timelineEvents]
-  );
-
-  const rangeLabel = useMemo(() => {
-    const totalPart = `Hrs Total: ${totalHoursForProject} hrs`;
-    if (!startDate || !endDate) return totalPart;
-    const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-    const startStr = startDate.toLocaleDateString(undefined, opts);
-    const endStr = endDate.toLocaleDateString(undefined, opts);
-    return `${startStr} – ${endStr} | ${totalPart}`;
-  }, [startDate, endDate, totalHoursForProject]);
-
-  const resolvedProjectId =
-    (localActiveProject?.projectId as string | undefined) || projectId || "";
-
-  const { tabs, getActiveIndex, confirmNavigate } = useProjectTabs(
-    resolvedProjectId,
-    localActiveProject?.title
-  );
-
-  const activeTabIndex = getActiveIndex();
-  const activeTabKey = tabs[activeTabIndex]?.key ?? tabs[0]?.key;
-
-  const mobileRangeLabel = useMemo(() => {
-    if (!rangeLabel) return "";
-    const parts = rangeLabel.split("|").map((part) => part.trim());
-    if (parts.length === 2) {
-      const [datesPart, hoursPart] = parts;
-      const normalizedHours = hoursPart.replace(/^Hrs Total:\s*/i, "").trim();
-      return `${datesPart} · ${normalizedHours}`;
-    }
-    return rangeLabel.replace(/^Hrs Total:\s*/i, "").trim();
-  }, [rangeLabel]);
-
-  // --------------------------
-  // Modal state
-  // --------------------------
-  // Edit Name Modal
-  const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
-  const [updatedName, setUpdatedName] = useState(localActiveProject?.title || "");
-
-  // Edit Status Modal
-  const [isEditStatusModalOpen, setIsEditStatusModalOpen] = useState(false);
-  const [updatedStatus, setUpdatedStatus] = useState(
-    localActiveProject?.status?.toString?.() || ""
-  );
-
-  // Finish Line Modal
-  const [isFinishLineModalOpen, setIsFinishLineModalOpen] = useState(false);
-  const [selectedFinishLineDate, setSelectedFinishLineDate] = useState(
-    toString(localActiveProject?.finishline)
-  );
-  const [selectedProductionStartDate, setSelectedProductionStartDate] =
-    useState(
-      toString(localActiveProject?.productionStart) ||
-        toString(localActiveProject?.dateCreated)
-    );
-
-  // Invoice Info Modal
-  const [isInvoiceInfoModalOpen, setIsInvoiceInfoModalOpen] = useState(false);
-  const [invoiceBrandName, setInvoiceBrandName] = useState(
-    toString(localActiveProject?.invoiceBrandName)
-  );
-  const [invoiceBrandAddress, setInvoiceBrandAddress] = useState(
-    toString(localActiveProject?.invoiceBrandAddress)
-  );
-  const [invoiceBrandPhone, setInvoiceBrandPhone] = useState(
-    toString(localActiveProject?.invoiceBrandPhone)
-  );
-  const [clientName, setClientName] = useState(
-    toString(localActiveProject?.clientName)
-  );
-  const [clientAddress, setClientAddress] = useState(
-    toString(localActiveProject?.clientAddress)
-  );
-  const [clientPhone, setClientPhone] = useState(
-    toString(localActiveProject?.clientPhone)
-  );
-  const [clientEmail, setClientEmail] = useState(
-    toString(localActiveProject?.clientEmail)
-  );
-
-  // Delete Confirmation Modal
-  const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] =
-    useState(false);
-
-  // Thumbnail Modal
-  const [isThumbnailModalOpen, setIsThumbnailModalOpen] = useState(false);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-  const [selectedThumbnailFile, setSelectedThumbnailFile] =
-    useState<File | null>(null);
-  const [isThumbDragging, setIsThumbDragging] = useState(false);
-  const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
-  const thumbnailInputRef = useRef<HTMLInputElement | null>(null);
-  const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-
-  // Project Settings Modal
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-
-  const queueUpdate = async (payload: Partial<Project>) => {
-    if (!activeProject?.projectId) return;
-    try {
-      setSaving(true);
-      await enqueueProjectUpdate(updateProjectFields, activeProject.projectId, payload);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Track if a modal was opened from the settings modal so we can return
-  const [returnToSettings, setReturnToSettings] = useState(false);
-
-  // When the thumbnail modal opens, force a resize once so Cropper recalculates
-  useEffect(() => {
-    if (isThumbnailModalOpen && thumbnailPreview) {
-      const id = setTimeout(() => {
-        window.dispatchEvent(new Event("resize"));
-      }, 50);
-      return () => clearTimeout(id);
-    }
-    return undefined;
-  }, [isThumbnailModalOpen, thumbnailPreview]);
-
-  // Color Picker Modal
-  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(
-    (localActiveProject?.color as string) || "#FA3356"
-  );
-
-  const hexToRgb = (hex: string) => {
-    const cleaned = hex.replace("#", "");
-    const bigint = parseInt(cleaned, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    return `${r}, ${g}, ${b}`;
-  };
-
-  const onCropComplete = useCallback((_: Area, cropped: Area) => {
-    setCroppedAreaPixels(cropped);
-  }, []);
-
-  const createImage = (url: string): Promise<HTMLImageElement> =>
-    new Promise((resolve, reject) => {
-      const img = new Image();
-      img.addEventListener("load", () => resolve(img));
-      img.addEventListener("error", (err) => reject(err));
-      img.src = url;
-    });
-
-  const getCroppedImg = async (
-    imageSrc: string,
-    cropArea: Area,
-    type = "image/jpeg"
-  ): Promise<Blob> => {
-    const img = await createImage(imageSrc);
-    const canvas = document.createElement("canvas");
-    canvas.width = cropArea.width;
-    canvas.height = cropArea.height;
-    const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(
-      img,
-      cropArea.x,
-      cropArea.y,
-      cropArea.width,
-      cropArea.height,
-      0,
-      0,
-      cropArea.width,
-      cropArea.height
-    );
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob as Blob), type);
-    });
-  };
-
-  // Pick color from anywhere on the screen using the EyeDropper API
-  const pickColorFromScreen = async () => {
-    const EyeDropperCtor = (window as typeof window & { EyeDropper?: new () => { open(): Promise<{ sRGBHex: string }> } }).EyeDropper;
-    if (EyeDropperCtor) {
-      try {
-        const eyeDropper = new EyeDropperCtor();
-        const { sRGBHex } = await eyeDropper.open();
-        setSelectedColor(sRGBHex);
-      } catch (err) {
-         
-        console.error("EyeDropper cancelled or failed", err);
-      }
-    } else {
-      alert("Your browser does not support the EyeDropper API.");
-    }
-  };
-
-  // --------------------------
-  // Team avatars
-  // --------------------------
-  const activeProjectId = activeProject?.projectId;
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(
-    activeProjectId && teamMembersCache.has(activeProjectId)
-      ? (teamMembersCache.get(activeProjectId) as TeamMember[])
-      : []
-  );
-  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-    const load = async () => {
-      if (
-        !activeProjectId ||
-        !localActiveProject ||
-        !Array.isArray(localActiveProject.team)
-      ) {
-        if (isMounted) {
-          setTeamMembers([]);
-          if (activeProjectId) teamMembersCache.set(activeProjectId, []);
-        }
-        return;
-      }
-      try {
-        const ids = localActiveProject.team.map((m) => m.userId);
-        const profiles = await fetchUserProfilesBatch(ids);
-        const map = new Map(profiles.map((p: UserProfile) => [p.userId, p]));
-        const results: TeamMember[] = localActiveProject.team.map((member) => {
-          const profile = map.get(member.userId) || ({} as Partial<UserProfile>);
-          return {
-            userId: member.userId,
-            firstName: (profile.firstName as string) || "",
-            lastName: (profile.lastName as string) || "",
-            thumbnail: (profile.thumbnail as string) || null,
-          };
-        });
-        if (isMounted) {
-          setTeamMembers(results);
-          teamMembersCache.set(activeProjectId, results);
-        }
-      } catch {
-        if (isMounted) {
-          setTeamMembers([]);
-          teamMembersCache.set(activeProjectId, []);
-        }
-      }
-    };
-    load();
-    return () => {
-      isMounted = false;
-    };
-  }, [projectId, JSON.stringify(localActiveProject?.team)]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    teamMembers.forEach((m) => {
-      if (m.thumbnail) {
-        const img = new Image();
-        img.src = getFileUrl(m.thumbnail);
-      }
-    });
-  }, [teamMembers]);
-
-  // --------------------------
-  // Modal Handlers
-  // --------------------------
-  const openEditNameModal = (fromSettings = false) => {
-    setReturnToSettings(fromSettings);
-    setUpdatedName(localActiveProject.title || "");
-    setIsEditNameModalOpen(true);
-  };
-  const closeEditNameModal = () => {
-    setIsEditNameModalOpen(false);
-    if (returnToSettings) {
-      setIsSettingsModalOpen(true);
-      setReturnToSettings(false);
-    }
-  };
-  const handleUpdateName = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!activeProject) return;
-    if (updatedName === activeProject.title) {
-      closeEditNameModal();
-      return;
-    }
-    const updatedProject = { ...activeProject, title: updatedName };
-    setLocalActiveProject(updatedProject);
-    onActiveProjectChange?.(updatedProject);
-    setActiveProject(updatedProject);
-    setProjects((prev: Project[]) =>
-      Array.isArray(prev)
-        ? prev.map((p) =>
-            p.projectId === updatedProject.projectId ? { ...p, title: updatedName } : p
-          )
-        : prev
-    );
-    setUserProjects((prev: Project[]) =>
-      Array.isArray(prev)
-        ? prev.map((p) =>
-            p.projectId === updatedProject.projectId ? { ...p, title: updatedName } : p
-          )
-        : prev
-    );
-
-    try {
-      await queueUpdate({ title: updatedName });
-      if (ws && (ws as WebSocket).readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            action: "projectUpdated",
-            projectId: activeProject.projectId,
-            title: updatedName || activeProject.title,
-            fields: { title: updatedName },
-            conversationId: `project#${activeProject.projectId}`,
-            username: user?.firstName || "Someone",
-            senderId: user.userId,
-          })
-        );
-      }
-    } catch (error) {
-       
-      console.error("Failed to update project name:", error);
-    } finally {
-      closeEditNameModal();
-    }
-  };
-
-  const openEditStatusModal = () => {
-    setUpdatedStatus(localActiveProject.status?.toString?.() || "");
-    setIsEditStatusModalOpen(true);
-  };
-  const handleUpdateStatus = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!activeProject) return;
-    if (updatedStatus === String(activeProject.status ?? "")) {
-      setIsEditStatusModalOpen(false);
-      return;
-    }
-    const updatedProject = { ...localActiveProject, status: updatedStatus };
-    setLocalActiveProject(updatedProject);
-    onActiveProjectChange?.(updatedProject);
-    setActiveProject(updatedProject);
-    await queueUpdate({ status: updatedStatus });
-
-    if (ws && (ws as WebSocket).readyState === WebSocket.OPEN) {
-      ws.send(
-        JSON.stringify({
-          action: "projectUpdated",
-          projectId: activeProject.projectId,
-          title: activeProject.title,
-          fields: { status: updatedStatus },
-          conversationId: `project#${activeProject.projectId}`,
-          username: user?.firstName || "Someone",
-          senderId: user.userId,
-        })
-      );
-    }
-    setIsEditStatusModalOpen(false);
-  };
-
-  const openFinishLineModal = () => {
-    setSelectedFinishLineDate(toString(localActiveProject.finishline));
-    setSelectedProductionStartDate(
-      toString(localActiveProject.productionStart) || toString(localActiveProject.dateCreated)
-    );
-    setIsFinishLineModalOpen(true);
-  };
-  const handleUpdateFinishLine = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!activeProject) return;
-    try {
-      const updatedProject = {
-        ...localActiveProject,
-        finishline: selectedFinishLineDate,
-        productionStart: selectedProductionStartDate,
-      };
-      setLocalActiveProject(updatedProject);
-      onActiveProjectChange?.(updatedProject);
-      setActiveProject(updatedProject);
-
-      await queueUpdate({
-        finishline: selectedFinishLineDate,
-        productionStart: selectedProductionStartDate,
-      });
-
-      if (ws && (ws as WebSocket).readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            action: "projectUpdated",
-            projectId: activeProject.projectId,
-            title: activeProject.title,
-            fields: {
-              finishline: selectedFinishLineDate,
-              productionStart: selectedProductionStartDate,
-            },
-            conversationId: `project#${activeProject.projectId}`,
-            username: user?.firstName || "Someone",
-            senderId: user.userId,
-          })
-        );
-      }
-    } catch (error) {
-       
-      console.error("Failed to update finish line:", error);
-    } finally {
-      setIsFinishLineModalOpen(false);
-    }
-  };
-
-  const openDeleteConfirmationModal = (fromSettings = false) => {
-    setReturnToSettings(fromSettings);
-    setIsConfirmDeleteModalOpen(true);
-  };
-  const closeDeleteConfirmationModal = () => {
-    setIsConfirmDeleteModalOpen(false);
-    if (returnToSettings) {
-      setIsSettingsModalOpen(true);
-      setReturnToSettings(false);
-    }
-  };
-  const handleDeleteProject = async () => {
-    if (!activeProject?.projectId) {
-       
-      console.error("No active project to delete.");
-      return;
-    }
-    const pid = activeProject.projectId;
-    try {
-      await apiFetch<{ success?: boolean }>(
-        `${POST_PROJECT_TO_USER_URL}?userId=${userId}&projectId=${pid}`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      // Since apiFetch throws on error, success means we got here
-      onProjectDeleted(pid);
-      await refreshUser();
-    } catch (error: unknown) {
-       
-      console.error("Error during project deletion:", (error as Error)?.message || error);
-    }
-    closeDeleteConfirmationModal();
-    showWelcomeScreen();
-  };
-
-  const openThumbnailModal = (fromSettings = false) => {
-    setReturnToSettings(fromSettings);
-    setIsThumbnailModalOpen(true);
-  };
-  const closeThumbnailModal = () => {
-    setIsThumbnailModalOpen(false);
-    if (returnToSettings) {
-      setIsSettingsModalOpen(true);
-      setReturnToSettings(false);
-    }
-  };
-
-  const handleThumbnailFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedThumbnailFile(file);
-      const previewURL = URL.createObjectURL(file);
-      if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
-      setThumbnailPreview(previewURL);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-    }
-  };
-  const handleThumbDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsThumbDragging(true);
-  };
-  const handleThumbDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsThumbDragging(false);
-  };
-  const handleThumbDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsThumbDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      setSelectedThumbnailFile(file);
-      const previewURL = URL.createObjectURL(file);
-      if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
-      setThumbnailPreview(previewURL);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-    }
-  };
-  const handleRemoveThumbnail = () => {
-    if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
-    setThumbnailPreview(null);
-    setSelectedThumbnailFile(null);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    if (thumbnailInputRef.current) thumbnailInputRef.current.value = "";
-  };
-
-  useEffect(() => {
-    return () => {
-      if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview);
-    };
-  }, [thumbnailPreview]);
-
-  const handleUploadThumbnail = async () => {
-    if (!selectedThumbnailFile || !activeProject) return;
-    try {
-      setIsThumbnailUploading(true);
-      const croppedBlob =
-        croppedAreaPixels && thumbnailPreview
-          ? await getCroppedImg(
-              thumbnailPreview,
-              croppedAreaPixels,
-              selectedThumbnailFile.type
-            )
-          : selectedThumbnailFile;
-
-      const baseKey = `project-thumbnails/${activeProject.projectId}/${selectedThumbnailFile.name}`;
-      await uploadData({
-        key: baseKey,
-        data: croppedBlob,
-        options: { accessLevel: "public" },
-      });
-
-      // Small delay to let the CDN catch up (as in your original)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const fullKey = `public/${baseKey}`;
-
-      const updatedLocal: Project = {
-        ...localActiveProject,
-        thumbnails: Array.from(
-           new Set([fullKey, ...(localActiveProject.thumbnails || [])])
-        ),
-      };
-      setLocalActiveProject(updatedLocal);
-      onActiveProjectChange?.(updatedLocal);
-      setActiveProject(updatedLocal);
-
-      await queueUpdate({ thumbnails: [fullKey] });
-
-      if (ws && (ws as WebSocket).readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            action: "projectUpdated",
-            projectId: activeProject.projectId,
-            title: activeProject.title,
-            fields: { thumbnails: [fullKey] },
-            conversationId: `project#${activeProject.projectId}`,
-            username: user?.firstName || "Someone",
-            senderId: user.userId,
-          })
-        );
-      }
-
-      closeThumbnailModal();
-       
-      console.log("Thumbnail updated successfully");
-    } catch (error) {
-       
-      console.error("Error uploading thumbnail:", error);
-    } finally {
-      setIsThumbnailUploading(false);
-    }
-  };
-
-  const openColorModal = (fromSettings = false) => {
-    setReturnToSettings(fromSettings);
-    setSelectedColor((localActiveProject?.color as string) || "#FA3356");
-    setIsColorModalOpen(true);
-  };
-  const closeColorModal = () => {
-    setIsColorModalOpen(false);
-    if (returnToSettings) {
-      setIsSettingsModalOpen(true);
-      setReturnToSettings(false);
-    }
-  };
-  const handleSaveColor = async () => {
-    if (!activeProject) return;
-    try {
-      const updatedLocal = { ...localActiveProject, color: selectedColor };
-      setLocalActiveProject(updatedLocal);
-      onActiveProjectChange?.(updatedLocal);
-      setActiveProject(updatedLocal);
-      await queueUpdate({ color: selectedColor });
-
-      if (ws && (ws as WebSocket).readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            action: "projectUpdated",
-            projectId: activeProject.projectId,
-            title: activeProject.title,
-            fields: { color: selectedColor },
-            conversationId: `project#${activeProject.projectId}`,
-            username: user?.firstName || "Someone",
-            senderId: user.userId,
-          })
-        );
-      }
-    } catch (error) {
-       
-      console.error("Error updating color:", error);
-    } finally {
-      closeColorModal();
-    }
-  };
-
-  const openInvoiceInfoModal = (fromSettings = false) => {
-    setReturnToSettings(fromSettings);
-    setIsInvoiceInfoModalOpen(true);
-  };
-  const closeInvoiceInfoModal = () => {
-    setIsInvoiceInfoModalOpen(false);
-    if (returnToSettings) {
-      setIsSettingsModalOpen(true);
-      setReturnToSettings(false);
-    }
-  };
-  const handleSaveInvoiceInfo = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!activeProject) return;
-    try {
-      const fields = {
-        invoiceBrandName,
-        invoiceBrandAddress,
-        invoiceBrandPhone,
-        clientName,
-        clientAddress,
-        clientPhone,
-        clientEmail,
-      };
-      const updatedLocal = { ...localActiveProject, ...fields };
-      setLocalActiveProject(updatedLocal);
-      onActiveProjectChange?.(updatedLocal);
-      setActiveProject(updatedLocal);
-      await queueUpdate(fields);
-
-      if (ws && (ws as WebSocket).readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            action: "projectUpdated",
-            projectId: activeProject.projectId,
-            title: activeProject.title,
-            fields,
-            conversationId: `project#${activeProject.projectId}`,
-            username: user?.firstName || "Someone",
-            senderId: user.userId,
-          })
-        );
-      }
-    } catch (err) {
-       
-      console.error("Error updating invoice info:", err);
-    } finally {
-      closeInvoiceInfoModal();
-    }
-  };
-
-  const openSettingsModal = () => {
-    setReturnToSettings(false);
-    setIsSettingsModalOpen(true);
-  };
   const openTeamModal = () => setIsTeamModalOpen(true);
   const closeTeamModal = () => setIsTeamModalOpen(false);
 
-  // --------------------------
-  // Render
-  // --------------------------
   return (
     <div>
       {saving && <div style={{ color: "#FA3356" }}>Saving...</div>}
@@ -944,805 +197,152 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           onSelectTab={(tab) => confirmNavigate(tab.path)}
         />
       ) : (
-        <div className="project-header">
-          <div className="header-content">
-            <div className="left-side">
-              <div className="project-logo-wrapper">
-                <Squircle
-                  as="button"
-                  type="button"
-                  onClick={() => openThumbnailModal(false)}
-                  title="Change Project Thumbnail"
-                  aria-label="Change Project Thumbnail"
-                  className="interactive project-logo-button"
-                  radius={18}
-                  smoothing={0.88}
-                >
-                  {localActiveProject?.thumbnails &&
-                  localActiveProject.thumbnails.length > 0 ? (
-                    <img
-                      src={getFileUrl(localActiveProject.thumbnails[0])}
-                      alt="Project Thumbnail"
-                      className="project-logo-image"
-                    />
-                  ) : (
-                    <span className="project-logo-initial">
-                      {projectInitial.toUpperCase()}
-                    </span>
-                  )}
-                </Squircle>
-              </div>
-
-              <div className="single-project-title">
-                <h2 className="project-title-heading">
-                  {localActiveProject ? localActiveProject.title : "Summary"}
-                </h2>
-              </div>
-
-              <svg
-                id="StatusSVG"
-                viewBox="0 0 400 400"
-                onClick={openEditStatusModal}
-                onKeyDown={(e) => handleKeyDown(e, openEditStatusModal)}
-                role="button"
-                tabIndex={0}
-                aria-label={`Status: ${displayStatus} Complete`}
-                className="interactive status-svg"
-                style={{ cursor: "pointer" }}
-              >
-                <title>{`Status: ${displayStatus} Complete`}</title>
-                <text
-                  className="project-status"
-                  transform={`translate(${
-                    localActiveProject?.status !== "100%" ? 75 : 56.58
-                  } 375.21)`}
-                >
-                  <tspan x="22.5" y="-136">
-                    {displayStatus}
-                  </tspan>
-                </text>
-                {localActiveProject && (
-                  <ellipse
-                    cx="200"
-                    cy="200"
-                    rx="160"
-                    ry="160"
-                    fill="none"
-                    strokeWidth="15"
-                    strokeDasharray={`${
-                      (parseStatusToNumber(localActiveProject.status) / 100) * 1002
-                    }, 1004`}
-                    style={{
-                      stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
-                    }}
-                  >
-                    {parseStatusToNumber(localActiveProject.status) < 100 && (
-                      <animate
-                        attributeName="stroke-dasharray"
-                        from="0, 1004"
-                        to={`${
-                          (parseStatusToNumber(localActiveProject.status) / 100) *
-                          1002
-                        }, 1004`}
-                        dur="1s"
-                        begin="0s"
-                        fill="freeze"
-                      />
-                    )}
-                  </ellipse>
-                )}
-              </svg>
-
-              <AvatarStack members={teamMembers} onClick={openTeamModal} />
-
-            <div
-              className="finish-line-header interactive"
-              onClick={openFinishLineModal}
-              onKeyDown={(e) => handleKeyDown(e, openFinishLineModal)}
-              role="button"
-              tabIndex={0}
-              title="Production dates"
-              aria-label="Production dates"
-              style={{ cursor: "pointer" }}
-            >
-              <span>{rangeLabel}</span>
-            </div>
-
-            <div
-              onClick={openSettingsModal}
-              onKeyDown={(e) => handleKeyDown(e, openSettingsModal)}
-              role="button"
-              tabIndex={0}
-              title="Project settings"
-              aria-label="Project settings"
-              className="interactive"
-              style={{ cursor: "pointer", margin: "10px" }}
-            >
-              <Settings size={20} className="settings-icon" />
-            </div>
-
-            <div
-              onClick={onOpenQuickLinks}
-              onKeyDown={(e) => handleKeyDown(e, onOpenQuickLinks)}
-              role="button"
-              tabIndex={0}
-              title="Quick links"
-              aria-label="Quick links"
-              className="interactive"
-              style={{ cursor: "pointer" }}
-            >
-              <Link2 size={20} />
-            </div>
-
-            <div
-              onClick={onOpenFiles}
-              onKeyDown={(e) => handleKeyDown(e, onOpenFiles)}
-              role="button"
-              tabIndex={0}
-              title="Open file manager"
-              aria-label="Open file manager"
-              className="interactive"
-              style={{ cursor: "pointer", margin: "10px" }}
-            >
-              <Folder size={20} />
-            </div>
-
-            <Modal
-              isOpen={isConfirmDeleteModalOpen}
-              onRequestClose={closeDeleteConfirmationModal}
-              contentLabel="Confirm Delete Project"
-              closeTimeoutMS={300}
-              className={{
-                base: styles.modalContent,
-                afterOpen: styles.modalContentAfterOpen,
-                beforeClose: styles.modalContentBeforeClose,
-              }}
-              overlayClassName={styles.modalOverlay}
-            >
-              <h4 style={{ fontSize: "1rem", paddingBottom: "20px" }}>
-                Are you sure you want to delete this project?
-              </h4>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "10px",
-                  marginTop: "20px",
-                }}
-              >
-                <button
-                  className="modal-button primary"
-                  onClick={handleDeleteProject}
-                  style={{ borderRadius: "5px" }}
-                >
-                  Yes
-                </button>
-                <button
-                  className="modal-button secondary"
-                  onClick={closeDeleteConfirmationModal}
-                  style={{ borderRadius: "5px" }}
-                >
-                  No
-                </button>
-              </div>
-            </Modal>
-          </div>
-
-          <div className="right-side">
-            <div className="project-nav-tabs" style={{ padding: "0 10px 10px" }}>
-              <ProjectTabs
-                projectId={localActiveProject?.projectId || projectId}
-                projectTitle={localActiveProject?.title}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+        <DesktopProjectHeader
+          project={localActiveProject}
+          projectId={projectId}
+          projectInitial={projectInitial}
+          displayStatus={displayStatus}
+          parseStatusToNumber={parseStatusToNumber}
+          rangeLabel={rangeLabel}
+          teamMembers={teamMembers}
+          onOpenThumbnail={() => openThumbnailModal(false)}
+          onOpenStatus={openEditStatusModal}
+          onOpenTeam={openTeamModal}
+          onOpenFinishLine={openFinishLineModal}
+          onOpenSettings={openSettingsModal}
+          onOpenQuickLinks={onOpenQuickLinks}
+          onOpenFiles={onOpenFiles}
+          onKeyDown={handleKeyDown}
+        />
       )}
 
-      {/* Edit Name */}
-      <Modal
+      <EditNameModal
         isOpen={isEditNameModalOpen}
-        onRequestClose={closeEditNameModal}
-        contentLabel="Edit Project Name"
-        closeTimeoutMS={300}
-        className={{
-          base: styles.modalContent,
-          afterOpen: styles.modalContentAfterOpen,
-          beforeClose: styles.modalContentBeforeClose,
-        }}
-        overlayClassName={styles.modalOverlay}
-      >
-        <h4 style={{ marginBottom: "20px" }}>Edit Project Name</h4>
-        <form onSubmit={handleUpdateName}>
-          <input
-            className="modal-input"
-            style={{
-              marginBottom: "25px",
-              height: "45px",
-              borderRadius: "5px",
-              fontSize: "1.2rem",
-            }}
-            type="text"
-            value={updatedName}
-            onChange={(e) => setUpdatedName(e.target.value)}
-          />
-          <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-            <button
-              className="modal-button primary"
-              type="submit"
-              style={{ borderRadius: "5px", padding: "10px 40px" }}
-            >
-              Save
-            </button>
-            <button
-              className="modal-button secondary"
-              type="button"
-              onClick={closeEditNameModal}
-              style={{ borderRadius: "5px", padding: "10px 40px" }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </Modal>
+        value={updatedName}
+        onChange={setUpdatedName}
+        onSubmit={handleUpdateName}
+        onClose={closeEditNameModal}
+      />
 
-      {/* Finish Line */}
-      <Modal
+      <FinishLineModal
         isOpen={isFinishLineModalOpen}
-        onRequestClose={() => setIsFinishLineModalOpen(false)}
-        contentLabel="Finish Line"
-        closeTimeoutMS={300}
-        className={{
-          base: styles.modalContent,
-          afterOpen: styles.modalContentAfterOpen,
-          beforeClose: styles.modalContentBeforeClose,
-        }}
-        overlayClassName={styles.modalOverlay}
-      >
-        <h4 style={{ marginBottom: "20px" }}>Production Start & Finish Line</h4>
-        <form onSubmit={handleUpdateFinishLine} className={styles.form}>
-          <label style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            Production Start
-            <input
-              type="date"
-              aria-label="Production start date"
-              value={selectedProductionStartDate}
-              onChange={(e) => setSelectedProductionStartDate(e.target.value)}
-              className={styles.input}
-            />
-          </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            Finish Line
-            <input
-              type="date"
-              aria-label="Finish line date"
-              value={selectedFinishLineDate}
-              onChange={(e) => setSelectedFinishLineDate(e.target.value)}
-              className={styles.input}
-            />
-          </label>
-          <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-            <button
-              className="modal-button primary"
-              type="submit"
-              style={{ borderRadius: "5px", padding: "10px 20px" }}
-            >
-              Save
-            </button>
-            <button
-              className="modal-button secondary"
-              type="button"
-              onClick={() => setIsFinishLineModalOpen(false)}
-              style={{ borderRadius: "5px", padding: "10px 20px" }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </Modal>
+        productionStartDate={selectedProductionStartDate}
+        finishLineDate={selectedFinishLineDate}
+        onProductionStartChange={setSelectedProductionStartDate}
+        onFinishLineChange={setSelectedFinishLineDate}
+        onSubmit={handleUpdateFinishLine}
+        onClose={closeFinishLineModal}
+      />
 
-      {/* Edit Status */}
-      <Modal
+      <EditStatusModal
         isOpen={isEditStatusModalOpen}
-        onRequestClose={() => setIsEditStatusModalOpen(false)}
-        contentLabel="Edit Status"
-        closeTimeoutMS={300}
-        className={{
-          base: styles.modalContent,
-          afterOpen: styles.modalContentAfterOpen,
-          beforeClose: styles.modalContentBeforeClose,
-        }}
-        overlayClassName={styles.modalOverlay}
-      >
-        <h4 style={{ marginBottom: "20px" }}>Edit Status</h4>
-        <form onSubmit={handleUpdateStatus}>
-          <div style={{ marginBottom: "15px" }}>
-            <label>Status:</label>
-            <input
-              className="modal-input"
-              style={{
-                marginLeft: "10px",
-                height: "35px",
-                borderRadius: "5px",
-                fontSize: "1rem",
-              }}
-              type="text"
-              value={updatedStatus}
-              onChange={(e) => setUpdatedStatus(e.target.value)}
-            />
-          </div>
-          <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-            <button
-              className="modal-button primary"
-              type="submit"
-              style={{ borderRadius: "5px", padding: "10px 20px" }}
-            >
-              Save
-            </button>
-            <button
-              className="modal-button secondary"
-              type="button"
-              onClick={() => setIsEditStatusModalOpen(false)}
-              style={{ borderRadius: "5px", padding: "10px 20px" }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </Modal>
+        value={updatedStatus}
+        onChange={setUpdatedStatus}
+        onSubmit={handleUpdateStatus}
+        onClose={closeEditStatusModal}
+      />
 
-      {/* Thumbnail */}
-      <Modal
+      <ThumbnailModal
         isOpen={isThumbnailModalOpen}
-        onRequestClose={closeThumbnailModal}
-        contentLabel="Change Thumbnail"
-        closeTimeoutMS={300}
-        className={{
-          base: styles.modalContent,
-          afterOpen: styles.modalContentAfterOpen,
-          beforeClose: styles.modalContentBeforeClose,
-        }}
-        overlayClassName={styles.modalOverlay}
-      >
-        <h4 style={{ marginBottom: "20px" }}>Choose a Thumbnail</h4>
+        thumbnailPreview={thumbnailState.preview}
+        isDragging={thumbnailState.isDragging}
+        isUploading={thumbnailState.isUploading}
+        crop={thumbnailState.crop}
+        zoom={thumbnailState.zoom}
+        onCropChange={setThumbnailCrop}
+        onZoomChange={setThumbnailZoom}
+        onCropComplete={(cropped) => setThumbnailCroppedArea(cropped)}
+        onFileChange={handleThumbnailFileChange}
+        onDragOver={handleThumbDragOver}
+        onDragLeave={handleThumbDragLeave}
+        onDrop={handleThumbDrop}
+        onRemoveThumbnail={handleRemoveThumbnail}
+        onUploadThumbnail={handleUploadThumbnail}
+        onClose={closeThumbnailModal}
+        fileInputRef={thumbnailInputRef}
+      />
 
-        <div
-          style={{
-            marginBottom: "20px",
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
-          >
-            <div
-              style={{
-                width: "150px",
-                height: "150px",
-                borderRadius: "20px",
-                border: thumbnailPreview
-                  ? "none"
-                  : `2px dashed ${isThumbDragging ? "#FA3356" : "#ccc"}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-                color: "#ccc",
-                cursor: thumbnailPreview ? "default" : "pointer",
-                position: "relative",
-              }}
-              onClick={
-                !thumbnailPreview ? () => thumbnailInputRef.current?.click() : undefined
-              }
-              onDragOver={!thumbnailPreview ? handleThumbDragOver : undefined}
-              onDragLeave={!thumbnailPreview ? handleThumbDragLeave : undefined}
-              onDrop={!thumbnailPreview ? handleThumbDrop : undefined}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                ref={thumbnailInputRef}
-                onChange={handleThumbnailFileChange}
-                style={{ display: "none" }}
-              />
-
-              {thumbnailPreview ? (
-                <div style={{ position: "relative", width: 150, height: 150 }}>
-                  <Cropper
-                    image={thumbnailPreview}
-                    crop={crop}
-                    zoom={zoom}
-                    aspect={1}
-                    onCropChange={setCrop}
-                    onZoomChange={(z) => setZoom(z)}
-                    onCropComplete={onCropComplete}
-                    objectFit="cover"
-                  />
-                </div>
-              ) : (
-                <span style={{ width: "100%" }}>Click or drag thumbnail here</span>
-              )}
-
-              {isThumbDragging && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: "rgba(0,0,0,0.6)",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    pointerEvents: "none",
-                    borderRadius: "20px",
-                  }}
-                >
-                  Drop to upload
-                </div>
-              )}
-
-              {isThumbnailUploading && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: "rgba(0,0,0,0.4)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "20px",
-                  }}
-                >
-                  <div className="dot-loader">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {thumbnailPreview && (
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.1}
-                value={zoom}
-                onChange={(e) => setZoom(parseFloat(e.target.value))}
-                style={{ width: "150px", marginTop: "10px" }}
-              />
-            )}
-
-            {thumbnailPreview && (
-              <button
-                className="modal-button secondary"
-                type="button"
-                onClick={handleRemoveThumbnail}
-                style={{ marginTop: "10px", borderRadius: "5px", padding: "5px 10px" }}
-              >
-                Remove
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "10px",
-            marginTop: "30px",
-          }}
-        >
-          <button
-            className="modal-button primary"
-            onClick={handleUploadThumbnail}
-            style={{ padding: "10px 20px", borderRadius: "5px" }}
-            disabled={isThumbnailUploading}
-          >
-            Save
-          </button>
-          <button
-            className="modal-button secondary"
-            onClick={closeThumbnailModal}
-            style={{ padding: "10px 20px", borderRadius: "5px" }}
-          >
-            Cancel
-          </button>
-        </div>
-      </Modal>
-
-      {/* Color */}
-      <Modal
+      <ColorModal
         isOpen={isColorModalOpen}
-        onRequestClose={closeColorModal}
-        contentLabel="Choose Color"
-        closeTimeoutMS={300}
-        className={{
-          base: `${styles.modalContent} ${styles.colorModalContent}`,
-          afterOpen: `${styles.modalContentAfterOpen} ${styles.colorModalContent}`,
-          beforeClose: `${styles.modalContentBeforeClose} ${styles.colorModalContent}`,
-        }}
-        overlayClassName={styles.modalOverlay}
-      >
-        <h4 style={{ marginBottom: "20px" }}>Project Color</h4>
-        <HexColorPicker
-          color={selectedColor}
-          onChange={setSelectedColor}
-          className={styles.colorPicker}
-        />
-        <div className={styles.hexRgbWrapper} style={{ marginTop: "10px" }}>
-          <HexColorInput
-            color={selectedColor}
-            onChange={setSelectedColor}
-            prefixed
-            style={{
-              width: "100px",
-              padding: "5px",
-              borderRadius: "5px",
-              textAlign: "center",
-              backgroundColor: "#ffffff",
-              color: "#000000",
-              border: "1px solid #ccc",
-            }}
-          />
-          <div style={{ marginTop: "5px", fontSize: "0.9rem" }}>
-            RGB: {hexToRgb(selectedColor)}
-          </div>
-        </div>
+        color={selectedColor}
+        rgbLabel={hexToRgb(selectedColor)}
+        onColorChange={setSelectedColor}
+        onPickColor={pickColorFromScreen}
+        onSave={handleSaveColor}
+        onClose={closeColorModal}
+      />
 
-        <div className={styles.pipetteWrapper}>
-          <Pipette
-            onClick={pickColorFromScreen}
-            aria-label="Pick color from screen"
-            style={{ cursor: "pointer", width: 24, height: 24 }}
-          />
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-around",
-            marginTop: "30px",
-          }}
-        >
-          <button
-            className="modal-button primary"
-            onClick={handleSaveColor}
-            style={{ padding: "10px 20px", borderRadius: "5px" }}
-          >
-            Save
-          </button>
-          <button
-            className="modal-button secondary"
-            onClick={closeColorModal}
-            style={{ padding: "10px 20px", borderRadius: "5px" }}
-          >
-            Cancel
-          </button>
-        </div>
-      </Modal>
-
-      {/* Invoice Info */}
-      <Modal
+      <InvoiceInfoModal
         isOpen={isInvoiceInfoModalOpen}
-        onRequestClose={closeInvoiceInfoModal}
-        contentLabel="Invoice Info"
-        closeTimeoutMS={300}
-        className={{
-          base: styles.modalContent,
-          afterOpen: styles.modalContentAfterOpen,
-          beforeClose: styles.modalContentBeforeClose,
+        invoiceBrandName={invoiceBrandName}
+        invoiceBrandAddress={invoiceBrandAddress}
+        invoiceBrandPhone={invoiceBrandPhone}
+        clientName={clientName}
+        clientAddress={clientAddress}
+        clientPhone={clientPhone}
+        clientEmail={clientEmail}
+        onChange={(field, value) => {
+          switch (field) {
+            case "invoiceBrandName":
+              setInvoiceBrandName(value);
+              break;
+            case "invoiceBrandAddress":
+              setInvoiceBrandAddress(value);
+              break;
+            case "invoiceBrandPhone":
+              setInvoiceBrandPhone(value);
+              break;
+            case "clientName":
+              setClientName(value);
+              break;
+            case "clientAddress":
+              setClientAddress(value);
+              break;
+            case "clientPhone":
+              setClientPhone(value);
+              break;
+            case "clientEmail":
+              setClientEmail(value);
+              break;
+            default:
+              break;
+          }
         }}
-        overlayClassName={styles.modalOverlay}
-      >
-        <h4 style={{ marginBottom: "20px" }}>Invoice Info</h4>
-        <form onSubmit={handleSaveInvoiceInfo} className={styles.form}>
-          <input
-            className="modal-input"
-            type="text"
-            placeholder="Brand Name"
-            value={invoiceBrandName}
-            onChange={(e) => setInvoiceBrandName(e.target.value)}
-            style={{ marginBottom: "10px", borderRadius: "5px" }}
-          />
-          <input
-            className="modal-input"
-            type="text"
-            placeholder="Brand Address"
-            value={invoiceBrandAddress}
-            onChange={(e) => setInvoiceBrandAddress(e.target.value)}
-            style={{ marginBottom: "10px", borderRadius: "5px" }}
-          />
-          <input
-            className="modal-input"
-            type="text"
-            placeholder="Brand Phone"
-            value={invoiceBrandPhone}
-            onChange={(e) => setInvoiceBrandPhone(e.target.value)}
-            style={{ marginBottom: "10px", borderRadius: "5px" }}
-          />
-          <input
-            className="modal-input"
-            type="text"
-            placeholder="Client Name"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            style={{ marginBottom: "10px", borderRadius: "5px" }}
-          />
-          <input
-            className="modal-input"
-            type="text"
-            placeholder="Client Address"
-            value={clientAddress}
-            onChange={(e) => setClientAddress(e.target.value)}
-            style={{ marginBottom: "10px", borderRadius: "5px" }}
-          />
-          <input
-            className="modal-input"
-            type="text"
-            placeholder="Client Phone"
-            value={clientPhone}
-            onChange={(e) => setClientPhone(e.target.value)}
-            style={{ marginBottom: "10px", borderRadius: "5px" }}
-          />
-          <input
-            className="modal-input"
-            type="email"
-            placeholder="Client Email"
-            value={clientEmail}
-            onChange={(e) => setClientEmail(e.target.value)}
-            style={{ marginBottom: "20px", borderRadius: "5px" }}
-          />
+        onSubmit={handleSaveInvoiceInfo}
+        onClose={closeInvoiceInfoModal}
+      />
 
-          <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-            <button
-              className="modal-button primary"
-              type="submit"
-              style={{ borderRadius: "5px", padding: "10px 20px" }}
-            >
-              Save
-            </button>
-            <button
-              className="modal-button secondary"
-              type="button"
-              onClick={closeInvoiceInfoModal}
-              style={{ borderRadius: "5px", padding: "10px 20px" }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Settings */}
-      <Modal
+      <SettingsModal
         isOpen={isSettingsModalOpen}
-        onRequestClose={() => setIsSettingsModalOpen(false)}
-        contentLabel="Project Settings"
-        closeTimeoutMS={300}
-        className={{
-          base: styles.modalContent,
-          afterOpen: styles.modalContentAfterOpen,
-          beforeClose: styles.modalContentBeforeClose,
+        isAdmin={!!isAdmin}
+        onEditName={() => {
+          setIsSettingsModalOpen(false);
+          openEditNameModal(true);
         }}
-        overlayClassName={styles.modalOverlay}
-      >
-        <h4 style={{ marginBottom: "20px" }}>Project Settings</h4>
+        onEditThumbnail={() => {
+          setIsSettingsModalOpen(false);
+          openThumbnailModal(true);
+        }}
+        onChangeColor={() => {
+          setIsSettingsModalOpen(false);
+          openColorModal(true);
+        }}
+        onEditInvoiceInfo={() => {
+          setIsSettingsModalOpen(false);
+          openInvoiceInfoModal(true);
+        }}
+        onDeleteProject={() => {
+          setIsSettingsModalOpen(false);
+          openDeleteConfirmationModal(true);
+        }}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <button
-            className="modal-button primary"
-            aria-label="Edit project name"
-            onClick={() => {
-              setIsSettingsModalOpen(false);
-              openEditNameModal(true);
-            }}
-            style={{
-              borderRadius: "5px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <Pencil size={20} color="white" aria-hidden="true" />
-            Edit Name
-          </button>
-
-          <button
-            className="modal-button primary"
-            aria-label="Edit project thumbnail"
-            onClick={() => {
-              setIsSettingsModalOpen(false);
-              openThumbnailModal(true);
-            }}
-            style={{
-              borderRadius: "5px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <ImageIcon size={20} color="white" aria-hidden="true" />
-            Edit Thumbnail
-          </button>
-
-          <button
-            className="modal-button primary"
-            aria-label="Change project color"
-            onClick={() => {
-              setIsSettingsModalOpen(false);
-              openColorModal(true);
-            }}
-            style={{
-              borderRadius: "5px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <Palette size={20} color="white" aria-hidden="true" />
-            Change Color
-          </button>
-
-          <button
-            className="modal-button primary"
-            aria-label="Edit invoice info"
-            onClick={() => {
-              setIsSettingsModalOpen(false);
-              openInvoiceInfoModal(true);
-            }}
-            style={{
-              borderRadius: "5px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <FontAwesomeIcon icon={faPen} color="white" />
-            Invoice Info
-          </button>
-
-          {isAdmin && (
-            <>
-              <div
-                style={{
-                  borderTop: "1px solid rgba(255, 255, 255, 0.2)",
-                  margin: "8px 0",
-                }}
-              />
-              <button
-                className="modal-button secondary"
-                aria-label="Delete project"
-                onClick={() => {
-                  setIsSettingsModalOpen(false);
-                  openDeleteConfirmationModal(true);
-                }}
-                style={{
-                  borderRadius: "5px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: "#1a1a1a",
-                  border: "1px solid #ffffff",
-                }}
-              >
-                <Trash size={20} color="white" aria-hidden="true" />
-                Delete Project
-              </button>
-            </>
-          )}
-        </div>
-      </Modal>
+      <DeleteConfirmationModal
+        isOpen={isConfirmDeleteModalOpen}
+        onConfirm={handleDeleteProject}
+        onCancel={closeDeleteConfirmationModal}
+      />
 
       <TeamModal
         isOpen={isTeamModalOpen}
@@ -1753,112 +353,4 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   );
 };
 
-// -----------------------
-// Project Tabs Component
-// -----------------------
-interface ProjectTabsProps {
-  projectId: string;
-  projectTitle?: string | null;
-}
-
-const ProjectTabs: React.FC<ProjectTabsProps> = ({ projectId, projectTitle }) => {
-  const tabRefs = useRef<HTMLButtonElement[]>([]);
-  const [sliderStyle, setSliderStyle] = useState<{ width: number; left: number }>(
-    { width: 0, left: 0 }
-  );
-  const [transitionEnabled, setTransitionEnabled] = useState(false);
-
-  const { tabs, storageKey, getActiveIndex, getFromIndex, confirmNavigate } =
-    useProjectTabs(projectId, projectTitle);
-
-  useEffect(() => {
-    tabRefs.current = tabRefs.current.slice(0, tabs.length);
-  }, [tabs.length]);
-
-  const updateSlider = useCallback(() => {
-    const current = getActiveIndex();
-    const el = tabRefs.current[current];
-    if (el) {
-      setSliderStyle({ width: el.offsetWidth, left: el.offsetLeft });
-    }
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(storageKey, String(current));
-    }
-  }, [getActiveIndex, storageKey]);
-
-  useLayoutEffect(() => {
-    const fromEl = tabRefs.current[getFromIndex()];
-    if (fromEl) {
-      setSliderStyle({ width: fromEl.offsetWidth, left: fromEl.offsetLeft });
-    }
-    setTransitionEnabled(false);
-  }, [getFromIndex]);
-
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      setTransitionEnabled(true);
-      updateSlider();
-    });
-  }, [updateSlider]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    window.addEventListener("resize", updateSlider);
-    return () => window.removeEventListener("resize", updateSlider);
-  }, [updateSlider]);
-
-  const activeIndex = getActiveIndex();
-
-  return (
-    <div
-      className="segmented-control with-slider"
-      role="tablist"
-      aria-label="Project navigation"
-    >
-      <span
-        className="tab-slider"
-        style={{
-          width: sliderStyle.width,
-          transform: `translateX(${sliderStyle.left}px)`,
-          transition: transitionEnabled ? undefined : "none",
-        }}
-        aria-hidden="true"
-      />
-
-        {tabs.map((tab, index) => {
-          const isActive = index === activeIndex;
-        return (
-          <button
-            key={tab.key}
-            type="button"
-            ref={(el) => {
-              if (el) tabRefs.current[index] = el;
-            }}
-            onClick={() => confirmNavigate(tab.path)}
-            className={isActive ? "active" : ""}
-            aria-pressed={isActive}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-};
-
 export default React.memo(ProjectHeader);
-
-
-
-
-
-
-
-
-
-
-
-
-
-

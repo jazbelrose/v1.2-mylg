@@ -3,7 +3,8 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
   height: 100%;
   background: radial-gradient(circle at top, rgba(255, 255, 255, 0.02), transparent 55%),
     var(--moodboard-page-bg, #0f1014);

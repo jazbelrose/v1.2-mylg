@@ -1,12 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Coins,
-  Calendar as CalendarIcon,
-  StickyNote,
-  PenTool,
-} from "lucide-react";
+import { LayoutDashboard, Coins, Calendar as CalendarIcon, PenTool } from "lucide-react";
 import { useData } from "@/app/contexts/useData";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 
@@ -39,7 +33,6 @@ export const useProjectTabs = (
 
   const showBudgetTab = isAdmin;
   const showCalendarTab = isAdmin || isDesigner;
-  const showMoodboardTab = isAdmin || isDesigner;
   const showEditorTab = isAdmin || isDesigner;
 
   const hasProject = Boolean(projectId);
@@ -71,18 +64,6 @@ export const useProjectTabs = (
             projectId,
             projectTitle ?? undefined,
             "/calendar"
-          )
-        : "/dashboard/projects",
-    [hasProject, projectId, projectTitle]
-  );
-
-  const moodboardPath = React.useMemo(
-    () =>
-      hasProject
-        ? getProjectDashboardPath(
-            projectId,
-            projectTitle ?? undefined,
-            "/moodboard"
           )
         : "/dashboard/projects",
     [hasProject, projectId, projectTitle]
@@ -128,14 +109,6 @@ export const useProjectTabs = (
           matches: (pathname: string) => pathname.startsWith(calendarPath),
         },
         {
-          key: "moodboard",
-          label: "Moodboard",
-          icon: <StickyNote size={16} />,
-          path: moodboardPath,
-          visible: showMoodboardTab,
-          matches: (pathname: string) => pathname.startsWith(moodboardPath),
-        },
-        {
           key: "editor",
           label: "Editor",
           icon: <PenTool size={16} />,
@@ -148,11 +121,9 @@ export const useProjectTabs = (
       basePath,
       budgetPath,
       calendarPath,
-      moodboardPath,
       editorPath,
       showBudgetTab,
       showCalendarTab,
-      showMoodboardTab,
       showEditorTab,
     ]
   );

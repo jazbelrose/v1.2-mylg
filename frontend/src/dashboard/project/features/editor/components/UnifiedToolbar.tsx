@@ -1,10 +1,46 @@
 /* eslint-disable */
 import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
-import { Bold, Italic, Underline, Strikethrough, Code, Heading1, Heading2, Quote, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify, Square, Circle, Pencil, Type, Image as ImageIcon, MousePointer, ClipboardCopy, ClipboardPaste, Trash2, Eraser, Eye, Save, Undo2, Redo2, Figma, Mic, FileText, Paintbrush, } from 'lucide-react';
+import {
+    Bold,
+    Italic,
+    Underline,
+    Strikethrough,
+    Code,
+    Heading1,
+    Heading2,
+    Quote,
+    List,
+    ListOrdered,
+    AlignLeft,
+    AlignCenter,
+    AlignRight,
+    AlignJustify,
+    Square,
+    Circle,
+    Pencil,
+    Type,
+    Image as ImageIcon,
+    MousePointer,
+    ClipboardCopy,
+    ClipboardPaste,
+    Trash2,
+    Eraser,
+    Eye,
+    Save,
+    Undo2,
+    Redo2,
+    Figma,
+    Mic,
+    FileText,
+    Paintbrush,
+    LayoutDashboard,
+} from 'lucide-react';
 import { LayoutOutlined as LayoutIcon } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import './UnifiedToolbar.css';
 import ColorPicker from '@/shared/ui/ColorPicker';
+
+type EditorMode = 'brief' | 'canvas' | 'moodboard';
 
 interface UnifiedToolbarProps {
     onBold?: () => void;
@@ -44,14 +80,14 @@ interface UnifiedToolbarProps {
     onSave?: () => void;
     onUndo?: () => void;
     onRedo?: () => void;
-    initialMode?: 'brief' | 'canvas';
-    onModeChange?: (mode: 'brief' | 'canvas') => void;
+    initialMode?: EditorMode;
+    onModeChange?: (mode: EditorMode) => void;
     theme?: 'dark' | 'light';
     orientation?: 'horizontal' | 'vertical';
 }
 
 const UnifiedToolbar: React.FC<UnifiedToolbarProps> = ({ onBold, onItalic, onUnderline, onStrikethrough, onCode, onParagraph, onHeading1, onHeading2, onQuote, onUnorderedList, onOrderedList, onFontChange, onFontSizeChange, onFontColorChange, onBgColorChange, onAlignLeft, onAlignCenter, onAlignRight, onAlignJustify, onAddRectangle, onAddCircle, onFreeDraw, onSelectTool, onAddText, onAddImage, onInsertLayout, onColorChange, onFigma, onVoice, onCopy, onPaste, onDelete, onClearCanvas, onPreview, onSave, onUndo, onRedo, initialMode = 'brief', onModeChange, theme = 'dark', orientation = 'horizontal', }) => {
-    const [mode, setMode] = useState<'brief' | 'canvas'>(initialMode);
+    const [mode, setMode] = useState<EditorMode>(initialMode);
     const [fontColor, setFontColor] = useState<string>('');
     const [bgColor, setBgColor] = useState<string>('');
     const [layoutOpen, setLayoutOpen] = useState(false);
@@ -116,15 +152,16 @@ const UnifiedToolbar: React.FC<UnifiedToolbarProps> = ({ onBold, onItalic, onUnd
                 break;
         }
     };
-    const handleModeChange = (newMode: 'brief' | 'canvas') => {
+    const handleModeChange = (newMode: EditorMode) => {
         setMode(newMode);
         if (onModeChange)
             onModeChange(newMode);
     };
-    
-    const modes = [
-        { key: 'brief' as const, label: 'Brief', icon: FileText },
-        { key: 'canvas' as const, label: 'Canvas', icon: Paintbrush },
+
+    const modes: { key: EditorMode; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
+        { key: 'brief', label: 'Brief', icon: FileText },
+        { key: 'canvas', label: 'Canvas', icon: Paintbrush },
+        { key: 'moodboard', label: 'Moodboard', icon: LayoutDashboard },
     ];
     
     const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -317,7 +354,7 @@ const UnifiedToolbar: React.FC<UnifiedToolbarProps> = ({ onBold, onItalic, onUnd
                 <button type="button" onClick={onPreview} title="Preview">
                     <Eye size={16} />
                 </button>
-                <button type="button" onClick={onSave} title="Save">
+                <button type="button" onClick={onSave} title="Save" disabled={mode === 'moodboard'}>
                     <Save size={16} />
                 </button>
                 <button type="button" onClick={onUndo} title="Undo">

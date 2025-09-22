@@ -10,6 +10,7 @@ import FileManagerComponent from "@/dashboard/project/components/FileManager/Fil
 import PreviewDrawer from "@/dashboard/project/features/editor/components/PreviewDrawer";
 import UnifiedToolbar from "@/dashboard/project/features/editor/components/UnifiedToolbar";
 import LexicalEditor from "@/dashboard/project/features/editor/components/Brief/LexicalEditor";
+import MoodboardCanvas from "@/dashboard/project/features/moodboard/components/MoodboardCanvas";
 import { useData } from "@/app/contexts/useData";
 import { Project } from "@/app/contexts/DataProvider";
 import { useSocket } from "@/app/contexts/useSocket";
@@ -35,7 +36,7 @@ const EditorPage: React.FC = () => {
   const { ws } = useSocket();
 
   const [activeProject, setActiveProject] = useState<Project | null>(initialActiveProject);
-  const [activeTab, setActiveTab] = useState<"brief" | "canvas">("brief");
+  const [activeTab, setActiveTab] = useState<"brief" | "canvas" | "moodboard">("brief");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [filesOpen, setFilesOpen] = useState(false);
   const [briefToolbarActions, setBriefToolbarActions] = useState<Record<string, unknown>>({});
@@ -183,7 +184,7 @@ const EditorPage: React.FC = () => {
   const handleSave = useCallback(() => {
     if (activeTab === "canvas") {
       designerRef.current?.handleSave();
-    } else {
+    } else if (activeTab === "brief") {
       void saveBrief();
     }
   }, [activeTab, saveBrief]);
@@ -242,7 +243,7 @@ const EditorPage: React.FC = () => {
           <UnifiedToolbar
             initialMode={activeTab}
             onModeChange={(mode) => {
-              if (mode === "canvas" && activeTab === "brief" && isBriefDirty) {
+              if (mode !== "brief" && activeTab === "brief" && isBriefDirty) {
                 const confirmLeave = window.confirm(
                   "You have unsaved changes, continue?"
                 );
@@ -269,6 +270,7 @@ const EditorPage: React.FC = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
+              className="editor-content-wrapper"
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -100, opacity: 0 }}
@@ -285,13 +287,17 @@ const EditorPage: React.FC = () => {
                 <AnimatePresence mode="wait">
                   {activeTab === "brief" && (
                     <motion.div
+                      className="editor-mode-panel"
                       key="brief"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="dashboard-layout" style={{ paddingBottom: "5px" }}>
+                      <div
+                        className="dashboard-layout editor-mode-layout"
+                        style={{ paddingBottom: "5px" }}
+                      >
                         {activeProject?.description ? (
                           <LexicalEditor
                             key={activeProject.projectId}
@@ -307,13 +313,17 @@ const EditorPage: React.FC = () => {
                   )}
                   {activeTab === "canvas" && (
                     <motion.div
+                      className="editor-mode-panel"
                       key="canvas"
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="dashboard-layout" style={{ paddingBottom: "5px" }}>
+                      <div
+                        className="dashboard-layout editor-mode-layout"
+                        style={{ paddingBottom: "5px" }}
+                      >
                         <div style={{ maxWidth: "1920px", width: "100%" }}>
                           <div
                             className="editor-container"
@@ -322,6 +332,27 @@ const EditorPage: React.FC = () => {
                             <DesignerComponent ref={designerRef} />
                           </div>
                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+                  {activeTab === "moodboard" && (
+                    <motion.div
+                      className="editor-mode-panel"
+                      key="moodboard"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div
+                        className="dashboard-layout editor-mode-layout"
+                        style={{ paddingBottom: "5px" }}
+                      >
+                        <MoodboardCanvas
+                          projectId={activeProject?.projectId}
+                          userId={userId ?? undefined}
+                          palette={projectPalette}
+                        />
                       </div>
                     </motion.div>
                   )}

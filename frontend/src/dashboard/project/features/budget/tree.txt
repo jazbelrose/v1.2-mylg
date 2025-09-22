@@ -33,7 +33,7 @@ D:\MYLG\MYLG-APP\SRC\DASHBOARD\BUDGET
 �       InvoicePreviewModal.tsx
 �       RevisionModal.module.css
 �       RevisionModal.tsx
-�       VisxPieChart.tsx
+�       BudgetDonut.tsx
 �       
 +---context
 �       BudgetProvider.tsx

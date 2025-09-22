@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 
 import { CircleDollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileInvoiceDollar, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import ClientInvoicePreviewModal from "@/dashboard/project/components/Shared/ClientInvoicePreviewModal";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
-import VisxPieChart from "@/dashboard/project/features/budget/components/VisxPieChart";
+import BudgetDonut, {
+  type BudgetDonutSlice,
+  type BudgetDonutDatum,
+} from "@/dashboard/project/features/budget/components/BudgetDonut";
+import { useSocket } from "@/app/contexts/useSocket";
 import { generateSequentialPalette, getColor } from "@/shared/utils/colorUtils";
 
 
@@ -25,11 +29,33 @@ type BudgetHeaderData = {
   // Include other fields if your app uses them
 };
 
-type PieDatum = { name: string; value: number };
-
 interface BudgetOverviewCardProps {
   projectId?: string;
 }
+
+const RELEVANT_WS_ACTIONS = new Set([
+  "budgetUpdated",
+  "projectTotalsUpdated",
+  "chartDataUpdated",
+]);
+
+const computeSignature = (slices: BudgetDonutSlice[]): string =>
+  slices.map((slice) => `${slice.id}:${slice.value}`).join("|");
+
+const palettesAreEqual = (a: string[], b: string[]): boolean => {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+};
+
+type ChartState = {
+  slices: BudgetDonutSlice[];
+  total: number;
+  palette: string[];
+  signature: string;
+};
 
 const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) => {
   const { activeProject, isAdmin } = useData();
@@ -40,41 +66,133 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
   const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false);
   const [invoiceRevision, setInvoiceRevision] = useState<BudgetHeaderData | null>(null);
 
-  // Use context selectors for memoized data
+  const { ws } = useSocket();
+
   const stats = getStats();
-  const pieData: PieDatum[] = getPie(groupBy);
   const ballparkValue = stats.ballpark;
 
-  const totalPieValue = useMemo(() => {
-    return pieData.reduce((sum, d) => sum + d.value, 0);
-  }, [pieData]);
+  const resolvedProjectKey = useMemo(() => {
+    const key = projectId ?? activeProject?.projectId;
+    return key ? String(key) : null;
+  }, [projectId, activeProject?.projectId]);
 
-  const pieDataSorted = useMemo(
-    () => [...pieData].sort((a, b) => b.value - a.value),
-    [pieData]
+  const computeChartState = useCallback((): ChartState => {
+    const raw = getPie(groupBy) ?? [];
+    const sorted = [...raw].sort((a, b) => b.value - a.value);
+    const slices = sorted.map((item, index) => ({
+      id: `${groupBy}-${item.name ?? `slice-${index}`}`,
+      label: item.name,
+      value: item.value,
+    }));
+    const total = sorted.reduce((sum, item) => sum + item.value, 0);
+    const baseColorSource =
+      typeof activeProject?.color === "string" && activeProject.color.trim() !== ""
+        ? activeProject.color
+        : getColor(resolvedProjectKey ?? "budget");
+    const palette = slices.length
+      ? generateSequentialPalette(baseColorSource, slices.length).reverse()
+      : [];
+
+    return {
+      slices,
+      total,
+      palette,
+      signature: computeSignature(slices),
+    };
+  }, [getPie, groupBy, activeProject?.color, resolvedProjectKey]);
+
+  const [chartState, setChartState] = useState<ChartState>(() => computeChartState());
+
+  const updateRafRef = useRef<number | null>(null);
+
+  const scheduleUpdate = useCallback(() => {
+    if (updateRafRef.current) {
+      cancelAnimationFrame(updateRafRef.current);
+    }
+    updateRafRef.current = requestAnimationFrame(() => {
+      updateRafRef.current = null;
+      const shaped = computeChartState();
+      setChartState((prev) => {
+        if (prev.signature === shaped.signature) {
+          const paletteChanged = !palettesAreEqual(prev.palette, shaped.palette);
+          const totalChanged = prev.total !== shaped.total;
+          if (!paletteChanged && !totalChanged) {
+            return prev;
+          }
+          return {
+            ...prev,
+            total: totalChanged ? shaped.total : prev.total,
+            palette: paletteChanged ? shaped.palette : prev.palette,
+          };
+        }
+        return shaped;
+      });
+    });
+  }, [computeChartState]);
+
+  useEffect(() => scheduleUpdate(), [scheduleUpdate]);
+
+  useEffect(
+    () => () => {
+      if (updateRafRef.current) {
+        cancelAnimationFrame(updateRafRef.current);
+      }
+    },
+    []
   );
 
-  const colors = useMemo(() => {
-    const base = activeProject?.color || getColor(projectId);
-    if (typeof base !== "string") {
-      console.error("Invalid color base", base);
-      return [];
-    }
-    return generateSequentialPalette(base, pieDataSorted.length).reverse();
-  }, [pieDataSorted.length, projectId, activeProject?.color]);
+  useEffect(() => {
+    if (!ws) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(event.data as string);
+      } catch (error) {
+        console.error("Failed to parse WebSocket message", error);
+        return;
+      }
+
+      if (!parsed || typeof parsed !== "object") return;
+
+      const action = (parsed as { action?: unknown }).action;
+      if (typeof action !== "string" || !RELEVANT_WS_ACTIONS.has(action)) return;
+
+      const targetProject = (parsed as { projectId?: unknown }).projectId;
+      if (
+        resolvedProjectKey &&
+        targetProject &&
+        String(targetProject) !== resolvedProjectKey
+      ) {
+        return;
+      }
+
+      scheduleUpdate();
+    };
+
+    ws.addEventListener("message", handleMessage);
+    return () => {
+      ws.removeEventListener("message", handleMessage);
+    };
+  }, [ws, scheduleUpdate, resolvedProjectKey]);
 
   const formatDatumValue = useCallback(
-    (d: PieDatum) => {
-      const isPercent = groupBy === "none" && d.name === "Effective Markup";
-      const rounded = Math.round(d.value);
+    (slice: BudgetDonutSlice) => {
+      const isPercent = groupBy === "none" && slice.label === "Effective Markup";
+      const rounded = Math.round(slice.value);
       return isPercent ? `${rounded}%` : formatUSD(rounded);
     },
     [groupBy]
   );
 
   const formatTooltip = useCallback(
-    (d: PieDatum) => `${d.name}: ${formatDatumValue(d)}`,
+    (slice: BudgetDonutDatum) => `${slice.label}: ${formatDatumValue(slice)}`,
     [formatDatumValue]
+  );
+
+  const totalFormatter = useCallback(
+    (value: number) => formatUSD(Math.round(value)),
+    []
   );
 
   const openInvoicePreview = async (): Promise<void> => {
@@ -186,12 +304,12 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
           <>
             <div className="chart-legend-container">
               <div className="budget-chart">
-                <VisxPieChart
-                  data={pieDataSorted}
-                  total={totalPieValue}
-                  colors={colors}
+                <BudgetDonut
+                  data={chartState.slices}
+                  total={chartState.total}
+                  palette={chartState.palette}
                   formatTooltip={formatTooltip}
-                  colorMode="sequential"
+                  totalFormatter={totalFormatter}
                 />
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,7 +13,11 @@ import { Segmented, Switch } from "antd";
 
 import EditBallparkModal from "@/dashboard/project/features/budget/components/EditBallparkModal";
 import ClientInvoicePreviewModal from "@/dashboard/project/components/Shared/ClientInvoicePreviewModal";
-import VisxPieChart from "@/dashboard/project/features/budget/components/VisxPieChart";
+import BudgetDonut, {
+  type BudgetDonutSlice,
+  type BudgetDonutDatum,
+} from "@/dashboard/project/features/budget/components/BudgetDonut";
+import { useSocket } from "@/app/contexts/useSocket";
 
 import { updateBudgetItem } from "@/shared/utils/api";
 import { formatUSD } from "@/shared/utils/budgetUtils";
@@ -94,6 +98,30 @@ interface BudgetHeaderProps {
   onBallparkChange?: (val: number) => void;
   onOpenRevisionModal: () => void;
 }
+
+const RELEVANT_WS_ACTIONS = new Set<unknown>([
+  "budgetUpdated",
+  "projectTotalsUpdated",
+  "chartDataUpdated",
+]);
+
+const computeSignature = (slices: BudgetDonutSlice[]): string =>
+  slices.map((slice) => `${slice.id}:${slice.value}`).join("|");
+
+const palettesAreEqual = (a: string[], b: string[]): boolean => {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+};
+
+type ChartState = {
+  slices: BudgetDonutSlice[];
+  total: number;
+  palette: string[];
+  signature: string;
+};
 
 /* =========================
    Helpers
@@ -177,6 +205,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   const [isBallparkModalOpen, setBallparkModalOpen] = useState(false);
   const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false);
   const [invoiceRevision, setInvoiceRevision] = useState<BudgetHeaderData | null>(null);
+
+  const { ws } = useSocket();
 
   useEffect(() => {
     if (!hasReconciled) setShowReconciled(false);
@@ -416,16 +446,43 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     setBallparkModalOpen(false);
   };
 
-  const pieData = useMemo(() => {
+  const resolvedProjectKey = useMemo(
+    () => (activeProject?.projectId ? String(activeProject.projectId) : null),
+    [activeProject?.projectId]
+  );
+
+  const computeChartState = useCallback((): ChartState => {
+    const baseColorSource =
+      typeof activeProject?.color === "string" && activeProject.color.trim() !== ""
+        ? activeProject.color
+        : getColor(resolvedProjectKey ?? "budget");
+
     if (groupBy === "none") {
-      return metrics.map((m) => ({ name: m.title, value: m.chartValue as number }));
+      const slices = metrics.map((metric) => ({
+        id: `metric-${metric.title}`,
+        label: metric.title,
+        value: toNumber(metric.chartValue as number | string | undefined | null),
+      }));
+
+      const palette = slices.length
+        ? generateSequentialPalette(baseColorSource, slices.length).reverse()
+        : [];
+
+      return {
+        slices,
+        total: toNumber(budgetHeader?.headerFinalTotalCost),
+        palette,
+        signature: computeSignature(slices),
+      };
     }
+
     const selected = metrics.find((m) => m.title === selectedMetric);
     const field = (selected?.field as keyof BudgetItem) || "itemFinalCost";
 
     const totals: Record<string, number> = {};
     budgetItems.forEach((item) => {
-      const key = (item[groupBy] as string) || "Unspecified";
+      const rawKey = (item[groupBy] as string) || "Unspecified";
+      const key = rawKey && rawKey.trim() !== "" ? rawKey : "Unspecified";
       let val: number;
 
       if (field === "markupAmount") {
@@ -440,50 +497,138 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             ? reconciled
             : actual;
         val = finalCost - base;
+      } else if (field === "itemMarkUp") {
+        val = toNumber(item[field] as number | string | undefined | null) * 100;
       } else {
-        // coerce numeric (including percent)
-        if (field === "itemMarkUp") {
-          val = toNumber(item[field] as number | string | undefined | null) * 100;
-        } else {
-          val = toNumber(item[field] as number | string | undefined | null);
-        }
+        val = toNumber(item[field] as number | string | undefined | null);
       }
 
-      totals[key] = (totals[key] || 0) + (Number.isNaN(val) ? 0 : val);
+      const safeValue = Number.isNaN(val) ? 0 : val;
+      totals[key] = (totals[key] ?? 0) + safeValue;
     });
 
-    return Object.entries(totals).map(([name, value]) => ({ name, value }));
-  }, [groupBy, metrics, budgetItems, selectedMetric, markupBasis]);
+    const slices = Object.entries(totals).map(([label, value]) => ({
+      id: `${groupBy}-${label}`,
+      label,
+      value,
+    }));
 
-  const totalPieValue = useMemo(() => {
-    if (groupBy === "none") {
-      return toNumber(budgetHeader?.headerFinalTotalCost);
+    const sortedSlices = [...slices].sort((a, b) => b.value - a.value);
+    const palette = sortedSlices.length
+      ? generateSequentialPalette(baseColorSource, sortedSlices.length).reverse()
+      : [];
+
+    return {
+      slices: sortedSlices,
+      total: sortedSlices.reduce((sum, slice) => sum + slice.value, 0),
+      palette,
+      signature: computeSignature(sortedSlices),
+    };
+  }, [
+    activeProject?.color,
+    budgetHeader?.headerFinalTotalCost,
+    budgetItems,
+    groupBy,
+    markupBasis,
+    metrics,
+    resolvedProjectKey,
+    selectedMetric,
+  ]);
+
+  const [chartState, setChartState] = useState<ChartState>(() => computeChartState());
+
+  const updateRafRef = useRef<number | null>(null);
+
+  const scheduleUpdate = useCallback(() => {
+    if (updateRafRef.current) {
+      cancelAnimationFrame(updateRafRef.current);
     }
-    return pieData.reduce((sum, d) => sum + d.value, 0);
-  }, [groupBy, budgetHeader, pieData]);
+    updateRafRef.current = requestAnimationFrame(() => {
+      updateRafRef.current = null;
+      const shaped = computeChartState();
+      setChartState((prev) => {
+        if (prev.signature === shaped.signature) {
+          const paletteChanged = !palettesAreEqual(prev.palette, shaped.palette);
+          const totalChanged = prev.total !== shaped.total;
+          if (!paletteChanged && !totalChanged) {
+            return prev;
+          }
+          return {
+            ...prev,
+            total: totalChanged ? shaped.total : prev.total,
+            palette: paletteChanged ? shaped.palette : prev.palette,
+          };
+        }
+        return shaped;
+      });
+    });
+  }, [computeChartState]);
 
-  const pieDataSorted = useMemo(
-    () => [...pieData].sort((a, b) => b.value - a.value),
-    [pieData]
+  useEffect(() => scheduleUpdate(), [scheduleUpdate]);
+
+  useEffect(
+    () => () => {
+      if (updateRafRef.current) {
+        cancelAnimationFrame(updateRafRef.current);
+      }
+    },
+    []
   );
 
-  const colors = useMemo(
-    () =>
-      // Reverse so the largest segment uses the darkest shade
-      generateSequentialPalette(
-        activeProject?.color || getColor(activeProject?.projectId),
-        pieDataSorted.length
-      ).reverse(),
-    [activeProject?.color, activeProject?.projectId, pieDataSorted.length]
+  useEffect(() => {
+    if (!ws) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(event.data as string);
+      } catch (error) {
+        console.error("Failed to parse WebSocket message", error);
+        return;
+      }
+
+      if (!parsed || typeof parsed !== "object") return;
+      const action = (parsed as { action?: unknown }).action;
+      if (typeof action !== "string" || !RELEVANT_WS_ACTIONS.has(action)) return;
+
+      const targetProject = (parsed as { projectId?: unknown }).projectId;
+      if (
+        resolvedProjectKey &&
+        targetProject &&
+        String(targetProject) !== resolvedProjectKey
+      ) {
+        return;
+      }
+
+      scheduleUpdate();
+    };
+
+    ws.addEventListener("message", handleMessage);
+    return () => {
+      ws.removeEventListener("message", handleMessage);
+    };
+  }, [ws, scheduleUpdate, resolvedProjectKey]);
+
+  const formatTooltip = useCallback(
+    (slice: BudgetDonutDatum) => {
+      const metric =
+        groupBy === "none"
+          ? metrics.find((m) => m.title === slice.label)
+          : metrics.find((m) => m.title === selectedMetric);
+      const isPercent =
+        (metric as { isPercentage?: boolean })?.isPercentage &&
+        (groupBy === "none" ? slice.label !== "Effective Markup" : selectedMetric !== "Effective Markup");
+      const rounded = Math.round(slice.value);
+      const value = isPercent ? `${rounded}%` : formatUSD(rounded);
+      return `${slice.label}: ${value}`;
+    },
+    [groupBy, metrics, selectedMetric]
   );
 
-  const formatTooltip = (d: { name: string; value: number }) => {
-    const metric = metrics.find((m) => m.title === selectedMetric);
-    const isPercent = (metric as { isPercentage?: boolean })?.isPercentage && selectedMetric !== "Effective Markup";
-    const rounded = Math.round(d.value);
-    const value = isPercent ? `${rounded}%` : formatUSD(rounded);
-    return `${d.name}: ${value}`;
-  };
+  const totalFormatter = useCallback(
+    (value: number) => formatUSD(Math.round(value)),
+    []
+  );
 
   return (
     <div>
@@ -548,24 +693,32 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
 
           <div className={summaryStyles.chartAndLegend}>
             <div className={summaryStyles.chartContainer}>
-              <VisxPieChart
-                data={pieDataSorted}
-                total={totalPieValue}
-                colors={colors}
+              <BudgetDonut
+                data={chartState.slices}
+                total={chartState.total}
+                palette={chartState.palette}
                 formatTooltip={formatTooltip}
-                colorMode="sequential"
+                totalFormatter={totalFormatter}
               />
             </div>
             <ul className={summaryStyles.legend}>
-              {pieDataSorted.map((m, i) => (
-                <li className={summaryStyles.legendItem} key={m.name}>
-                  <span
-                    className={summaryStyles.legendDot}
-                    style={{ background: colors[i % colors.length] }}
-                  />
-                  {m.name}
-                </li>
-              ))}
+              {chartState.slices.map((slice, index) => {
+                const palette = chartState.palette;
+                const paletteLength = palette.length;
+                const background =
+                  paletteLength > 0
+                    ? palette[index % paletteLength]
+                    : getColor(`${slice.id}-${index}`);
+                return (
+                  <li className={summaryStyles.legendItem} key={slice.id}>
+                    <span
+                      className={summaryStyles.legendDot}
+                      style={{ background }}
+                    />
+                    {slice.label}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>

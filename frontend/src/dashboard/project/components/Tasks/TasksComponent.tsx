@@ -36,6 +36,7 @@ import {
 } from "@/shared/utils/api";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import "./task-table.css";
+import "./tasks-modal.css";
 
 /* =========================
    Types
@@ -123,6 +124,28 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [commentTask, setCommentTask] = useState<Task | null>(null);
   const [commentText, setCommentText] = useState("");
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(max-width: 640px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(max-width: 640px)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobileViewport(event.matches);
+    };
+
+    setIsMobileViewport(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
 
   const [assignForm] = Form.useForm();
   const [assignLocationSearch, setAssignLocationSearch] = useState("");
@@ -601,6 +624,15 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     },
   ];
 
+  const modalRootClassName = isMobileViewport
+    ? "tasks-modal tasks-modal-mobile"
+    : "tasks-modal";
+  const modalCloseIcon = (
+    <span aria-hidden="true" className="tasks-modal-close-icon">
+      ×
+    </span>
+  );
+
   /* Render */
   return (
     <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
@@ -759,8 +791,13 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
             open={isTaskModalOpen}
             onOk={saveTask}
             onCancel={() => setIsTaskModalOpen(false)}
-            centered
+            centered={!isMobileViewport}
+            maskClosable={isMobileViewport}
+            rootClassName={modalRootClassName}
+            closeIcon={modalCloseIcon}
             okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
+            okText={editingTask ? "Save Task" : "Add Task"}
+            cancelText="Cancel"
             forceRender
           >
             <Form layout="vertical" form={editForm} preserve={false}>
@@ -904,8 +941,13 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
             open={isCommentModalOpen}
             onOk={saveComment}
             onCancel={() => setIsCommentModalOpen(false)}
-            centered
+            centered={!isMobileViewport}
+            maskClosable={isMobileViewport}
+            rootClassName={modalRootClassName}
+            closeIcon={modalCloseIcon}
             okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
+            okText="Save Comment"
+            cancelText="Cancel"
           >
             <Input.TextArea
               value={commentText}

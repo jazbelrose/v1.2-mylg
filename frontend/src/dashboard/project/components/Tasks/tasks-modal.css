@@ -1,0 +1,74 @@
+.tasks-modal .ant-modal {
+  width: min(560px, calc(100vw - 48px));
+}
+
+.tasks-modal .ant-modal-content {
+  border-radius: 20px;
+}
+
+.tasks-modal .ant-modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tasks-modal .ant-modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tasks-modal-mobile .ant-modal {
+  top: 20px !important;
+  margin: 0 auto;
+  width: calc(100vw - 32px);
+  max-width: 480px;
+  padding-bottom: 0;
+}
+
+.tasks-modal-mobile .ant-modal-content {
+  border-radius: 18px;
+}
+
+.tasks-modal-mobile .ant-modal-header,
+.tasks-modal-mobile .ant-modal-body,
+.tasks-modal-mobile .ant-modal-footer {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.tasks-modal-mobile .ant-modal-header {
+  padding-top: 16px;
+  padding-bottom: 12px;
+}
+
+.tasks-modal-mobile .ant-modal-body {
+  padding-top: 4px;
+  padding-bottom: 12px;
+}
+
+.tasks-modal-mobile .ant-modal-footer {
+  padding-top: 12px;
+  padding-bottom: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.tasks-modal-mobile .ant-modal-footer > .ant-btn {
+  width: 100%;
+}
+
+.tasks-modal-mobile .ant-modal-close {
+  top: 12px;
+  right: 12px;
+}
+
+.tasks-modal-close-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .tasks-modal .ant-modal {
+    width: calc(100vw - 32px);
+  }
+}

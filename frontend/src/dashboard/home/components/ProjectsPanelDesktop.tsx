@@ -173,15 +173,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
         />
       </div>
 
-      <div className={desktopStyles.footer}>
-        <button
-          type="button"
-          className={desktopStyles.footerButton}
-          onClick={() => navigate("/dashboard/projects")}
-        >
-          See all projects
-        </button>
-      </div>
+     
     </section>
   );
 };

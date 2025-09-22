@@ -351,6 +351,26 @@
   height: 40px;
 }
 
+.project-header:not(.new-project-header) .project-team-stack {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 4px 6px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, outline 0.2s ease;
+}
+
+.project-header:not(.new-project-header) .project-team-stack:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.project-header:not(.new-project-header) .project-team-stack:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
 @media (max-width: 1200px) {
   .project-header:not(.new-project-header) {
     border-radius: 20px;

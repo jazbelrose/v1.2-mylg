@@ -48,10 +48,14 @@
 }
 
 .dashboard-item.view-gallery {
-  
+
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  min-height: 0;
+  gap: clamp(10px, 2vw, 18px);
 }
 
 .dashboard-item.view-gallery span {

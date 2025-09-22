@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+﻿import { useCallback, useMemo } from "react";
 
 import { enqueueProjectUpdate } from "@/shared/utils/requestQueue";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
@@ -126,23 +126,16 @@ export function useRangeLabels(project: Project) {
   );
 
   const rangeLabel = useMemo(() => {
-    const totalPart = `Hrs Total: ${totalHours} hrs`;
+    const totalPart = `${totalHours} hrs`;
     if (!startDate || !endDate) return totalPart;
     const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
     const startStr = startDate.toLocaleDateString(undefined, options);
     const endStr = endDate.toLocaleDateString(undefined, options);
-    return `${startStr} – ${endStr} | ${totalPart}`;
+    return `${startStr} – ${endStr}  ⏱ ${totalPart}`;
   }, [startDate, endDate, totalHours]);
 
   const mobileRangeLabel = useMemo(() => {
-    if (!rangeLabel) return "";
-    const parts = rangeLabel.split("|").map((part) => part.trim());
-    if (parts.length === 2) {
-      const [datesPart, hoursPart] = parts;
-      const normalizedHours = hoursPart.replace(/^Hrs Total:\s*/i, "").trim();
-      return `${datesPart} · ${normalizedHours}`;
-    }
-    return rangeLabel.replace(/^Hrs Total:\s*/i, "").trim();
+    return rangeLabel;
   }, [rangeLabel]);
 
   return { rangeLabel, mobileRangeLabel, totalHours };
@@ -151,3 +144,4 @@ export function useRangeLabels(project: Project) {
 export function deriveProjectInitialState(props: ProjectHeaderProps) {
   return normalizeProjectFromProps(props.activeProject);
 }
+

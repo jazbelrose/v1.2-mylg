@@ -38,7 +38,7 @@
 
 /* Budget + Calendar two-column layout */
 .budget-calendar-layout {
-  --budget-calendar-gap: 18px;
+  --budget-calendar-gap: 12px;
   --budget-calendar-min-calendar: 400px;
   --budget-calendar-max-calendar: 520px;
   --budget-calendar-stack-budget: 420px;

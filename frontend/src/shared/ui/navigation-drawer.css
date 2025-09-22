@@ -346,9 +346,9 @@
 .nav-list {
   list-style: none;
   margin: 0;
-  padding: 8px;
+  padding: 9px;
   display: grid;
-  gap: 8px;
+  gap: 9px;
 }
 
 .nav-list--secondary {

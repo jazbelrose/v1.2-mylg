@@ -137,7 +137,7 @@
 .timeline-location-row {
   display: flex;
   flex-direction: row !important;
-  gap: 5px;
+  gap: 18px;
 }
 
 .timeline-location-row > * {

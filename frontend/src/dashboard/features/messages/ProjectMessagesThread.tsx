@@ -266,6 +266,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
   } = useData();
   const { ws } = useSocket() || {};
   const { isAuthenticated } = useAuth();
+  const projectName = activeProject?.title?.trim() || projectId;
 
   const messages = useMemo(() => {
     const all: Message[] = Array.isArray(projectMessages[projectId])
@@ -988,10 +989,9 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
         <div
           className="thread-panel-header chat-panel-header"
           onMouseDown={startDrag}
+          aria-label={`Message thread controls for ${projectName}`}
         >
-          <h3 className="project-thread-title">
-            # {activeProject?.title || projectId} Thread
-          </h3>
+          <div className="thread-header-spacer" aria-hidden="true" />
           <div className="thread-header-actions">
             {floating && (
               <button
@@ -1122,7 +1122,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
               </div>
               <input
                 type="text"
-                placeholder="Message"
+                placeholder={`Message ${projectName}`}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {

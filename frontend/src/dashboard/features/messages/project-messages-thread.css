@@ -157,6 +157,11 @@
   flex: 1;
 }
 
+.thread-header-spacer {
+  flex: 1;
+  min-height: 24px;
+}
+
 .message-action-wrapper {
   position: relative;
   display: flex;

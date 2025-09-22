@@ -144,12 +144,13 @@ const centerPopoverPercentStyles: React.CSSProperties = {
 };
 
 const tooltipStyles: React.CSSProperties = {
-  background: "rgba(17, 24, 39, 0.95)",
-  color: "#fff",
+  background: "#0f172a",
+  color: "#f8fafc",
   borderRadius: "6px",
+  border: "1px solid rgba(148, 163, 184, 0.4)",
   padding: "6px 10px",
   fontSize: "0.75rem",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.35)",
+  boxShadow: "0 6px 18px rgba(15, 23, 42, 0.45)",
 };
 
 const renderActiveShape = (props: Record<string, unknown>) => {
@@ -183,6 +184,11 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   const [lockedIndex, setLockedIndex] = useState<number | null>(null);
   const [isCenterOpen, setIsCenterOpen] = useState(false);
   const [isCenterPinned, setIsCenterPinned] = useState(false);
+  const isCenterPinnedRef = useRef(isCenterPinned);
+
+  useEffect(() => {
+    isCenterPinnedRef.current = isCenterPinned;
+  }, [isCenterPinned]);
 
   const centerButtonRef = useRef<HTMLButtonElement | null>(null);
   const centerPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -294,30 +300,31 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   }, []);
 
   const handleCenterMouseEnter = useCallback(() => {
-    if (isCenterPinned) return;
+    if (isCenterPinnedRef.current) return;
     openCenterPopover();
-  }, [isCenterPinned, openCenterPopover]);
+  }, [openCenterPopover]);
 
   const handleCenterMouseLeave = useCallback(() => {
-    if (isCenterPinned) return;
+    if (isCenterPinnedRef.current) return;
     closeCenterPopover();
-  }, [isCenterPinned, closeCenterPopover]);
+  }, [closeCenterPopover]);
 
   const handleCenterFocus = useCallback(() => {
-    if (isCenterPinned) return;
+    if (isCenterPinnedRef.current) return;
     openCenterPopover();
-  }, [isCenterPinned, openCenterPopover]);
+  }, [openCenterPopover]);
 
   const handleCenterBlur = useCallback(() => {
-    if (isCenterPinned) return;
+    if (isCenterPinnedRef.current) return;
     closeCenterPopover();
-  }, [isCenterPinned, closeCenterPopover]);
+  }, [closeCenterPopover]);
 
   const handleCenterClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
       setIsCenterPinned((prev) => {
         const next = !prev;
+        isCenterPinnedRef.current = next;
         if (next) {
           openCenterPopover();
         } else {
@@ -336,6 +343,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       event.stopPropagation();
       setIsCenterPinned((prev) => {
         const next = !prev;
+        isCenterPinnedRef.current = next;
         if (next) {
           openCenterPopover();
         } else {
@@ -358,11 +366,13 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       ) {
         return;
       }
+      isCenterPinnedRef.current = false;
       setIsCenterPinned(false);
       closeCenterPopover();
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        isCenterPinnedRef.current = false;
         setIsCenterPinned(false);
         closeCenterPopover();
       }
@@ -379,7 +389,10 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   useEffect(() => {
     if (!isCenterPinned && !isCenterOpen) return;
     closeCenterPopover();
-    setIsCenterPinned(false);
+    if (isCenterPinnedRef.current) {
+      isCenterPinnedRef.current = false;
+      setIsCenterPinned(false);
+    }
   }, [dataSignature, total, closeCenterPopover, isCenterPinned, isCenterOpen]);
 
   return (

@@ -5,8 +5,13 @@ import { useNavigate } from "react-router-dom";
 
 import { useData } from "@/app/contexts/useData";
 import type { UserLite } from "@/app/contexts/DataProvider";
-import { useProjectKpis, type ProjectLike } from "@/dashboard/home/hooks/useProjectKpis";
+import {
+  parseProjectStatusToNumber,
+  useProjectKpis,
+  type ProjectLike,
+} from "@/dashboard/home/hooks/useProjectKpis";
 import { MICRO_WOBBLE_SCALE, SPRING_FAST } from "@/shared/ui/motionTokens";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 
 import desktopStyles from "./ProjectsPanelDesktop.module.css";
 import mobileStyles from "@/dashboard/home/components/projects-panel.module.css";
@@ -36,6 +41,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   const navigate = useNavigate();
 
   const [imgError, setImgError] = useState<Record<string, boolean>>({});
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
 
   useEffect(() => {
     if (!isLoading && projects.length === 0 && !projectsError) {
@@ -54,11 +60,20 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     (projectId: string) => {
       if (onOpenProject) {
         onOpenProject(projectId);
-      } else {
-        navigate("/dashboard/projects");
+        return;
       }
+
+      const project = (projects as ProjectLike[]).find(
+        (entry) => entry.projectId === projectId
+      );
+      if (project) {
+        navigate(getProjectDashboardPath(projectId, project.title));
+        return;
+      }
+
+      navigate("/dashboard/projects");
     },
-    [onOpenProject, navigate]
+    [onOpenProject, navigate, projects]
   );
 
   const {
@@ -74,6 +89,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
     statusTriggerLabel,
     statusDropdown,
     showStatusDropdown,
+    setStatusFilter,
     sortOptions,
     sortTriggerLabel,
     sortDropdown,
@@ -84,6 +100,49 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
   });
 
   const kpis = useProjectKpis(projects as ProjectLike[]);
+
+  const nextDueProject = useMemo(() => {
+    const today = new Date();
+    return (projects as ProjectLike[])
+      .filter((project) => {
+        if (!project.finishline) return false;
+        const deadline = new Date(project.finishline);
+        return !Number.isNaN(deadline.getTime()) && deadline > today;
+      })
+      .sort((a, b) => {
+        const aDate = new Date(a.finishline || 0).getTime();
+        const bDate = new Date(b.finishline || 0).getTime();
+        return aDate - bDate;
+      })[0] ?? null;
+  }, [projects]);
+
+  const filteredProjectsToDisplay = useMemo(() => {
+    if (!showPendingOnly) return filteredProjects;
+
+    return (filteredProjects as ProjectWithMeta[]).filter((project) =>
+      parseProjectStatusToNumber(project.status) < 100
+    );
+  }, [filteredProjects, showPendingOnly]);
+
+  const handleNavigateToAllProjects = useCallback(() => {
+    setShowPendingOnly(false);
+    setScope("all");
+    setQuery("");
+    setStatusFilter("");
+    navigate("/dashboard/projects");
+  }, [navigate, setQuery, setScope, setStatusFilter]);
+
+  const handleTogglePendingFilter = useCallback(() => {
+    setScope("all");
+    setQuery("");
+    setStatusFilter("");
+    setShowPendingOnly((prev) => !prev);
+  }, [setQuery, setScope, setStatusFilter]);
+
+  const handleOpenNextProject = useCallback(() => {
+    if (!nextDueProject?.projectId) return;
+    handleOpen(nextDueProject.projectId);
+  }, [handleOpen, nextDueProject]);
 
   const usersById = useMemo(() => {
     const map = new Map<string, UserLite>();
@@ -130,40 +189,50 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
         />
 
         <div className={mobileStyles.kpis}>
-          <motion.span
+          <motion.button
+            type="button"
             className={mobileStyles.chip}
             whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             transition={reduceMotion ? undefined : SPRING_FAST}
+            onClick={handleNavigateToAllProjects}
           >
             {kpis.totalProjects} Projects
-          </motion.span>
+          </motion.button>
           <span className={mobileStyles.dot} />
-          <motion.span
-            className={mobileStyles.chip}
+          <motion.button
+            type="button"
+            className={`${mobileStyles.chip} ${
+              showPendingOnly ? mobileStyles.chipActive : ""
+            }`}
+            aria-pressed={showPendingOnly}
             whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             transition={reduceMotion ? undefined : SPRING_FAST}
+            onClick={handleTogglePendingFilter}
           >
             {kpis.pendingProjects} Pending
-          </motion.span>
+          </motion.button>
           <span className={mobileStyles.dot} />
-          <motion.span
-            className={mobileStyles.chip}
+          <motion.button
+            type="button"
+            className={`${mobileStyles.chip} ${mobileStyles.chipNext}`}
             whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             transition={reduceMotion ? undefined : SPRING_FAST}
+            onClick={handleOpenNextProject}
+            disabled={!nextDueProject}
           >
             {kpis.nextProject
               ? `Next: ${kpis.nextProject.title} ${kpis.nextProject.date}`
               : "No upcoming projects"}
-          </motion.span>
+          </motion.button>
         </div>
       </header>
 
       <div className={desktopStyles.content}>
         <ProjectsTable
-          projects={filteredProjects as ProjectWithMeta[]}
+          projects={filteredProjectsToDisplay as ProjectWithMeta[]}
           isLoading={isLoading}
           projectsError={projectsError}
           onOpenProject={handleOpen}

@@ -28,6 +28,13 @@ interface KPIs {
   nextProject: { title: string; date: string } | null;
 }
 
+export const parseProjectStatusToNumber = (status: unknown): number => {
+  if (status === undefined || status === null) return 0;
+  const str = typeof status === "string" ? status : String(status);
+  const num = parseFloat(str.replace("%", ""));
+  return Number.isNaN(num) ? 0 : num;
+};
+
 /**
  * Derive dashboard KPIs from a list of projects.
  * - total number of projects
@@ -36,16 +43,9 @@ interface KPIs {
  */
 export function useProjectKpis(projects: ProjectLike[]): KPIs {
   return useMemo(() => {
-    const parseStatusToNumber = (status: unknown): number => {
-      if (status === undefined || status === null) return 0;
-      const str = typeof status === "string" ? status : String(status);
-      const num = parseFloat(str.replace("%", ""));
-      return Number.isNaN(num) ? 0 : num;
-    };
-
     const totalProjects = projects.length;
     const completed = projects.filter(
-      (p) => parseStatusToNumber(p.status) >= 100
+      (p) => parseProjectStatusToNumber(p.status) >= 100
     ).length;
     const pendingProjects = totalProjects - completed;
 

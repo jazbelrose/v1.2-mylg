@@ -15,6 +15,7 @@ import AvatarStack from '../../../shared/ui/AvatarStack';
 import { ProjectsFilterMenu } from './ProjectsFilterMenu';
 import { useProjectFilters } from './hooks/useProjectFilters';
 import {
+  parseProjectStatusToNumber,
   useProjectKpis,
   type ProjectLike,
 } from '@/dashboard/home/hooks/useProjectKpis';
@@ -103,6 +104,7 @@ const AllProjects: React.FC = () => {
     return stored === 'grid' || stored === 'list' ? stored : 'list';
   });
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
@@ -137,6 +139,7 @@ const AllProjects: React.FC = () => {
     statusTriggerLabel,
     statusDropdown,
     showStatusDropdown,
+    setStatusFilter,
     sortOptions,
     sortTriggerLabel,
     sortDropdown,
@@ -155,7 +158,32 @@ const AllProjects: React.FC = () => {
     [filteredProjectsWithMeta],
   );
 
+  const displayedProjects = useMemo(
+    () =>
+      showPendingOnly
+        ? filteredProjects.filter(
+            (project) => parseProjectStatusToNumber(project.status) < 100,
+          )
+        : filteredProjects,
+    [filteredProjects, showPendingOnly],
+  );
+
   const kpis = useProjectKpis(projects as ProjectLike[]);
+
+  const nextDueProject = useMemo(() => {
+    const today = new Date();
+    return (projects as Project[])
+      .filter((project) => {
+        if (!project.finishline) return false;
+        const deadline = new Date(project.finishline);
+        return !Number.isNaN(deadline.getTime()) && deadline > today;
+      })
+      .sort((a, b) => {
+        const aDate = new Date(a.finishline || 0).getTime();
+        const bDate = new Date(b.finishline || 0).getTime();
+        return aDate - bDate;
+      })[0] ?? null;
+  }, [projects]);
 
   const handleThumbnailError = useCallback((projectId: string) => {
     setImageErrors((prev) => {
@@ -266,7 +294,32 @@ const AllProjects: React.FC = () => {
     return d.toLocaleString(undefined, { month: 'short', day: 'numeric' });
   };
 
-  const isSingleProject = filteredProjects.length === 1;
+  useEffect(() => {
+    if (!filteredProjects.length) {
+      setShowPendingOnly(false);
+    }
+  }, [filteredProjects.length]);
+
+  const handleShowAllProjectsChip = useCallback(() => {
+    setScope('all');
+    setQuery('');
+    setStatusFilter('');
+    setShowPendingOnly(false);
+  }, [setQuery, setScope, setStatusFilter]);
+
+  const handleTogglePendingChip = useCallback(() => {
+    setScope('all');
+    setQuery('');
+    setStatusFilter('');
+    setShowPendingOnly((prev) => !prev);
+  }, [setQuery, setScope, setStatusFilter]);
+
+  const handleOpenNextProject = useCallback(() => {
+    if (!nextDueProject) return;
+    onSelectProject(nextDueProject);
+  }, [nextDueProject, onSelectProject]);
+
+  const isSingleProject = displayedProjects.length === 1;
 
   const renderProjectThumbnail = useCallback(
     (project: Project, variant: 'grid' | 'list') => {
@@ -378,6 +431,22 @@ const AllProjects: React.FC = () => {
         </p>
       </div>
     );
+  } else if (showPendingOnly && displayedProjects.length === 0) {
+    content = (
+      <div
+        style={{
+          display: 'flex',
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+        }}
+      >
+        <p style={{ fontSize: '14px', color: '#aaa', textAlign: 'center' }}>
+          No pending projects
+        </p>
+      </div>
+    );
   } else if (viewMode === 'grid') {
     content = (
       <div
@@ -385,7 +454,7 @@ const AllProjects: React.FC = () => {
           isSingleProject ? 'single-item' : ''
         }`}
       >
-        {filteredProjects.map((project: Project) => (
+        {displayedProjects.map((project: Project) => (
           <div
             key={project.projectId}
             className={`project-container-welcome ${
@@ -451,7 +520,7 @@ const AllProjects: React.FC = () => {
 
     content = (
       <ul className="projects-list">
-        {filteredProjects.map((project: Project) => {
+        {displayedProjects.map((project: Project) => {
           const statusText = formatStatus(String(project.status || ''));
           const team = normalizeTeam(project.team);
           const progress = Number(statusText.replace('%', ''));
@@ -610,7 +679,8 @@ const AllProjects: React.FC = () => {
         </div>
 
         <div className={mobileStyles.kpis}>
-          <motion.span
+          <motion.button
+            type="button"
             className={mobileStyles.chip}
             whileHover={
               reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
@@ -619,12 +689,17 @@ const AllProjects: React.FC = () => {
               reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
             }
             transition={reduceMotion ? undefined : SPRING_FAST}
+            onClick={handleShowAllProjectsChip}
           >
             {kpis.totalProjects} Projects
-          </motion.span>
+          </motion.button>
           <span className={mobileStyles.dot} />
-          <motion.span
-            className={mobileStyles.chip}
+          <motion.button
+            type="button"
+            className={`${mobileStyles.chip} ${
+              showPendingOnly ? mobileStyles.chipActive : ''
+            }`}
+            aria-pressed={showPendingOnly}
             whileHover={
               reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
             }
@@ -632,12 +707,14 @@ const AllProjects: React.FC = () => {
               reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
             }
             transition={reduceMotion ? undefined : SPRING_FAST}
+            onClick={handleTogglePendingChip}
           >
             {kpis.pendingProjects} Pending
-          </motion.span>
+          </motion.button>
           <span className={mobileStyles.dot} />
-          <motion.span
-            className={mobileStyles.chip}
+          <motion.button
+            type="button"
+            className={`${mobileStyles.chip} ${mobileStyles.chipNext}`}
             whileHover={
               reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
             }
@@ -645,11 +722,13 @@ const AllProjects: React.FC = () => {
               reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }
             }
             transition={reduceMotion ? undefined : SPRING_FAST}
+            onClick={handleOpenNextProject}
+            disabled={!nextDueProject}
           >
             {kpis.nextProject
               ? `Next: ${kpis.nextProject.title} ${kpis.nextProject.date}`
               : 'No upcoming projects'}
-          </motion.span>
+          </motion.button>
         </div>
       </header>
       <div className="projects-scrollable">{content}</div>

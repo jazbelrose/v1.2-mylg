@@ -121,6 +121,29 @@ const TOOLTIP_TEXT: Partial<Record<keyof ItemForm, string>> = {
     "Markup will auto-adjust to keep Final Cost unchanged when you override costs. You can then modify Markup as needed.",
 };
 
+const IMMUTABLE_FORM_FIELD_NAMES = new Set(["projectid", "budgetid"]);
+const IMMUTABLE_FORM_FIELD_ALIASES = new Set(["pk", "sk"]);
+const FORM_GSI_KEY_PATTERN = /^gsi\d*(pk|sk)$/i;
+
+const shouldStripImmutableField = (key: string): boolean => {
+  const normalizedKey = key.toLowerCase();
+  if (normalizedKey === "budgetitemid") return false;
+  if (IMMUTABLE_FORM_FIELD_NAMES.has(normalizedKey)) return true;
+  if (IMMUTABLE_FORM_FIELD_ALIASES.has(normalizedKey)) return true;
+  return FORM_GSI_KEY_PATTERN.test(normalizedKey);
+};
+
+const sanitizeFormPayload = (payload: ItemForm): ItemForm => {
+  const sanitized = Object.entries(payload).reduce<Record<string, unknown>>((acc, [key, value]) => {
+    if (!shouldStripImmutableField(key)) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+
+  return sanitized as ItemForm;
+};
+
 const fields: FieldDef[] = [
   { name: "category", label: "Category", type: "select", options: CATEGORY_OPTIONS },
   { name: "elementKey", label: "Element Key" },
@@ -410,7 +433,8 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
     data.revision = revision;
 
     if (onSubmit) {
-      return await onSubmit(data, isAutoSave);
+      const payload = sanitizeFormPayload(data);
+      return await onSubmit(payload, isAutoSave);
     }
     return null;
   };

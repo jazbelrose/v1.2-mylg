@@ -64,6 +64,30 @@ interface BudgetEventHandlers {
   getNextElementId: (category: string) => string;
 }
 
+const IMMUTABLE_FIELD_NAMES = new Set([
+  "projectid",
+  "budgetid",
+  "budgetitemid",
+]);
+
+const IMMUTABLE_FIELD_ALIASES = new Set(["pk", "sk"]);
+
+const GSI_KEY_PATTERN = /^gsi\d*(pk|sk)$/i;
+
+const sanitizeMutableBudgetFields = (payload: Record<string, unknown>): Record<string, unknown> =>
+  Object.entries(payload).reduce<Record<string, unknown>>((acc, [key, value]) => {
+    const normalizedKey = key.toLowerCase();
+    if (
+      IMMUTABLE_FIELD_NAMES.has(normalizedKey) ||
+      IMMUTABLE_FIELD_ALIASES.has(normalizedKey) ||
+      GSI_KEY_PATTERN.test(normalizedKey)
+    ) {
+      return acc;
+    }
+    acc[key] = value;
+    return acc;
+  }, {});
+
 const BudgetEventManager: React.FC<BudgetEventManagerProps> = ({
   activeProject,
   eventsByLineItem,
@@ -334,12 +358,19 @@ const BudgetEventManager: React.FC<BudgetEventManagerProps> = ({
     }
     stateManager.pushHistory();
     try {
+      const sanitized = sanitizeMutableBudgetFields(data);
       const normalized = {
-        ...data,
-        areaGroup: data.areaGroup ? String(data.areaGroup).trim().toUpperCase() : '',
-        invoiceGroup: data.invoiceGroup ? String(data.invoiceGroup).trim().toUpperCase() : '',
-        description: data.description ? String(data.description).trim().toUpperCase() : '',
-      };
+        ...sanitized,
+        areaGroup: sanitized["areaGroup"]
+          ? String(sanitized["areaGroup"]).trim().toUpperCase()
+          : '',
+        invoiceGroup: sanitized["invoiceGroup"]
+          ? String(sanitized["invoiceGroup"]).trim().toUpperCase()
+          : '',
+        description: sanitized["description"]
+          ? String(sanitized["description"]).trim().toUpperCase()
+          : '',
+      } as Partial<BudgetItem>;
       const updatedItem = await updateBudgetItem(
         activeProject.projectId,
         String(data.budgetItemId),
@@ -369,13 +400,18 @@ const BudgetEventManager: React.FC<BudgetEventManagerProps> = ({
     }
     stateManager.pushHistory();
     try {
+      const sanitized = sanitizeMutableBudgetFields(data);
       const normalized = {
-        ...data,
-        areaGroup: data.areaGroup ? String(data.areaGroup).trim().toUpperCase() : '',
-        invoiceGroup: data.invoiceGroup
-          ? String(data.invoiceGroup).trim().toUpperCase()
+        ...sanitized,
+        areaGroup: sanitized["areaGroup"]
+          ? String(sanitized["areaGroup"]).trim().toUpperCase()
           : '',
-        description: data.description ? String(data.description).trim().toUpperCase() : '',
+        invoiceGroup: sanitized["invoiceGroup"]
+          ? String(sanitized["invoiceGroup"]).trim().toUpperCase()
+          : '',
+        description: sanitized["description"]
+          ? String(sanitized["description"]).trim().toUpperCase()
+          : '',
       };
       const budgetId = String(budgetHeader?.budgetId || "");
       const revision = Number(budgetHeader?.revision ?? 1);

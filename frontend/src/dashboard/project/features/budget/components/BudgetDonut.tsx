@@ -409,8 +409,8 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
             dataKey="value"
             nameKey="label"
             innerRadius="52%"
-            outerRadius="86%"
-            paddingAngle={2}
+            outerRadius="90%"
+            paddingAngle={1}
             cornerRadius={2}
             isAnimationActive
             animationDuration={350}

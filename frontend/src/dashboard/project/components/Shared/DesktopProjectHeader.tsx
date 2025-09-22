@@ -62,31 +62,48 @@ const DesktopProjectHeader = ({
     <div className="project-header">
       <div className="header-content">
         <div className="left-side">
-          <div className="project-logo-wrapper">
-            <Squircle
-              as="button"
-              type="button"
-              onClick={onOpenThumbnail}
-              title="Change Project Thumbnail"
-              aria-label="Change Project Thumbnail"
-              className="interactive project-logo-button"
-              radius={18}
-              smoothing={0.88}
-            >
-              {thumbnailKey ? (
-                <img
-                  src={getFileUrlForThumbnail(thumbnailKey)}
-                  alt="Project Thumbnail"
-                  className="project-logo-image"
-                />
-              ) : (
-                <span className="project-logo-initial">{projectInitial.toUpperCase()}</span>
-              )}
-            </Squircle>
-          </div>
+          <div className="project-identity">
+            <div className="project-logo-wrapper">
+              <Squircle
+                as="button"
+                type="button"
+                onClick={onOpenThumbnail}
+                title="Change Project Thumbnail"
+                aria-label="Change Project Thumbnail"
+                className="interactive project-logo-button"
+                radius={18}
+                smoothing={0.88}
+              >
+                {thumbnailKey ? (
+                  <img
+                    src={getFileUrlForThumbnail(thumbnailKey)}
+                    alt="Project Thumbnail"
+                    className="project-logo-image"
+                  />
+                ) : (
+                  <span className="project-logo-initial">{projectInitial.toUpperCase()}</span>
+                )}
+              </Squircle>
+            </div>
 
-          <div className="single-project-title">
-            <h2 className="project-title-heading">{project?.title || "Summary"}</h2>
+            <div className="project-text-group">
+              <div className="single-project-title">
+                <h2 className="project-title-heading">{project?.title || "Summary"}</h2>
+              </div>
+
+              <div
+                className="finish-line-header interactive"
+                onClick={onOpenFinishLine}
+                onKeyDown={(event) => handleKeyDown(event, onOpenFinishLine)}
+                role="button"
+                tabIndex={0}
+                title="Production dates"
+                aria-label="Production dates"
+                style={{ cursor: "pointer" }}
+              >
+                <span>{rangeLabel}</span>
+              </div>
+            </div>
           </div>
 
           <svg
@@ -137,19 +154,6 @@ const DesktopProjectHeader = ({
           </svg>
 
           <AvatarStack members={teamMembers} onClick={onOpenTeam} />
-
-          <div
-            className="finish-line-header interactive"
-            onClick={onOpenFinishLine}
-            onKeyDown={(event) => handleKeyDown(event, onOpenFinishLine)}
-            role="button"
-            tabIndex={0}
-            title="Production dates"
-            aria-label="Production dates"
-            style={{ cursor: "pointer" }}
-          >
-            <span>{rangeLabel}</span>
-          </div>
 
           <div
             onClick={onOpenSettings}

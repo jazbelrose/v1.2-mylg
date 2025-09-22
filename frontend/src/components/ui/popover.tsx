@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { cn } from "./utils";
 import "./popover.css";
 
@@ -143,9 +144,26 @@ interface PopoverContentProps
 
 export const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(
   ({ className, style, align = "end", children, ...props }, forwardedRef) => {
-    const { open, contentRef } = usePopoverContext();
+    const { open, contentRef, triggerRef, setOpen } = usePopoverContext();
+    const [position, setPosition] = React.useState<
+      | null
+      | {
+          top: number;
+          left: number;
+          placement: "top" | "bottom";
+        }
+    >(null);
+    const [isMobile, setIsMobile] = React.useState(false);
 
-    if (!open) return null;
+    React.useEffect(() => {
+      if (typeof window === "undefined") return undefined;
+
+      const mq = window.matchMedia("(max-width: 640px)");
+      const handleChange = () => setIsMobile(mq.matches);
+      handleChange();
+      mq.addEventListener("change", handleChange);
+      return () => mq.removeEventListener("change", handleChange);
+    }, []);
 
     const refCallback = (node: HTMLDivElement | null) => {
       contentRef.current = node;
@@ -157,24 +175,114 @@ export const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentPro
       }
     };
 
-    const alignStyle: React.CSSProperties =
-      align === "start"
-        ? { left: 0, right: "auto" }
-        : align === "center"
-        ? { left: "50%", transform: "translateX(-50%)" }
-        : { right: 0 };
+    React.useLayoutEffect(() => {
+      if (typeof window === "undefined") return;
 
-    return (
+      if (!open) {
+        setPosition(null);
+        return;
+      }
+
+      const spacing = 8;
+      const viewportPadding = 12;
+
+      const updatePosition = () => {
+        if (!triggerRef.current || !contentRef.current) return;
+
+        const triggerRect = triggerRef.current.getBoundingClientRect();
+
+        // Temporarily reset inline styles to measure natural size
+        contentRef.current.style.left = "0px";
+        contentRef.current.style.top = "0px";
+        contentRef.current.style.transform = "none";
+
+        const contentRect = contentRef.current.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        let left: number;
+        switch (align) {
+          case "start":
+            left = triggerRect.left;
+            break;
+          case "center":
+            left = triggerRect.left + triggerRect.width / 2 - contentRect.width / 2;
+            break;
+          case "end":
+          default:
+            left = triggerRect.right - contentRect.width;
+        }
+
+        const maxLeft = viewportWidth - contentRect.width - viewportPadding;
+        if (contentRect.width >= viewportWidth - viewportPadding * 2) {
+          left = viewportPadding;
+        } else {
+          left = Math.min(Math.max(left, viewportPadding), maxLeft);
+        }
+
+        let top = triggerRect.bottom + spacing;
+        let placement: "top" | "bottom" = "bottom";
+
+        if (top + contentRect.height > viewportHeight - viewportPadding) {
+          const aboveTop = triggerRect.top - spacing - contentRect.height;
+
+          if (aboveTop >= viewportPadding) {
+            top = aboveTop;
+            placement = "top";
+          } else {
+            // Clamp within viewport when neither direction fits perfectly
+            const maxTop = viewportHeight - viewportPadding - contentRect.height;
+            top = Math.max(viewportPadding, Math.min(top, maxTop));
+          }
+        }
+
+        setPosition({ top, left, placement });
+      };
+
+      updatePosition();
+
+      window.addEventListener("resize", updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+
+      return () => {
+        window.removeEventListener("resize", updatePosition);
+        window.removeEventListener("scroll", updatePosition, true);
+      };
+    }, [align, open, triggerRef, contentRef]);
+
+    if (!open) return null;
+
+    const shouldShowMobileClose = isMobile && align === "center";
+
+    const content = (
       <div
         ref={refCallback}
         className={cn("ui-popover-content", className)}
-        style={{ ...alignStyle, ...style }}
+        style={{
+          top: position?.top,
+          left: position?.left,
+          visibility: position ? "visible" : "hidden",
+          ...style,
+        }}
         role="menu"
+        data-placement={position?.placement}
         {...props}
       >
+        {shouldShowMobileClose ? (
+          <button
+            type="button"
+            className="ui-popover-close"
+            onClick={() => setOpen(false)}
+            aria-label="Close menu"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        ) : null}
         {children}
       </div>
     );
+
+    return createPortal(content, document.body);
   }
 );
 

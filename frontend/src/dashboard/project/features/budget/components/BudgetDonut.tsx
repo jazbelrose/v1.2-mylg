@@ -87,7 +87,7 @@ const centerLabelStyles: React.CSSProperties = {
 };
 
 const centerValueStyles: React.CSSProperties = {
-  fontSize: "1.1rem",
+  fontSize: "1rem",
   fontWeight: 700,
 };
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useCallback } from "react";
+import React, { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -52,7 +52,10 @@ const srOnlyStyles: React.CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-const centerContainerStyles: React.CSSProperties = {
+const centerButtonBaseBackground = "rgba(15, 23, 42, 0.6)";
+const centerButtonBaseShadow = "0 8px 20px rgba(15, 23, 42, 0.45)";
+
+const centerButtonStyles: React.CSSProperties = {
   position: "absolute",
   top: "50%",
   left: "50%",
@@ -61,17 +64,83 @@ const centerContainerStyles: React.CSSProperties = {
   flexDirection: "column",
   alignItems: "center",
   gap: "4px",
-  pointerEvents: "none",
+  border: "none",
+  background: centerButtonBaseBackground,
+  borderRadius: "999px",
+  padding: "10px 18px",
+  color: "inherit",
+  cursor: "pointer",
+  pointerEvents: "auto",
+  transition: "background 150ms ease, box-shadow 150ms ease",
+  boxShadow: centerButtonBaseShadow,
 };
 
 const centerLabelStyles: React.CSSProperties = {
   fontSize: "0.75rem",
-  color: "#9ca3af",
+  color: "#cbd5f5",
+  letterSpacing: "0.02em",
 };
 
 const centerValueStyles: React.CSSProperties = {
-  fontSize: "1rem",
+  fontSize: "1.1rem",
+  fontWeight: 700,
+};
+
+const centerPopoverStyles: React.CSSProperties = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  background: "rgba(30, 30, 30, 0.94)",
+  color: "#f8fafc",
+  borderRadius: "12px",
+  padding: "14px 16px",
+  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.55)",
+  minWidth: "220px",
+  maxWidth: "260px",
+  zIndex: 2,
+  pointerEvents: "auto",
+};
+
+const centerPopoverHeaderStyles: React.CSSProperties = {
   fontWeight: 600,
+  marginBottom: "10px",
+  fontSize: "0.8rem",
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+  opacity: 0.9,
+};
+
+const centerPopoverListStyles: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+};
+
+const centerPopoverRowStyles: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "8px",
+};
+
+const centerPopoverLabelGroupStyles: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  minWidth: 0,
+};
+
+const centerPopoverSwatchStyles: React.CSSProperties = {
+  width: "10px",
+  height: "10px",
+  borderRadius: "999px",
+  flexShrink: 0,
+};
+
+const centerPopoverPercentStyles: React.CSSProperties = {
+  flexShrink: 0,
+  fontVariantNumeric: "tabular-nums",
 };
 
 const tooltipStyles: React.CSSProperties = {
@@ -112,6 +181,11 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
 }) => {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [lockedIndex, setLockedIndex] = useState<number | null>(null);
+  const [isCenterOpen, setIsCenterOpen] = useState(false);
+  const [isCenterPinned, setIsCenterPinned] = useState(false);
+
+  const centerButtonRef = useRef<HTMLButtonElement | null>(null);
+  const centerPopoverRef = useRef<HTMLDivElement | null>(null);
 
   const shapedData = useMemo(() => {
     if (!Array.isArray(data)) return [] as InternalSlice[];
@@ -156,6 +230,11 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
 
   const activeIndex = lockedIndex ?? hoverIndex ?? undefined;
 
+  const dataSignature = useMemo(
+    () => stableData.map((slice) => `${slice.id}:${slice.value}`).join("|"),
+    [stableData]
+  );
+
   const handleMouseEnter = useCallback(
     (_: unknown, index: number) => {
       if (!explodeOnHover) return;
@@ -196,6 +275,113 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
 
   const formattedTotal = useMemo(() => totalFormatter(total), [total, totalFormatter]);
 
+  const percentageFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(undefined, {
+        style: "percent",
+        maximumFractionDigits: 1,
+        minimumFractionDigits: 0,
+      }),
+    []
+  );
+
+  const openCenterPopover = useCallback(() => {
+    setIsCenterOpen(true);
+  }, []);
+
+  const closeCenterPopover = useCallback(() => {
+    setIsCenterOpen(false);
+  }, []);
+
+  const handleCenterMouseEnter = useCallback(() => {
+    if (isCenterPinned) return;
+    openCenterPopover();
+  }, [isCenterPinned, openCenterPopover]);
+
+  const handleCenterMouseLeave = useCallback(() => {
+    if (isCenterPinned) return;
+    closeCenterPopover();
+  }, [isCenterPinned, closeCenterPopover]);
+
+  const handleCenterFocus = useCallback(() => {
+    if (isCenterPinned) return;
+    openCenterPopover();
+  }, [isCenterPinned, openCenterPopover]);
+
+  const handleCenterBlur = useCallback(() => {
+    if (isCenterPinned) return;
+    closeCenterPopover();
+  }, [isCenterPinned, closeCenterPopover]);
+
+  const handleCenterClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      setIsCenterPinned((prev) => {
+        const next = !prev;
+        if (next) {
+          openCenterPopover();
+        } else {
+          closeCenterPopover();
+        }
+        return next;
+      });
+    },
+    [closeCenterPopover, openCenterPopover]
+  );
+
+  const handleCenterPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (event.pointerType !== "touch") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setIsCenterPinned((prev) => {
+        const next = !prev;
+        if (next) {
+          openCenterPopover();
+        } else {
+          closeCenterPopover();
+        }
+        return next;
+      });
+    },
+    [closeCenterPopover, openCenterPopover]
+  );
+
+  useEffect(() => {
+    if (!isCenterPinned) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (
+        !target ||
+        centerButtonRef.current?.contains(target) ||
+        centerPopoverRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setIsCenterPinned(false);
+      closeCenterPopover();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsCenterPinned(false);
+        closeCenterPopover();
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isCenterPinned, closeCenterPopover]);
+
+  useEffect(() => {
+    if (!isCenterPinned && !isCenterOpen) return;
+    closeCenterPopover();
+    setIsCenterPinned(false);
+  }, [dataSignature, total, closeCenterPopover, isCenterPinned, isCenterOpen]);
+
   return (
     <div
       className={className}
@@ -209,8 +395,8 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
             data={stableData}
             dataKey="value"
             nameKey="label"
-            innerRadius="60%"
-            outerRadius="80%"
+            innerRadius="52%"
+            outerRadius="86%"
             paddingAngle={2}
             cornerRadius={2}
             isAnimationActive
@@ -235,10 +421,78 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         </PieChart>
       </ResponsiveContainer>
 
-      <div style={centerContainerStyles} aria-hidden="true">
+      <button
+        ref={centerButtonRef}
+        type="button"
+        style={{
+          ...centerButtonStyles,
+          background: isCenterOpen ? "rgba(15, 23, 42, 0.75)" : centerButtonBaseBackground,
+          boxShadow: isCenterOpen
+            ? "0 12px 32px rgba(15, 23, 42, 0.6)"
+            : centerButtonBaseShadow,
+        }}
+        onMouseEnter={handleCenterMouseEnter}
+        onMouseLeave={handleCenterMouseLeave}
+        onFocus={handleCenterFocus}
+        onBlur={handleCenterBlur}
+        onPointerDown={handleCenterPointerDown}
+        onClick={handleCenterClick}
+        aria-label="View budget allocation"
+        aria-haspopup="dialog"
+        aria-expanded={isCenterOpen}
+        aria-pressed={isCenterPinned}
+      >
         {totalLabel ? <span style={centerLabelStyles}>{totalLabel}</span> : null}
         <span style={centerValueStyles}>{formattedTotal}</span>
-      </div>
+      </button>
+
+      {isCenterOpen ? (
+        <div
+          ref={centerPopoverRef}
+          style={centerPopoverStyles}
+          role="dialog"
+          aria-label="Budget allocation breakdown"
+        >
+          <div style={centerPopoverHeaderStyles}>Budget allocation</div>
+          {stableData.length ? (
+            <div style={centerPopoverListStyles}>
+              {stableData.map((slice) => {
+                const ratio = total > 0 ? slice.value / total : 0;
+                return (
+                  <div key={slice.id} style={centerPopoverRowStyles}>
+                    <div style={centerPopoverLabelGroupStyles}>
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          ...centerPopoverSwatchStyles,
+                          backgroundColor: slice.color,
+                        }}
+                      />
+                      <span
+                        style={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        {slice.label}
+                      </span>
+                    </div>
+                    <span style={centerPopoverPercentStyles}>
+                      {total > 0 ? percentageFormatter.format(ratio) : "0%"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ fontStyle: "italic", opacity: 0.75, fontSize: "0.8rem" }}>
+              No categories available
+            </div>
+          )}
+        </div>
+      ) : null}
 
       <table style={srOnlyStyles}>
         <caption>{ariaLabel}</caption>
@@ -274,4 +528,3 @@ export default React.memo(BudgetDonut, (prev, next) => {
   return true;
 });
 
-export { srOnlyStyles };

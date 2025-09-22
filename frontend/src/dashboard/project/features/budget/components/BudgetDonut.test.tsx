@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import BudgetDonut, { type BudgetDonutSlice } from "./BudgetDonut";
 
@@ -9,7 +10,9 @@ describe("BudgetDonut", () => {
     { id: "labor", label: "Labor", value: 500 },
   ];
 
-  it("renders total label and accessible table", () => {
+  it("renders total label and accessible table", async () => {
+    const user = userEvent.setup();
+
     render(
       <div style={{ width: 320, height: 240 }}>
         <BudgetDonut
@@ -26,5 +29,21 @@ describe("BudgetDonut", () => {
     expect(screen.getByRole("table", { name: "Test budget chart" })).toBeInTheDocument();
     expect(screen.getByText("Design")).toBeInTheDocument();
     expect(screen.getByText("Labor")).toBeInTheDocument();
+
+    const centerButton = screen.getByRole("button", { name: /view budget allocation/i });
+    await user.click(centerButton);
+
+    expect(
+      screen.getByRole("dialog", { name: "Budget allocation breakdown" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Budget allocation")).toBeInTheDocument();
+    expect(screen.getByText("Design")).toBeInTheDocument();
+    expect(screen.getByText("66.7%"))
+      .toBeInTheDocument();
+
+    await user.click(centerButton);
+    expect(
+      screen.queryByRole("dialog", { name: "Budget allocation breakdown" })
+    ).not.toBeInTheDocument();
   });
 });

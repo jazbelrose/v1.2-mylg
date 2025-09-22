@@ -91,8 +91,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                 <div
                   className="calendar-week-track"
                   style={{
-                    left: `${track.left}%`,
-                    width: `${track.width}%`,
+                    left: `calc(${track.left}% - 3px)`,
+                    width: `calc(${track.width}% + 6px)`,
                     backgroundColor: projectColor,
                     opacity: 0.2,
                   }}

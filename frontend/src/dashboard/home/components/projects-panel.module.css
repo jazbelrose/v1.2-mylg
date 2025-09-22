@@ -184,10 +184,22 @@
   white-space: nowrap;
   max-width: 100%;
   transition: background-color .2s ease;
+  cursor: pointer;
 }
 
 .chip:hover {
   background: rgba(255, 255, 255, .03);
+}
+
+.chipActive {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .24);
+  color: rgba(255, 255, 255, .95);
+}
+
+.chip:disabled,
+.chip[aria-pressed="true"]:disabled {
+  cursor: not-allowed;
 }
 
 .chipNoWrap {

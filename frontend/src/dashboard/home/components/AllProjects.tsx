@@ -696,7 +696,9 @@ const AllProjects: React.FC = () => {
           <span className={mobileStyles.dot} />
           <motion.button
             type="button"
-            className={mobileStyles.chip}
+            className={`${mobileStyles.chip} ${
+              showPendingOnly ? mobileStyles.chipActive : ''
+            }`}
             aria-pressed={showPendingOnly}
             whileHover={
               reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }

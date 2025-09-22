@@ -202,7 +202,9 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
           <span className={mobileStyles.dot} />
           <motion.button
             type="button"
-            className={mobileStyles.chip}
+            className={`${mobileStyles.chip} ${
+              showPendingOnly ? mobileStyles.chipActive : ""
+            }`}
             aria-pressed={showPendingOnly}
             whileHover={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}
             whileFocus={reduceMotion ? undefined : { scale: MICRO_WOBBLE_SCALE }}

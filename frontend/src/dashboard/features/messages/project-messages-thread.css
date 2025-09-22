@@ -140,13 +140,13 @@
 
 .message-input-container {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   margin-top: 10px;
   border-radius: 30px;
   padding: 8px;
   position: relative;
-  background-color: #1c1c1c;
+  background-color: transparent;
 }
 
 .message-input-inner {
@@ -165,7 +165,7 @@
 
 .message-action-menu {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 12px);
   left: 0;
   display: flex;
   gap: 6px;
@@ -198,8 +198,8 @@
 
 .message-input {
   flex-grow: 1;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
   border: 1px solid #444;
   background: #262626;
   color: #fff;
@@ -215,7 +215,9 @@
   align-items: center;
   justify-content: center;
   padding: 5px;
-  border-radius: 6px;
+  margin: 0 6px;
+  border: 1px solid white;
+  border-radius: 50px;
   transition: background-color 0.2s ease;
 }
 
@@ -268,7 +270,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
+  padding: 8px 6px;
   background: transparent;
   border: none;
   border-radius: 6px;

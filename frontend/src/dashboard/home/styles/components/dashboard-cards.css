@@ -167,6 +167,8 @@
   aspect-ratio: 1 / 1;
   position: relative;
   margin-inline: auto;
+  padding: clamp(16px, 4cqw, 32px);
+  box-sizing: border-box;
 }
 
 .budget-legend {

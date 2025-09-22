@@ -91,7 +91,7 @@ const centerPopoverStyles: React.CSSProperties = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  background: "rgba(15, 23, 42, 0.55)",
+  background: "rgba(17, 17, 17, 0.6)", // Semi-transparent for frosted effect
   color: "#f8fafc",
   borderRadius: "16px",
   padding: "16px 18px",
@@ -102,9 +102,8 @@ const centerPopoverStyles: React.CSSProperties = {
   pointerEvents: "auto",
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
-  border: "1px solid rgba(148, 163, 184, 0.25)",
+  border: "2px solid rgba(148, 163, 184, 0.25)",
 };
-
 const centerPopoverHeaderStyles: React.CSSProperties = {
   fontWeight: 600,
   marginBottom: "10px",
@@ -150,7 +149,7 @@ const centerPopoverPercentStyles: React.CSSProperties = {
 };
 
 const tooltipStyles: React.CSSProperties = {
-  background: "#0f172a",
+  background: "#111",
   color: "#f8fafc",
   borderRadius: "6px",
   border: "1px solid rgba(148, 163, 184, 0.4)",
@@ -426,9 +425,9 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         type="button"
         style={{
           ...centerButtonStyles,
-          background: isCenterOpen ? "rgba(15, 23, 42, 0.75)" : centerButtonBaseBackground,
+          background: isCenterOpen ? "#111" : centerButtonBaseBackground,
           boxShadow: isCenterOpen
-            ? "0 12px 32px rgba(15, 23, 42, 0.6)"
+            ? "0 12px 32px #111"
             : centerButtonBaseShadow,
         }}
         onMouseEnter={handleCenterMouseEnter}

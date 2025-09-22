@@ -22,7 +22,7 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: stretch;
   min-height: clamp(180px, 30vh, 260px);
   background-color: #111;
   color: #fff;
@@ -82,8 +82,8 @@
   cursor: pointer;
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: stretch;
+  justify-content: flex-start;
   gap: clamp(12px, 2vw, 24px);
   width: 100%;
   container-type: inline-size;
@@ -98,7 +98,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  flex: 1 1 320px;
+  flex: 1 1 0%;
+  max-width: 50%;
   min-width: 0;
 }
 
@@ -150,14 +151,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: clamp(10px, 2vw, 18px);
+  align-self: stretch;
+  min-height: 100%;
+  flex: 1 1 0%;
+  max-width: 50%;
+  margin-left: 0;
+  margin-right: 0;
   gap: 12px;
+  min-width: 0;
 }
 
 .budget-chart {
-  width: min(40vh, 36vw, 220px);
-  height: min(40vh, 36vw, 220px);
+  width: 100%;
+  max-width: clamp(220px, 50cqw, 520px);
+  aspect-ratio: 1 / 1;
   position: relative;
+  margin-inline: auto;
 }
 
 .budget-legend {
@@ -212,6 +221,12 @@
     align-items: stretch;
   }
 
+  .budget-overview-summary,
+  .chart-legend-container {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
   .chart-legend-container {
     width: 100%;
     margin-left: 0;
@@ -219,15 +234,13 @@
 
   .budget-chart {
     margin-inline: auto;
-    width: clamp(160px, 48cqw, 220px);
-    height: clamp(160px, 48cqw, 220px);
+    max-width: clamp(200px, 60cqw, 360px);
   }
 }
 
 @container budget-card (max-width: 760px) {
   .budget-chart {
-    width: clamp(140px, 60cqw, 200px);
-    height: clamp(140px, 60cqw, 200px);
+    max-width: clamp(180px, 70cqw, 280px);
   }
 }
 

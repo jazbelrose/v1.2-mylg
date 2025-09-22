@@ -270,6 +270,7 @@ const EditorPage: React.FC = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
+              className="editor-content-wrapper"
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -100, opacity: 0 }}

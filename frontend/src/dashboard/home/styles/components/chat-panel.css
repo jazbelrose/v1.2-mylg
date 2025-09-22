@@ -68,7 +68,8 @@ body.chat-panel-docked {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-height: 800px;
+  min-height: 0;
+  height: 100%;
 }
 
 @media (max-width: var(--breakpoint-sm)) {

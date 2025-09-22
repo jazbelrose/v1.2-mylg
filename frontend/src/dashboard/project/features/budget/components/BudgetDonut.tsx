@@ -183,12 +183,6 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [lockedIndex, setLockedIndex] = useState<number | null>(null);
   const [isCenterOpen, setIsCenterOpen] = useState(false);
-  const [isCenterPinned, setIsCenterPinned] = useState(false);
-  const isCenterPinnedRef = useRef(isCenterPinned);
-
-  useEffect(() => {
-    isCenterPinnedRef.current = isCenterPinned;
-  }, [isCenterPinned]);
 
   const centerButtonRef = useRef<HTMLButtonElement | null>(null);
   const centerPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -300,40 +294,41 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   }, []);
 
   const handleCenterMouseEnter = useCallback(() => {
-    if (isCenterPinnedRef.current) return;
     openCenterPopover();
   }, [openCenterPopover]);
 
-  const handleCenterMouseLeave = useCallback(() => {
-    if (isCenterPinnedRef.current) return;
-    closeCenterPopover();
-  }, [closeCenterPopover]);
+  const handleCenterMouseLeave = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const nextTarget = event.relatedTarget as Node | null;
+      if (nextTarget && centerPopoverRef.current?.contains(nextTarget)) {
+        return;
+      }
+      closeCenterPopover();
+    },
+    [closeCenterPopover]
+  );
 
   const handleCenterFocus = useCallback(() => {
-    if (isCenterPinnedRef.current) return;
     openCenterPopover();
   }, [openCenterPopover]);
 
   const handleCenterBlur = useCallback(() => {
-    if (isCenterPinnedRef.current) return;
     closeCenterPopover();
   }, [closeCenterPopover]);
 
-  const handleCenterClick = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      event.stopPropagation();
-      setIsCenterPinned((prev) => {
-        const next = !prev;
-        isCenterPinnedRef.current = next;
-        if (next) {
-          openCenterPopover();
-        } else {
-          closeCenterPopover();
-        }
-        return next;
-      });
+  const handleCenterPopoverMouseEnter = useCallback(() => {
+    openCenterPopover();
+  }, [openCenterPopover]);
+
+  const handleCenterPopoverMouseLeave = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      const nextTarget = event.relatedTarget as Node | null;
+      if (nextTarget && centerButtonRef.current?.contains(nextTarget)) {
+        return;
+      }
+      closeCenterPopover();
     },
-    [closeCenterPopover, openCenterPopover]
+    [closeCenterPopover]
   );
 
   const handleCenterPointerDown = useCallback(
@@ -341,22 +336,13 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       if (event.pointerType !== "touch") return;
       event.preventDefault();
       event.stopPropagation();
-      setIsCenterPinned((prev) => {
-        const next = !prev;
-        isCenterPinnedRef.current = next;
-        if (next) {
-          openCenterPopover();
-        } else {
-          closeCenterPopover();
-        }
-        return next;
-      });
+      openCenterPopover();
     },
-    [closeCenterPopover, openCenterPopover]
+    [openCenterPopover]
   );
 
   useEffect(() => {
-    if (!isCenterPinned) return;
+    if (!isCenterOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null;
       if (
@@ -366,14 +352,10 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       ) {
         return;
       }
-      isCenterPinnedRef.current = false;
-      setIsCenterPinned(false);
       closeCenterPopover();
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        isCenterPinnedRef.current = false;
-        setIsCenterPinned(false);
         closeCenterPopover();
       }
     };
@@ -384,16 +366,11 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isCenterPinned, closeCenterPopover]);
+  }, [closeCenterPopover, isCenterOpen]);
 
   useEffect(() => {
-    if (!isCenterPinned && !isCenterOpen) return;
     closeCenterPopover();
-    if (isCenterPinnedRef.current) {
-      isCenterPinnedRef.current = false;
-      setIsCenterPinned(false);
-    }
-  }, [dataSignature, total, closeCenterPopover, isCenterPinned, isCenterOpen]);
+  }, [dataSignature, total, closeCenterPopover]);
 
   return (
     <div
@@ -430,7 +407,11 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
               />
             ))}
           </Pie>
-          <Tooltip content={tooltipRenderer} cursor={{ fill: "rgba(255,255,255,0.08)" }} />
+          <Tooltip
+            content={tooltipRenderer}
+            cursor={{ fill: "rgba(255,255,255,0.08)" }}
+            wrapperStyle={{ zIndex: 10 }}
+          />
         </PieChart>
       </ResponsiveContainer>
 
@@ -449,11 +430,9 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         onFocus={handleCenterFocus}
         onBlur={handleCenterBlur}
         onPointerDown={handleCenterPointerDown}
-        onClick={handleCenterClick}
         aria-label="View budget allocation"
         aria-haspopup="dialog"
         aria-expanded={isCenterOpen}
-        aria-pressed={isCenterPinned}
       >
         {totalLabel ? <span style={centerLabelStyles}>{totalLabel}</span> : null}
         <span style={centerValueStyles}>{formattedTotal}</span>
@@ -465,6 +444,8 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
           style={centerPopoverStyles}
           role="dialog"
           aria-label="Budget allocation breakdown"
+          onMouseEnter={handleCenterPopoverMouseEnter}
+          onMouseLeave={handleCenterPopoverMouseLeave}
         >
           <div style={centerPopoverHeaderStyles}>Budget allocation</div>
           {stableData.length ? (

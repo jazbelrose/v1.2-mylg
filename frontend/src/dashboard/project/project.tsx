@@ -10,7 +10,6 @@ import Timeline from "@/dashboard/project/components/Timeline/Timeline";
 import CalendarOverviewCard from "@/dashboard/project/components/Shared/CalendarOverviewCard";
 import QuickLinksComponent from "@/dashboard/project/components/Shared/QuickLinksComponent";
 import type { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickLinksComponent";
-import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
 import FileManagerComponent from "@/dashboard/project/components/FileManager/FileManager";
 import TasksComponent from "@/dashboard/project/components/Tasks/TasksComponent";
 import { BudgetProvider } from "@/dashboard/project/features/budget/context/BudgetProvider";
@@ -301,17 +300,13 @@ const SingleProject: React.FC = () => {
               />
 
               <div className="dashboard-layout timeline-location-row">
-                <div className="location-wrapper">
-                  <LocationComponent
-                    activeProject={activeProject}
-                    onActiveProjectChange={handleActiveProjectChange}
-                  />
-                </div>
                 <div className="tasks-wrapper">
                   <TasksComponent
                     projectId={activeProject?.projectId}
                     userId={userId}
                     team={activeProject?.team}
+                    activeProject={activeProject}
+                    onActiveProjectChange={handleActiveProjectChange}
                   />
                 </div>
               </div>

@@ -5,6 +5,8 @@ import React, {
   useState,
 } from "react";
 
+import type { Project } from "@/app/contexts/DataProvider";
+import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
 import {
   createTask,
   fetchTasks,
@@ -43,6 +45,8 @@ interface TasksComponentProps {
   projectId?: string;
   userId?: string;
   team?: TeamMember[];
+  activeProject?: Project;
+  onActiveProjectChange?: (project: Project) => void;
 }
 
 type Task = {
@@ -287,6 +291,8 @@ export default function ProjectOverviewTasks({
   projectId = "",
   userId,
   team = [],
+  activeProject,
+  onActiveProjectChange,
 }: TasksComponentProps) {
   const [teamProfiles, setTeamProfiles] = useState<TeamMember[]>([]);
   const [tasks, setTasks] = useState<Task[]>(() => (projectId ? [] : seed));
@@ -388,22 +394,22 @@ export default function ProjectOverviewTasks({
      return formatTeamMember(fallback) || "Me";
    }, [lookupMember, teamProfiles, team, userId]);
 
-   const { myTasks, teamTasks } = useMemo(() => {
-     const mine: Task[] = [];
-     const others: Task[] = [];
-     const hasUserId = Boolean(userId);
-     tasks.forEach((task) => {
-       const isMine = hasUserId
-         ? task.assigneeId === userId
-         : task.assignee === currentUserName;
-       if (isMine) {
-         mine.push(task);
-       } else {
-         others.push(task);
-       }
-     });
-     return { myTasks: mine, teamTasks: others };
-   }, [currentUserName, tasks, userId]);
+  const { myTasks, teamTasks } = useMemo(() => {
+    const mine: Task[] = [];
+    const others: Task[] = [];
+    const hasUserId = Boolean(userId);
+    tasks.forEach((task) => {
+      const isMine = hasUserId
+        ? task.assigneeId === userId || task.assignee === currentUserName
+        : task.assignee === currentUserName;
+      if (isMine) {
+        mine.push(task);
+      } else {
+        others.push(task);
+      }
+    });
+    return { myTasks: mine, teamTasks: others };
+  }, [currentUserName, tasks, userId]);
 
    const addTask = useCallback(
      async (task: Task) => {
@@ -470,7 +476,16 @@ export default function ProjectOverviewTasks({
        <div className="ov-quickWrap"><span className="ov-quickLabel">Quick Task</span><QuickAdd onAdd={addTask} defaultAssignee={currentUserName} /></div>
 
        <div className="ov-grid">
-         <section className="ov-card ov-map"><div className="ov-map__inner" /></section>
+         <section className="ov-card ov-map">
+           {activeProject && onActiveProjectChange ? (
+             <LocationComponent
+               activeProject={activeProject}
+               onActiveProjectChange={onActiveProjectChange}
+             />
+           ) : (
+             <div className="ov-map__empty">Location unavailable</div>
+           )}
+         </section>
          <section className="ov-card">
            <header><h4>My Tasks</h4><span className="ov-pill">{myTasks.length}</span></header>
            {myTasks.length===0 ? <div className="ov-empty">Nothing yet—create your first task.</div> : myTasks.slice(0,4).map((t) => <Row key={t.id} t={t} />) }
@@ -523,6 +538,9 @@ export default function ProjectOverviewTasks({
         @media(max-width:700px){ .ov-grid{ grid-template-columns: 1fr } }
 
         .ov-card{ background:linear-gradient(180deg, var(--panel), var(--panel2)); border:1px solid #24242a; border-radius:var(--radius); padding:10px }
+        .ov-card.ov-map{ padding:0; overflow:hidden }
+        .ov-card.ov-map .column-5{ height:100%; }
+        .ov-map__empty{ display:flex; align-items:center; justify-content:center; min-height:240px; color:var(--muted); font-size:13px }
         .ov-card header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px }
         .ov-card h4{ margin:0; font-weight:650 }
         .ov-pill{ font-size:12px; padding:4px 8px; border-radius:999px; background:#1a1a22; border:1px solid #2a2a33; color:#c8c8d0 }
@@ -559,7 +577,6 @@ export default function ProjectOverviewTasks({
         .ov-quickAdd input, .ov-quickAdd select{ background:#0e0e12; color:var(--text); border:1px solid #262630; border-radius:10px; padding:8px 10px; outline:none; height:36px }
         .ov-btn{ height:36px }
         .ov-map{ position:sticky; top:8px }
-        .ov-map__inner{ aspect-ratio:4 / 3; width:100%; border-radius:12px; border:1px solid #23232a; overflow:hidden; background:#0f0f12 }
         .ov-panel__grab{ align-self:center; width:56px; height:6px; border-radius:999px; background:#2a2a32; margin:8px 0 2px }
         .ov-panel__mapWide{ height:40vh; min-height:240px; max-height:55vh; border-radius:12px; border:1px solid #23232a; background:#0f0f13; margin:8px 14px 6px }
        `}</style>

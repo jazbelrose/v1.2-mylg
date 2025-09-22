@@ -1,235 +1,169 @@
-import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { test, expect, beforeAll, beforeEach, vi } from 'vitest';
-import TasksComponent from './TasksComponent';
-import { message } from 'antd';
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeAll, beforeEach, expect, test, vi } from "vitest";
 
-// Define mock functions
-type Mock = ReturnType<typeof vi.fn>;
+import TasksComponent from "./TasksComponent";
 
-let fetchTasksMock: Mock;
-let deleteTaskMock: Mock;
-let fetchUserProfilesBatchMock: Mock;
-
-vi.mock('@/shared/utils/api', () => ({
-  __esModule: true,
-  fetchTasks: vi.fn(() => Promise.resolve([])),
-  deleteTask: vi.fn(() => Promise.resolve({})),
-  fetchUserProfilesBatch: vi.fn(() => Promise.resolve([])),
-  createTask: vi.fn((t) => Promise.resolve(t)),
-  updateTask: vi.fn((t) => Promise.resolve(t)),
-}));
-vi.mock('antd', () => ({
-  Form: Object.assign(
-    vi.fn(({ children, ...props }) => <form {...props}>{children}</form>),
-    {
-      Item: vi.fn(({ children, label, name, ...props }) => <div {...props}> {label && <label htmlFor={name}>{label}</label>} {React.cloneElement(children as React.ReactElement<any>, { id: name })} </div>), // eslint-disable-line @typescript-eslint/no-explicit-any
-      useForm: vi.fn(() => [{
-        getFieldValue: vi.fn(),
-        setFieldsValue: vi.fn(),
-        resetFields: vi.fn(),
-        validateFields: vi.fn(),
-      }])
-    }
-  ),
-  ConfigProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  message: { error: vi.fn(), success: vi.fn() },
-  theme: { defaultAlgorithm: {}, darkAlgorithm: {} },
-  Table: vi.fn(({ columns, dataSource }) => 
-    !dataSource || dataSource.length === 0 ? <div>No tasks yet!</div> : (
-      <div>
-        {dataSource.map((record: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-          <div key={record.id || record.taskId}>
-            {columns.map((col: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-              if (col.dataIndex === 'name') {
-                return <div key={col.key}>{(record[col.dataIndex] || "").toUpperCase()}</div>;
-              }
-              if (col.key === 'actions') {
-                return <div key={col.key}>{col.render(null, record)}</div>;
-              }
-              // Add other columns if needed
-              return null;
-            })}
-          </div>
-        ))}
-      </div>
-    )
-  ),
-  Select: vi.fn(({ id, options, children, ...props }) => (
-    <select id={id} name={id} {...props}>
-      {options ? options.map((opt: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
-        <option key={opt.value} value={opt.value}>{opt.label || opt.children}</option>) : children}
-    </select>
-  )),
-  Button: vi.fn(({ children, ...props }) => <button {...props}>{children || 'Button'}</button>),
-  Dropdown: vi.fn(({ menu, children, ...props }) => {
-    const items = menu?.items || [];
-    return (
-      <div {...props}>
-        {children}
-        {items.map((item: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-          <button key={item.key} onClick={() => menu?.onClick?.({ key: item.key })}>
-            {item.label}
-          </button>
-        ))}
-      </div>
-    );
-  }),
-  Modal: vi.fn(({ children, ...props }) => <div {...props}>{children || 'Modal'}</div>),
-  Input: Object.assign(
-    vi.fn(({ id, ...props }) => <input id={id} {...props} />),
-    {
-      TextArea: vi.fn(({ id, ...props }) => <textarea id={id} {...props} />)
-    }
-  ),
-  Tooltip: vi.fn(({ children, ...props }) => <div {...props}>{children || 'Tooltip'}</div>),
-  DatePicker: vi.fn(({ id, ...props }) => <input id={id} type="date" {...props} />),
-  AutoComplete: vi.fn(({ id, options, ...props }) => (
-    <div>
-      <input id={id} name={id} {...props} />
-      {options ? options.map((opt: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
-        <div key={opt.value} role="option">{opt.label || opt}</div>) : null}
-    </div>
-  )),
-  // other antd components if needed
+const apiMocks = vi.hoisted(() => ({
+  fetchTasksMock: vi.fn(),
+  createTaskMock: vi.fn(),
+  fetchUserProfilesBatchMock: vi.fn(),
 }));
 
-// Import mocked api functions
-// const { fetchTasks, deleteTask, fetchUserProfilesBatch } = vi.mocked(await import('@/shared/utils/api'));
-
-const mockUseBudget = vi.fn(() => ({ budgetItems: [] }));
-vi.mock('@/dashboard/project/features/budget/context/BudgetContext', () => ({
-  __esModule: true,
-  useBudget: (...args: unknown[]) => mockUseBudget(...args),
+vi.mock("@/shared/utils/api", () => ({
+  fetchTasks: apiMocks.fetchTasksMock,
+  createTask: apiMocks.createTaskMock,
+  fetchUserProfilesBatch: apiMocks.fetchUserProfilesBatchMock,
 }));
+
+const { fetchTasksMock, createTaskMock, fetchUserProfilesBatchMock } = apiMocks;
 
 beforeAll(() => {
-  // matchMedia shim for antd/select etc.
-  // @ts-expect-error polyfill for JSDOM
-  window.matchMedia =
-    window.matchMedia ||
-    function () {
-      return {
-        matches: false,
-        addListener: () => {},
-        removeListener: () => {},
-        addEventListener: () => {},
-        removeEventListener: () => {},
-        dispatchEvent: () => false,
-      };
-    };
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
 });
 
-beforeEach(async () => {
-  mockUseBudget.mockReturnValue({ budgetItems: [] });
-
-  const apiModule = await import('@/shared/utils/api');
-  fetchTasksMock = apiModule.fetchTasks as Mock;
-  deleteTaskMock = apiModule.deleteTask as Mock;
-  fetchUserProfilesBatchMock = apiModule.fetchUserProfilesBatch as Mock;
-
+beforeEach(() => {
   fetchTasksMock.mockReset();
-  fetchTasksMock.mockResolvedValue([]);
-
-  deleteTaskMock.mockReset();
-  deleteTaskMock.mockResolvedValue({});
-
+  createTaskMock.mockReset();
   fetchUserProfilesBatchMock.mockReset();
+
+  fetchTasksMock.mockResolvedValue([]);
   fetchUserProfilesBatchMock.mockResolvedValue([]);
+  createTaskMock.mockResolvedValue({});
 });
 
-test('shows no tasks message when list is empty', async () => {
-  render(<TasksComponent team={[]} />);
-  expect(await screen.findByText('No tasks yet!')).toBeInTheDocument();
+test("loads tasks and splits into my and team sections", async () => {
+  fetchTasksMock.mockResolvedValue([
+    {
+      taskId: "1",
+      projectId: "p1",
+      title: "Confirm venue walkthrough",
+      status: "todo",
+      assigneeId: "user-1",
+      dueDate: "2025-09-23",
+      priority: "high",
+    },
+    {
+      taskId: "2",
+      projectId: "p1",
+      title: "Order vinyl print",
+      status: "done",
+      assigneeId: "user-2",
+      dueDate: "2020-01-01",
+      priority: "medium",
+    },
+  ]);
+  fetchUserProfilesBatchMock.mockResolvedValue([
+    { userId: "user-1", firstName: "Jaz" },
+    { userId: "user-2", firstName: "Art", lastName: "Pa" },
+  ]);
+
+  render(
+    <TasksComponent
+      projectId="p1"
+      userId="user-1"
+      team={[
+        { userId: "user-1", firstName: "Jaz" },
+        { userId: "user-2", firstName: "Art", lastName: "Pa" },
+      ]}
+    />
+  );
+
+  await waitFor(() => expect(fetchTasksMock).toHaveBeenCalledTimes(1));
+
+  expect((await screen.findAllByText("Confirm venue walkthrough")).length).toBeGreaterThan(0);
+  expect((await screen.findAllByText("Order vinyl print")).length).toBeGreaterThan(0);
+
+  await waitFor(() =>
+    expect(screen.getByText(/Completed/).parentElement?.querySelector("strong")?.textContent).toBe("1")
+  );
+
+  await waitFor(() =>
+    expect(screen.getByText(/Overdue/).parentElement?.querySelector("strong")?.textContent).toBe("1")
+  );
+
+  await waitFor(() =>
+    expect(
+      screen.getByText("My Tasks").parentElement?.querySelector(".ov-pill")?.textContent
+    ).toBe("1")
+  );
+
+  await waitFor(() =>
+    expect(
+      screen.getByText("Team Tasks").parentElement?.querySelector(".ov-pill")?.textContent
+    ).toBe("1")
+  );
 });
 
-test('Assigned To select displays team members by full name', async () => {
-  const team = [
-    { userId: '1', firstName: 'Alice', lastName: 'Wonderland' },
-    { userId: '2', firstName: 'Bob', lastName: 'Smith' },
-  ];
-  fetchUserProfilesBatchMock.mockResolvedValue(team);
-
-  render(<TasksComponent team={team} />);
-  const select = screen.getByLabelText('Assigned To');
-  await userEvent.click(select);
-
-  expect((await screen.findAllByText('Alice Wonderland')).length).toBeGreaterThan(0);
-  expect((await screen.findAllByText('Bob Smith')).length).toBeGreaterThan(0);
-});
-
-test('Task Name lists budget item descriptions', async () => {
-  mockUseBudget.mockReturnValue({
-    budgetItems: [
-      { budgetItemId: 'b1', descriptionShort: 'First description' },
-      { budgetItemId: 'b2', descriptionShort: 'Second description' }
-    ]
+test("allows quick adding tasks and syncs with the api", async () => {
+  fetchTasksMock
+    .mockResolvedValueOnce([])
+    .mockResolvedValueOnce([
+      {
+        taskId: "101",
+        projectId: "p1",
+        title: "New quick task",
+        status: "todo",
+        assigneeId: "user-1",
+        priority: "high",
+      },
+    ]);
+  fetchUserProfilesBatchMock.mockResolvedValue([
+    { userId: "user-1", firstName: "Jaz" },
+  ]);
+  createTaskMock.mockResolvedValue({
+    taskId: "101",
+    projectId: "p1",
+    title: "New quick task",
+    status: "todo",
+    assigneeId: "user-1",
+    priority: "high",
   });
 
-  render(<TasksComponent team={[]} />);
-  const input = screen.getByLabelText('Task Name');
+  const user = userEvent.setup();
 
-  await userEvent.type(input, 'First');
-  expect((await screen.findAllByRole('option', { name: 'First description' })).length).toBeGreaterThan(0);
+  render(
+    <TasksComponent
+      projectId="p1"
+      userId="user-1"
+      team={[{ userId: "user-1", firstName: "Jaz" }]}
+    />
+  );
 
-  await userEvent.clear(input);
-  await userEvent.type(input, 'Second');
-  expect((await screen.findAllByRole('option', { name: 'Second description' })).length).toBeGreaterThan(0);
+  await waitFor(() => expect(fetchTasksMock).toHaveBeenCalledTimes(1));
+
+  const [titleInput] = screen.getAllByLabelText("Task title");
+  await user.type(titleInput, "New quick task");
+
+  const [prioritySelect] = screen.getAllByLabelText("Priority");
+  await user.selectOptions(prioritySelect, "High");
+
+  await user.click(screen.getByRole("button", { name: "Add" }));
+
+  await waitFor(() => expect(createTaskMock).toHaveBeenCalledTimes(1));
+  expect(createTaskMock).toHaveBeenCalledWith(
+    expect.objectContaining({
+      projectId: "p1",
+      title: "New quick task",
+      status: "todo",
+      priority: "high",
+      assigneeId: "user-1",
+    })
+  );
+
+  await waitFor(() => expect(fetchTasksMock.mock.calls.length).toBeGreaterThanOrEqual(2));
+  expect((await screen.findAllByText("New quick task")).length).toBeGreaterThan(0);
+  expect(titleInput).toHaveValue("");
 });
-
-test('invokes deleteTask when deleting a task', async () => {
-  fetchTasksMock.mockResolvedValue([{ projectId: 'p1', taskId: '1', name: 'Sample' }]);
-
-  render(<TasksComponent projectId="p1" team={[]} />);
-  await screen.findByText('SAMPLE');
-
-  await userEvent.click(screen.getByLabelText('actions-dropdown'));
-  await userEvent.click(await screen.findByText('Delete'));
-
-  await waitFor(() => expect(deleteTaskMock).toHaveBeenCalledWith({ projectId: 'p1', taskId: '1' }));
-});
-
-test('restores task and shows error message when deleteTask fails', async () => {
-  fetchTasksMock.mockResolvedValue([{ taskId: '1', name: 'Sample' }]);
-  deleteTaskMock.mockRejectedValue(new Error('fail'));
-
-  render(<TasksComponent projectId="p1" team={[]} />);
-  await screen.findByText('SAMPLE');
-
-  await act(async () => {
-    await userEvent.click(screen.getByLabelText('actions-dropdown'));
-    await userEvent.click(await screen.findByText('Delete'));
-  });
-
-  await waitFor(() => expect(message.error).toHaveBeenCalledWith('Failed to delete task'));
-  expect(screen.getByText('SAMPLE')).toBeInTheDocument();
-});
-
-test('loads tasks when API returns { tasks: [...] }', async () => {
-  fetchTasksMock.mockResolvedValue([{ projectId: 'p1', taskId: '1', title: 'Sample' }]);
-
-  render(<TasksComponent projectId="p1" team={[]} />);
-
-  expect(await screen.findByText('SAMPLE')).toBeInTheDocument();
-
-  fetchTasksMock.mockReset();
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

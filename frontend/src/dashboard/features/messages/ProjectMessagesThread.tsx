@@ -1023,7 +1023,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
             style={{
               flexGrow: 1,
               overflowY: "auto",
-              padding: "8px",
+              padding: "0 4px",
               borderRadius: "5px",
               marginBottom: "8px",
               display: "flex",

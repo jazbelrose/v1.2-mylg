@@ -294,11 +294,11 @@ const SingleProject: React.FC = () => {
                 {!isMobileBudgetLayout && <div className="calendar-column">{calendarOverviewCard}</div>}
               </div>
 
-              <Timeline
+              {/* <Timeline
                 activeProject={activeProject as Project & { status: string; milestoneTitles?: string[] }}
                 parseStatusToNumber={parseStatusToNumber}
                 onActiveProjectChange={handleActiveProjectChange}
-              />
+              /> */}
 
               <div className="dashboard-layout timeline-location-row">
                 <div className="location-wrapper">

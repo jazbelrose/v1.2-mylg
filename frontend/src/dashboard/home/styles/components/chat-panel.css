@@ -44,7 +44,7 @@ body.chat-panel-docked {
 .chat-panel-header {
   display: flex;
   justify-content: space-between;
-  padding: 4px;
+  padding: 4px 4px 0;
   background: transparent;
 }
 

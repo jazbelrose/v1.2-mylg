@@ -110,12 +110,21 @@
 .action-bar {
   position: absolute;
   bottom: 4px;
-  right: 8px;
   display: flex;
   gap: 8px;
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
+}
+
+.message-row.current-user .action-bar {
+  right: 8px;
+  left: auto;
+}
+
+.message-row:not(.current-user) .action-bar {
+  left: 8px;
+  right: auto;
 }
 
 .bubble-container:hover .action-bar,

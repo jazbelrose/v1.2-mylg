@@ -87,8 +87,20 @@ const DesktopProjectHeader = ({
             </div>
 
             <div className="project-text-group">
-              <div className="single-project-title">
+              <div className="single-project-title project-title-row">
                 <h2 className="project-title-heading">{project?.title || "Summary"}</h2>
+
+                <div
+                  onClick={onOpenSettings}
+                  onKeyDown={(event) => handleKeyDown(event, onOpenSettings)}
+                  role="button"
+                  tabIndex={0}
+                  title="Project settings"
+                  aria-label="Project settings"
+                  className="interactive icon-button project-settings-button"
+                >
+                  <Settings size={18} className="settings-icon" />
+                </div>
               </div>
 
               <div
@@ -106,55 +118,81 @@ const DesktopProjectHeader = ({
             </div>
           </div>
 
-          <svg
-            id="StatusSVG"
-            viewBox="0 0 400 400"
-            onClick={onOpenStatus}
-            onKeyDown={(event) => handleKeyDown(event, onOpenStatus)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Status: ${displayStatus} Complete`}
-            className="interactive status-svg"
-            style={{ cursor: "pointer" }}
-          >
-            <title>{`Status: ${displayStatus} Complete`}</title>
-            <text
-              className="project-status"
-              transform={`translate(${progressValue !== 100 ? 75 : 56.58} 375.21)`}
+          <div className="project-quick-actions">
+            <svg
+              id="StatusSVG"
+              viewBox="0 0 400 400"
+              onClick={onOpenStatus}
+              onKeyDown={(event) => handleKeyDown(event, onOpenStatus)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Status: ${displayStatus} Complete`}
+              className="interactive status-svg"
+              style={{ cursor: "pointer" }}
             >
-              <tspan x="22.5" y="-136">
-                {displayStatus}
-              </tspan>
-            </text>
-            {progressValue >= 0 && (
-              <ellipse
-                cx="200"
-                cy="200"
-                rx="160"
-                ry="160"
-                fill="none"
-                strokeWidth="15"
-                strokeDasharray={`${(progressValue / 100) * 1002}, 1004`}
-                style={{
-                  stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
-                }}
+              <title>{`Status: ${displayStatus} Complete`}</title>
+              <text
+                className="project-status"
+                transform={`translate(${progressValue !== 100 ? 75 : 56.58} 375.21)`}
               >
-                {progressValue < 100 && (
-                  <animate
-                    attributeName="stroke-dasharray"
-                    from="0, 1004"
-                    to={`${(progressValue / 100) * 1002}, 1004`}
-                    dur="1s"
-                    begin="0s"
-                    fill="freeze"
-                  />
-                )}
-              </ellipse>
-            )}
-          </svg>
+                <tspan x="22.5" y="-136">
+                  {displayStatus}
+                </tspan>
+              </text>
+              {progressValue >= 0 && (
+                <ellipse
+                  cx="200"
+                  cy="200"
+                  rx="160"
+                  ry="160"
+                  fill="none"
+                  strokeWidth="15"
+                  strokeDasharray={`${(progressValue / 100) * 1002}, 1004`}
+                  style={{
+                    stroke: "var(--progress-accent, var(--accent-strong, #FA3356))",
+                  }}
+                >
+                  {progressValue < 100 && (
+                    <animate
+                      attributeName="stroke-dasharray"
+                      from="0, 1004"
+                      to={`${(progressValue / 100) * 1002}, 1004`}
+                      dur="1s"
+                      begin="0s"
+                      fill="freeze"
+                    />
+                  )}
+                </ellipse>
+              )}
+            </svg>
+
+            <div
+              onClick={onOpenQuickLinks}
+              onKeyDown={(event) => handleKeyDown(event, onOpenQuickLinks)}
+              role="button"
+              tabIndex={0}
+              title="Quick links"
+              aria-label="Quick links"
+              className="interactive icon-button"
+            >
+              <Link2 size={20} />
+            </div>
+
+            <div
+              onClick={onOpenFiles}
+              onKeyDown={(event) => handleKeyDown(event, onOpenFiles)}
+              role="button"
+              tabIndex={0}
+              title="Open file manager"
+              aria-label="Open file manager"
+              className="interactive icon-button"
+            >
+              <Folder size={20} />
+            </div>
+          </div>
         </div>
 
-        <div className="project-nav-center">
+        <div className="right-side">
           <div className="project-nav-tabs">
             <ProjectTabs
               tabs={navigation.tabs}
@@ -164,46 +202,8 @@ const DesktopProjectHeader = ({
               confirmNavigate={navigation.confirmNavigate}
             />
           </div>
-        </div>
 
-        <div className="right-side">
           <AvatarStack members={teamMembers} onClick={onOpenTeam} />
-
-          <div
-            onClick={onOpenSettings}
-            onKeyDown={(event) => handleKeyDown(event, onOpenSettings)}
-            role="button"
-            tabIndex={0}
-            title="Project settings"
-            aria-label="Project settings"
-            className="interactive icon-button"
-          >
-            <Settings size={20} className="settings-icon" />
-          </div>
-
-          <div
-            onClick={onOpenQuickLinks}
-            onKeyDown={(event) => handleKeyDown(event, onOpenQuickLinks)}
-            role="button"
-            tabIndex={0}
-            title="Quick links"
-            aria-label="Quick links"
-            className="interactive icon-button"
-          >
-            <Link2 size={20} />
-          </div>
-
-          <div
-            onClick={onOpenFiles}
-            onKeyDown={(event) => handleKeyDown(event, onOpenFiles)}
-            role="button"
-            tabIndex={0}
-            title="Open file manager"
-            aria-label="Open file manager"
-            className="interactive icon-button"
-          >
-            <Folder size={20} />
-          </div>
         </div>
       </div>
     </div>

@@ -131,7 +131,7 @@ export function useRangeLabels(project: Project) {
     const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
     const startStr = startDate.toLocaleDateString(undefined, options);
     const endStr = endDate.toLocaleDateString(undefined, options);
-    return `${startStr} – ${endStr}  ⏱ ${totalPart}`;
+    return `${startStr} – ${endStr}  ⏱ ${totalPart}`;
   }, [startDate, endDate, totalHours]);
 
   const mobileRangeLabel = useMemo(() => {

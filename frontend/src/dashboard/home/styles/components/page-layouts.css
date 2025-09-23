@@ -22,8 +22,22 @@
   height: 100%;
   flex: 1;
   min-height: 0;
-  padding-right: 12px;
+
 }
+
+.budget-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  padding: 12px 12px 0;
+      background: var(--project-header-bg, var(--bg2, #111213));
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+}
+
 
 /* Active project details wrapper sizing */
 .active-project-details {

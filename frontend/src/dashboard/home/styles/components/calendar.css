@@ -160,6 +160,7 @@
 
 /* Timeline + Location row layout */
 .timeline-location-row {
+  padding-top: 12px;
   display: flex;
   flex-direction: row !important;
   gap: 12px;

@@ -5,7 +5,7 @@
   align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
-  flex: .6;
+  flex: .3;
   transition: transform 0.2s ease;
 }
 

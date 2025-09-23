@@ -1761,9 +1761,9 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         onConfirm={performDeleteInvoices}
         message="Delete selected invoices?"
         className={{
-          base: styles.modalContent,
-          afterOpen: styles.modalContentAfterOpen,
-          beforeClose: styles.modalContentBeforeClose,
+          base: styles.confirmModalContent,
+          afterOpen: styles.confirmModalContentAfterOpen,
+          beforeClose: styles.confirmModalContentBeforeClose,
         }}
         overlayClassName={{
           base: styles.modalOverlay,

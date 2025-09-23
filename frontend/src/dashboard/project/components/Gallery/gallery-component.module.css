@@ -9,6 +9,10 @@
   transition: transform 0.2s ease;
 }
 
+:global(:root[data-h-density="compact"]) :local(.galleryTrigger) {
+  gap: clamp(6px, 1.2svh, 12px);
+}
+
 
 
 .topRow {
@@ -450,6 +454,17 @@
   box-sizing: border-box;
 }
 
+:global(:root[data-h-density="cozy"]) :local(.previewThumbnail) {
+  max-height: clamp(72px, 12svh, 92px);
+  max-width: clamp(120px, 22svh, 150px);
+}
+
+:global(:root[data-h-density="compact"]) :local(.previewThumbnail) {
+  max-height: clamp(56px, 10svh, 72px);
+  max-width: clamp(96px, 18svh, 128px);
+  padding: clamp(3px, 0.8svh, 5px);
+}
+
 .previewPlaceholder {
   width: 150px;
   height: 100px;
@@ -471,6 +486,18 @@
   margin-top: 8px;
   margin-left: auto;
   justify-content: flex-end;
+}
+
+:global(:root[data-h-density="cozy"]) :local(.thumbnailRow) {
+  gap: clamp(6px, 1.1svh, 10px);
+}
+
+:global(:root[data-h-density="compact"]) :local(.thumbnailRow) {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: clamp(4px, 1svh, 8px);
+  overflow: hidden;
+  width: 100%;
 }
 
 .galleryCover {

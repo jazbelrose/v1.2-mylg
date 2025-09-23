@@ -4,12 +4,14 @@
   display: flex;
   width: 100%;
   height: 100%;
+  gap: var(--dashboard-section-gap, 12px);
   overflow: hidden;
+  align-items: stretch;
 }
 
 /* Override shared layout spacing to match dashboard design */
 .dashboard-content {
-  gap: 5px;              /* was tokenized elsewhere; keep original 5px */
+  gap: var(--dashboard-section-gap, 5px); /* was tokenized elsewhere; keep original 5px */
   align-items: stretch;  /* stretch columns equally */
   overflow: hidden;      /* prevent extra scrollbars */
 }
@@ -22,7 +24,7 @@
   height: 100%;
   flex: 1;
   min-height: 0;
-
+  gap: var(--dashboard-section-gap, 12px);
 }
 
 .budget-layout {
@@ -32,7 +34,7 @@
   height: 100%;
   flex: 1;
   min-height: 0;
-  padding: 12px 12px 0;
+  padding: clamp(10px, 1.8svh, 16px) clamp(10px, 1.8svh, 16px) 0;
       background: var(--project-header-bg, var(--bg2, #111213));
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
@@ -42,9 +44,8 @@
 /* Active project details wrapper sizing */
 .active-project-details {
   width: 100%;
-  height: 100vh;
+  min-height: 100svh;
   height: 100dvh;
-  max-height: 100vh;
   max-height: 100dvh;
   overflow: hidden;
   box-sizing: border-box;

@@ -1,9 +1,8 @@
 /* Dashboard Cards and Budget Overview */
 
 .dashboard-item {
-  
-  padding: 18px;
-  border-radius: 20px;
+  padding: var(--dashboard-card-padding, 18px);
+  border-radius: var(--dashboard-card-radius, 20px);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -11,6 +10,7 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 48px rgba(0, 0, 0, 0.45);
   border-radius: 32px 32px 32px 32px;
   border: 2px solid rgba(255, 255, 255, 0.10);
+  gap: clamp(12px, 2vw, 24px);
 }
 
 .dashboard-item:hover {
@@ -23,40 +23,51 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: stretch;
-  min-height: clamp(180px, 26vh, 240px);
+  min-height: clamp(180px, 34svh, 260px);
   background-color: #111;
   color: #fff;
   transition: background-color 0.2s ease;
   overflow: visible;
 }
 
+:root[data-h-density="cozy"] .dashboard-item.budget {
+  min-height: clamp(160px, 30svh, 230px);
+}
+
+:root[data-h-density="compact"] .dashboard-item.budget {
+  min-height: clamp(150px, 26svh, 210px);
+  flex-wrap: wrap;
+  gap: clamp(10px, 1.6svh, 16px);
+}
+
 .dashboard-item.budget span {
-  margin: 4px 0;
-  font-size: clamp(1rem, 3vw, 1.75rem);
+  margin: clamp(2px, 0.7svh, 6px) 0;
+  font-size: clamp(0.9rem, 2.6svh, 1.6rem);
 }
 
 .dashboard-item.budget span:nth-child(2) {
-  font-size: clamp(1.5rem, 4vw, 3rem);
+  font-size: clamp(1.25rem, 3.6svh, 2.4rem);
   font-weight: bold;
-  margin: 2px 0;
+  margin: clamp(1px, 0.6svh, 4px) 0;
 }
 
 .dashboard-item.budget span:last-child {
-  font-size: clamp(1rem, 2vw, 1.5rem);
-  margin: 2px 0 2px 5px;
+  font-size: clamp(0.9rem, 2svh, 1.3rem);
+  margin: clamp(1px, 0.6svh, 3px) 0 0 clamp(2px, 0.6svh, 5px);
   color: #FA3356;
 }
 
 .dashboard-item.view-gallery {
-  
+
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
+  gap: clamp(8px, 1.4svh, 16px);
 }
 
 .dashboard-item.view-gallery span {
-  margin: 4px 0;
-  font-size: clamp(1rem, 3vw, 1.75rem);
+  margin: clamp(2px, 0.8svh, 6px) 0;
+  font-size: clamp(1rem, 2.8svh, 1.5rem);
 }
 
 .dashboard-item.finish-line {
@@ -90,6 +101,11 @@
   container-name: budget-card;
 }
 
+:root[data-h-density="compact"] .budget-component-container {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .budget-overview-card {
   gap: 16px;
 }
@@ -101,6 +117,11 @@
   flex: 1 1 0%;
   max-width: 50%;
   min-width: 0;
+}
+
+:root[data-h-density="compact"] .budget-overview-summary {
+  max-width: none;
+  width: 100%;
 }
 
 .budget-overview-header {
@@ -161,14 +182,34 @@
   min-width: 0;
 }
 
+:root[data-h-density="cozy"] .chart-legend-container {
+  max-width: 45%;
+}
+
+:root[data-h-density="compact"] .chart-legend-container {
+  max-width: none;
+  width: 100%;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: clamp(8px, 1.4svh, 14px);
+}
+
 .budget-chart {
   width: 100%;
-  max-width: clamp(220px, 50cqw, 110px);
+  max-width: clamp(180px, 46cqw, 260px);
   aspect-ratio: 1 / 1;
   position: relative;
   margin-inline: auto;
-  
+
   box-sizing: border-box;
+}
+
+:root[data-h-density="cozy"] .budget-chart {
+  max-width: clamp(160px, 42cqw, 220px);
+}
+
+:root[data-h-density="compact"] .budget-chart {
+  max-width: clamp(140px, 40cqw, 200px);
 }
 
 .budget-legend {
@@ -179,6 +220,14 @@
   margin: 0 0 0 8px;
   min-width: clamp(100px, 16vw, 140px);
   gap: 6px;
+}
+
+:root[data-h-density="cozy"] .budget-legend {
+  min-width: clamp(90px, 20cqw, 120px);
+}
+
+:root[data-h-density="compact"] .budget-legend {
+  display: none;
 }
 
 .budget-legend-header {

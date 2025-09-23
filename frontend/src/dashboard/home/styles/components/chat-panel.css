@@ -6,14 +6,24 @@ body.chat-panel-docked {
 
 .chat-panel {
   position: fixed;
-  top: var(--chat-panel-top, 50px);
-  height: calc(100% - var(--chat-panel-top, 50px));
-  width: 320px;
+  --chat-panel-offset: var(--chat-panel-top, clamp(48px, 8svh, 64px));
+  top: var(--chat-panel-offset);
+  height: calc(100svh - var(--chat-panel-offset));
+  max-height: calc(100svh - var(--chat-panel-offset));
+  width: clamp(300px, 22cqw, 340px);
   background: rgba(0, 0, 0, 0.8);
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease, height 0.3s ease;
   z-index: 10000;
+}
+
+:root[data-h-density="cozy"] .chat-panel {
+  width: clamp(280px, 20cqw, 320px);
+}
+
+:root[data-h-density="compact"] .chat-panel {
+  width: clamp(260px, 18cqw, 300px);
 }
 
 .chat-panel.docked {
@@ -32,13 +42,13 @@ body.chat-panel-docked {
 
 .chat-panel.floating {
   position: fixed;
-  height: 400px;
+  height: clamp(280px, 52svh, 420px);
   border-radius: 32px;
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
 
   transition: height 0.3s ease;
-  min-width: 280px;
-  min-height: 280px;
+  min-width: clamp(240px, 18cqw, 280px);
+  min-height: clamp(220px, 42svh, 320px);
 }
 
 .chat-panel-header {

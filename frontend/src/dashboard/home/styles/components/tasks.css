@@ -8,10 +8,10 @@
 }
 
 .tasks-card {
- 
-  border-radius: 20px;
-  padding: 10px;
-  
+
+  border-radius: var(--dashboard-card-radius, 20px);
+  padding: var(--dashboard-card-padding, 18px);
+
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -24,12 +24,12 @@
 }
 
 .assign-task-form {
-  margin-bottom: 10px;
-  padding: 8px;
+  margin-bottom: clamp(8px, 1.4svh, 12px);
+  padding: clamp(6px, 1.2svh, 10px);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: clamp(6px, 1.2svh, 12px);
   background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -37,17 +37,18 @@
 
 .assign-task-form .form-row {
   display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
+  gap: clamp(6px, 1.2svh, 12px);
+  flex-wrap: wrap;
 }
 
 .assign-task-form .form-row > * {
-  flex: 1 1 0;
+  flex: 1 1 48%;
   min-width: 0;
 }
 
 .assign-task-form .form-row.actions {
   justify-content: flex-end;
+  gap: clamp(6px, 1.2svh, 12px);
 }
 
 .assign-task-form h3 {
@@ -62,14 +63,14 @@
 
 .assign-task-form .ant-form-item-label > label {
   color: white;
-  font-size: 0.75rem;
+  font-size: clamp(0.7rem, 1.4svh, 0.8rem);
   padding-bottom: 0px;
 }
 
 .assign-task-form .ant-input,
 .assign-task-form .ant-select-selector,
 .assign-task-form .ant-picker {
-  height: 28px;
+  height: clamp(28px, 4.8svh, 36px);
   background: #1f1f1f;
   border-color: #333;
   color: white;
@@ -89,14 +90,10 @@
   color: white;
 }
 
-.assign-task-form .form-row.actions > * {
-  flex: 0;
-}
-
 .assign-task-form .modal-submit-button {
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  height: 28px;
+  padding: clamp(2px, 0.6svh, 4px) clamp(8px, 1.4svh, 14px);
+  font-size: clamp(0.7rem, 1.3svh, 0.85rem);
+  height: clamp(28px, 4.6svh, 34px);
   width: auto;
 }
 
@@ -121,8 +118,8 @@
 
 .tasks-tabs {
   display: flex;
-  gap: 10px;
-  margin: 0 0 10px 0;
+  gap: clamp(6px, 1.2svh, 12px);
+  margin: 0 0 clamp(8px, 1.4svh, 12px) 0;
   flex-shrink: 0;
 }
 
@@ -130,7 +127,7 @@
   background: none;
   border: none;
   color: white;
-  padding: 6px 12px;
+  padding: clamp(4px, 0.9svh, 8px) clamp(8px, 1.6svh, 12px);
   cursor: pointer;
 }
 
@@ -141,14 +138,13 @@
 .tasks-divider {
   border: none;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  margin: 8px 0;
+  margin: clamp(6px, 1.2svh, 10px) 0;
 }
 
 .tasks-table-wrapper {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: auto;
-  padding-bottom: 60px;
+  overflow: hidden;
+  padding-bottom: clamp(24px, 4.5svh, 48px);
   min-height: 0;
 }
 
@@ -160,11 +156,11 @@
 
 .tasks-table th,
 .tasks-table td {
-  padding: 4px 8px;
+  padding: clamp(4px, 0.9svh, 8px) clamp(6px, 1.2svh, 12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   text-align: left;
-  font-size: 0.9rem;
-  white-space: nowrap;
+  font-size: clamp(0.8rem, 1.5svh, 0.9rem);
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
@@ -176,11 +172,12 @@
 }
 
 .tasks-table .ant-table-cell {
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
 }
+
 
 .tasks-table .comment-column,
 .tasks-table .actions-column {
@@ -192,18 +189,39 @@
 }
 
 .tasks-table .actions-column {
-  padding-right: 8px;
-  width: 40px;
+  padding-right: clamp(4px, 0.8svh, 8px);
+  width: clamp(32px, 6svh, 40px);
+}
+
+:root[data-h-density="cozy"] .assign-task-form .form-row > * {
+  flex: 1 1 45%;
+}
+
+:root[data-h-density="compact"] .assign-task-form {
+  gap: clamp(4px, 1svh, 8px);
+}
+
+:root[data-h-density="compact"] .assign-task-form .form-row {
+  gap: clamp(4px, 1svh, 8px);
+}
+
+:root[data-h-density="compact"] .assign-task-form .form-row > * {
+  flex: 1 1 100%;
+}
+
+:root[data-h-density="compact"] .tasks-table .comment-column,
+:root[data-h-density="compact"] .tasks-table .actions-column {
+  display: none;
 }
 
 .tasks-table .status-column {
-  padding-right: 12px;
-  min-width: 140px;
+  padding-right: clamp(8px, 1.4svh, 12px);
+  min-width: clamp(120px, 22svh, 160px);
 }
 
 .tasks-table .status-column .ant-select-selector {
-  padding: 0 24px 0 8px;
-  height: 24px;
+  padding: 0 clamp(18px, 3svh, 24px) 0 clamp(6px, 1.2svh, 10px);
+  height: clamp(24px, 4.2svh, 32px);
 }
 
 .tasks-table .comment-column .ant-btn,

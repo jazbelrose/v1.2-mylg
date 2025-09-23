@@ -3,28 +3,55 @@
 @import './overrides.css';
 
 .dashboard-root {
+  --dashboard-shell-padding-inline: clamp(12px, 3cqw, 24px);
+  --dashboard-shell-padding-block: clamp(14px, 3svh, 28px);
+  --dashboard-section-gap: clamp(12px, 2.2svh, 20px);
+  --dashboard-card-padding: clamp(16px, 2.6svh, 26px);
+  --dashboard-card-radius: clamp(20px, 6svh, 32px);
+  --dashboard-column-gap: clamp(12px, 3cqw, 24px);
   display: grid;
-  grid-template-columns: 280px 1fr;
-  height: 100vh;
+  grid-template-columns: clamp(240px, 18cqw, 280px) 1fr;
+  min-height: 100svh;
+  height: 100dvh;
+  max-height: 100dvh;
   max-width: 1920px;
   margin: 0 auto;
   overflow: hidden;
+  padding-inline: var(--dashboard-shell-padding-inline);
+}
+
+:root[data-h-density="cozy"] .dashboard-root {
+  --dashboard-shell-padding-inline: clamp(10px, 2.5cqw, 20px);
+  --dashboard-shell-padding-block: clamp(12px, 2.4svh, 20px);
+  --dashboard-section-gap: clamp(10px, 1.8svh, 18px);
+  --dashboard-card-padding: clamp(14px, 2.2svh, 22px);
+  --dashboard-card-radius: clamp(18px, 5svh, 28px);
+  --dashboard-column-gap: clamp(10px, 2.5cqw, 18px);
+}
+
+:root[data-h-density="compact"] .dashboard-root {
+  --dashboard-shell-padding-inline: clamp(8px, 2cqw, 16px);
+  --dashboard-shell-padding-block: clamp(10px, 1.8svh, 16px);
+  --dashboard-section-gap: clamp(8px, 1.6svh, 14px);
+  --dashboard-card-padding: clamp(12px, 1.9svh, 18px);
+  --dashboard-card-radius: clamp(16px, 4svh, 24px);
+  --dashboard-column-gap: clamp(8px, 2cqw, 16px);
 }
 
 .dashboard-root--nav-collapsed {
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: clamp(96px, 9cqw, 120px) 1fr;
 }
 
 .dashboard-root > aside {
   position: sticky;
   top: 0;
   align-self: start;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
 }
 
 .dashboard-root--nav-collapsed > aside {
-  width: 120px;
+  width: clamp(96px, 9cqw, 120px);
 }
 
 .dashboard-root > aside > * {
@@ -34,10 +61,12 @@
 .dashboard-main {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100svh;
+  height: 100dvh;
+  max-height: 100dvh;
   min-width: 0;
   overflow: hidden;
-  padding: 0 12px;
+  padding-inline: clamp(8px, 2cqw, 16px);
 }
 
 .dashboard-wrapper {
@@ -45,28 +74,29 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  
   overflow: hidden;
-  padding-bottom: 16px;
+  padding-block: var(--dashboard-shell-padding-block);
+  gap: var(--dashboard-section-gap);
 }
 
 .dashboard-wrapper.welcome-screen {
-  padding: 24px;
+  padding: var(--dashboard-shell-padding-block);
 }
 
 @media (max-width: 1023px) {
   .dashboard-root {
     display: block;
-    min-height: 100vh;
+    min-height: 100svh;
     min-height: 100dvh;
+    padding-inline: 0;
   }
 
   .dashboard-main {
-    min-height: 100vh;
+    min-height: 100svh;
     min-height: 100dvh;
-    height: 100vh;
+    height: 100svh;
     height: 100dvh;
-    max-height: 100vh;
+    max-height: 100svh;
     max-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -79,13 +109,6 @@
     flex: 1 1 auto;
     min-height: 0;
     padding: 0;
+    gap: clamp(10px, 2.4svh, 18px);
   }
 }
-
-
-
-
-
-
-
-

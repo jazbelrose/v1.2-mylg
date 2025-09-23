@@ -735,10 +735,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
             </div>
           </Form>
 
-          <div
-            className="tasks-table-wrapper"
-            style={{ maxHeight: 400, overflow: "auto", position: "relative", paddingBottom: 0 }}
-          >
+          <div className="tasks-table-wrapper">
             <Table<Task>
               rowKey="id"
               columns={columns}
@@ -747,7 +744,6 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
               size="small"
               tableLayout="fixed"
               className="tasks-table custom-sticky-scrollbar"
-              scroll={{ x: "max-content", y: 340 }}
               locale={{ emptyText: "No tasks yet!" }}
               sticky={{ offsetHeader: 0, offsetScroll: 0 }}
               style={{ fontSize: "11px" }}

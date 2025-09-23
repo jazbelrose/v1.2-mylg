@@ -16,29 +16,29 @@
 .calendar-layout .project-calendar-wrapper {
   max-height: none;
   flex: 1 1 0;
-  min-height: 650px;
-  overflow-y: auto;
+  min-height: clamp(420px, 60svh, 720px);
+  overflow: hidden;
 }
 
 .calendar-layout .project-calendar-wrapper .react-calendar__tile {
-  min-height: 100px;
-  padding: 10px 0;
+  min-height: clamp(72px, 12svh, 110px);
+  padding: clamp(6px, 1.2svh, 10px) 0;
 }
 
 .calendar-layout .project-calendar-wrapper .calendar-day {
-  min-height: clamp(40px, 8vh, 60px);
+  min-height: clamp(40px, 7svh, 60px);
 }
 
 .calendar-layout .timeline-chart {
   flex: 2 1 0;
-  min-height: 450px;
+  min-height: clamp(320px, 48svh, 520px);
   height: auto;
   max-height: none;
 }
 
 /* Budget + Calendar two-column layout */
 .budget-calendar-layout {
-  --budget-calendar-gap: 12px;
+  --budget-calendar-gap: var(--dashboard-section-gap, 12px);
   min-height: 0;
   --budget-calendar-min-calendar: 400px;
   --budget-calendar-max-calendar: 520px;
@@ -141,17 +141,34 @@
 }
 
 .overview-layout > .dashboard-layout.budget-calendar-layout {
-  flex: 1 1 70%;
-  min-height: clamp(240px, 34vh, 500px);
+  flex: 1 1 65%;
+  min-height: clamp(240px, 45svh, 520px);
 }
 
 .overview-layout > .dashboard-layout.timeline-location-row {
-  flex: 1 1 30%;
-  min-height: clamp(200px, 28vh, 380px);
+  flex: 1 1 35%;
+  min-height: clamp(200px, 32svh, 420px);
 }
 
-@media (max-height: 820px),
-       (max-width: var(--breakpoint-md)) {
+:root[data-h-density="cozy"] .overview-layout > .dashboard-layout.budget-calendar-layout {
+  min-height: clamp(210px, 40svh, 460px);
+}
+
+:root[data-h-density="cozy"] .overview-layout > .dashboard-layout.timeline-location-row {
+  min-height: clamp(190px, 28svh, 360px);
+}
+
+:root[data-h-density="compact"] .overview-layout > .dashboard-layout.budget-calendar-layout {
+  flex: 1 1 60%;
+  min-height: clamp(190px, 36svh, 420px);
+}
+
+:root[data-h-density="compact"] .overview-layout > .dashboard-layout.timeline-location-row {
+  flex: 1 1 40%;
+  min-height: clamp(170px, 26svh, 320px);
+}
+
+@media (max-width: var(--breakpoint-md)) {
   .overview-layout > .dashboard-layout.budget-calendar-layout,
   .overview-layout > .dashboard-layout.timeline-location-row {
     flex: 1 1 auto;
@@ -163,9 +180,18 @@
   padding-top: 12px;
   display: flex;
   flex-direction: row !important;
-  gap: 12px;
+  gap: var(--dashboard-section-gap, 12px);
   align-items: stretch;
-  min-height: clamp(220px, 28vh, 360px);
+  min-height: clamp(220px, 34svh, 360px);
+}
+
+:root[data-h-density="cozy"] .timeline-location-row {
+  min-height: clamp(200px, 30svh, 320px);
+}
+
+:root[data-h-density="compact"] .timeline-location-row {
+  min-height: clamp(180px, 28svh, 300px);
+  padding-top: clamp(6px, 1.2svh, 10px);
 }
 
 .timeline-location-row > * {
@@ -176,15 +202,24 @@
 
 /* Location card and map container */
 .dashboard-layout .dashboard-item.location {
-  height: 400px;
+  min-height: clamp(240px, 32svh, 420px);
   padding: 0;
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: var(--dashboard-card-radius, 20px);
+}
+
+:root[data-h-density="cozy"] .dashboard-layout .dashboard-item.location {
+  min-height: clamp(210px, 28svh, 360px);
+}
+
+:root[data-h-density="compact"] .dashboard-layout .dashboard-item.location {
+  min-height: clamp(180px, 24svh, 300px);
 }
 
 .dashboard-layout #map {
   width: 100%;
   height: 100%;
+  min-height: inherit;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -197,6 +232,8 @@
   overflow: hidden;
   min-width: 0;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .location-wrapper .column-5 {

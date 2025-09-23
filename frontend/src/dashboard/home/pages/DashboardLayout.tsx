@@ -2,12 +2,15 @@ import React, { useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useData } from "@/app/contexts/useData";
+import { useHeightDensity } from "@/shared/hooks/useHeightDensity";
 import "./dashboard-styles.css";
 
 
 const Dashboard: React.FC = () => {
   // If your DataProvider has types, replace `any` below with the real shape.
   const { userName, opacity } = useData() as { userName?: string; opacity?: number };
+
+  useHeightDensity();
 
   const location = useLocation();
   const navigate = useNavigate();

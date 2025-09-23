@@ -141,12 +141,12 @@
 }
 
 .overview-layout > .dashboard-layout.budget-calendar-layout {
-  flex: 1 1 60%;
+  flex: 1 1 70%;
   min-height: clamp(240px, 34vh, 500px);
 }
 
 .overview-layout > .dashboard-layout.timeline-location-row {
-  flex: 1 1 40%;
+  flex: 1 1 30%;
   min-height: clamp(200px, 28vh, 380px);
 }
 

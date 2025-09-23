@@ -6,7 +6,6 @@ import BudgetOverviewCard from "@/dashboard/project/features/budget/components/B
 import GalleryComponent from "@/dashboard/project/components/Gallery/GalleryComponent";
 
 import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPageLayout";
-import Timeline from "@/dashboard/project/components/Timeline/Timeline";
 import CalendarOverviewCard from "@/dashboard/project/components/Shared/CalendarOverviewCard";
 import QuickLinksComponent from "@/dashboard/project/components/Shared/QuickLinksComponent";
 import type { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickLinksComponent";

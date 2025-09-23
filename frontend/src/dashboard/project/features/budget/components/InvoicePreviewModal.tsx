@@ -22,7 +22,6 @@ import { saveAs } from "file-saver";
 import { uploadData, list } from "aws-amplify/storage";
 import {
   updateUserProfile,
-  S3_PUBLIC_BASE,
   apiFetch,
   fileUrlsToKeys,
   getFileUrl,
@@ -215,13 +214,19 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     if (!project?.projectId) return [];
     const prefix = `projects/${project.projectId}/invoices/`;
     try {
-      const res = await list({ prefix, options: { accessLevel: "public" } });
+      const res = await list({ prefix, options: { accessLevel: "guest" } });
       return (res.items || [])
         .filter((item) => item.key && !String(item.key).endsWith("/"))
-        .map((item) => ({
-          name: String(item.key).split("/").pop() || "",
-          url: `${S3_PUBLIC_BASE}${item.key}`,
-        }));
+        .map((item) => {
+          const rawKey = String(item.key);
+          const storageKey = rawKey.startsWith("public/")
+            ? rawKey
+            : `public/${rawKey}`;
+          return {
+            name: rawKey.split("/").pop() || "",
+            url: getFileUrl(storageKey),
+          };
+        });
     } catch (err) {
       console.error("Failed to list invoice files", err);
       return [];
@@ -738,16 +743,21 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     const key = `projects/${project.projectId}/invoices/${fileName}`;
 
     try {
-      await uploadData({
+      const uploadTask = uploadData({
         key,
         data: blob,
         options: {
-          accessLevel: "public",
+          accessLevel: "guest",
           metadata: { friendlyName: fileName },
         },
       });
-      const url = `${S3_PUBLIC_BASE}${key}`;
-      setSavedInvoices((prev) => [...prev, { name: fileName, url }]);
+      await uploadTask.result;
+      const storageKey = key.startsWith("public/") ? key : `public/${key}`;
+      const url = getFileUrl(storageKey);
+      setSavedInvoices((prev) => {
+        const next = prev.filter((inv) => inv.url !== url);
+        return [...next, { name: fileName, url }];
+      });
       setInvoiceDirty(false);
       setCurrentFileName(fileName);
     } catch (err) {
@@ -771,8 +781,13 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         const ext = blob.type.split("/").pop() || "png";
         const file = new File([blob], `logo.${ext}`, { type: blob.type });
         const filename = `userBranding/${userData.userId}/${file.name}`;
-        await uploadData({ key: filename, data: file, options: { accessLevel: "public" } });
-        uploadedKey = filename;
+        const uploadTask = uploadData({
+          key: filename,
+          data: file,
+          options: { accessLevel: "guest" },
+        });
+        await uploadTask.result;
+        uploadedKey = filename.startsWith("public/") ? filename : `public/${filename}`;
       }
 
       const updated = {

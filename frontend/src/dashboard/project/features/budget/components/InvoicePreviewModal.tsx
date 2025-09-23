@@ -421,7 +421,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     setPaymentSummary("Payment");
     setNotes(DEFAULT_NOTES_HTML);
     setDepositReceived(0);
-    setInvoiceDirty(false);
+    setInvoiceDirty(true);
 
     if (revision?.revision != null) {
       setCurrentFileName(`invoice-revision-${revision.revision}.html`);

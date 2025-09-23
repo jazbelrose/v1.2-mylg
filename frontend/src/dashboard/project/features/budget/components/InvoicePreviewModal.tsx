@@ -7,6 +7,7 @@ import React, {
   useState,
   useCallback,
 } from "react";
+import { createPortal } from "react-dom";
 import Modal from "@/shared/ui/ModalWithStack";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -1707,34 +1708,37 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
         </div>
       </Modal>
 
-      {showUnsavedPrompt && (
-        <div
-          className={styles.unsavedOverlay}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Unsaved invoice changes"
-        >
-          <div className={styles.unsavedDialog}>
-            <p>This invoice has unsaved changes. Leave Anyway?</p>
-            <div className={styles.unsavedActions}>
-              <button
-                type="button"
-                className={styles.unsavedButton}
-                onClick={handleStayOpen}
-              >
-                Stay
-              </button>
-              <button
-                type="button"
-                className={`${styles.unsavedButton} ${styles.unsavedButtonPrimary}`}
-                onClick={handleConfirmLeave}
-              >
-                Leave Anyway
-              </button>
+      {showUnsavedPrompt &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className={styles.unsavedOverlay}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Unsaved invoice changes"
+          >
+            <div className={styles.unsavedDialog}>
+              <p>This invoice has unsaved changes. Leave Anyway?</p>
+              <div className={styles.unsavedActions}>
+                <button
+                  type="button"
+                  className={styles.unsavedButton}
+                  onClick={handleStayOpen}
+                >
+                  Stay
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.unsavedButton} ${styles.unsavedButtonPrimary}`}
+                  onClick={handleConfirmLeave}
+                >
+                  Leave Anyway
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       <ConfirmModal
         isOpen={isConfirmingDelete}

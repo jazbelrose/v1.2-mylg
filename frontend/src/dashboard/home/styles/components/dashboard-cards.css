@@ -23,7 +23,7 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: stretch;
-  min-height: clamp(180px, 30vh, 260px);
+  min-height: clamp(180px, 26vh, 240px);
   background-color: #111;
   color: #fff;
   transition: background-color 0.2s ease;
@@ -255,7 +255,7 @@
     min-width: clamp(110px, 22vw, 160px);
   }
   .dashboard-item.budget {
-    min-height: clamp(160px, 25vh, 220px);
+    min-height: clamp(150px, 24vh, 200px);
   }
 }
 
@@ -272,7 +272,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
-    min-height: 200px;
+    min-height: 180px;
   }
   .budget-overview-card {
     gap: 12px;

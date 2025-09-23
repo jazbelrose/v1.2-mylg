@@ -38,124 +38,75 @@
 
 /* Budget + Calendar two-column layout */
 .budget-calendar-layout {
-  --budget-calendar-gap: 12px;
-  min-height: 0;
-  --budget-calendar-min-calendar: 400px;
-  --budget-calendar-max-calendar: 520px;
-  --budget-calendar-stack-budget: 420px;
-
   display: grid;
-  gap: var(--budget-calendar-gap);
-  grid-template-columns: minmax(0, 1fr)
-    clamp(
-      var(--budget-calendar-min-calendar),
-      30%,
-      var(--budget-calendar-max-calendar)
-    );
-  grid-template-areas: "budget calendar";
+  grid-template-columns: 3fr 2fr;
+  gap: 12px;
   align-items: stretch;
-  container-type: inline-size;
-  container-name: budget-calendar;
 }
 
 .budget-calendar-layout--stacked {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    "budget"
-    "calendar";
-}
-
-.budget-calendar-layout--stacked .budget-column,
-.budget-calendar-layout--stacked .calendar-column {
-  width: 100%;
-  min-inline-size: 0;
-  gap: var(--budget-calendar-gap);
-}
-
-.budget-calendar-layout--stacked .calendar-column {
   display: flex;
   flex-direction: column;
+  gap: 20px;
 }
 
 .budget-calendar-layout .budget-column {
-  grid-area: budget;
   display: flex;
   flex-direction: column;
-  gap: var(--budget-calendar-gap);
-  min-inline-size: 0;
+  gap: 12px;
+}
+
+.budget-calendar-layout .budget-column > :first-child {
+  flex: 3 1 0;
+}
+
+.budget-calendar-layout .budget-column > :last-child {
+  flex: 2 1 0;
 }
 
 .budget-calendar-layout .calendar-column {
-  grid-area: calendar;
   display: flex;
   flex-direction: column;
-  gap: var(--budget-calendar-gap);
-  min-inline-size: 0;
-  container-type: inline-size;
-  container-name: calendar-panel;
+  gap: 12px;
 }
 
 .budget-calendar-layout .budget-column > *,
 .budget-calendar-layout .calendar-column > * {
   width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
-@container budget-calendar (max-width: calc(
-    var(--budget-calendar-min-calendar) +
-    var(--budget-calendar-stack-budget) +
-    var(--budget-calendar-gap)
-  )) {
-  .budget-calendar-layout {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "budget"
-      "calendar";
-  }
+.budget-calendar-layout--stacked .budget-column,
+.budget-calendar-layout--stacked .calendar-column {
+  width: 100%;
+  gap: 20px;
+}
+
+.budget-calendar-layout--stacked .budget-column {
+  display: flex;
+}
+
+.budget-calendar-layout--stacked .budget-column > *,
+.budget-calendar-layout--stacked .calendar-column > * {
+  flex: none;
 }
 
 @media (max-width: var(--breakpoint-sm)) {
   .budget-calendar-layout {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "budget"
-      "calendar";
+    display: flex;
+    flex-direction: column;
     gap: 20px;
   }
 
   .budget-calendar-layout .budget-column,
   .budget-calendar-layout .calendar-column {
-    width: 100%;
     gap: 20px;
   }
 
   .budget-calendar-layout .budget-column > *,
   .budget-calendar-layout .calendar-column > * {
-    width: 100%;
-  }
-}
-
-/* Overview height distribution */
-.overview-layout > .dashboard-layout {
-  min-height: 0;
-  flex: 1 1 auto;
-}
-
-.overview-layout > .dashboard-layout.budget-calendar-layout {
-  flex: 1 1 80%;
-  min-height: clamp(240px, 34vh, 500px);
-  max-height: 500px; 
-}
-
-.overview-layout > .dashboard-layout.timeline-location-row {
-  flex: 1 1 20%;
-  min-height: clamp(200px, 28vh, 380px);
-}
-
-@media (max-height: 820px),
-       (max-width: var(--breakpoint-md)) {
-  .overview-layout > .dashboard-layout.budget-calendar-layout,
-  .overview-layout > .dashboard-layout.timeline-location-row {
-    flex: 1 1 auto;
+    flex: none;
   }
 }
 
@@ -163,10 +114,9 @@
 .timeline-location-row {
   padding-top: 12px;
   display: flex;
-  flex-direction: row !important;
+  flex-direction: row;
   gap: 12px;
   align-items: stretch;
-  min-height: clamp(220px, 28vh, 360px);
 }
 
 .timeline-location-row > * {

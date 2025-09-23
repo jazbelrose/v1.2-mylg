@@ -116,6 +116,8 @@ const groupFields: Array<{ label: string; value: GroupField }> = [
   { label: "Category", value: "category" },
 ];
 
+const DEFAULT_NOTES_HTML = "<p>Notes...</p>";
+
 // ---------- Component ----------
 const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
   isOpen,
@@ -167,7 +169,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
   const [customerSummary, setCustomerSummary] = useState("Customer");
   const [invoiceSummary, setInvoiceSummary] = useState("Invoice Details");
   const [paymentSummary, setPaymentSummary] = useState("Payment");
-  const [notes, setNotes] = useState("Notes...");
+  const [notes, setNotes] = useState(DEFAULT_NOTES_HTML);
   const [depositReceived, setDepositReceived] = useState<number>(0);
   const [totalDue, setTotalDue] = useState<number>(0);
 
@@ -180,6 +182,8 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
   // delete confirm
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
 
   // logo file input
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -198,6 +202,23 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     };
     reader.readAsDataURL(file);
   };
+
+  const handleAttemptClose = useCallback(() => {
+    if (isDirty || invoiceDirty) {
+      setShowUnsavedPrompt(true);
+      return;
+    }
+    onRequestClose();
+  }, [isDirty, invoiceDirty, onRequestClose]);
+
+  const handleConfirmLeave = useCallback(() => {
+    setShowUnsavedPrompt(false);
+    onRequestClose();
+  }, [onRequestClose]);
+
+  const handleStayOpen = useCallback(() => {
+    setShowUnsavedPrompt(false);
+  }, []);
 
   const handleLogoDrop: React.DragEventHandler<HTMLDivElement> = (e) => {
     e.preventDefault();
@@ -323,7 +344,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       }
 
       const notesEl = q(".notes");
-      if (notesEl) setNotes(notesEl.textContent || "");
+      if (notesEl) setNotes(notesEl.innerHTML || "");
 
       // Try to infer grouping field from headers
       const parsedGroups = Array.from(
@@ -392,7 +413,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     setCustomerSummary(project?.clientName || "Customer");
     setInvoiceSummary("Invoice Details");
     setPaymentSummary("Payment");
-    setNotes("Notes...");
+    setNotes(DEFAULT_NOTES_HTML);
     setDepositReceived(0);
     setInvoiceDirty(false);
 
@@ -547,6 +568,12 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     setSelectedPages(pages.map((_, i) => i));
     setCurrentPage(0);
   }, [pages]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowUnsavedPrompt(false);
+    }
+  }, [isOpen]);
 
   // ---------- Build / Export / Save ----------
   const buildInvoiceHtml = (): string => {
@@ -800,7 +827,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     <Fragment>
       <Modal
         isOpen={isOpen}
-        onRequestClose={onRequestClose}
+        onRequestClose={handleAttemptClose}
         contentLabel="Invoice Preview"
         closeTimeoutMS={300}
         className={{
@@ -816,7 +843,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       >
         <div className={styles.modalHeader}>
           <div className={styles.modalTitle}>Invoice Preview</div>
-          <button className={styles.iconButton} onClick={onRequestClose} aria-label="Close">
+          <button className={styles.iconButton} onClick={handleAttemptClose} aria-label="Close">
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
@@ -1359,12 +1386,11 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                         contentEditable
                         suppressContentEditableWarning
                         onBlur={(e) => {
-                          setNotes(e.currentTarget.textContent || "");
+                          setNotes(e.currentTarget.innerHTML || "");
                           setInvoiceDirty(true);
                         }}
-                      >
-                        {notes}
-                      </div>
+                        dangerouslySetInnerHTML={{ __html: notes }}
+                      />
 
                       <div className="footer" contentEditable suppressContentEditableWarning>
                         {project?.company || "Company Name"}
@@ -1656,17 +1682,16 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                             </div>
                           </div>
 
-                          <div
-                            className="notes"
-                            contentEditable
-                            suppressContentEditableWarning
-                            onBlur={(e) => {
-                              setNotes(e.currentTarget.textContent || "");
-                              setInvoiceDirty(true);
-                            }}
-                          >
-                            {notes}
-                          </div>
+                            <div
+                              className="notes"
+                              contentEditable
+                              suppressContentEditableWarning
+                              onBlur={(e) => {
+                                setNotes(e.currentTarget.innerHTML || "");
+                                setInvoiceDirty(true);
+                              }}
+                              dangerouslySetInnerHTML={{ __html: notes }}
+                            />
 
                           <div className="footer" contentEditable suppressContentEditableWarning>
                             {project?.company || "Company Name"}
@@ -1681,6 +1706,35 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
           )}
         </div>
       </Modal>
+
+      {showUnsavedPrompt && (
+        <div
+          className={styles.unsavedOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Unsaved invoice changes"
+        >
+          <div className={styles.unsavedDialog}>
+            <p>This invoice has unsaved changes. Leave Anyway?</p>
+            <div className={styles.unsavedActions}>
+              <button
+                type="button"
+                className={styles.unsavedButton}
+                onClick={handleStayOpen}
+              >
+                Stay
+              </button>
+              <button
+                type="button"
+                className={`${styles.unsavedButton} ${styles.unsavedButtonPrimary}`}
+                onClick={handleConfirmLeave}
+              >
+                Leave Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={isConfirmingDelete}

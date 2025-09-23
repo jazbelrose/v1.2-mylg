@@ -50,8 +50,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       isOpen={isOpen}
       onRequestClose={onRequestClose}
       contentLabel="Confirmation"
-      className={className as string}
-      overlayClassName={overlayClassName as string}
+      className={className}
+      overlayClassName={overlayClassName}
       shouldCloseOnOverlayClick={false}
     >
       <div style={{ textAlign: 'center' }}>

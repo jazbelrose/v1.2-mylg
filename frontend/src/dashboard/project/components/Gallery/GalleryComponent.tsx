@@ -796,8 +796,8 @@ const GalleryComponent: React.FC = () => {
     <Fragment>
       {saving && <div style={{ color: "#FA3356", marginBottom: "10px" }}>Saving...</div>}
 
-      <div
-        className={`dashboard-item view-gallery ${styles.galleryTrigger}`}
+      <section
+        className={`card dashboard-item view-gallery dashboard-galleries ${styles.galleryTrigger}`}
         onClick={handleTriggerClick}
         role="button"
         tabIndex={0}
@@ -808,50 +808,54 @@ const GalleryComponent: React.FC = () => {
           }
         }}
       >
-        <div className={styles.topRow}>
-          <GalleryVerticalEnd size={26} className={styles.triggerIcon} />
-          <span>Galleries</span>
-        </div>
+        <header className="card__header">
+          <div className={styles.topRow}>
+            <GalleryVerticalEnd size={26} className={styles.triggerIcon} />
+            <span>Galleries</span>
+          </div>
+        </header>
 
-        {combinedGalleries.length > 0 && (
-          <div
-            className={`${styles.thumbnailRow} ${styles.galleryCover}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              openModal();
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Edit galleries"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
+        <div className="card__body">
+          {combinedGalleries.length > 0 && (
+            <div
+              className={`${styles.thumbnailRow} ${styles.galleryCover}`}
+              onClick={(e) => {
                 e.stopPropagation();
                 openModal();
-              }
-            }}
-          >
-            {combinedGalleries.map((galleryItem, idx) => {
-              const previewUrl = getPreviewUrl(galleryItem);
-              return previewUrl ? (
-                <img
-                  src={previewUrl ? getFileUrl(previewUrl) : ''}
-                  alt=""
-                  className={styles.previewThumbnail}
-                  key={galleryItem.slug || idx}
-                />
-              ) : (
-                <div
-                  className={`${styles.previewThumbnail} ${styles.previewPlaceholder}`}
-                  key={galleryItem.slug || idx}
-                >
-                  <GalleryVerticalEnd size={32} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Edit galleries"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openModal();
+                }
+              }}
+            >
+              {combinedGalleries.map((galleryItem, idx) => {
+                const previewUrl = getPreviewUrl(galleryItem);
+                return previewUrl ? (
+                  <img
+                    src={previewUrl ? getFileUrl(previewUrl) : ''}
+                    alt=""
+                    className={styles.previewThumbnail}
+                    key={galleryItem.slug || idx}
+                  />
+                ) : (
+                  <div
+                    className={`${styles.previewThumbnail} ${styles.previewPlaceholder}`}
+                    key={galleryItem.slug || idx}
+                  >
+                    <GalleryVerticalEnd size={32} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
 
       <Modal
         isOpen={isModalOpen}

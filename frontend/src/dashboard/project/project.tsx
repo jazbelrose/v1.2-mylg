@@ -22,8 +22,6 @@ import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 
-const MOBILE_LAYOUT_WIDTH = 640;
-
 interface LocationState {
   flashDate?: string;
 }
@@ -45,11 +43,6 @@ const SingleProject: React.FC = () => {
   const [filesOpen, setFilesOpen] = useState<boolean>(false);
   const quickLinksRef = useRef<QuickLinksRef>(null);
   const { ws } = useSocket();
-
-  const [isMobileBudgetLayout, setIsMobileBudgetLayout] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.innerWidth <= MOBILE_LAYOUT_WIDTH;
-  });
 
   const projectNameFromPath = useMemo(() => {
     const segments = location.pathname.split("/").filter(Boolean);
@@ -108,18 +101,6 @@ const SingleProject: React.FC = () => {
     },
     [fetchProjectDetails]
   );
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handleResize = () => {
-      setIsMobileBudgetLayout(window.innerWidth <= MOBILE_LAYOUT_WIDTH);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   // Keep the active project in sync with the ID from the route.
   useEffect(() => {
@@ -277,41 +258,49 @@ const SingleProject: React.FC = () => {
               />
             )}
 
-              <div
-                className={`dashboard-layout budget-calendar-layout${
-                  isMobileBudgetLayout ? " budget-calendar-layout--stacked" : ""
-                }`}
-              >
-                <div className="budget-column">
-                  <BudgetOverviewCard projectId={activeProject?.projectId} />
-                  {isMobileBudgetLayout && (
-                    <div className="budget-calendar-mobile-card">{calendarOverviewCard}</div>
-                  )}
-
-                  <GalleryComponent />
+              <div className="dashboard-layout project-dashboard-layout">
+                <div className="dashboard-budget">
+                  <div className="dashboard-budgetCard">
+                    <BudgetOverviewCard projectId={activeProject?.projectId} />
+                  </div>
+                  <div className="dashboard-galleries">
+                    <GalleryComponent />
+                  </div>
                 </div>
-                {!isMobileBudgetLayout && <div className="calendar-column">{calendarOverviewCard}</div>}
-              </div>
 
-              {/* <Timeline
-                activeProject={activeProject as Project & { status: string; milestoneTitles?: string[] }}
-                parseStatusToNumber={parseStatusToNumber}
-                onActiveProjectChange={handleActiveProjectChange}
-              /> */}
-
-              <div className="dashboard-layout timeline-location-row">
-                <div className="location-wrapper">
-                  <LocationComponent
-                    activeProject={activeProject}
-                    onActiveProjectChange={handleActiveProjectChange}
-                  />
+                <div className="dashboard-calendarChat">
+                  <section className="card dashboard-calendar">
+                    <header className="card__header">
+                      <span>Calendar</span>
+                    </header>
+                    <div className="card__body">{calendarOverviewCard}</div>
+                  </section>
                 </div>
-                <div className="tasks-wrapper">
-                  <TasksComponent
-                    projectId={activeProject?.projectId}
-                    userId={userId}
-                    team={activeProject?.team}
-                  />
+
+                <div className="dashboard-timelineRow">
+                  <section className="card dashboard-map">
+                    <header className="card__header">
+                      <span>Project Location</span>
+                    </header>
+                    <div className="card__body">
+                      <LocationComponent
+                        activeProject={activeProject}
+                        onActiveProjectChange={handleActiveProjectChange}
+                      />
+                    </div>
+                  </section>
+                  <section className="card dashboard-tasks">
+                    <header className="card__header">
+                      <span>Tasks</span>
+                    </header>
+                    <div className="card__body">
+                      <TasksComponent
+                        projectId={activeProject?.projectId}
+                        userId={userId}
+                        team={activeProject?.team}
+                      />
+                    </div>
+                  </section>
                 </div>
               </div>
             </div>

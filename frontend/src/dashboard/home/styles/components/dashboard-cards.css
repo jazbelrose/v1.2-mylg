@@ -1,7 +1,6 @@
 /* Dashboard Cards and Budget Overview */
 
 .dashboard-item {
-  
   padding: 18px;
   border-radius: 20px;
   display: flex;
@@ -11,6 +10,25 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 48px rgba(0, 0, 0, 0.45);
   border-radius: 32px 32px 32px 32px;
   border: 2px solid rgba(255, 255, 255, 0.10);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.card__header {
+  flex: 0 0 auto;
+}
+
+.card__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .dashboard-item:hover {
@@ -81,9 +99,8 @@
 .budget-component-container {
   cursor: pointer;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: stretch;
-  justify-content: flex-start;
   gap: clamp(12px, 2vw, 24px);
   width: 100%;
   container-type: inline-size;
@@ -98,9 +115,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  flex: 1 1 0%;
-  max-width: 50%;
-  min-width: 0;
+  width: 100%;
+  gap: 8px;
 }
 
 .budget-overview-header {

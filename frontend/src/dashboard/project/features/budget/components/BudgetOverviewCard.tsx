@@ -231,8 +231,8 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
 
 
   return (
-    <div
-      className="dashboard-item budget budget-component-container budget-overview-card"
+    <section
+      className="card dashboard-item budget budget-component-container budget-overview-card"
       onClick={isAdmin ? openBudgetPage : undefined}
       style={{
         cursor: isAdmin ? "pointer" : "default",
@@ -241,74 +241,78 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
         zIndex: 2,
       }}
     >
-      <div className="budget-overview-summary">
-        <span className="budget-overview-header">
-          <CircleDollarSign size={26} className="budget-overview-icon" />
-          Budget
-          {budgetHeader?.clientRevisionId != null && (
-            <span className="budget-overview-revision">{`Rev.${budgetHeader.clientRevisionId}`}</span>
-          )}
-        </span>
+      <header className="card__header">
+        <div className="budget-overview-summary">
+          <span className="budget-overview-header">
+            <CircleDollarSign size={26} className="budget-overview-icon" />
+            Budget
+            {budgetHeader?.clientRevisionId != null && (
+              <span className="budget-overview-revision">{`Rev.${budgetHeader.clientRevisionId}`}</span>
+            )}
+          </span>
 
-        {loading ? (
-          <FontAwesomeIcon
-            icon={faSpinner}
-            spin
-            className="budget-overview-spinner"
-            aria-label="Loading budget"
-          />
-        ) : (
-          <>
-            <span className="budget-overview-amount">
-              {budgetHeader ? formatUSD(ballparkValue) : "Not available"}
-              {budgetHeader && (
-                <FontAwesomeIcon
-                  icon={faFileInvoiceDollar}
-                  className="budget-overview-invoice-icon"
-                  title="Invoice preview"
-                  aria-label="Invoice preview"
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openInvoicePreview();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
+          {loading ? (
+            <FontAwesomeIcon
+              icon={faSpinner}
+              spin
+              className="budget-overview-spinner"
+              aria-label="Loading budget"
+            />
+          ) : (
+            <>
+              <span className="budget-overview-amount">
+                {budgetHeader ? formatUSD(ballparkValue) : "Not available"}
+                {budgetHeader && (
+                  <FontAwesomeIcon
+                    icon={faFileInvoiceDollar}
+                    className="budget-overview-invoice-icon"
+                    title="Invoice preview"
+                    aria-label="Invoice preview"
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
                       e.stopPropagation();
                       openInvoicePreview();
-                    }
-                  }}
-                />
-              )}
-            </span>
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openInvoicePreview();
+                      }
+                    }}
+                  />
+                )}
+              </span>
 
-            <span className="budget-overview-date">
-              {(() => {
-                const createdAt = budgetHeader?.createdAt;
-                return createdAt ? new Date(createdAt as string | number | Date).toLocaleDateString() : "No date";
-              })()}
-            </span>
-          </>
-        )}
-      </div>
-
-      {loading ? (
-        <div
-          style={{
-            marginTop: "16px",
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <FontAwesomeIcon icon={faSpinner} spin aria-label="Loading chart" />
+              <span className="budget-overview-date">
+                {(() => {
+                  const createdAt = budgetHeader?.createdAt;
+                  return createdAt
+                    ? new Date(createdAt as string | number | Date).toLocaleDateString()
+                    : "No date";
+                })()}
+              </span>
+            </>
+          )}
         </div>
-      ) : (
-        budgetHeader && (
-          <>
+      </header>
+
+      <div className="card__body">
+        {loading ? (
+          <div
+            style={{
+              marginTop: "16px",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <FontAwesomeIcon icon={faSpinner} spin aria-label="Loading chart" />
+          </div>
+        ) : (
+          budgetHeader && (
             <div className="chart-legend-container">
-              <div className="budget-chart">
+              <div className="budget-chart budget-donut">
                 <BudgetDonut
                   data={chartState.slices}
                   total={chartState.total}
@@ -318,9 +322,9 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
                 />
               </div>
             </div>
-          </>
-        )
-      )}
+          )
+        )}
+      </div>
 
       <ClientInvoicePreviewModal
         isOpen={isInvoicePreviewOpen}
@@ -328,7 +332,7 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
         revision={invoiceRevision}
         project={activeProject}
       />
-    </div>
+    </section>
   );
 };
 

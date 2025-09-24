@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ResponsiveContainer,
   PieChart,
@@ -99,9 +100,7 @@ const centerValueStyles: React.CSSProperties = {
 };
 
 const centerPopoverStyles: React.CSSProperties = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
+  position: "fixed",
   transform: "translate(-50%, -50%)",
   background: "rgba(17, 17, 17, 0.6)", // Semi-transparent for frosted effect
   color: "#f8fafc",
@@ -197,9 +196,17 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   explodeOnClick = true,
   className,
 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [lockedIndex, setLockedIndex] = useState<number | null>(null);
   const [isCenterOpen, setIsCenterOpen] = useState(false);
+  const [centerPopoverPosition, setCenterPopoverPosition] = useState<
+    | {
+        top: number;
+        left: number;
+      }
+    | null
+  >(null);
 
   const centerButtonRef = useRef<HTMLButtonElement | null>(null);
   const centerPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -302,12 +309,25 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     []
   );
 
+  const updateCenterPopoverPosition = useCallback(() => {
+    const button = centerButtonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    setCenterPopoverPosition({
+      top: rect.top + rect.height / 2,
+      left: rect.left + rect.width / 2,
+    });
+  }, []);
+
   const openCenterPopover = useCallback(() => {
     setIsCenterOpen(true);
-  }, []);
+    updateCenterPopoverPosition();
+  }, [updateCenterPopoverPosition]);
 
   const closeCenterPopover = useCallback(() => {
     setIsCenterOpen(false);
+    setCenterPopoverPosition(null);
   }, []);
 
   const handleCenterMouseEnter = useCallback(() => {
@@ -386,15 +406,105 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   }, [closeCenterPopover, isCenterOpen]);
 
   useEffect(() => {
+    if (!isCenterOpen) return;
+
+    updateCenterPopoverPosition();
+
+    const handleReposition = () => {
+      updateCenterPopoverPosition();
+    };
+
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+
+    return () => {
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [isCenterOpen, updateCenterPopoverPosition]);
+
+  useEffect(() => {
     closeCenterPopover();
   }, [dataSignature, total, closeCenterPopover]);
 
+  const handleContainerPointerLeave = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!explodeOnHover) return;
+      const nextTarget = event.relatedTarget as Node | null;
+      if (nextTarget && containerRef.current?.contains(nextTarget)) {
+        return;
+      }
+      setHoverIndex(null);
+    },
+    [explodeOnHover]
+  );
+
+  const popoverContent =
+    typeof document !== "undefined" && isCenterOpen && centerPopoverPosition
+      ? createPortal(
+          <div
+            ref={centerPopoverRef}
+            style={{
+              ...centerPopoverStyles,
+              top: centerPopoverPosition.top,
+              left: centerPopoverPosition.left,
+            }}
+            role="dialog"
+            aria-label="Budget allocation breakdown"
+            onMouseEnter={handleCenterPopoverMouseEnter}
+            onMouseLeave={handleCenterPopoverMouseLeave}
+          >
+            <div style={centerPopoverHeaderStyles}>Budget allocation</div>
+            {stableData.length ? (
+              <div style={centerPopoverListStyles}>
+                {stableData.map((slice) => {
+                  const ratio = total > 0 ? slice.value / total : 0;
+                  return (
+                    <div key={slice.id} style={centerPopoverRowStyles}>
+                      <div style={centerPopoverLabelGroupStyles}>
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            ...centerPopoverSwatchStyles,
+                            backgroundColor: slice.color,
+                          }}
+                        />
+                        <span
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          {slice.label}
+                        </span>
+                      </div>
+                      <span style={centerPopoverPercentStyles}>
+                        {total > 0 ? percentageFormatter.format(ratio) : "0%"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ fontStyle: "italic", opacity: 0.75, fontSize: "0.8rem" }}>
+                No categories available
+              </div>
+            )}
+          </div>,
+          document.body
+        )
+      : null;
+
   return (
     <div
+      ref={containerRef}
       className={className}
       role="img"
       aria-label={ariaLabel}
-      style={{ width: "100%", height: "100%", position: "relative" }}
+      style={{ width: "100%", height: "100%", position: "relative", overflow: "visible" }}
+      onPointerLeave={handleContainerPointerLeave}
     >
       <ResponsiveContainer>
         <PieChart>
@@ -454,55 +564,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         <span style={centerValueStyles}>{formattedTotal}</span>
       </button>
 
-      {isCenterOpen ? (
-        <div
-          ref={centerPopoverRef}
-          style={centerPopoverStyles}
-          role="dialog"
-          aria-label="Budget allocation breakdown"
-          onMouseEnter={handleCenterPopoverMouseEnter}
-          onMouseLeave={handleCenterPopoverMouseLeave}
-        >
-          <div style={centerPopoverHeaderStyles}>Budget allocation</div>
-          {stableData.length ? (
-            <div style={centerPopoverListStyles}>
-              {stableData.map((slice) => {
-                const ratio = total > 0 ? slice.value / total : 0;
-                return (
-                  <div key={slice.id} style={centerPopoverRowStyles}>
-                    <div style={centerPopoverLabelGroupStyles}>
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          ...centerPopoverSwatchStyles,
-                          backgroundColor: slice.color,
-                        }}
-                      />
-                      <span
-                        style={{
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        {slice.label}
-                      </span>
-                    </div>
-                    <span style={centerPopoverPercentStyles}>
-                      {total > 0 ? percentageFormatter.format(ratio) : "0%"}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div style={{ fontStyle: "italic", opacity: 0.75, fontSize: "0.8rem" }}>
-              No categories available
-            </div>
-          )}
-        </div>
-      ) : null}
+      {popoverContent}
 
       <table style={srOnlyStyles}>
         <caption>{ariaLabel}</caption>

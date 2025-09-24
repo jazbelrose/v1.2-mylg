@@ -12,7 +12,7 @@ import {
 import { Segmented, Switch } from "antd";
 
 import EditBallparkModal from "@/dashboard/project/features/budget/components/EditBallparkModal";
-import ClientInvoicePreviewModal from "@/dashboard/project/components/Shared/ClientInvoicePreviewModal";
+import ClientInvoicePreviewModal from "@/dashboard/project/features/budget/ClientInvoicePreviewModal";
 import BudgetDonut, {
   type BudgetDonutSlice,
   type BudgetDonutDatum,

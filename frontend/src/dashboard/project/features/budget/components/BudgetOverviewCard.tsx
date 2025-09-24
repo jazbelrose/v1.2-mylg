@@ -5,7 +5,7 @@ import { formatUSD } from "@/shared/utils/budgetUtils";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileInvoiceDollar, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import ClientInvoicePreviewModal from "@/dashboard/project/components/Shared/ClientInvoicePreviewModal";
+import ClientInvoicePreviewModal from "@/dashboard/project/features/budget/ClientInvoicePreviewModal";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import BudgetDonut, {
   type BudgetDonutSlice,

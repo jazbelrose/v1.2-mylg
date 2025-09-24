@@ -7,7 +7,6 @@ export type { QuickLinksRef } from './QuickLinksComponent';
 export { default as LocationComponent } from './LocationComponent';
 export { default as TeamModal } from './TeamModal';
 export { default as PDFPreview } from './PDFPreview';
-export { default as ClientInvoicePreviewModal } from './ClientInvoicePreviewModal';
 export { default as ChatPanel } from './ChatPanel';
 export { default as Dropdown } from '../FileManager/Dropdown';
 

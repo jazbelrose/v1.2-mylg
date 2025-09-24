@@ -1,5 +1,5 @@
 import { slugify } from "@/shared/utils/slug";
-import { Gallery } from './GalleryComponent';
+import { Gallery } from "./types";
 
 export function getUniqueSlug(
   desiredSlug: string,

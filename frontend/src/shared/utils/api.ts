@@ -236,7 +236,8 @@ const BASE_ENDPOINTS = {
     EDIT_MESSAGE_URL: 'https://uzcx04lrr9.execute-api.us-west-2.amazonaws.com/messages',
     GALLERY_UPLOAD_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/galleries/upload',
     CREATE_GALLERY_FUNCTION_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/galleries',
-    DELETE_GALLERY_FUNCTION_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/galleries',
+    DELETE_GALLERY_FUNCTION_URL:
+      'https://o01t8q8mjk.execute-api.us-west-1.amazonaws.com/default/deleteGalleryFiles',
     GALLERIES_API_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects/galleries',
     POST_PROJECTS_URL: 'https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/projects',
     POST_PROJECT_TO_USER_URL: 'https://gy8dq7w0a3.execute-api.us-west-2.amazonaws.com/postProjectToUserId',

@@ -41,6 +41,10 @@ Auth: AWS Cognito with role claims injected at token issuance
 
 Storage: Amazon S3 for files and assets
 
+## Environment configuration
+
+- `VITE_DELETE_GALLERY_FUNCTION_URL` – Points to the legacy Lambda used to remove gallery assets from S3 when a gallery is deleted. For the development stack this should be set to `https://o01t8q8mjk.execute-api.us-west-1.amazonaws.com/default/deleteGalleryFiles`.
+
 🚀 Roadmap
 
 Multi-user calendar sharing and task scheduling

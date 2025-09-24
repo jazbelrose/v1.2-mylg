@@ -58,27 +58,49 @@ npx serverless deploy --stage dev --verbose
 
 ## Function Behavior
 
-### S3 Event Processing
-When a PDF or SVG file is uploaded to `mylg-files-v12` bucket with `uploads/` prefix:
-1. Extracts embedded images from the file
-2. Uploads extracted images to S3
-3. Creates updated file with clickable links
-4. Saves gallery metadata to DynamoDB
-5. Broadcasts real-time updates via WebSocket
+### Complete Workflow (Matches Original Design)
 
-### HTTP API Processing
-POST `/galleries/create` with payload:
+#### 1. **Upload Request** 
+Frontend calls `POST /projects/galleries/upload` with:
 ```json
 {
   "projectId": "uuid",
+  "fileName": "design.pdf",
+  "contentType": "application/pdf",
   "galleryName": "My Gallery",
-  "gallerySlug": "my-gallery",
+  "gallerySlug": "my-gallery", 
   "galleryPassword": "optional",
   "passwordEnabled": true,
-  "svgData": "base64-encoded-svg",
-  "pdfData": "base64-encoded-pdf"
+  "passwordTimeout": 900000
 }
 ```
+
+#### 2. **Signed URL Response**
+Backend returns signed S3 URL with metadata:
+```json
+{
+  "uploadUrl": "https://s3.amazonaws.com/...",
+  "key": "uploads/projectId/timestamp_uuid.pdf",
+  "bucket": "mylg-files-v12"
+}
+```
+
+#### 3. **File Upload to S3**  
+Frontend uploads file to S3 with metadata headers
+
+#### 4. **S3 Event Triggers Lambda**
+When file is uploaded to `uploads/` prefix, S3 triggers CreateGalleryFunction
+
+#### 5. **Gallery Processing**
+Lambda function:
+1. Extracts embedded images from PDF/SVG
+2. Uploads extracted images to S3
+3. Creates updated file with clickable links  
+4. Saves gallery metadata to DynamoDB
+5. Broadcasts real-time updates via WebSocket
+
+### Manual Processing (Alternative)
+POST `/projects/galleries/process` with direct file data (for testing)
 
 ## Database Schema
 Saves to `Galleries` table:

@@ -3,6 +3,8 @@ import { corsHeadersFromEvent, preflightFromEvent, json } from "/opt/nodejs/util
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 
 /* ------------ ENV ------------ */
@@ -850,6 +852,62 @@ const deleteGallery = async (_e, C, { projectId, galleryId }) => {
   return json(204, C, "");
 };
 
+// POST /projects/galleries/upload
+// Body: { projectId, fileName, contentType, galleryName?, gallerySlug?, galleryPassword?, passwordEnabled?, passwordTimeout? }
+const createGalleryUpload = async (e, C) => {
+  const b = B(e);
+  const { projectId, fileName, contentType, galleryName, gallerySlug, galleryPassword, passwordEnabled, passwordTimeout } = b;
+  
+  if (!projectId || !fileName || !contentType) {
+    return json(400, C, { error: "projectId, fileName, and contentType are required" });
+  }
+
+  // Validate file type
+  const allowedTypes = ['application/pdf', 'image/svg+xml', 'text/xml'];
+  if (!allowedTypes.includes(contentType) && !contentType.startsWith('image/svg')) {
+    return json(400, C, { error: "Only PDF and SVG files are supported" });
+  }
+
+  // Generate unique file key
+  const fileExtension = contentType === 'application/pdf' ? 'pdf' : 'svg';
+  const timestamp = Date.now();
+  const fileId = uuidv4();
+  const key = `uploads/${projectId}/${timestamp}_${fileId}.${fileExtension}`;
+
+  // Create metadata for the S3 object
+  const metadata = {
+    projectid: projectId,
+    galleryname: galleryName || fileName,
+  };
+  
+  if (gallerySlug) metadata.galleryslug = gallerySlug;
+  if (galleryPassword) metadata.gallerypassword = galleryPassword;
+  if (passwordEnabled !== undefined) metadata.passwordenabled = String(passwordEnabled);
+  if (passwordTimeout) metadata.passwordtimeout = String(passwordTimeout);
+
+  try {
+    // Create presigned URL for upload
+    const command = new PutObjectCommand({
+      Bucket: FILE_BUCKET,
+      Key: key,
+      ContentType: contentType,
+      Metadata: metadata,
+    });
+
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 minutes
+
+    return json(200, C, {
+      uploadUrl,
+      key,
+      bucket: FILE_BUCKET,
+      metadata,
+    });
+  } catch (error) {
+    console.error("Error creating presigned URL:", error);
+    return json(500, C, { error: "Failed to create upload URL" });
+  }
+};
+
 /* ---------- Budgets (headers & line items) ---------- */
 // Helpers
 function enforcePrefix(id) {
@@ -1053,6 +1111,9 @@ const routes = [
   { m: "PUT",    r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: putGallery },
   { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: patchGallery },
   { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: deleteGallery },
+
+  // Gallery upload (creates signed S3 URLs)
+  { m: "POST",   r: /^\/projects\/galleries\/upload$/i,                                        h: createGalleryUpload },
 
   // Budgets under project
   { m: "GET",    r: /^\/projects\/(?<projectId>[^/]+)\/budget$/i,                               h: listBudgetForProject },

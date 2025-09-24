@@ -189,11 +189,17 @@
   align-items: center;
   gap: 6px;
 
+  padding: 6px 12px;
   border-radius: 10px;
 
   color: rgba(255, 255, 255, 0.65);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  line-height: 1.4;
+  white-space: normal;
+  max-width: 100%;
+  min-width: 0;
+  text-align: left;
 }
 
 .project-header:not(.new-project-header) .finish-line-header:hover,
@@ -205,6 +211,8 @@
 
 .project-header:not(.new-project-header) .finish-line-header span {
   color: inherit;
+  line-height: inherit;
+  white-space: inherit;
 }
 
 .project-header:not(.new-project-header) .project-nav-tabs {

@@ -161,9 +161,8 @@
 .dateText {
   font-size: 0.75rem;
   color: #f87171;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
+  white-space: normal;
 }
 
 .tabs {

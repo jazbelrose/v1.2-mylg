@@ -194,18 +194,7 @@ const DesktopProjectHeader = ({
               <Folder size={20} />
             </div>
 
-            <div
-              onClick={onOpenTeam}
-              onKeyDown={(event) => handleKeyDown(event, onOpenTeam)}
-              role="button"
-              tabIndex={0}
-              title="View project team"
-              aria-label="View project team"
-              className="interactive project-team-stack"
-            >
-              <AvatarStack members={teamMembers} />
-            </div>
-
+            
             <button
               type="button"
               onClick={() => {
@@ -222,6 +211,19 @@ const DesktopProjectHeader = ({
             >
               <MessageCircle size={20} />
             </button>
+
+            <div
+              onClick={onOpenTeam}
+              onKeyDown={(event) => handleKeyDown(event, onOpenTeam)}
+              role="button"
+              tabIndex={0}
+              title="View project team"
+              aria-label="View project team"
+              className="interactive project-team-stack"
+            >
+              <AvatarStack members={teamMembers} />
+            </div>
+
           </div>
         </div>
 

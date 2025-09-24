@@ -9,6 +9,19 @@ import {
   type TooltipProps,
 } from "recharts";
 
+interface SectorProps {
+  cx?: number;
+  cy?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  startAngle?: number;
+  endAngle?: number;
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
+  className?: string;
+}
+
 import { getColor } from "@/shared/utils/colorUtils";
 
 export interface BudgetDonutSlice {
@@ -158,9 +171,9 @@ const tooltipStyles: React.CSSProperties = {
   backdropFilter: "blur(10px)", // Add blur for frosted effect
   WebkitBackdropFilter: "blur(10px)", // Safari support
 };
-const renderActiveShape = (props: Record<string, unknown>) => {
+const renderActiveShape = (props: SectorProps) => {
   const outerRadius = typeof props.outerRadius === "number" ? props.outerRadius : 0;
-  return <Sector {...(props as never)} outerRadius={outerRadius + 8} />;
+  return <Sector {...props} outerRadius={outerRadius + 8} />;
 };
 
 const slicesAreEqual = (a: BudgetDonutSlice[], b: BudgetDonutSlice[]) => {

@@ -2,7 +2,7 @@ import Modal from "@/shared/ui/ModalWithStack";
 
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
-import type { FinishLineModalState } from "../useProjectHeaderState";
+import type { FinishLineModalState } from "../projectHeaderTypes";
 
 interface FinishLineModalProps {
   modal: FinishLineModalState;

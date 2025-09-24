@@ -2,7 +2,7 @@ import Modal from "@/shared/ui/ModalWithStack";
 
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
-import type { EditStatusModalState } from "../useProjectHeaderState";
+import type { EditStatusModalState } from "../projectHeaderTypes";
 
 interface EditStatusModalProps {
   modal: EditStatusModalState;

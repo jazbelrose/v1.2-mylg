@@ -2,7 +2,7 @@ import Modal from "@/shared/ui/ModalWithStack";
 
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
-import type { DeleteConfirmationModalState } from "../useProjectHeaderState";
+import type { DeleteConfirmationModalState } from "../projectHeaderTypes";
 
 interface DeleteConfirmationModalProps {
   modal: DeleteConfirmationModalState;

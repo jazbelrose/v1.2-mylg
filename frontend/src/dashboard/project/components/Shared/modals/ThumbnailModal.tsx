@@ -4,7 +4,7 @@ import Modal from "@/shared/ui/ModalWithStack";
 
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
-import type { ThumbnailModalState } from "../useProjectHeaderState";
+import type { ThumbnailModalState } from "../projectHeaderTypes";
 
 interface ThumbnailModalProps {
   modal: ThumbnailModalState;

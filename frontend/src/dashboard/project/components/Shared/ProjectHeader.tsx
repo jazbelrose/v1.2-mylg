@@ -7,8 +7,8 @@ import TeamModal from "./TeamModal";
 import DesktopProjectHeader from "./DesktopProjectHeader";
 import {
   useProjectHeaderState,
-  type ProjectHeaderProps,
 } from "./useProjectHeaderState";
+import type { ProjectHeaderProps } from "./projectHeaderTypes";
 import EditNameModal from "./modals/EditNameModal";
 import FinishLineModal from "./modals/FinishLineModal";
 import EditStatusModal from "./modals/EditStatusModal";

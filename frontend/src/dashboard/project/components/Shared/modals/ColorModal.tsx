@@ -5,7 +5,7 @@ import Modal from "@/shared/ui/ModalWithStack";
 
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
-import type { ColorModalState } from "../useProjectHeaderState";
+import type { ColorModalState } from "../projectHeaderTypes";
 
 interface ColorModalProps {
   modal: ColorModalState;

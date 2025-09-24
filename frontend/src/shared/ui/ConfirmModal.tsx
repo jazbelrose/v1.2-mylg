@@ -46,6 +46,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   const mismatch = confirmText && text !== '' && text !== confirmText;
 
   return (
+    // @ts-expect-error react-modal types are incorrect for className
     <Modal
       isOpen={isOpen}
       onRequestClose={onRequestClose}

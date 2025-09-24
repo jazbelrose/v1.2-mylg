@@ -91,7 +91,19 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
   }, [userId, fetchUserProfile]);
 
   // Derived role checks based on user profile
-  const role = user?.role || user?.occupation;
+  const userData = useMemo<UserLite | null>(() => {
+    if (user) {
+      return user;
+    }
+
+    if (!userId) {
+      return null;
+    }
+
+    return { userId, messages: [] } as UserLite;
+  }, [user, userId]);
+
+  const role = userData?.role || userData?.occupation;
   const isAdmin = role === "admin";
   const isDesigner = role === "designer";
   const isBuilder = role === "builder";
@@ -99,8 +111,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const isClient = role === "client";
 
   // Backward compatibility
-  const userName = user?.firstName ? `${user.firstName} ` : "Guest";
-  const userData = user; // alias for backward compatibility
+  const userName = userData?.firstName ? `${userData.firstName} ` : "Guest";
   const setUserData = setUser; // alias for backward compatibility
   const refreshUser = fetchUserProfile; // alias for backward compatibility
 

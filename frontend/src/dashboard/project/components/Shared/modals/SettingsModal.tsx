@@ -6,7 +6,7 @@ import Modal from "@/shared/ui/ModalWithStack";
 
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
-import type { SettingsModalState } from "../useProjectHeaderState";
+import type { SettingsModalState } from "../projectHeaderTypes";
 
 interface SettingsModalProps {
   modal: SettingsModalState;

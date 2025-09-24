@@ -2,7 +2,7 @@ import Modal from "@/shared/ui/ModalWithStack";
 
 import styles from "@/dashboard/home/components/finish-line-component.module.css";
 
-import type { InvoiceInfoModalState } from "../useProjectHeaderState";
+import type { InvoiceInfoModalState } from "../projectHeaderTypes";
 
 interface InvoiceInfoModalProps {
   modal: InvoiceInfoModalState;

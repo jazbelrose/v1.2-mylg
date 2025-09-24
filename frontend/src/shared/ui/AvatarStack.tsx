@@ -13,6 +13,7 @@ interface AvatarStackProps {
   members?: Member[];
   onClick?: () => void;
   size?: number; // avatar diameter in px (default 34)
+  className?: string;
 }
 
 const getMaxVisible = (): number => {
@@ -23,7 +24,7 @@ const getMaxVisible = (): number => {
   return 4;
 };
 
-const AvatarStack: React.FC<AvatarStackProps> = ({ members = [], onClick, size }) => {
+const AvatarStack: React.FC<AvatarStackProps> = ({ members = [], onClick, size, className }) => {
   const [maxVisible, setMaxVisible] = useState<number>(getMaxVisible());
 
   useEffect(() => {
@@ -38,9 +39,11 @@ const AvatarStack: React.FC<AvatarStackProps> = ({ members = [], onClick, size }
   const avatarSize = typeof size === 'number' && size > 8 ? size : 34;
   const overlap = Math.floor(avatarSize / 2);
 
+  const stackClassName = className ? `${styles.stack} ${className}` : styles.stack;
+
   return (
     <div
-      className={styles.stack}
+      className={stackClassName}
       aria-label="Project team members"
       onClick={onClick}
       role={onClick ? 'button' : undefined}

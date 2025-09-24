@@ -961,58 +961,66 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               )}
             </svg>
 
-            <AvatarStack members={teamMembers} onClick={openTeamModal} />
+            <div className="project-quick-actions">
+              <div className="quick-action">
+                <AvatarStack
+                  members={teamMembers}
+                  onClick={openTeamModal}
+                  className="project-quick-actions__avatars"
+                />
+              </div>
 
-            <div
-              className="finish-line-header interactive"
-              onClick={openFinishLineModal}
-              onKeyDown={(e) => handleKeyDown(e, openFinishLineModal)}
-              role="button"
-              tabIndex={0}
-              title="Production dates"
-              aria-label="Production dates"
-              style={{ cursor: "pointer" }}
-            >
-              <span>{rangeLabel}</span>
-            </div>
+              <div
+                className="finish-line-header interactive quick-action"
+                onClick={openFinishLineModal}
+                onKeyDown={(e) => handleKeyDown(e, openFinishLineModal)}
+                role="button"
+                tabIndex={0}
+                title="Production dates"
+                aria-label="Production dates"
+                style={{ cursor: "pointer" }}
+              >
+                <span>{rangeLabel}</span>
+              </div>
 
-            <div
-              onClick={openSettingsModal}
-              onKeyDown={(e) => handleKeyDown(e, openSettingsModal)}
-              role="button"
-              tabIndex={0}
-              title="Project settings"
-              aria-label="Project settings"
-              className="interactive"
-              style={{ cursor: "pointer", margin: "10px" }}
-            >
-              <Settings size={20} className="settings-icon" />
-            </div>
+              <div
+                onClick={openSettingsModal}
+                onKeyDown={(e) => handleKeyDown(e, openSettingsModal)}
+                role="button"
+                tabIndex={0}
+                title="Project settings"
+                aria-label="Project settings"
+                className="interactive quick-action"
+                style={{ cursor: "pointer" }}
+              >
+                <Settings size={20} className="settings-icon" />
+              </div>
 
-            <div
-              onClick={onOpenQuickLinks}
-              onKeyDown={(e) => handleKeyDown(e, onOpenQuickLinks)}
-              role="button"
-              tabIndex={0}
-              title="Quick links"
-              aria-label="Quick links"
-              className="interactive"
-              style={{ cursor: "pointer" }}
-            >
-              <Link2 size={20} />
-            </div>
+              <div
+                onClick={onOpenQuickLinks}
+                onKeyDown={(e) => handleKeyDown(e, onOpenQuickLinks)}
+                role="button"
+                tabIndex={0}
+                title="Quick links"
+                aria-label="Quick links"
+                className="interactive quick-action"
+                style={{ cursor: "pointer" }}
+              >
+                <Link2 size={20} />
+              </div>
 
-            <div
-              onClick={onOpenFiles}
-              onKeyDown={(e) => handleKeyDown(e, onOpenFiles)}
-              role="button"
-              tabIndex={0}
-              title="Open file manager"
-              aria-label="Open file manager"
-              className="interactive"
-              style={{ cursor: "pointer", margin: "10px" }}
-            >
-              <Folder size={20} />
+              <div
+                onClick={onOpenFiles}
+                onKeyDown={(e) => handleKeyDown(e, onOpenFiles)}
+                role="button"
+                tabIndex={0}
+                title="Open file manager"
+                aria-label="Open file manager"
+                className="interactive quick-action"
+                style={{ cursor: "pointer" }}
+              >
+                <Folder size={20} />
+              </div>
             </div>
 
             <Modal

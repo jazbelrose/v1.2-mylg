@@ -7,7 +7,7 @@
 .calendar-layout .project-calendar-wrapper {
   max-height: none;.timeline-location-row {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: stretch;
   padding-top: 18px;
   height: 50vh;
@@ -36,7 +36,7 @@
 .budget-calendar-layout {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 16px;
+  gap: 12px;
   min-height: 0;
 }
 
@@ -48,7 +48,7 @@
 .budget-calendar-layout .calendar-column {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   min-width: 0;
   min-height: 0;
 }
@@ -76,9 +76,9 @@
 /* Timeline + Location row layout */
 .timeline-location-row {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: stretch;
-  padding-top: 18px;
+  padding-top: 12px;
   height: 85vh;
 }
 

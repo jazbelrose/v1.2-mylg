@@ -223,6 +223,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
                 maxWidth: MAX_THREAD_WIDTH,
                 height: "100%",
                 minHeight: 0,
+                marginLeft: "12px",
               }}
             >
               <_ProjectMessagesThread

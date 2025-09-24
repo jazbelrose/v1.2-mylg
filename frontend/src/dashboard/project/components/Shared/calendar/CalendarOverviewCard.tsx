@@ -1,8 +1,8 @@
 import React from "react";
 import "./calendar-overview-card.css";
-import CalendarBase, { CalendarBaseProps } from "./calendar/CalendarBase";
+import CalendarBase, { CalendarBaseProps } from "./CalendarBase";
 
-export type { Project, TimelineEvent } from "./calendar/CalendarBase";
+export type { Project, TimelineEvent } from "./CalendarBase";
 
 type CalendarOverviewCardProps = Omit<CalendarBaseProps, "wrapperClassName" | "dayHeaderIdPrefix">;
 

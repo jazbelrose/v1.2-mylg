@@ -242,8 +242,8 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
       }}
     >
       <div className="budget-overview-summary">
-        <span className="budget-overview-header">
-          <CircleDollarSign size={26} className="budget-overview-icon" />
+        <span className="budget-overview-header" style={{ paddingLeft: "6px" }}>
+          
           Budget
           {budgetHeader?.clientRevisionId != null && (
             <span className="budget-overview-revision">{`Rev.${budgetHeader.clientRevisionId}`}</span>

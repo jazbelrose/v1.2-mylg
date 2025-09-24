@@ -129,6 +129,11 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  font-size: clamp(1.5rem, 3vw, 2.5rem) !important;
+}
+
+.dashboard-item.budget .budget-overview-amount span {
+  font-size: clamp(1.5rem, 3vw, 2.5rem) !important;
 }
 
 .budget-overview-invoice-icon {

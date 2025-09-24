@@ -1,6 +1,11 @@
 .calendar-layout .project-calendar-wrapper {
-  max-height: none;
-  flex: 1 1 0;
+  max-height: none;.timeline-location-row {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  padding-top: 18px;
+  height: 50vh;
+}x: 1 1 0;
   min-height: 650px;
   overflow-y: auto;
 }
@@ -68,7 +73,7 @@
   gap: 16px;
   align-items: stretch;
   padding-top: 18px;
-  height: 500px;
+  height: 80vh;
 }
 
 .timeline-location-row > * {
@@ -77,9 +82,10 @@
   min-height: 0;
 }
 
-@media (max-width: 1024px) {
+@media (max-height: 800px) {
   .timeline-location-row {
     flex-direction: column;
+    height: 50vh;
   }
 }
 

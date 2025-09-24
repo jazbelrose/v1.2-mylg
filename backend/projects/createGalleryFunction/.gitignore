@@ -1,4 +1,6 @@
 # Python dependencies - these are installed during deployment
+# Python dependencies - these are installed during deployment
+python/
 fitz/
 pymupdf/
 pymupdf-*/
@@ -10,4 +12,5 @@ __pycache__/
 *.pyo
 
 # Local environment
+.venv/
 .env

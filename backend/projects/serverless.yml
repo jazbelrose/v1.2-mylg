@@ -3,10 +3,24 @@ frameworkVersion: '3'
 
 useDotenv: true
 
+plugins:
+  - serverless-python-requirements
+
 custom:
   app: mylg
   ver: v12
   env: ${file(../serverless.common.yml):env}
+  pythonRequirements:
+    dockerizePip: non-linux
+    slim: true
+    strip: false
+    fileName: createGalleryFunction/requirements.txt
+    zip: true
+    useDownloadCache: true
+    useStaticCache: true
+    pipCmdExtraArgs:
+      - --cache-dir
+      - .requirements-cache
 
 provider:
   name: aws
@@ -76,8 +90,18 @@ provider:
         - Effect: Allow
           Action:
             - s3:DeleteObject
+            - s3:GetObject
+            - s3:PutObject
+            - s3:GetObjectMetadata
           Resource:
             - arn:aws:s3:::${env:FILE_BUCKET}/*
+            - arn:aws:s3:::${env:FILE_BUCKET}/*
+        
+        - Effect: Allow
+          Action:
+            - execute-api:ManageConnections
+          Resource:
+            - arn:aws:execute-api:${aws:region}:${aws:accountId}:*/*/*/*
 
 functions:
   projectsRouter:
@@ -154,9 +178,50 @@ functions:
           path: /budgets/{proxy+}
           method: OPTIONS
 
+  createGalleryFunction:
+    name: ${self:custom.app}-${self:custom.ver}-create-gallery-${sls:stage}
+    handler: createGalleryFunction/lambda_function.lambda_handler
+    runtime: python3.9
+    timeout: 300
+    memorySize: 512
+    package:
+      patterns:
+        - createGalleryFunction/**
+        - '!createGalleryFunction/template.yml'
+    environment:
+      GALLERIES_TABLE: ${env:GALLERIES_TABLE}
+      CONNECTIONS_TABLE: ${env:CONNECTIONS_TABLE}
+      SOURCE_BUCKET: ${env:FILE_BUCKET}
+      WEBSOCKET_ENDPOINT: ${env:WEBSOCKET_ENDPOINT, ''}
+    events:
+      - s3:
+          bucket: ${env:FILE_BUCKET}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploads/
+            - suffix: .pdf
+          existing: true
+      - s3:
+          bucket: ${env:FILE_BUCKET}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploads/
+            - suffix: .svg
+          existing: true
+      - httpApi:
+          path: /galleries/create
+          method: POST
+          authorizer:
+            name: jwtAuthorizer
+      - httpApi:
+          path: /galleries/create
+          method: OPTIONS
+
 package:
   patterns:
     # include the router + anything it imports (node_modules auto-included)
     - router.mjs
     - '!**/*.map'
     - '!node_modules/.bin/**'
+    # exclude Python function packaging - it's handled separately
+    - '!createGalleryFunction/**'

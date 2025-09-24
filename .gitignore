@@ -38,3 +38,35 @@ logs/
 
 # Scripts (migration and utility scripts)
 backend/scripts/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.pytest_cache/
+
+# Python packages and wheels
+*.egg-info/
+dist/
+build/
+*.whl
+
+# PyMuPDF and other compiled dependencies
+**/fitz/
+**/pymupdf/
+**/pymupdf-*/
+**/*-dist-info/
+**/requirements.txt.lock
+
+# Serverless Python requirements cache
+.requirements-cache/
+**/.requirements-cache/

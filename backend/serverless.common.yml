@@ -47,6 +47,7 @@ env:
   # ---- WebSocket
   CONNECTIONS_TABLE: Connections
   CONNECTIONS_USER_GSI: userId-sessionId-index
+  WEBSOCKET_ENDPOINT: ""  # Set this to your websocket API gateway domain
 
   # ---- Misc
   SCANS_ALLOWED: "false"                     # flip to "true" only for dev scans

@@ -1,3 +1,9 @@
+.calendar-layout {
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+}
+
 .calendar-layout .project-calendar-wrapper {
   max-height: none;.timeline-location-row {
   display: flex;

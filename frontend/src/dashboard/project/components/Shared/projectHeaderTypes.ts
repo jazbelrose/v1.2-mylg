@@ -23,6 +23,8 @@ export interface ProjectHeaderProps {
   onActiveProjectChange?: (project: Project) => void;
   onOpenFiles: () => void;
   onOpenQuickLinks: () => void;
+  onOpenChat?: () => void;
+  isChatHidden?: boolean;
 }
 
 export interface NavigationState {

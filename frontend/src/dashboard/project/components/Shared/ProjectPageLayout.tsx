@@ -16,11 +16,12 @@ type ProjectPageLayoutProps = {
 type ProjectMessagesThreadProps = {
   projectId: string;
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
   floating: boolean;
-  setFloating: (floating: boolean) => void;
-  startDrag: () => void;
+  setFloating: (floating: boolean | ((prev: boolean) => boolean)) => void;
+  startDrag: (event: React.MouseEvent<HTMLDivElement>) => void;
   headerOffset: number;
+  onCloseChat?: () => void;
 };
 
 type ChatPanelProps = {
@@ -28,6 +29,7 @@ type ChatPanelProps = {
   initialFloating?: boolean;
   onFloatingChange?: (floating: boolean) => void;
   openSignal?: number;
+  onCloseChat?: () => void;
 };
 
 // (If your imported components already export types, remove these lines)
@@ -94,6 +96,15 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
     }
   });
   const [chatOpenSignal, setChatOpenSignal] = React.useState<number>(0);
+  const [isChatHidden, setIsChatHidden] = React.useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const stored = localStorage.getItem("chatPanelHidden");
+      return stored === "true";
+    } catch {
+      return false;
+    }
+  });
 
   const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("project");
 
@@ -137,11 +148,21 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
   }, [floatingThread]);
 
   React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem("chatPanelHidden", isChatHidden ? "true" : "false");
+    } catch {
+      /* ignore write errors */
+    }
+  }, [isChatHidden]);
+
+  React.useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
 
     const handleOpenChat = () => {
+      setIsChatHidden(false);
       setFloatingThread((prev) => {
         if (!prev) {
           return true;
@@ -157,6 +178,15 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
       window.removeEventListener("project-open-chat", handleOpenChat);
     };
   }, [setFloatingThread, setChatOpenSignal]);
+
+  const handleHideChat = React.useCallback(() => {
+    setIsChatHidden(true);
+  }, []);
+
+  const handleShowChat = React.useCallback(() => {
+    setIsChatHidden(false);
+    setChatOpenSignal((prev) => prev + 1);
+  }, []);
 
   const viewportUnit = React.useMemo(() => {
     if (typeof window === "undefined") {
@@ -188,7 +218,12 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
         ref={projectHeaderRef}
         style={{ position: "sticky", top: 0, zIndex: 5, backgroundColor: "#0c0c0c" }}
       >
-        {header}
+        {React.isValidElement(header)
+          ? React.cloneElement(header, {
+              onOpenChat: handleShowChat,
+              isChatHidden,
+            })
+          : header}
       </div>
 
       <div
@@ -211,9 +246,9 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
           {children}
         </div>
 
-        {!floatingThread && !isMobile && (
+        {!isChatHidden && !floatingThread && !isMobile && (
           <>
-            
+
 
             <div
               style={{
@@ -229,23 +264,29 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
               <_ProjectMessagesThread
                 projectId={safeProjectId}
                 open
-                setOpen={() => {}}
+                setOpen={(value) => {
+                  void value;
+                }}
                 floating={false}
                 setFloating={setFloatingThread}
-                startDrag={() => {}}
+                startDrag={(event) => {
+                  void event;
+                }}
                 headerOffset={headerHeights.global + headerHeights.project}
+                onCloseChat={handleHideChat}
               />
             </div>
           </>
         )}
       </div>
 
-      {floatingThread && (
+      {floatingThread && !isChatHidden && (
         <_ChatPanel
           projectId={safeProjectId}
           initialFloating
           onFloatingChange={setFloatingThread}
           openSignal={chatOpenSignal}
+          onCloseChat={handleHideChat}
         />
       )}
     </div>

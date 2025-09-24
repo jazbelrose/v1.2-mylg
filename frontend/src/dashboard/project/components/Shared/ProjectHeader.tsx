@@ -66,6 +66,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = (props) => {
           onOpenFinishLine={finishLineModal.open}
           onOpenStatus={editStatusModal.open}
           onOpenThumbnail={() => thumbnailModal.open()}
+          onOpenChat={props.onOpenChat}
           tabs={navigation.tabs}
           activeTabKey={navigation.activeTabKey}
           onSelectTab={(tab) => navigation.confirmNavigate(tab.path)}
@@ -94,6 +95,8 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = (props) => {
             confirmNavigate: navigation.confirmNavigate,
           }}
           getFileUrlForThumbnail={getFileUrlForThumbnail}
+          onOpenChat={props.onOpenChat}
+          isChatHidden={props.isChatHidden}
         />
       )}
 

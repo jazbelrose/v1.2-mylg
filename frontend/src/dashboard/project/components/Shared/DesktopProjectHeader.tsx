@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from "react";
 
-import { Folder, Link2, Settings } from "lucide-react";
+import { Folder, Link2, MessageCircle, Settings } from "lucide-react";
 
 import AvatarStack from "@/shared/ui/AvatarStack";
 import Squircle from "@/shared/ui/Squircle";
@@ -36,6 +36,8 @@ interface DesktopProjectHeaderProps {
   teamMembers: TeamMember[];
   navigation: NavigationProps;
   getFileUrlForThumbnail: (thumbnail: string) => string;
+  onOpenChat?: () => void;
+  isChatHidden?: boolean;
 }
 
 const DesktopProjectHeader = ({
@@ -55,6 +57,8 @@ const DesktopProjectHeader = ({
   teamMembers,
   navigation,
   getFileUrlForThumbnail,
+  onOpenChat,
+  isChatHidden,
 }: DesktopProjectHeaderProps) => {
   const thumbnailKey = project?.thumbnails?.[0] as string | undefined;
 
@@ -201,6 +205,23 @@ const DesktopProjectHeader = ({
             >
               <AvatarStack members={teamMembers} />
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenChat) {
+                  onOpenChat();
+                } else if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("project-open-chat"));
+                }
+              }}
+              className="interactive icon-button"
+              aria-label={isChatHidden ? "Open project chat" : "Show project chat"}
+              title={isChatHidden ? "Open project chat" : "Show project chat"}
+              aria-pressed={!isChatHidden}
+            >
+              <MessageCircle size={20} />
+            </button>
           </div>
         </div>
 

@@ -119,6 +119,7 @@ type ProjectMessagesThreadProps = {
   setFloating: (fn: (v: boolean) => boolean | boolean) => void;
   startDrag: (e: React.MouseEvent<HTMLDivElement>) => void;
   headerOffset?: number;
+  onCloseChat?: () => void;
 };
 
 /* =============================================================================
@@ -252,6 +253,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
   setFloating,
   startDrag,
   headerOffset = 0,
+  onCloseChat,
 }) => {
   const {
     activeProject,
@@ -1011,6 +1013,16 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
                 title={floating ? "Dock" : "Float"}
               >
                 {floating ? <Dock size={16} /> : <Move size={16} />}
+              </button>
+            )}
+            {!isMobile && (
+              <button
+                className="icon-btn"
+                onClick={() => onCloseChat?.()}
+                aria-label="Close chat"
+                title="Close chat"
+              >
+                <FontAwesomeIcon icon={faTimes} />
               </button>
             )}
           </div>

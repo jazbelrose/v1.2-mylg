@@ -13,6 +13,7 @@ type ChatPanelProps = {
   onFloatingChange?: (floating: boolean) => void;
   initialOpen?: boolean;
   openSignal?: number;
+  onCloseChat?: () => void;
 };
 
 type Size = { width: number; height: number };
@@ -28,6 +29,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   onFloatingChange,
   initialOpen,
   openSignal = 0,
+  onCloseChat,
 }) => {
   const isNarrowScreen =
     typeof window !== "undefined" ? window.innerWidth < 768 : false;
@@ -315,6 +317,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         floating={floating}
         setFloating={handleSetFloating}
         startDrag={startDrag}
+        onCloseChat={onCloseChat}
       />
       {floating && !isMobile && (
         <div className="chat-panel-resizer" onMouseDown={startResize} />

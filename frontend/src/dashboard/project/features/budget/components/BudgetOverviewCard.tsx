@@ -1,6 +1,4 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
-
-import { CircleDollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/app/contexts/useData";
 import { formatUSD } from "@/shared/utils/budgetUtils";

@@ -67,6 +67,8 @@
   display: flex;
   gap: 16px;
   align-items: stretch;
+  padding-top: 18px;
+  height: 500px;
 }
 
 .timeline-location-row > * {
@@ -83,7 +85,6 @@
 
 /* Location card and map container */
 .dashboard-layout .dashboard-item.location {
-  height: 400px;
   padding: 0;
   overflow: hidden;
   border-radius: 20px;

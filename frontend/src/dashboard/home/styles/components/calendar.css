@@ -79,7 +79,7 @@
   gap: 16px;
   align-items: stretch;
   padding-top: 18px;
-  height: 80vh;
+  height: 85vh;
 }
 
 .timeline-location-row > * {
@@ -88,9 +88,9 @@
   min-height: 0;
 }
 
-@media (max-height: 800px) {
+@media (max-height: 900px) {
   .timeline-location-row {
-    flex-direction: column;
+    
     height: 50vh;
   }
 }

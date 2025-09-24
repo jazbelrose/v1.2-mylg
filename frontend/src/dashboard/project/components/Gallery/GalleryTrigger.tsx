@@ -31,7 +31,7 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
       }}
     >
       <div className={styles.topRow}>
-        <GalleryVerticalEnd size={26} className={styles.triggerIcon} />
+        
         <span>Galleries</span>
       </div>
 

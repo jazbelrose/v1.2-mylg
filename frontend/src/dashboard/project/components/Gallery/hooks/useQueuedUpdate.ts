@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { enqueueProjectUpdate } from "../../../../shared/utils/requestQueue";
+import { enqueueProjectUpdate } from "@/shared/utils/requestQueue";
 
 const useQueuedUpdate = (
   projectId?: string,

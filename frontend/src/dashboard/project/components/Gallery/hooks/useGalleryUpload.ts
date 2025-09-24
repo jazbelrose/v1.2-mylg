@@ -8,8 +8,8 @@ import {
 } from "react";
 import { toast } from "react-toastify";
 
-import { GALLERY_UPLOAD_URL, apiFetch } from "../../../../shared/utils/api";
-import { slugify } from "../../../../shared/utils/slug";
+import { GALLERY_UPLOAD_URL, apiFetch } from "@/shared/utils/api";
+import { slugify } from "@/shared/utils/slug";
 import { Gallery } from "../types";
 import { getUniqueSlug } from "../GalleryUtils";
 

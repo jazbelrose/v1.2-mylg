@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useData } from "../../../../app/contexts/useData";
-import { useSocket } from "../../../../app/contexts/useSocket";
-import { fetchGalleries } from "../../../../shared/utils/api";
+import { useData } from "@/app/contexts/useData";
+import { useSocket } from "@/app/contexts/useSocket";
+import { fetchGalleries } from "@/shared/utils/api";
 import { Gallery, ProjectLite } from "../types";
 
 const isBrowser = typeof window !== "undefined";

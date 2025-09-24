@@ -1,8 +1,8 @@
 import { ChangeEventHandler, useMemo, useState } from "react";
 import { uploadData } from "aws-amplify/storage";
 
-import { S3_PUBLIC_BASE, updateGallery } from "../../../../shared/utils/api";
-import { slugify } from "../../../../shared/utils/slug";
+import { S3_PUBLIC_BASE, updateGallery } from "@/shared/utils/api";
+import { slugify } from "@/shared/utils/slug";
 import { CoverOptions, Gallery, PendingCover } from "../types";
 
 const COVER_PAGE_SIZE = 12;

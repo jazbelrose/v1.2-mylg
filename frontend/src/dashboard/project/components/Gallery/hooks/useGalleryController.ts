@@ -2,9 +2,9 @@ import { DragEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { deleteGallery, deleteGalleryFiles, updateGallery } from "../../../../shared/utils/api";
-import { slugify } from "../../../../shared/utils/slug";
-import { sha256 } from "../../../../shared/utils/hash";
+import { deleteGallery, deleteGalleryFiles, updateGallery } from "@/shared/utils/api";
+import { slugify } from "@/shared/utils/slug";
+import { sha256 } from "@/shared/utils/hash";
 import useQueuedUpdate from "./useQueuedUpdate";
 import useGalleryData from "./useGalleryData";
 import { Gallery, GalleryController } from "../types";

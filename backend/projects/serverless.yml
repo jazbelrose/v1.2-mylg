@@ -3,22 +3,10 @@ frameworkVersion: '3'
 
 useDotenv: true
 
-plugins:
-  - serverless-python-requirements
-
 custom:
   app: mylg
   ver: v12
   env: ${file(../serverless.common.yml):env}
-  pythonRequirements:
-    dockerizePip: true
-    dockerImage: public.ecr.aws/lambda/python:3.9
-    slim: true
-    strip: false
-    fileName: createGalleryFunction/requirements.txt
-    zip: true
-    useDownloadCache: true
-    useStaticCache: true
 
 provider:
   name: aws
@@ -186,6 +174,7 @@ functions:
       patterns:
         - createGalleryFunction/**
         - '!createGalleryFunction/template.yml'
+        - createGalleryFunction/python/**
     environment:
       GALLERIES_TABLE: ${env:GALLERIES_TABLE}
       CONNECTIONS_TABLE: ${env:CONNECTIONS_TABLE}

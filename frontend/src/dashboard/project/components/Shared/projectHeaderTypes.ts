@@ -13,6 +13,23 @@ import type { Area } from "react-easy-crop";
 import type { TeamMember } from "./types";
 import type { ProjectTabItem } from "./useProjectTabs";
 
+export interface RangeDisplayMeta {
+  label: string;
+  accessibleLabel: string;
+  duration: {
+    label: string;
+    accessibleLabel: string;
+  };
+  start?: {
+    label: string;
+    dateTime: string;
+  };
+  end?: {
+    label: string;
+    dateTime: string;
+  };
+}
+
 export interface ProjectHeaderProps {
   title?: string;
   parseStatusToNumber: (status: string | number | undefined) => number;
@@ -146,6 +163,7 @@ export interface ProjectHeaderState {
   displayStatus: string;
   progressValue: number;
   rangeLabel: string;
+  rangeMeta: RangeDisplayMeta | null;
   mobileRangeLabel: string;
   handleKeyDown: (event: KeyboardEvent, action: () => void) => void;
   navigation: NavigationState;

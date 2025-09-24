@@ -45,7 +45,7 @@ export function useLocalProjectState(activeProject: Project | null) {
     [localProject?.status]
   );
 
-  const { rangeLabel, mobileRangeLabel } = useRangeLabels(localProject);
+  const { rangeLabel, mobileRangeLabel, rangeMeta } = useRangeLabels(localProject);
 
   const resolvedProjectId = (localProject?.projectId as string | undefined) || projectId;
 
@@ -55,6 +55,7 @@ export function useLocalProjectState(activeProject: Project | null) {
     projectInitial,
     displayStatus,
     rangeLabel,
+    rangeMeta,
     mobileRangeLabel,
     resolvedProjectId,
   };

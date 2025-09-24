@@ -118,6 +118,10 @@
   isolation: isolate;
   margin-top: 12px;
   margin-bottom: 12px;
+  --project-date-range-gap: 0.75ch;
+  --project-date-dot-gap: 1.75ch;
+  --project-date-duration-gap: 2.25ch;
+  --project-date-icon-gap: 0.75ch;
 }
 
 .project-header:not(.new-project-header)::after {
@@ -187,7 +191,7 @@
 .project-header:not(.new-project-header) .finish-line-header {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 0;
 
   border-radius: 10px;
 
@@ -205,6 +209,41 @@
 
 .project-header:not(.new-project-header) .finish-line-header span {
   color: inherit;
+}
+
+.project-header:not(.new-project-header) .finish-line-header .meta {
+  display: inline-flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  gap: 0;
+}
+
+.project-header:not(.new-project-header) .finish-line-header .meta time {
+  color: inherit;
+}
+
+.project-header:not(.new-project-header) .finish-line-header .meta .range-separator {
+  margin: 0 var(--project-date-range-gap, 0.75ch);
+  color: inherit;
+}
+
+.project-header:not(.new-project-header) .finish-line-header .meta .dot {
+  margin: 0 var(--project-date-dot-gap, 1.75ch);
+  color: inherit;
+}
+
+.project-header:not(.new-project-header) .finish-line-header .meta .duration {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--project-date-icon-gap, 0.75ch);
+  margin-left: var(--project-date-duration-gap, 2.25ch);
+  color: inherit;
+}
+
+.project-header:not(.new-project-header) .finish-line-header .meta .clock {
+  font-size: 0.9em;
+  line-height: 1;
 }
 
 .project-header:not(.new-project-header) .project-nav-tabs {

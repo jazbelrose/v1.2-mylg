@@ -5,7 +5,14 @@ import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import { fileUrlsToKeys } from "@/shared/utils/api";
 
 import type { Project } from "@/app/contexts/DataProvider";
-import type { ProjectHeaderProps } from "./projectHeaderTypes";
+import type { ProjectHeaderProps, RangeDisplayMeta } from "./projectHeaderTypes";
+
+function formatISODateOnly(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export function toString(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -125,20 +132,61 @@ export function useRangeLabels(project: Project) {
     [project?.timelineEvents]
   );
 
-  const rangeLabel = useMemo(() => {
-    const totalPart = `${totalHours} hrs`;
-    if (!startDate || !endDate) return totalPart;
+  const rangeMeta = useMemo<RangeDisplayMeta>(() => {
+    const hoursLabel = `${totalHours}h`;
+    const durationAccessible = `${totalHours} ${totalHours === 1 ? "hour" : "hours"}`;
+    const duration = {
+      label: hoursLabel,
+      accessibleLabel: durationAccessible,
+    };
+
     const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-    const startStr = startDate.toLocaleDateString(undefined, options);
-    const endStr = endDate.toLocaleDateString(undefined, options);
-    return `${startStr} – ${endStr}  ⏱ ${totalPart}`;
-  }, [startDate, endDate, totalHours]);
 
-  const mobileRangeLabel = useMemo(() => {
-    return rangeLabel;
-  }, [rangeLabel]);
+    const startInfo = startDate
+      ? {
+          label: startDate.toLocaleDateString(undefined, options),
+          dateTime: formatISODateOnly(startDate),
+        }
+      : undefined;
 
-  return { rangeLabel, mobileRangeLabel, totalHours };
+    const endInfo = endDate
+      ? {
+          label: endDate.toLocaleDateString(undefined, options),
+          dateTime: formatISODateOnly(endDate),
+        }
+      : undefined;
+
+    const hasStart = Boolean(startInfo);
+    const hasEnd = Boolean(endInfo);
+
+    const datePart = hasStart && hasEnd
+      ? `${startInfo!.label} – ${endInfo!.label}`
+      : (startInfo || endInfo)?.label;
+
+    const label = datePart ? `${datePart} · ${hoursLabel}` : hoursLabel;
+
+    const accessibleDatePart = hasStart && hasEnd
+      ? `${startInfo!.label} – ${endInfo!.label}`
+      : (startInfo || endInfo)?.label;
+
+    const accessibleLabel = [accessibleDatePart, durationAccessible]
+      .filter(Boolean)
+      .join(", ");
+
+    return {
+      label,
+      accessibleLabel: accessibleLabel || durationAccessible,
+      duration,
+      start: startInfo,
+      end: endInfo,
+    };
+  }, [endDate, startDate, totalHours]);
+
+  const rangeLabel = rangeMeta.label;
+
+  const mobileRangeLabel = rangeMeta.label;
+
+  return { rangeLabel, mobileRangeLabel, totalHours, rangeMeta };
 }
 
 export function deriveProjectInitialState(props: ProjectHeaderProps) {

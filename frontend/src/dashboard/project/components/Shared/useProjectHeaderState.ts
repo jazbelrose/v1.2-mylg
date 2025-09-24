@@ -92,6 +92,7 @@ export function useProjectHeaderState(props: ProjectHeaderProps): ProjectHeaderS
     projectInitial,
     displayStatus,
     rangeLabel,
+    rangeMeta,
     mobileRangeLabel,
     resolvedProjectId,
   } = useLocalProjectState(activeProject);
@@ -478,6 +479,7 @@ export function useProjectHeaderState(props: ProjectHeaderProps): ProjectHeaderS
     displayStatus,
     progressValue,
     rangeLabel,
+    rangeMeta,
     mobileRangeLabel,
     handleKeyDown,
     navigation,

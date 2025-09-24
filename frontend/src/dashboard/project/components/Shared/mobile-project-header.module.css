@@ -164,6 +164,34 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  gap: 0;
+  --project-date-range-gap: 0.65ch;
+  --project-date-dot-gap: 1.5ch;
+  --project-date-duration-gap: 2.1ch;
+  --project-date-icon-gap: 0.7ch;
+}
+
+.dateText :global(.range-separator) {
+  margin: 0 var(--project-date-range-gap, 0.65ch);
+}
+
+.dateText :global(.dot) {
+  margin: 0 var(--project-date-dot-gap, 1.5ch);
+}
+
+.dateText :global(.duration) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--project-date-icon-gap, 0.7ch);
+  margin-left: var(--project-date-duration-gap, 2.1ch);
+}
+
+.dateText :global(.clock) {
+  font-size: 0.85em;
+  line-height: 1;
 }
 
 .tabs {

@@ -28,6 +28,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = (props) => {
     displayStatus,
     progressValue,
     rangeLabel,
+    rangeMeta,
     mobileRangeLabel,
     handleKeyDown,
     navigation,
@@ -58,6 +59,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = (props) => {
           statusLabel={displayStatus}
           progressValue={progressValue}
           rangeLabel={mobileRangeLabel || undefined}
+          rangeMeta={rangeMeta}
           teamMembers={teamModal.members}
           onOpenQuickLinks={props.onOpenQuickLinks}
           onOpenFiles={props.onOpenFiles}
@@ -77,6 +79,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = (props) => {
           displayStatus={displayStatus}
           progressValue={progressValue}
           rangeLabel={rangeLabel}
+          rangeMeta={rangeMeta}
           handleKeyDown={handleKeyDown}
           onOpenStatus={editStatusModal.open}
           onOpenFinishLine={finishLineModal.open}

@@ -10,6 +10,8 @@ import type { Project } from "@/app/contexts/DataProvider";
 import ProjectTabs from "./ProjectTabs";
 import type { TeamMember } from "./types";
 import type { ProjectTabItem } from "./useProjectTabs";
+import RangeMeta from "./RangeMeta";
+import type { RangeDisplayMeta } from "./projectHeaderTypes";
 
 interface NavigationProps {
   tabs: ProjectTabItem[];
@@ -25,6 +27,7 @@ interface DesktopProjectHeaderProps {
   displayStatus: string;
   progressValue: number;
   rangeLabel: string;
+  rangeMeta: RangeDisplayMeta | null;
   handleKeyDown: (event: KeyboardEvent, action: () => void) => void;
   onOpenStatus: () => void;
   onOpenFinishLine: () => void;
@@ -44,6 +47,7 @@ const DesktopProjectHeader = ({
   displayStatus,
   progressValue,
   rangeLabel,
+  rangeMeta,
   handleKeyDown,
   onOpenStatus,
   onOpenFinishLine,
@@ -113,7 +117,7 @@ const DesktopProjectHeader = ({
                 aria-label="Production dates"
                 style={{ cursor: "pointer" }}
               >
-                <span>{rangeLabel}</span>
+                {rangeMeta ? <RangeMeta meta={rangeMeta} /> : <span>{rangeLabel}</span>}
               </div>
             </div>
           </div>

@@ -18,6 +18,8 @@ import type { ProjectTabItem } from "./useProjectTabs";
 import styles from "./mobile-project-header.module.css";
 import Squircle from "@/shared/ui/Squircle";
 import { useNavigate } from "react-router-dom";
+import RangeMeta from "./RangeMeta";
+import type { RangeDisplayMeta } from "./projectHeaderTypes";
 
 interface MobileProjectHeaderProps {
   projectName?: string;
@@ -26,6 +28,7 @@ interface MobileProjectHeaderProps {
   statusLabel: string;
   progressValue: number;
   rangeLabel?: string;
+  rangeMeta?: RangeDisplayMeta | null;
   teamMembers: TeamMember[];
   onOpenQuickLinks: () => void;
   onOpenFiles: () => void;
@@ -47,6 +50,7 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
   statusLabel,
   progressValue,
   rangeLabel,
+  rangeMeta,
   teamMembers,
   onOpenQuickLinks,
   onOpenFiles,
@@ -145,7 +149,7 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
               </button>
             </div>
 
-            {rangeLabel ? (
+            {rangeMeta || rangeLabel ? (
               <button
                 type="button"
                 onClick={onOpenFinishLine}
@@ -159,7 +163,11 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
                 }}
                 aria-label="Edit project schedule"
               >
-                <div className={styles.dateText}>{rangeLabel}</div>
+                {rangeMeta ? (
+                  <RangeMeta meta={rangeMeta} className={styles.dateText} />
+                ) : (
+                  <div className={styles.dateText}>{rangeLabel}</div>
+                )}
               </button>
             ) : null}
           </div>

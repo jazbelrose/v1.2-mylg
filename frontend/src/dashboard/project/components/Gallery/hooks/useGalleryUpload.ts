@@ -105,12 +105,15 @@ const useGalleryUpload = ({
     timeoutMs: number,
     onProgress?: (pct: number) => void
   ) => {
+    const guessedContentType = file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/svg+xml');
+
     const presignRes = await apiFetch<{ uploadUrl: string; key: string }>(GALLERY_UPLOAD_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         projectId: activeProjectId,
         fileName: file.name,
+        contentType: guessedContentType,
         galleryName: name || file.name,
         gallerySlug: slug || undefined,
         galleryPassword: password || undefined,

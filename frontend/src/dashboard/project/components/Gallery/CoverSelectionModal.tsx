@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faChevronRight, faImage, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 import styles from "./gallery-component.module.css";
-import { GalleryController } from "./hooks/useGalleryController";
+import type { GalleryController } from "./types";
 import { getFileUrl } from "../../../../shared/utils/api";
 
 interface CoverSelectionModalProps {

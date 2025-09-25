@@ -7,7 +7,7 @@ import { faEdit, faEye, faEyeSlash, faImage, faTrash, faXmark } from "@fortaweso
 import styles from "./gallery-component.module.css";
 import { getFileUrl } from "../../../../shared/utils/api";
 import { getPreviewUrl } from "./GalleryUtils";
-import { GalleryController } from "./hooks/useGalleryController";
+import type { GalleryController } from "./types";
 import { slugify } from "../../../../shared/utils/slug";
 
 interface GalleryModalProps {

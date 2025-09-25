@@ -164,51 +164,9 @@ functions:
           path: /budgets/{proxy+}
           method: OPTIONS
 
-  createGalleryFunction:
-    name: ${self:custom.app}-${self:custom.ver}-create-gallery-${sls:stage}
-    handler: createGalleryFunction.lambda_function.lambda_handler
-    runtime: python3.9
-    timeout: 300
-    memorySize: 512
-    package:
-      patterns:
-        - createGalleryFunction/**
-        - '!createGalleryFunction/template.yml'
-        - createGalleryFunction/python/**
-    environment:
-      GALLERIES_TABLE: ${env:GALLERIES_TABLE}
-      CONNECTIONS_TABLE: ${env:CONNECTIONS_TABLE}
-      SOURCE_BUCKET: ${env:FILE_BUCKET}
-      WEBSOCKET_ENDPOINT: ${env:WEBSOCKET_ENDPOINT, ''}
-    events:
-      - s3:
-          bucket: ${env:FILE_BUCKET}
-          event: s3:ObjectCreated:*
-          rules:
-            - prefix: uploads/
-            - suffix: .pdf
-          existing: true
-      - s3:
-          bucket: ${env:FILE_BUCKET}
-          event: s3:ObjectCreated:*
-          rules:
-            - prefix: uploads/
-            - suffix: .svg
-          existing: true
-      - httpApi:
-          path: /projects/galleries/process
-          method: POST
-          authorizer:
-            name: jwtAuthorizer
-      - httpApi:
-          path: /projects/galleries/process
-          method: OPTIONS
+    # NOTE: createGalleryFunction has been moved to a dedicated service under
+    # backend/create-gallery so that it can be developed and deployed independently
+    # from the projects service. See ../create-gallery/README.md for build & deploy steps.
 
 package:
-  patterns:
-    # include the router + anything it imports (node_modules auto-included)
-    - router.mjs
-    - '!**/*.map'
-    - '!node_modules/.bin/**'
-    # exclude Python function packaging - it's handled separately
-    - '!createGalleryFunction/**'
+  individually: true

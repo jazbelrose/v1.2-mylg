@@ -1,3 +1,6 @@
+"""
+createGalleryFunction handler copied from projects service. Keep dependencies in `requirements.txt`.
+"""
 import json
 import os
 import re
@@ -97,7 +100,6 @@ def process_pdf(pdf_bytes, base_path, bucket):
 
             counter += 1
 
-        # Render the entire page as an image for pre-rendered galleries
         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
         page_key = f"{base_path}/pages/page_{pno}.jpg"
         s3.put_object(
@@ -125,12 +127,10 @@ def broadcast_to_conversation(conversation_id, payload):
         stale = []
         for conn in recipients:
             try:
-                # ← assign the response here
                 resp = apigw.post_to_connection(
                     ConnectionId=conn['connectionId'],
                     Data=json.dumps(payload).encode('utf-8')
                 )
-                # ← then log success
                 print(f"WS send succeeded for {conn['connectionId']}: {resp['ResponseMetadata']['HTTPStatusCode']}")
             except apigw.exceptions.GoneException:
                 stale.append(conn['connectionId'])
@@ -166,7 +166,6 @@ def process_request(body, cors_headers):
         }
 
     bucket = os.environ.get('SOURCE_BUCKET', 'mylg-files-v12')
-    # Check for slug collisions by querying Galleries table via GSI
     if gallery_slug:
         try:
             res = galleries_table.query(
@@ -193,7 +192,6 @@ def process_request(body, cors_headers):
     all_image_map = []
     page_image_urls = []
 
-    # SVG processing
     if svg_key or svg_data:
         if svg_key:
             obj = s3.get_object(Bucket=bucket, Key=svg_key)
@@ -209,7 +207,6 @@ def process_request(body, cors_headers):
         else:
             s3.put_object(Bucket=bucket, Key=orig_svg_key_out, Body=base64.b64decode(svg_data), ContentType='image/svg+xml')
 
-    # PDF processing
     if pdf_key or pdf_data:
         if pdf_key:
             obj = s3.get_object(Bucket=bucket, Key=pdf_key)
@@ -220,33 +217,24 @@ def process_request(body, cors_headers):
         image_urls.extend(pdf_image_urls)
         all_image_map = pdf_image_map
         page_image_urls = page_urls
-        
-        # Save updated PDF with clickable links
         updated_pdf_key = f"{base_path}/design-board-updated.pdf"
         s3.put_object(Bucket=bucket, Key=updated_pdf_key, Body=pdf_bytes_updated, ContentType='application/pdf')
-        
-        # Save original PDF
         orig_pdf_key_out = f"{base_path}/design-board-original.pdf"
         if pdf_key:
             s3.copy_object(Bucket=bucket, CopySource={'Bucket': bucket, 'Key': pdf_key}, Key=orig_pdf_key_out, ContentType='application/pdf')
         else:
             s3.put_object(Bucket=bucket, Key=orig_pdf_key_out, Body=base64.b64decode(pdf_data), ContentType='application/pdf')
-    
 
-        
-
-    # Password hashing (optional)
     password_hash = ''
     if gallery_password:
         import hashlib
         password_hash = hashlib.sha256(gallery_password.encode()).hexdigest()
 
-    # Prepare DynamoDB entry
     gallery_version = 2 if page_image_urls else 1
     gallery_entry = {
-        'galleryId': gallery_id,     
-        'projectId': project_id, 
-        'name': gallery_name,     
+        'galleryId': gallery_id,
+        'projectId': project_id,
+        'name': gallery_name,
         'imageUrls': image_urls,
         'imageMap': all_image_map,
         'pageImageUrls': page_image_urls,
@@ -270,14 +258,11 @@ def process_request(body, cors_headers):
     if pdf_key:
         gallery_entry['originalPdfUrl'] = f"https://{bucket}.s3.amazonaws.com/{pdf_key}"
 
-    # Convert all floats to Decimals before saving
     gallery_entry = convert_floats_to_decimals(gallery_entry)
 
-        # --- DEBUG: Print the gallery entry before saving to Dynamo ---
     print("DEBUG: gallery_entry =")
     print(json.dumps(gallery_entry, indent=2, default=str))
 
-    # Save to Galleries table
     try:
         galleries_table.put_item(Item=gallery_entry)
     except Exception as e:
@@ -288,12 +273,10 @@ def process_request(body, cors_headers):
         'action': 'galleryCreated',
         'projectId': project_id,
         'galleryId': gallery_id,
-        'name': gallery_name, 
+        'name': gallery_name,
     }
     )
 
-
-    # Response
     body_resp = {
         'galleryId': gallery_id,
         'slug': gallery_slug,
@@ -365,4 +348,3 @@ def lambda_handler(event, context):
         }
 
     return process_request(body, cors_headers)
-

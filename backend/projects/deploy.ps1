@@ -5,10 +5,7 @@ Write-Host "Installing Node.js dependencies..." -ForegroundColor Green
 npm install
 
 Write-Host "Checking Python dependencies..." -ForegroundColor Green
-if (!(Test-Path "createGalleryFunction\requirements.txt")) {
-    Write-Error "requirements.txt not found in createGalleryFunction directory"
-    exit 1
-}
+Write-Host "Note: createGalleryFunction has been moved to backend/create-gallery. See ../create-gallery/README.md for Python build instructions." -ForegroundColor Yellow
 
 Write-Host "Validating serverless configuration..." -ForegroundColor Green
 npx serverless print

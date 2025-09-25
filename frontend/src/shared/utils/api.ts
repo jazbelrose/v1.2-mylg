@@ -771,10 +771,18 @@ export async function deleteGalleryFiles(projectId: string, galleryId?: string, 
     console.debug('[deleteGalleryFiles] logging failed', e);
   }
 
+  // Provide an onNetworkError callback to surface richer diagnostics for callers
   return apiFetch(DELETE_GALLERY_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    onNetworkError: (err: Error) => {
+      try {
+        console.error('[deleteGalleryFiles] Network error callback:', err);
+      } catch (e) {
+        console.debug('failed logging network error callback', e);
+      }
+    },
   });
 }
 

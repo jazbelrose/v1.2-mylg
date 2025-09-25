@@ -267,16 +267,24 @@ const useGalleryController = (): GalleryController => {
         autoClose: 3000,
       });
 
-      try {
-        await deleteGalleryFiles(activeProjectId, g.galleryId || g.id, g.slug);
-      } catch (fileDeleteError) {
-        console.warn("Failed to delete gallery files", fileDeleteError);
-        try {
-          toast.warn("Failed to delete gallery files. Check console or network tab for details.");
-        } catch (e) {
-          console.debug('toast.warn failed', e);
-        }
-      }
+      // Fire-and-forget file deletion: don't block the UI on potentially long
+      // backend processing (Lambda may exceed API Gateway timeouts). Log and
+      // show a toast on failure so the user can retry manually.
+      deleteGalleryFiles(activeProjectId, g.galleryId || g.id, g.slug)
+        .then(() => {
+          console.log('deleteGalleryFiles: file deletion request completed');
+        })
+        .catch((fileDeleteError) => {
+          console.warn('Failed to delete gallery files', fileDeleteError);
+          try {
+            const msg = fileDeleteError instanceof Error && /Network request failed/i.test(fileDeleteError.message)
+              ? 'Network error while deleting gallery files. Files may still exist in storage. Check console and Network tab. You can retry file deletion from the Gallery admin.'
+              : 'Failed to delete gallery files. Check console or network tab for details.';
+            toast.warn(msg, { autoClose: 8000 });
+          } catch (e) {
+            console.debug('toast.warn failed', e);
+          }
+        });
     } catch (err) {
       console.error("Delete gallery failed:", err);
       toast.update(toastId, {

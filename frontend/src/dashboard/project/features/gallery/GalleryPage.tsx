@@ -107,6 +107,13 @@ interface GalleryPageProps {
   projectId?: string;
 }
 
+const normalizeGalleryAssetUrl = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  if (value.startsWith("/")) return value;
+  const [key] = fileUrlsToKeys([value]);
+  return getFileUrl(key);
+};
+
 /* ============================
    PDF config (keep as in JS)
    ============================ */
@@ -137,7 +144,6 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
 
   if (import.meta.env.DEV) {
     console.log("Loaded projects in GalleryPage:", projects);
-    console.log("Slug from URL (gallerySlug):", gallerySlug);
     console.log("Project slug:", projectSlug);
     console.log("Resolved project ID:", projectId);
   }
@@ -223,9 +229,38 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
   );
   const usePageImages = pageImageUrls.length > 0;
 
+  const normalizedUpdatedSvgUrl = useMemo(
+    () => normalizeGalleryAssetUrl(updatedSvgUrl),
+    [updatedSvgUrl]
+  );
+  const normalizedOriginalSvgUrl = useMemo(
+    () => normalizeGalleryAssetUrl(originalSvgUrl),
+    [originalSvgUrl]
+  );
+  const normalizedUpdatedPdfUrl = useMemo(
+    () => normalizeGalleryAssetUrl(updatedPdfUrl),
+    [updatedPdfUrl]
+  );
+  const normalizedOriginalPdfUrl = useMemo(
+    () => normalizeGalleryAssetUrl(originalPdfUrl),
+    [originalPdfUrl]
+  );
+  const normalizedOriginalUrl = normalizedOriginalSvgUrl || normalizedOriginalPdfUrl;
+
   const imageMap = useMemo<PdfAnnotation[]>(
     () => (Array.isArray(gallery?.imageMap) ? gallery!.imageMap! : []),
     [gallery]
+  );
+
+  const imageKeys = useMemo(() => fileUrlsToKeys(imageUrls), [imageUrls]);
+  const normalizedImageUrls = useMemo(
+    () => imageUrls.map((url) => normalizeGalleryAssetUrl(url) || url),
+    [imageUrls]
+  );
+
+  const normalizedPageImageUrls = useMemo(
+    () => pageImageUrls.map((url) => normalizeGalleryAssetUrl(url) || url),
+    [pageImageUrls]
   );
 
   // Fetch galleries for the project
@@ -295,8 +330,8 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
     setError("");
 
     if (isPdf) {
-      if (usePageImages && pageImageUrls.length > 0) {
-        const pages: PdfRenderedPage[] = pageImageUrls.map((src, idx) => ({
+      if (usePageImages && normalizedPageImageUrls.length > 0) {
+        const pages: PdfRenderedPage[] = normalizedPageImageUrls.map((src, idx) => ({
           src,
           annots: imageMap.filter((a) => a.page === idx + 1),
         }));
@@ -311,8 +346,14 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
             "https://d2qb21tb4meex0.cloudfront.net/pdfWorker/pdf.worker.js";
         }
         setLoading(true);
+        const pdfUrl = normalizedUpdatedPdfUrl || normalizedOriginalPdfUrl;
+        if (!pdfUrl) {
+          setLoading(false);
+          setError("Failed to load gallery. Please try again later.");
+          return;
+        }
         pdfjsLib
-          .getDocument(updatedPdfUrl || originalPdfUrl)
+          .getDocument(pdfUrl)
           .promise.then(async (doc: PDFDocument) => {
             setTotalPages(doc.numPages);
             setPagesLoaded(0);
@@ -326,9 +367,11 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
               canvas.height = viewport.height;
               await page.render({ canvasContext: ctx, viewport }).promise;
 
-              const annots = (await page.getAnnotations()).filter(
-                (a: PdfAnnotation) => a.url && imageUrls.includes(a.url)
-              );
+              const annots = (await page.getAnnotations()).filter((a: PdfAnnotation) => {
+                if (!a.url) return false;
+                const [key] = fileUrlsToKeys([a.url]);
+                return imageKeys.includes(key);
+              });
 
               return {
                 src: canvas.toDataURL(),
@@ -357,10 +400,42 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
       }
     } else {
       setLoading(true);
-      fetch(updatedSvgUrl as string)
+      const svgUrl = normalizedUpdatedSvgUrl || normalizedOriginalSvgUrl;
+      if (!svgUrl) {
+        setLoading(false);
+        setError("Failed to load gallery. Please try again later.");
+        return;
+      }
+      fetch(svgUrl)
         .then((res) => res.text())
         .then((text) => {
-          setSvgContent(text);
+          try {
+            // Parse SVG and rewrite image hrefs to normalized public URLs so the
+            // browser can load them when the SVG is inlined.
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'image/svg+xml');
+            const images = Array.from(doc.getElementsByTagName('image')) as Element[];
+            for (const imgEl of images) {
+              const href = imgEl.getAttribute('href') || imgEl.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
+              if (!href) continue;
+              const normalized = normalizeGalleryAssetUrl(href) || href;
+              try {
+                imgEl.setAttribute('href', normalized);
+              } catch {
+                // some browsers require setAttributeNS for xlink
+                imgEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', normalized);
+              }
+              // Allow cross-origin loading for images in inline SVG
+              imgEl.setAttribute('crossorigin', 'anonymous');
+            }
+            const serializer = new XMLSerializer();
+            const fixed = serializer.serializeToString(doc);
+            setSvgContent(fixed);
+          } catch (e) {
+            // If parsing fails, fall back to raw text
+            console.warn('Failed to rewrite SVG image hrefs', e);
+            setSvgContent(text);
+          }
           setLoading(false);
         })
         .catch((err: unknown) => {
@@ -375,13 +450,13 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
     navigate,
     gallery?.link,
     isPdf,
-    updatedPdfUrl,
-    originalPdfUrl,
-    originalUrl,
-    imageUrls,
-    updatedSvgUrl,
+    normalizedUpdatedPdfUrl,
+    normalizedOriginalPdfUrl,
+    normalizedOriginalSvgUrl,
+    imageKeys,
+    normalizedUpdatedSvgUrl,
     usePageImages,
-    pageImageUrls,
+    normalizedPageImageUrls,
     imageMap,
   ]);
 
@@ -423,12 +498,20 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
   };
 
   const nextImage = useCallback(
-    () => setCurrentIndex((i) => (i + 1) % imageUrls.length),
-    [imageUrls.length]
+    () =>
+      setCurrentIndex((i) =>
+        normalizedImageUrls.length ? (i + 1) % normalizedImageUrls.length : i
+      ),
+    [normalizedImageUrls.length]
   );
   const prevImage = useCallback(
-    () => setCurrentIndex((i) => (i - 1 + imageUrls.length) % imageUrls.length),
-    [imageUrls.length]
+    () =>
+      setCurrentIndex((i) =>
+        normalizedImageUrls.length
+          ? (i - 1 + normalizedImageUrls.length) % normalizedImageUrls.length
+          : i
+      ),
+    [normalizedImageUrls.length]
   );
 
   // Keyboard nav inside modal
@@ -441,7 +524,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [isModalOpen, imageUrls.length, nextImage, prevImage]);
+  }, [isModalOpen, normalizedImageUrls.length, nextImage, prevImage]);
 
   const verify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -494,7 +577,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
       <LayoutPdfButtons
         useMasonryLayout={useMasonryLayout}
         onToggleLayout={() => setUseMasonryLayout((v) => !v)}
-        downloadUrl={originalUrl as string}
+        downloadUrl={normalizedOriginalUrl || ""}
         isPdf={isPdf}
       />
 
@@ -549,7 +632,9 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
                 const width = (((rect[2] - rect[0]) * scale) / dims.width) * 100;
                 const height = (((rect[3] - rect[1]) * scale) / dims.height) * 100;
 
-                const imageIndex = imageUrls.indexOf(a.url || "");
+                const [annotKey] = fileUrlsToKeys([a.url || ""]);
+                const imageIndex = imageKeys.indexOf(annotKey);
+                if (imageIndex < 0) return null;
                 return (
                   <button
                     key={idx}
@@ -566,10 +651,8 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
                       cursor: "pointer",
                     }}
                     onClick={() => {
-                      if (imageIndex >= 0) {
-                        setCurrentIndex(imageIndex);
-                        setIsModalOpen(true);
-                      }
+                      setCurrentIndex(imageIndex);
+                      setIsModalOpen(true);
                     }}
                     aria-label={`Open image ${imageIndex + 1}`}
                   />
@@ -601,11 +684,13 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
         >
           {"\u276E"}
         </button>
-        <img
-          src={getFileUrl(fileUrlsToKeys([imageUrls[currentIndex]])[0])}
-          alt={`Gallery item ${currentIndex + 1}`}
-          className={styles.modalImage}
-        />
+        {normalizedImageUrls[currentIndex] && (
+          <img
+            src={normalizedImageUrls[currentIndex]}
+            alt={`Gallery item ${currentIndex + 1}`}
+            className={styles.modalImage}
+          />
+        )}
         <button
           onClick={nextImage}
           className={`${styles.navButton} ${styles.nextButton}`}

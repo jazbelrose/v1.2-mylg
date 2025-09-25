@@ -271,6 +271,11 @@ const useGalleryController = (): GalleryController => {
         await deleteGalleryFiles(activeProjectId, g.galleryId || g.id, g.slug);
       } catch (fileDeleteError) {
         console.warn("Failed to delete gallery files", fileDeleteError);
+        try {
+          toast.warn("Failed to delete gallery files. Check console or network tab for details.");
+        } catch (e) {
+          console.debug('toast.warn failed', e);
+        }
       }
     } catch (err) {
       console.error("Delete gallery failed:", err);

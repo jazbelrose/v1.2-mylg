@@ -764,6 +764,13 @@ export async function deleteGalleryFiles(projectId: string, galleryId?: string, 
   if (galleryId) body.galleryId = galleryId;
   if (gallerySlug) body.gallerySlug = gallerySlug;
 
+  // Debug: log the delete gallery files request details to aid troubleshooting
+  try {
+    console.log('[deleteGalleryFiles] Invoking DELETE_GALLERY_FUNCTION_URL', DELETE_GALLERY_FUNCTION_URL, 'body:', body);
+  } catch (e) {
+    console.debug('[deleteGalleryFiles] logging failed', e);
+  }
+
   return apiFetch(DELETE_GALLERY_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

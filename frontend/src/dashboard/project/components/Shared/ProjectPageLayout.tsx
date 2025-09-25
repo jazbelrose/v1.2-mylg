@@ -219,7 +219,7 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
         style={{ position: "sticky", top: 0, zIndex: 5, backgroundColor: "#0c0c0c" }}
       >
         {React.isValidElement(header)
-          ? React.cloneElement(header as any, {
+          ? React.cloneElement(header as React.ReactElement<Record<string, unknown>>, {
               onOpenChat: handleShowChat,
               isChatHidden,
             })

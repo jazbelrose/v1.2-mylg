@@ -23,6 +23,27 @@ provider:
     Stage: ${sls:stage}
   environment:
     ${self:custom.env}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:GALLERIES_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:GALLERIES_TABLE}/index/*
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:CONNECTIONS_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:CONNECTIONS_TABLE}/index/*
+        - Effect: Allow
+          Action:
+            - execute-api:ManageConnections
+          Resource: arn:aws:execute-api:${aws:region}:${aws:accountId}:*/*/POST/@connections/*
 
 functions:
   createGalleryFunction:

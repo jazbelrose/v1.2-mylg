@@ -2,7 +2,7 @@ import { DragEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { deleteGallery, deleteGalleryFiles, updateGallery } from "@/shared/utils/api";
+import { deleteGallery, updateGallery, apiFetch } from "@/shared/utils/api";
 import { slugify } from "@/shared/utils/slug";
 import { sha256 } from "@/shared/utils/hash";
 import useQueuedUpdate from "./useQueuedUpdate";
@@ -10,6 +10,8 @@ import useGalleryData from "./useGalleryData";
 import { Gallery, GalleryController } from "../types";
 import useGalleryCover from "./useGalleryCover";
 import useGalleryUpload from "./useGalleryUpload";
+
+const API_BASE = "https://bevnkraeqa.execute-api.us-west-2.amazonaws.com/dev";
 
 const useGalleryController = (): GalleryController => {
   const {
@@ -267,24 +269,30 @@ const useGalleryController = (): GalleryController => {
         autoClose: 3000,
       });
 
-      // Fire-and-forget file deletion: don't block the UI on potentially long
-      // backend processing (Lambda may exceed API Gateway timeouts). Log and
-      // show a toast on failure so the user can retry manually.
-      deleteGalleryFiles(activeProjectId, g.galleryId || g.id, g.slug)
-        .then(() => {
-          console.log('deleteGalleryFiles: file deletion request completed');
+      // Capture slug BEFORE deleting the DB row and then call the projects
+      // HTTP API files-delete route (stage included in API_BASE). We keep this
+      // fire-and-forget so the UI doesn't wait on potentially long S3 cleanup.
+      const slug = g.slug;
+      if (slug) {
+        const filesDeleteUrl = `${API_BASE}/projects/${encodeURIComponent(activeProjectId)}/galleries/${encodeURIComponent(slug)}/files/delete`;
+        apiFetch(filesDeleteUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
         })
-        .catch((fileDeleteError) => {
-          console.warn('Failed to delete gallery files', fileDeleteError);
-          try {
-            const msg = fileDeleteError instanceof Error && /Network request failed/i.test(fileDeleteError.message)
-              ? 'Network error while deleting gallery files. Files may still exist in storage. Check console and Network tab. You can retry file deletion from the Gallery admin.'
-              : 'Failed to delete gallery files. Check console or network tab for details.';
-            toast.warn(msg, { autoClose: 8000 });
-          } catch (e) {
-            console.debug('toast.warn failed', e);
-          }
-        });
+          .then(() => console.log('files-delete request completed', { projectId: activeProjectId, slug }))
+          .catch((fileDeleteError) => {
+            console.warn('Failed to delete gallery files', fileDeleteError);
+            try {
+              const msg = fileDeleteError instanceof Error && /Network request failed/i.test(fileDeleteError.message)
+                ? 'Network error while deleting gallery files. Files may still exist in storage. Check console and Network tab. You can retry file deletion from the Gallery admin.'
+                : 'Failed to delete gallery files. Check console or network tab for details.';
+              toast.warn(msg, { autoClose: 8000 });
+            } catch (e) {
+              console.debug('toast.warn failed', e);
+            }
+          });
+      }
     } catch (err) {
       console.error("Delete gallery failed:", err);
       toast.update(toastId, {

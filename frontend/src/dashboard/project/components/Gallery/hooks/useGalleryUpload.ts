@@ -122,19 +122,17 @@ const useGalleryUpload = ({
       }),
     });
 
-    const { uploadUrl } = presignRes;
+  const { uploadUrl } = presignRes;
+  console.debug("[useGalleryUpload] presign response:", presignRes);
     const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", uploadUrl);
       xhr.setRequestHeader("Content-Type", isPdf ? "application/pdf" : "image/svg+xml");
-      if (activeProjectId) xhr.setRequestHeader("x-amz-meta-projectid", activeProjectId);
-      xhr.setRequestHeader("x-amz-meta-galleryname", name || file.name);
-      if (slug) xhr.setRequestHeader("x-amz-meta-galleryslug", slug);
-      if (password) xhr.setRequestHeader("x-amz-meta-gallerypassword", password);
-      xhr.setRequestHeader("x-amz-meta-passwordenabled", String(enabled));
-      xhr.setRequestHeader("x-amz-meta-passwordtimeout", String(timeoutMs));
+  // NOTE: metadata (x-amz-meta-*) is included in the presigned URL by the server's signer.
+  // Sending metadata headers here can cause signature mismatches or CORS preflight failures,
+  // so we rely on the presigned URL and avoid sending x-amz-meta-* headers.
       xhr.upload.onprogress = (evt) => {
         if (evt.lengthComputable && onProgress) {
           onProgress(Math.round((evt.loaded / evt.total) * 100));

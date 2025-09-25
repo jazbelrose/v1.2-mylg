@@ -760,22 +760,13 @@ export async function deleteGallery(galleryId: string, projectId: string): Promi
 
 export async function deleteGalleryFiles(projectId: string, galleryId?: string, gallerySlug?: string): Promise<{ ok?: boolean } & JsonRecord | void> {
   if (!projectId) return;
-  const body: Record<string, unknown> = { projectId };
-  if (galleryId) body.galleryId = galleryId;
-  if (gallerySlug) body.gallerySlug = gallerySlug;
-
-  // Debug: log the delete gallery files request details to aid troubleshooting
-  try {
-    console.log('[deleteGalleryFiles] Invoking DELETE_GALLERY_FUNCTION_URL', DELETE_GALLERY_FUNCTION_URL, 'body:', body);
-  } catch (e) {
-    console.debug('[deleteGalleryFiles] logging failed', e);
-  }
-
-  // Provide an onNetworkError callback to surface richer diagnostics for callers
-  return apiFetch(DELETE_GALLERY_FUNCTION_URL, {
+  const slug = gallerySlug || galleryId; // fallback to galleryId if slug not provided
+  if (!slug) return;
+  const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/galleries/${encodeURIComponent(slug)}/files/delete`;
+  return apiFetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({}),
     onNetworkError: (err: Error) => {
       try {
         console.error('[deleteGalleryFiles] Network error callback:', err);

@@ -2,7 +2,7 @@
 import { corsHeadersFromEvent, preflightFromEvent, json } from "/opt/nodejs/utils/cors.mjs";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
-import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectsCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
@@ -104,6 +104,27 @@ async function updateProjectDirectory(projectId, fields) {
     ...upd,
   });
 }
+
+const listAllKeys = async (bucket, prefix) => {
+  const keys = [];
+  let token;
+  do {
+    const page = await s3.send(new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: prefix,
+      ContinuationToken: token
+    }));
+    (page.Contents || []).forEach(o => o?.Key && keys.push(o.Key));
+    token = page.NextContinuationToken;
+  } while (token);
+  return keys;
+};
+
+const chunk = (arr, n = 1000) => {
+  const out = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+};
 
 /* ============== Handlers ============== */
 
@@ -852,6 +873,43 @@ const deleteGallery = async (_e, C, { projectId, galleryId }) => {
   return json(204, C, "");
 };
 
+// POST /projects/{projectId}/galleries/{gallerySlug}/files/delete
+const deleteGalleryFilesBySlug = async (e, C, { projectId, gallerySlug }) => {
+  if (!projectId || !gallerySlug) {
+    return json(400, C, { error: "projectId and gallerySlug required" });
+  }
+
+  const prefix = `projects/${projectId}/gallery/${gallerySlug}/`;
+  try {
+    const keys = await listAllKeys(FILE_BUCKET, prefix);
+    if (!keys.length) {
+      return json(200, C, { ok: true, projectId, gallerySlug, deletedCount: 0, errors: [] });
+    }
+
+    const batches = chunk(keys, 1000);
+    const errors = [];
+    for (const b of batches) {
+      const res = await s3.send(new DeleteObjectsCommand({
+        Bucket: FILE_BUCKET,
+        Delete: { Objects: b.map(Key => ({ Key })), Quiet: true }
+      }));
+      (res.Errors || []).forEach(err => errors.push({
+        key: err.Key, code: err.Code, message: err.Message
+      }));
+    }
+
+    return json(200, C, {
+      ok: errors.length === 0,
+      projectId, gallerySlug,
+      deletedCount: keys.length,
+      errors
+    });
+  } catch (err) {
+    console.error("delete_gallery_files_error", { projectId, gallerySlug, err });
+    return json(500, C, { error: "Failed to delete gallery files", detail: String(err?.message || err) });
+  }
+};
+
 // POST /projects/galleries/upload
 // Body: { projectId, fileName, contentType, galleryName?, gallerySlug?, galleryPassword?, passwordEnabled?, passwordTimeout? }
 const createGalleryUpload = async (e, C) => {
@@ -1111,6 +1169,7 @@ const routes = [
   { m: "PUT",    r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: putGallery },
   { m: "PATCH",  r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: patchGallery },
   { m: "DELETE", r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<galleryId>[^/]+)$/i,     h: deleteGallery },
+  { m: "POST",   r: /^\/projects\/(?<projectId>[^/]+)\/galleries\/(?<gallerySlug>[^/]+)\/files\/delete$/i, h: deleteGalleryFilesBySlug },
 
   // Gallery upload (creates signed S3 URLs)
   { m: "POST",   r: /^\/projects\/galleries\/upload$/i,                                        h: createGalleryUpload },

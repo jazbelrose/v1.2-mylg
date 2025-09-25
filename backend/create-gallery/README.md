@@ -11,7 +11,7 @@ How to build (recommended: WSL/Docker/CI)
   pip install --target=python -r requirements.txt
 
 Packaging & deploy
-- Use `./scripts/deploy.ps1` to create `.serverless/createGalleryFunction.zip` locally. Then either use the AWS CLI or the Serverless Framework to update the function or deploy the stack.
+- Use the helper scripts in `./scripts/` to build and produce `.serverless/createGalleryFunction.zip` locally. Then either use the AWS CLI or the Serverless Framework to update the function or deploy the stack.
 
 Notes
 - Do NOT commit compiled .so files into the repo. Use `.gitignore` to avoid tracking build artifacts.
@@ -35,8 +35,22 @@ Prepare the ZIP for deployment (local test)
 Deploy options
 - Quick: Use the existing PowerShell helper to upload only the lambda code (low risk):
   - From repository root: `backend/projects/scripts/deploy_create_gallery.ps1 -FunctionName mylg-v12-create-gallery-dev -Region us-west-2`
-  - Or run the `backend/create-gallery/scripts/deploy.ps1` to create the zip and then upload via AWS CLI.
+  - Or run `backend/create-gallery/scripts/deploy_cli.ps1` to build (via WSL), upload the zip, run a smoke invoke, and tail logs.
 - Full stack: Run `npx serverless deploy` from `backend/create-gallery` to deploy the small CloudFormation stack for this service.
+
+Local deploy helper (Windows)
+
+If you're on Windows and want a single CLI command to build (via WSL), upload the zip to the Lambda, invoke a smoke test, and tail logs, use the PowerShell helper:
+
+```powershell
+# From this service folder:
+.\scripts\deploy_cli.ps1 -FunctionName "mylg-v12-create-gallery-dev" -Region "us-west-2"
+```
+
+Notes:
+- The script prefers WSL for building native Python dependencies. If WSL isn't available it will attempt to run the build script via bash which may fail on native Windows.
+- Requires AWS CLI v2 configured with credentials that can update Lambda code and read logs.
+- The default Lambda function name is `mylg-v12-create-gallery-dev`. Pass `-FunctionName` to override if your function has a different name.
 
 Troubleshooting
 - If your Lambda logs show ImportError for PyMuPDF, ensure you built the native wheels in a Linux environment that matches AWS Lambda (glibc/x86_64). Use WSL or a Linux CI runner.

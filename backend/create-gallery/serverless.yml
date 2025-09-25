@@ -60,8 +60,6 @@ functions:
       - httpApi:
           path: /projects/galleries/process
           method: POST
-          authorizer:
-            name: jwtAuthorizer
       - httpApi:
           path: /projects/galleries/process
           method: OPTIONS

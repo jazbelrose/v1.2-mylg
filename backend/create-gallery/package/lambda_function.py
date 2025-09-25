@@ -9,6 +9,8 @@ import uuid
 from io import BytesIO
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
+from urllib.parse import unquote
+from botocore.config import Config
 import fitz  # PyMuPDF
 
 
@@ -29,8 +31,52 @@ s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 galleries_table = dynamodb.Table(os.environ.get('GALLERIES_TABLE', 'Galleries'))
 connections_table = dynamodb.Table(os.environ.get('CONNECTIONS_TABLE', 'Connections'))
-WEBSOCKET_ENDPOINT = os.environ.get('WEBSOCKET_ENDPOINT')
-apigw = boto3.client('apigatewaymanagementapi', endpoint_url=f'https://{WEBSOCKET_ENDPOINT}') if WEBSOCKET_ENDPOINT else None
+
+
+def mgmt_endpoint():
+    # Read from env and normalize exactly once
+    raw = (os.environ.get('WEBSOCKET_ENDPOINT') or '').strip()
+    if not raw:
+        return None
+    # Convert wss:// to https:// if someone set the WSS URL by mistake
+    if raw.startswith('wss://'):
+        raw = 'https://' + raw[len('wss://'):]
+    # Remove accidental double scheme like https://https://
+    if raw.startswith('https://https://'):
+        raw = raw[len('https://'):]
+    # Ensure https:// prefix
+    if not raw.startswith('https://'):
+        raw = 'https://' + raw.lstrip('/')
+    return raw.rstrip('/')
+
+
+MGMT = mgmt_endpoint()
+apigw = None
+if MGMT:
+    apigw = boto3.client(
+        'apigatewaymanagementapi',
+        endpoint_url=MGMT,
+        config=Config(connect_timeout=3, read_timeout=3, retries={'max_attempts': 2, 'mode': 'standard'})
+    )
+
+
+def post_ws(connection_id: str, payload: dict):
+    if not apigw:
+        print('WEBSOCKET_ENDPOINT not configured; skipping broadcast')
+        return False
+    # If your DB stored a URL-encoded ID, decode it
+    cid = unquote(connection_id)
+    body = json.dumps(payload).encode('utf-8')
+    try:
+        apigw.post_to_connection(ConnectionId=cid, Data=body)
+        return True
+    except apigw.exceptions.GoneException:
+        # client disconnected — caller should remove this connectionId from the table
+        print(f'WS Gone: {cid}')
+        return 'gone'
+    except Exception as e:
+        print(f'WS send error: {e}')
+        return False
 
 IMAGE_PATTERN = re.compile(r'<image(?P<attributes>[^>]*)xlink:href="data:image/(?P<type>[^;]+);base64,(?P<data>[^"]+)"(?:\s*/>)?')
 
@@ -118,24 +164,19 @@ def process_pdf(pdf_bytes, base_path, bucket):
 
 
 def broadcast_to_conversation(conversation_id, payload):
-    if not apigw:
-        print('WEBSOCKET_ENDPOINT not configured; skipping broadcast')
-        return
     try:
         data = connections_table.scan().get('Items', [])
         recipients = [c for c in data if (c.get('activeConversation') or '').strip() == conversation_id.strip()]
         stale = []
         for conn in recipients:
-            try:
-                resp = apigw.post_to_connection(
-                    ConnectionId=conn['connectionId'],
-                    Data=json.dumps(payload).encode('utf-8')
-                )
-                print(f"WS send succeeded for {conn['connectionId']}: {resp['ResponseMetadata']['HTTPStatusCode']}")
-            except apigw.exceptions.GoneException:
-                stale.append(conn['connectionId'])
-            except Exception as e:
-                print('WS send error', e)
+            cid = conn.get('connectionId')
+            if not cid:
+                continue
+            res = post_ws(cid, payload)
+            if res == 'gone':
+                stale.append(cid)
+            elif res is True:
+                print(f'WS send succeeded for {cid}')
         for cid in stale:
             try:
                 connections_table.delete_item(Key={'connectionId': cid})

@@ -258,7 +258,6 @@ const useGalleryController = (): GalleryController => {
     const toastId = toast.loading("Deleting gallery...");
     try {
       await deleteGallery(g.galleryId || g.id, activeProjectId);
-      await deleteGalleryFiles(activeProjectId, g.galleryId || g.id, g.slug);
       const updated = galleries.filter((_, i) => i !== index);
       setGalleries(updated);
       toast.update(toastId, {
@@ -267,6 +266,12 @@ const useGalleryController = (): GalleryController => {
         isLoading: false,
         autoClose: 3000,
       });
+
+      try {
+        await deleteGalleryFiles(activeProjectId, g.galleryId || g.id, g.slug);
+      } catch (fileDeleteError) {
+        console.warn("Failed to delete gallery files", fileDeleteError);
+      }
     } catch (err) {
       console.error("Delete gallery failed:", err);
       toast.update(toastId, {

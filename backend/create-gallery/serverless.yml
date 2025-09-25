@@ -43,7 +43,7 @@ provider:
         - Effect: Allow
           Action:
             - execute-api:ManageConnections
-          Resource: arn:aws:execute-api:${aws:region}:${aws:accountId}:*/*/POST/@connections/*
+          Resource: arn:aws:execute-api:${aws:region}:${aws:accountId}:hhgvsv3ey7/${sls:stage}/POST/@connections/*
 
 functions:
   createGalleryFunction:
@@ -62,7 +62,7 @@ functions:
       GALLERIES_TABLE: ${env:GALLERIES_TABLE}
       CONNECTIONS_TABLE: ${env:CONNECTIONS_TABLE}
       SOURCE_BUCKET: ${env:FILE_BUCKET}
-      WEBSOCKET_ENDPOINT: ${env:WEBSOCKET_ENDPOINT, ''}
+      WEBSOCKET_ENDPOINT: "https://hhgvsv3ey7.execute-api.us-west-2.amazonaws.com/${sls:stage}"
     events:
       - s3:
           bucket: ${env:FILE_BUCKET}

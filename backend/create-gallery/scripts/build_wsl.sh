@@ -9,6 +9,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# Output paths
+mkdir -p .serverless || true
+ZIP_PATH=.serverless/createGalleryFunction.zip
+
 echo "Building in: $ROOT_DIR"
 
 # Ensure python target directory is clean
@@ -35,12 +39,20 @@ echo "Stripping .pyc and tests to reduce size..."
 find python -name "*.pyc" -delete || true
 find python -type d -name "tests" -prune -exec rm -rf {} + || true
 
+# Prepare package directory where installed packages are placed at the zip root
+rm -rf package
+mkdir -p package
+echo "Copying handler and installed packages into package/..."
+cp lambda_function.py package/
+# Copy contents of python/ (installed packages) into package/
+shopt -s dotglob || true
+cp -r python/* package/ || true
+
 mkdir -p .serverless
-ZIP_PATH=.serverless/createGalleryFunction.zip
 rm -f "$ZIP_PATH"
 
-echo "Creating zip $ZIP_PATH (this may be large due to native libs)"
-zip -r9 "$ZIP_PATH" lambda_function.py python -x "*/__pycache__/*"
+echo "Creating zip $ZIP_PATH with packages at root (this may be large due to native libs)"
+(cd package && zip -r9 "../$ZIP_PATH" . -x "*/__pycache__/*")
 
 echo "Build complete. Zip created at: $ZIP_PATH"
 echo "You can now upload this zip to your Lambda function or use the deploy script."

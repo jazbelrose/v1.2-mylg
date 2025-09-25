@@ -47,7 +47,7 @@ env:
   # ---- WebSocket
   CONNECTIONS_TABLE: Connections
   CONNECTIONS_USER_GSI: userId-sessionId-index
-  WEBSOCKET_ENDPOINT: https://hhgvsv3ey7.execute-api.us-west-2.amazonaws.com/dev
+  WEBSOCKET_ENDPOINT: ""  # Set this to your websocket API gateway domain (leave blank for service-specific overrides)
 
   # ---- Misc
   SCANS_ALLOWED: "false"                     # flip to "true" only for dev scans

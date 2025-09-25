@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { User, Bell, Menu, Plus } from "lucide-react";
 import { useData } from '@/app/contexts/useData';
 import { useNavigate } from 'react-router-dom';
@@ -32,6 +32,15 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
   const navigate = useNavigate();
 
   const userName = propUserName || userData?.firstName || userData?.email || 'User';
+  const fallbackEmailName = userData?.email?.split('@')[0];
+  const firstName =
+    userData?.firstName?.trim() ||
+    propUserName?.trim().split(/\s+/)[0] ||
+    fallbackEmailName?.trim() ||
+    'there';
+  const normalizedFirstName = firstName
+    ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+    : 'there';
   const userThumbnail = userData?.thumbnail;
   const userId = userData?.userId;
 
@@ -52,6 +61,18 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
   const hasNavigationToggle = Boolean(onToggleNavigation);
   const showHamburger = Boolean(setActiveView && hasNavigationToggle && !isDesktopShell);
   const showBrandInHeader = !isDesktopShell;
+
+  const greetingMessage = useMemo(() => {
+    if (!isDesktopShell) return null;
+
+    const hour = new Date().getHours();
+    let baseGreeting = 'Good evening';
+
+    if (hour < 12) baseGreeting = 'Good morning';
+    else if (hour < 18) baseGreeting = 'Good afternoon';
+
+    return `${baseGreeting}, ${normalizedFirstName}!`;
+  }, [isDesktopShell, normalizedFirstName]);
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -141,6 +162,12 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
             </button>
           )}
         </div>
+
+        {greetingMessage ? (
+          <div className="welcome-header-greeting" aria-live="polite">
+            {greetingMessage}
+          </div>
+        ) : null}
 
         {/* Right: Global Search + Create, Notifications, Avatar (+ online dot) */}
         <div className="welcome-header-right">

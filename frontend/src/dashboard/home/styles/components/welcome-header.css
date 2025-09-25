@@ -30,6 +30,20 @@
   min-width: 0;
 }
 
+.welcome-header-greeting {
+  flex: 0 1 clamp(240px, 32vw, 360px);
+  min-width: 0;
+  color: var(--text, #eaecee);
+  font-size: clamp(1rem, 1.6vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 .welcome-header-search {
   display: flex;
   align-items: center;

@@ -91,12 +91,15 @@ const useGalleryData = (): GalleryDataState => {
 
     try {
       const apiGals = await fetchGalleries(activeProject.projectId);
-      if (Array.isArray(apiGals) && apiGals.length > 0) {
+      // Treat any array returned by the API (including an empty array) as authoritative.
+      if (Array.isArray(apiGals)) {
         applyLists([], apiGals as Gallery[]);
         return;
       }
-    } catch {
-      // fall back
+    } catch (err) {
+      // If the API call fails, fall back to using the cached `activeProject` data.
+      // Log the error so debugging is easier when the UI shows galleries that don't exist server-side.
+      console.warn('fetchGalleries failed, falling back to cached activeProject galleries', err);
     }
 
     const { legacy, current } = extractGalleries(activeProject as ProjectLite);

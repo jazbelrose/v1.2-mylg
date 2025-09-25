@@ -166,7 +166,7 @@ functions:
 
   createGalleryFunction:
     name: ${self:custom.app}-${self:custom.ver}-create-gallery-${sls:stage}
-    handler: createGalleryFunction/lambda_function.lambda_handler
+    handler: createGalleryFunction.lambda_function.lambda_handler
     runtime: python3.9
     timeout: 300
     memorySize: 512

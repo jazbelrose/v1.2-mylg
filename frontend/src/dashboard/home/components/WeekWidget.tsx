@@ -129,10 +129,7 @@ export default function WeekWidget({
     const k = dateKey(tooltipDate);
     const dayDots = dotMap.get(k) || [];
     return dayDots
-      .map(
-        (c, i) =>
-          ({ id: `dot-${k}-${i}`, title: "Event", color: c } satisfies TooltipItem)
-      )
+      .map((c, i) => ({ id: `dot-${k}-${i}`, title: "Event", color: c, note: undefined } as TooltipItem))
       .sort((a, b) => Number(Boolean(b.note)) - Number(Boolean(a.note)));
   }, [tooltipDate, getTooltipItems, dotMap]);
 

@@ -708,6 +708,33 @@
   display: block;
 }
 
+/* Leaflet overrides ------------------------------------------------------
+   - Make the Leaflet map background and tiles transparent so your
+     rounded/dark card background shows through.
+   - Use :global(...) because Leaflet injects these classes outside CSS modules.
+   - Apply .mapWrapper to the map's parent to clip tiles to a rounded container.
+*/
+
+:global(.leaflet-container) {
+  background: #000000 !important; /* make the map background black */
+  border-radius: inherit; /* inherit the card radius when used inside a rounded container */
+}
+
+.mapWrapper {
+  /* apply this to the parent element that wraps the leaflet map element */
+  border-radius: 16px; /* adjust to match your card radius */
+  overflow: hidden;    /* prevents white corners during pan/zoom */
+  background: #000000; /* ensure parent is also black to avoid flashes */
+}
+
+:global(.leaflet-tile) {
+  /* Avoid white while individual tiles are loading */
+  background: #000000 !important;
+}
+
+/* Optional: if you need to target the map element directly in markup that doesn't
+   use CSS modules, you can rely on the global selectors above. */
+
 
 
 

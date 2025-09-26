@@ -41,6 +41,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, test, expect, beforeAll } from "vitest";
 import EventEditModal from "./EventEditModal";
 import { BudgetProvider } from "../context/BudgetProvider";
+import { BudgetRevisionSessionProvider } from "../context/BudgetRevisionSessionContext";
 import { DataProvider } from "../../../../../app/contexts/DataProvider";
 import { AuthProvider } from "../../../../../app/contexts/AuthContext";
 
@@ -54,17 +55,19 @@ test("uses last event date as default after adding", () => {
   render(
     <AuthProvider>
       <DataProvider>
-        <BudgetProvider projectId="p1">
-          <EventEditModal
-            isOpen={true}
-            onRequestClose={() => {}}
-            projectId="p1"
-            budgetItemId="LINE-1"
-            events={[]}
-            defaultDate="2024-05-01"
-            defaultDescription=""
-          />
-        </BudgetProvider>
+        <BudgetRevisionSessionProvider>
+          <BudgetProvider projectId="p1">
+            <EventEditModal
+              isOpen={true}
+              onRequestClose={() => {}}
+              projectId="p1"
+              budgetItemId="LINE-1"
+              events={[]}
+              defaultDate="2024-05-01"
+              defaultDescription=""
+            />
+          </BudgetProvider>
+        </BudgetRevisionSessionProvider>
       </DataProvider>
     </AuthProvider>
   );
@@ -89,19 +92,21 @@ test("uses last event date as default after adding", () => {
 test("displays event description for existing events", () => {
   render(
     <DataProvider>
-      <BudgetProvider projectId="p1">
-        <EventEditModal
-          isOpen={true}
-          onRequestClose={() => {}}
-          projectId="p1"
-          budgetItemId="LINE-1"
-          events={[
-            { id: "1", date: "2024-05-01", hours: 2, description: "Setup" },
-          ]}
-          defaultDate="2024-05-01"
-          defaultDescription=""
-        />
-      </BudgetProvider>
+      <BudgetRevisionSessionProvider>
+        <BudgetProvider projectId="p1">
+          <EventEditModal
+            isOpen={true}
+            onRequestClose={() => {}}
+            projectId="p1"
+            budgetItemId="LINE-1"
+            events={[
+              { id: "1", date: "2024-05-01", hours: 2, description: "Setup" },
+            ]}
+            defaultDate="2024-05-01"
+            defaultDescription=""
+          />
+        </BudgetProvider>
+      </BudgetRevisionSessionProvider>
     </DataProvider>
   );
 

@@ -3,6 +3,7 @@ import React from "react";
 
 import InvoicePreviewModal from "@/dashboard/project/features/budget/components/InvoicePreviewModal";
 import { BudgetProvider } from "@/dashboard/project/features/budget/context/BudgetProvider";
+import { BudgetRevisionSessionProvider } from "@/dashboard/project/features/budget/context/BudgetRevisionSessionContext";
 import { Project } from "@/app/contexts/DataProvider";
 
 interface RevisionLike {
@@ -23,16 +24,18 @@ const ClientInvoicePreviewModal: React.FC<ClientInvoicePreviewModalProps> = ({
   revision,
   project,
 }) => (
-  <BudgetProvider projectId={project?.projectId}>
-    <InvoicePreviewModal
-      isOpen={isOpen}
-      onRequestClose={onRequestClose}
-      revision={revision}
-      project={project}
-      showSidebar={false}
-      allowSave={false}
-    />
-  </BudgetProvider>
+  <BudgetRevisionSessionProvider>
+    <BudgetProvider projectId={project?.projectId}>
+      <InvoicePreviewModal
+        isOpen={isOpen}
+        onRequestClose={onRequestClose}
+        revision={revision}
+        project={project}
+        showSidebar={false}
+        allowSave={false}
+      />
+    </BudgetProvider>
+  </BudgetRevisionSessionProvider>
 );
 
 export default ClientInvoicePreviewModal;

@@ -5,16 +5,61 @@ import { useData } from "@/app/contexts/useData";
 import { normalizeMessage } from "@/shared/utils/websocketUtils";
 import { BudgetContext } from "./BudgetContext";
 import type { BudgetStats, PieDataItem, BudgetWebSocketOperations } from "./types";
+import { useBudgetRevisionSession } from "./BudgetRevisionSessionContext";
+
+const normalizeRevision = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
+const extractDocVersion = (header: Record<string, unknown> | null): number | null => {
+  if (!header) return null;
+  const shape = header as {
+    docVersion?: unknown;
+    version?: unknown;
+    updatedAt?: unknown;
+  };
+  const candidate = typeof shape.docVersion === "number" ? shape.docVersion : shape.version;
+  if (typeof candidate === "number" && Number.isFinite(candidate)) {
+    return candidate;
+  }
+  const updatedAt = shape.updatedAt;
+  if (typeof updatedAt === "number" && Number.isFinite(updatedAt)) {
+    return updatedAt;
+  }
+  if (typeof updatedAt === "string" && updatedAt.trim() !== "") {
+    const parsed = Date.parse(updatedAt);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  return null;
+};
 
 interface ProviderProps extends PropsWithChildren {
   projectId?: string;
 }
 
 export const BudgetProvider: React.FC<ProviderProps> = ({ projectId, children }) => {
-  const { budgetHeader, budgetItems, setBudgetHeader, setBudgetItems, refresh, loading } = useBudgetData(projectId);
+  const {
+    workingRevisionId,
+    syncFromServerSnapshot,
+    setWorkingRevisionId,
+    setDocVersion,
+  } = useBudgetRevisionSession();
+  const {
+    budgetHeader,
+    budgetItems,
+    setBudgetHeader,
+    setBudgetItems,
+    refresh,
+    loading,
+  } = useBudgetData(projectId, { revision: workingRevisionId ?? undefined });
   const { ws } = useSocket();
   const { user, userId } = useData();
-  
+
   const refreshRef = useRef(refresh);
   const lockedLinesRef = useRef<string[]>([]);
   
@@ -172,6 +217,26 @@ export const BudgetProvider: React.FC<ProviderProps> = ({ projectId, children })
     emitLineUnlock,
     emitTimelineUpdate,
   }), [emitBudgetUpdate, emitLineLock, emitLineUnlock, emitTimelineUpdate]);
+
+  useEffect(() => {
+    if (!budgetHeader) {
+      syncFromServerSnapshot(null, null, null);
+      return;
+    }
+    const budgetId =
+      typeof budgetHeader.budgetId === "string" && budgetHeader.budgetId.trim() !== ""
+        ? budgetHeader.budgetId
+        : null;
+    const revision = normalizeRevision(budgetHeader.revision);
+    const docVersion = extractDocVersion(budgetHeader);
+    syncFromServerSnapshot(budgetId, revision, docVersion);
+    if (revision != null && workingRevisionId == null) {
+      setWorkingRevisionId(revision, { persist: false, markOverride: false });
+    }
+    if (docVersion != null) {
+      setDocVersion(docVersion, { persist: false });
+    }
+  }, [budgetHeader, syncFromServerSnapshot, workingRevisionId, setWorkingRevisionId, setDocVersion]);
 
   useEffect(() => {
     if (!ws) return;

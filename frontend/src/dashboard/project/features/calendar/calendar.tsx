@@ -6,6 +6,7 @@ import { useSocket } from '@/app/contexts/SocketContext';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getProjectDashboardPath } from '@/shared/utils/projectUrl';
 import { BudgetProvider } from '@/dashboard/project/features/budget/context/BudgetProvider';
+import { BudgetRevisionSessionProvider } from '@/dashboard/project/features/budget/context/BudgetRevisionSessionContext';
 import type { Project } from '@/app/contexts/DataProvider';
 import type { QuickLinksRef } from '@/dashboard/project/components';
 import { useProjectPalette } from '@/dashboard/project/hooks/useProjectPalette';
@@ -176,15 +177,17 @@ const CalendarPage: React.FC = () => {
       />
 
       <div className="dashboard-layout calendar-layout" style={{ paddingBottom: '5px' }}>
-        <BudgetProvider projectId={activeProject?.projectId}>
-          <ProjectCalendar
-            project={activeProject as ProjectCalendarProject}
-            initialFlashDate={null}
-            onDateSelect={(d: string) => {
-              setTimelineDate(d);
-            }}
-          />
-        </BudgetProvider>
+        <BudgetRevisionSessionProvider>
+          <BudgetProvider projectId={activeProject?.projectId}>
+            <ProjectCalendar
+              project={activeProject as ProjectCalendarProject}
+              initialFlashDate={null}
+              onDateSelect={(d: string) => {
+                setTimelineDate(d);
+              }}
+            />
+          </BudgetProvider>
+        </BudgetRevisionSessionProvider>
         <TimelineChart
           project={activeProject as {
             color?: string;

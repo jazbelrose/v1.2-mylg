@@ -29,6 +29,7 @@ import BudgetEventManager from "@/dashboard/project/features/budget/components/B
 import BudgetTableLogic from "@/dashboard/project/features/budget/components/BudgetTableLogic";
 import { BudgetProvider} from "@/dashboard/project/features/budget/context/BudgetProvider";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
+import { useBudgetRevisionSession, BudgetRevisionSessionProvider } from "@/dashboard/project/features/budget/context/BudgetRevisionSessionContext";
 import { useData } from "@/app/contexts/useData";
 import type { Project, TimelineEvent } from "@/app/contexts/DataProvider";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
@@ -45,6 +46,15 @@ import { v4 as uuid } from "uuid";
 
 
 const TABLE_BOTTOM_MARGIN = 20;
+
+const normalizeRevisionValue = (value: unknown): number | null => {
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
 
 // Inner component that uses the budget context
 const BudgetPageContent = () => {
@@ -80,6 +90,10 @@ const BudgetPageContent = () => {
     wsOps,
   } = useBudget();
   const { emitBudgetUpdate } = wsOps;
+  const {
+    workingRevisionId,
+    setWorkingRevisionId,
+  } = useBudgetRevisionSession();
 
   // Simplified state for remaining functionality
   const [error, setError] = useState(null);
@@ -241,8 +255,19 @@ const BudgetPageContent = () => {
     try {
       const revs = await fetchBudgetHeaders(activeProject.projectId);
       setRevisions(revs);
-      const header =
-        revs.find((h) => h.revision === h.clientRevisionId) || revs[0] || null;
+      let header: Record<string, any> | null = null;
+      if (workingRevisionId != null) {
+        header =
+          revs.find((h) => Number(h.revision ?? NaN) === Number(workingRevisionId)) || null;
+      }
+      if (!header) {
+        header =
+          revs.find((h) => h.revision === h.clientRevisionId) || revs[0] || null;
+        const normalized = normalizeRevisionValue(header?.revision);
+        if (normalized != null && workingRevisionId == null) {
+          setWorkingRevisionId(normalized, { persist: false, markOverride: false });
+        }
+      }
       if (header) {
         if (header.budgetId) {
           const items = await fetchBudgetItems(header.budgetId, header.revision);
@@ -254,7 +279,12 @@ const BudgetPageContent = () => {
     } catch (err) {
       console.error("Error fetching budget header", err);
     }
-  }, [activeProject?.projectId, computeGroupsAndClients]);
+  }, [
+    activeProject?.projectId,
+    computeGroupsAndClients,
+    workingRevisionId,
+    setWorkingRevisionId,
+  ]);
 
   useEffect(() => {
     refresh();
@@ -358,6 +388,7 @@ const BudgetPageContent = () => {
       computeGroupsAndClients(newItems, newHeader);
       const revs = await fetchBudgetHeaders(activeProject.projectId);
       setRevisions(revs);
+      setWorkingRevisionId(newRev);
       emitBudgetUpdate();
     } catch (err) {
       console.error('Error creating new revision', err);
@@ -373,6 +404,7 @@ const BudgetPageContent = () => {
       setBudgetHeader((prev) => (prev ? { ...prev, ...header } : header));
       setBudgetItems(items);
       computeGroupsAndClients(items, header);
+      setWorkingRevisionId(rev);
     } catch (err) {
       console.error('Error switching revision', err);
     }
@@ -402,12 +434,14 @@ const BudgetPageContent = () => {
           setBudgetHeader(nextHeader);
           setBudgetItems(nextItems);
           computeGroupsAndClients(nextItems, nextHeader);
+          setWorkingRevisionId(normalizeRevisionValue(nextHeader.revision));
         } else {
           setBudgetHeader(null);
           setBudgetItems([]);
           setAreaGroups([]);
           setInvoiceGroups([]);
           setClients([]);
+          setWorkingRevisionId(null);
         }
       }
       emitBudgetUpdate();
@@ -689,11 +723,13 @@ const BudgetPageContent = () => {
 // Main component that provides the budget context
 const BudgetPage = () => {
   const { activeProject } = useData();
-  
+
   return (
-    <BudgetProvider projectId={activeProject?.projectId}>
-      <BudgetPageContent />
-    </BudgetProvider>
+    <BudgetRevisionSessionProvider>
+      <BudgetProvider projectId={activeProject?.projectId}>
+        <BudgetPageContent />
+      </BudgetProvider>
+    </BudgetRevisionSessionProvider>
   );
 };
 

@@ -2,6 +2,7 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { vi } from "vitest";
 import { BudgetProvider } from "./BudgetProvider";
+import { BudgetRevisionSessionProvider } from "./BudgetRevisionSessionContext";
 import { useBudget } from "./BudgetContext";
 
 // Mock the dependencies
@@ -94,9 +95,11 @@ const TestComponent = () => {
 describe("BudgetProvider", () => {
   test("provides memoized selectors with correct data", () => {
     const { getByTestId } = render(
-      <BudgetProvider projectId="test-project">
-        <TestComponent />
-      </BudgetProvider>
+      <BudgetRevisionSessionProvider>
+        <BudgetProvider projectId="test-project">
+          <TestComponent />
+        </BudgetProvider>
+      </BudgetRevisionSessionProvider>
     );
 
     // Test that stats are calculated correctly
@@ -126,9 +129,11 @@ describe("BudgetProvider", () => {
     };
 
     const { getByTestId } = render(
-      <BudgetProvider projectId="test-project">
-        <TestComponentNoCosts />
-      </BudgetProvider>
+      <BudgetRevisionSessionProvider>
+        <BudgetProvider projectId="test-project">
+          <TestComponentNoCosts />
+        </BudgetProvider>
+      </BudgetRevisionSessionProvider>
     );
 
     // Should use ballpark when no final costs

@@ -13,6 +13,7 @@ import LocationComponent from "@/dashboard/project/components/Shared/LocationCom
 import FileManagerComponent from "@/dashboard/project/components/FileManager/FileManager";
 import TasksComponent from "@/dashboard/project/components/Tasks/TasksComponent";
 import { BudgetProvider } from "@/dashboard/project/features/budget/context/BudgetProvider";
+import { BudgetRevisionSessionProvider } from "@/dashboard/project/features/budget/context/BudgetRevisionSessionContext";
 import { useData } from "@/app/contexts/useData";
 import { useSocket } from "@/app/contexts/useSocket";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -340,9 +341,10 @@ const SingleProject: React.FC = () => {
   );
 
   const projectContent = resolvedActiveProject ? (
-    <BudgetProvider projectId={resolvedActiveProject.projectId}>
-      <div className="overview-layout">
-        <QuickLinksComponent ref={quickLinksRef} hideTrigger />
+    <BudgetRevisionSessionProvider>
+      <BudgetProvider projectId={resolvedActiveProject.projectId}>
+        <div className="overview-layout">
+          <QuickLinksComponent ref={quickLinksRef} hideTrigger />
 
         {FileManagerComponent && (
           <FileManagerComponent
@@ -393,7 +395,8 @@ const SingleProject: React.FC = () => {
           </div>
         </div>
       </div>
-    </BudgetProvider>
+      </BudgetProvider>
+    </BudgetRevisionSessionProvider>
   ) : null;
 
   // Render

@@ -1,4 +1,4 @@
-import { DragEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import { DragEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -314,12 +314,23 @@ const useGalleryController = (): GalleryController => {
   const legacyCount = legacyGalleries.length;
   const hasGalleries = combinedGalleries.length > 0;
 
+  const resolveProjectRouteKey = useCallback(() => {
+    if (activeProjectId) return activeProjectId;
+    if (activeProjectTitle) return slugify(activeProjectTitle);
+    return null;
+  }, [activeProjectId, activeProjectTitle]);
+
   const handleTriggerClick = async () => {
     if (combinedGalleries.length > 0) {
       const lastGallery = combinedGalleries[combinedGalleries.length - 1];
       const slug = lastGallery.slug || slugify(lastGallery.name || "");
+      const projectKey = resolveProjectRouteKey();
+      if (!projectKey) {
+        console.warn("Cannot navigate to gallery without an active project reference");
+        return;
+      }
       await fetchProjects(1);
-      navigate(`/gallery/${slugify(activeProjectTitle || "")}/${slug}`);
+      navigate(`/gallery/${projectKey}/${slug}`);
     } else {
       openModal();
     }
@@ -337,8 +348,13 @@ const useGalleryController = (): GalleryController => {
       return;
     }
 
+    const projectKey = resolveProjectRouteKey();
+    if (!projectKey) {
+      console.warn("Cannot navigate to gallery without an active project reference");
+      return;
+    }
     await fetchProjects(1);
-    navigate(`/gallery/${slugify(activeProjectTitle || "")}/${slug}`);
+    navigate(`/gallery/${projectKey}/${slug}`);
   };
 
   const isEditing = editingIndex !== null;

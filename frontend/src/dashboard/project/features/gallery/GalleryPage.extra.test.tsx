@@ -4,6 +4,36 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
+const createProjectsContextValue = (overrides: Record<string, unknown> = {}) => ({
+  projects: [],
+  setProjects: vi.fn(),
+  setUserProjects: vi.fn(),
+  isLoading: false,
+  setIsLoading: vi.fn(),
+  loadingProfile: false,
+  activeProject: null,
+  setActiveProject: vi.fn(),
+  selectedProjects: [],
+  setSelectedProjects: vi.fn(),
+  fetchProjectDetails: vi.fn(),
+  fetchProjects: vi.fn(),
+  fetchUserProfile: vi.fn(),
+  fetchRecentActivity: vi.fn(),
+  opacity: 1,
+  setOpacity: vi.fn(),
+  settingsUpdated: false,
+  toggleSettingsUpdated: vi.fn(),
+  dmReadStatus: {},
+  setDmReadStatus: vi.fn(),
+  projectsError: false,
+  updateTimelineEvents: vi.fn(),
+  updateProjectFields: vi.fn(),
+  isAdmin: false,
+  isBuilder: false,
+  isDesigner: false,
+  ...overrides,
+});
+
 // Mock ReactModal
 vi.mock('react-modal', () => {
   const Modal = ({ children }: { children?: React.ReactNode }) => 
@@ -29,34 +59,7 @@ vi.mock('../../../../app/contexts/useUser', () => ({
 }));
 
 vi.mock('../../../../app/contexts/useProjects', () => ({
-  useProjects: vi.fn(() => ({
-    projects: [],
-    setProjects: vi.fn(),
-    setUserProjects: vi.fn(),
-    isLoading: false,
-    setIsLoading: vi.fn(),
-    loadingProfile: false,
-    activeProject: null,
-    setActiveProject: vi.fn(),
-    selectedProjects: [],
-    setSelectedProjects: vi.fn(),
-    fetchProjectDetails: vi.fn(),
-    fetchProjects: vi.fn(),
-    fetchUserProfile: vi.fn(),
-    fetchRecentActivity: vi.fn(),
-    opacity: 1,
-    setOpacity: vi.fn(),
-    settingsUpdated: false,
-    toggleSettingsUpdated: vi.fn(),
-    dmReadStatus: {},
-    setDmReadStatus: vi.fn(),
-    projectsError: false,
-    updateTimelineEvents: vi.fn(),
-    updateProjectFields: vi.fn(),
-    isAdmin: false,
-    isBuilder: false,
-    isDesigner: false,
-  })),
+  useProjects: vi.fn(() => createProjectsContextValue()),
 }));
 
 vi.mock('../../../../app/contexts/useMessages', () => ({
@@ -115,6 +118,7 @@ afterEach(() => {
 });
 
 import { useParams, useNavigate } from 'react-router-dom';
+import { useProjects } from '@/app/contexts/useProjects';
 import { fetchGalleries } from '@/shared/utils/api';
 
 // Mock CSS modules
@@ -129,6 +133,7 @@ vi.mock('./gallery-page.module.css', () => ({
 const fetchGalleriesMock = vi.mocked(fetchGalleries);
 const useParamsMock = vi.mocked(useParams);
 const useNavigateMock = vi.mocked(useNavigate);
+const useProjectsMock = vi.mocked(useProjects);
 
 describe('GalleryPage', () => {
   beforeEach(async () => {
@@ -136,10 +141,11 @@ describe('GalleryPage', () => {
       const { default: GalleryPageImport } = await import('./GalleryPage');
       GalleryPage = GalleryPageImport;
     }
+    useProjectsMock.mockReturnValue(createProjectsContextValue());
     fetchGalleriesMock.mockResolvedValue([
       { projectId: '1', name: 'client 001', slug: 'client-001', updatedSvgUrl: '/test.svg', imageUrls: ['img1.png'] },
     ]);
-    useParamsMock.mockReturnValue({ projectSlug: 'project-1', gallerySlug: 'client-001' });
+    useParamsMock.mockReturnValue({ projectId: 'project-1', gallerySlug: 'client-001' });
     useNavigateMock.mockReturnValue(vi.fn());
   });
 
@@ -167,7 +173,32 @@ describe('GalleryPage', () => {
     render(<GalleryPage projectId="1" />);
     const backButton = await screen.findByRole('button', { name: /back to dashboard/i });
     await userEvent.click(backButton);
-    expect(navigateMock).toHaveBeenCalledWith('/dashboard');
+    expect(navigateMock).toHaveBeenCalledWith('/dashboard/projects/1');
+  });
+
+  it('resolves project id when the route provides a slug', async () => {
+    const navigateMock = vi.fn();
+    useNavigateMock.mockReturnValue(navigateMock);
+    const projectsValue = createProjectsContextValue({
+      projects: [
+        {
+          projectId: '1',
+          title: 'Client 001',
+          gallery: [
+            { name: 'client 001', slug: 'client-001', updatedSvgUrl: '/test.svg', imageUrls: ['img1.png'] },
+          ],
+        },
+      ],
+    });
+    useProjectsMock.mockReturnValue(projectsValue as any);
+    useParamsMock.mockReturnValue({ projectId: 'client-001', gallerySlug: 'client-001' });
+
+    render(<GalleryPage />);
+
+    await waitFor(() => expect(fetchGalleriesMock).toHaveBeenCalledWith('1'));
+    const backButton = await screen.findByRole('button', { name: /back to dashboard/i });
+    await userEvent.click(backButton);
+    expect(navigateMock).toHaveBeenCalledWith('/dashboard/projects/1');
   });
 
   it('renders gallery page with link navigation', async () => {
@@ -176,7 +207,7 @@ describe('GalleryPage', () => {
     fetchGalleriesMock.mockResolvedValue([
       { projectId: 'project-1', name: 'link-gallery', slug: 'link', link: '/other' },
     ]);
-    useParamsMock.mockReturnValue({ projectSlug: 'project-2', gallerySlug: 'link' });
+    useParamsMock.mockReturnValue({ projectId: 'project-2', gallerySlug: 'link' });
     render(<GalleryPage projectId="1" />);
     await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/other'));
   });
@@ -196,7 +227,7 @@ describe('GalleryPage', () => {
     fetchGalleriesMock.mockResolvedValue([
       { projectId: 'project-1', name: 'secret', slug: 'secret', passwordHash: 'abc', passwordEnabled: true },
     ]);
-    useParamsMock.mockReturnValue({ projectSlug: 'project-3', gallerySlug: 'secret' });
+    useParamsMock.mockReturnValue({ projectId: 'project-3', gallerySlug: 'secret' });
     render(<GalleryPage projectId="1" />);
     const input = await screen.findByTestId('password-input');
     expect(input).toBeInTheDocument();
@@ -223,7 +254,7 @@ describe('GalleryPage', () => {
     fetchGalleriesMock.mockResolvedValue([
       { projectId: 'project-1', slug: 'pdf', updatedPdfUrl: '/dummy.pdf', imageUrls: ['img1.png'] },
     ]);
-    useParamsMock.mockReturnValue({ projectSlug: 'project-4', gallerySlug: 'pdf' });
+    useParamsMock.mockReturnValue({ projectId: 'project-4', gallerySlug: 'pdf' });
     const { default: GalleryPagePdf } = await import('./GalleryPage');
     render(<GalleryPagePdf />);
     expect(pdfjs.getDocument).toHaveBeenCalled();
@@ -247,7 +278,7 @@ describe('GalleryPage', () => {
     fetchGalleriesMock.mockResolvedValue([
       { projectId: 'project-1', slug: 'pdf', updatedPdfUrl: '/dummy.pdf' },
     ]);
-    useParamsMock.mockReturnValue({ projectSlug: 'project-5', gallerySlug: 'pdf' });
+    useParamsMock.mockReturnValue({ projectId: 'project-5', gallerySlug: 'pdf' });
     const { default: GalleryPagePdf } = await import('./GalleryPage');
     render(<GalleryPagePdf />);
     const container = await screen.findByTestId('svg-container');

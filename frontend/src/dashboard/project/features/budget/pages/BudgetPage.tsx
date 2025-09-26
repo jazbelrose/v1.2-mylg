@@ -78,8 +78,9 @@ const BudgetPageContent = () => {
     setBudgetHeader,
     setBudgetItems,
     wsOps,
+    setManualRevision,
   } = useBudget();
-  const { emitBudgetUpdate } = wsOps;
+  const { emitBudgetUpdate, emitClientRevisionUpdate } = wsOps;
 
   // Simplified state for remaining functionality
   const [error, setError] = useState(null);
@@ -257,8 +258,32 @@ const BudgetPageContent = () => {
   }, [activeProject?.projectId, computeGroupsAndClients]);
 
   useEffect(() => {
+    setManualRevision(false);
     refresh();
-  }, [refresh]);
+    return () => {
+      setManualRevision(false);
+    };
+  }, [refresh, setManualRevision]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<Record<string, unknown>>).detail;
+      if (!detail || typeof detail !== "object") return;
+      const targetProject = detail.projectId;
+      if (
+        activeProject?.projectId &&
+        targetProject &&
+        String(targetProject) === String(activeProject.projectId)
+      ) {
+        refresh();
+      }
+    };
+
+    window.addEventListener("clientRevisionUpdated", handler as EventListener);
+    return () => {
+      window.removeEventListener("clientRevisionUpdated", handler as EventListener);
+    };
+  }, [activeProject?.projectId, refresh]);
 
   const handleNewRevision = async (duplicate = false, fromRevision = null) => {
     if (!activeProject?.projectId || !budgetHeader) return;
@@ -354,6 +379,7 @@ const BudgetPageContent = () => {
       }
 
       setBudgetHeader(newHeader);
+      setManualRevision(true);
       setBudgetItems(newItems);
       computeGroupsAndClients(newItems, newHeader);
       const revs = await fetchBudgetHeaders(activeProject.projectId);
@@ -373,6 +399,7 @@ const BudgetPageContent = () => {
       setBudgetHeader((prev) => (prev ? { ...prev, ...header } : header));
       setBudgetItems(items);
       computeGroupsAndClients(items, header);
+      setManualRevision(rev !== header.clientRevisionId);
     } catch (err) {
       console.error('Error switching revision', err);
     }
@@ -400,10 +427,12 @@ const BudgetPageContent = () => {
             nextHeader.revision
           );
           setBudgetHeader(nextHeader);
+          setManualRevision(nextHeader.clientRevisionId !== nextHeader.revision);
           setBudgetItems(nextItems);
           computeGroupsAndClients(nextItems, nextHeader);
         } else {
           setBudgetHeader(null);
+          setManualRevision(false);
           setBudgetItems([]);
           setAreaGroups([]);
           setInvoiceGroups([]);
@@ -417,9 +446,38 @@ const BudgetPageContent = () => {
   };
 
   const handleSetClientRevision = async (rev) => {
-    console.log('Set client revision requested:', rev);
-    setRevisions((prev) => prev.map((h) => ({ ...h, clientRevisionId: rev })));
-    setBudgetHeader((prev) => (prev ? { ...prev, clientRevisionId: rev } : prev));
+    if (!activeProject?.projectId) return;
+    const previousClientRevision = Number(
+      (budgetHeader as Record<string, unknown>)?.clientRevisionId ?? NaN,
+    );
+    try {
+      await Promise.all(
+        revisions.map((h) =>
+          updateBudgetItem(activeProject.projectId, h.budgetItemId, {
+            clientRevisionId: rev,
+            revision: h.revision,
+          })
+        )
+      );
+      const updated = await fetchBudgetHeaders(activeProject.projectId);
+      setRevisions(updated);
+      setBudgetHeader((prev) => {
+        if (!prev) return prev;
+        const match = updated.find((h) => h.revision === prev.revision);
+        return match ? { ...prev, clientRevisionId: match.clientRevisionId } : prev;
+      });
+      const normalizedRev = Number(rev);
+      const nextClientRevision = Number.isNaN(normalizedRev)
+        ? null
+        : normalizedRev;
+      setManualRevision(nextClientRevision == null);
+      const previousNormalized = Number.isNaN(previousClientRevision)
+        ? null
+        : previousClientRevision;
+      emitClientRevisionUpdate(nextClientRevision, previousNormalized);
+    } catch (err) {
+      console.error('Error setting client revision', err);
+    }
   };
 
   const parseFile = async (file) => {

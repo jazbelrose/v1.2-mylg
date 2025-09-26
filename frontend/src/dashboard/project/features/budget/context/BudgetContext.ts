@@ -11,7 +11,9 @@ interface BudgetContextValue {
     header: BudgetHeaderShape | ((prev: BudgetHeaderShape) => BudgetHeaderShape)
   ) => void;
   setBudgetItems: (items: BudgetLineShape[]) => void;
-  refresh: () => Promise<{ header: BudgetHeaderShape; items: BudgetLineShape[] } | null>;
+  refresh: (
+    preferredRevision?: number | null,
+  ) => Promise<{ header: BudgetHeaderShape; items: BudgetLineShape[] } | null>;
   loading: boolean;
 
   // Memoized selectors
@@ -22,6 +24,9 @@ interface BudgetContextValue {
 
   // WebSocket operations
   wsOps: BudgetWebSocketOperations;
+
+  // Revision tracking helpers
+  setManualRevision: (manual: boolean) => void;
 }
 
 export const BudgetContext = createContext<BudgetContextValue | undefined>(undefined);

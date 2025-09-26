@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { fetchBudgetHeader, fetchBudgetItems } from "@/shared/utils/api";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { fetchBudgetHeaders, fetchBudgetItems } from "@/shared/utils/api";
 
 function shallowEqualObjects(
   a: Record<string, unknown> | null,
@@ -38,15 +38,36 @@ interface BudgetData {
 const budgetCache = new Map<string, BudgetData>();
 const inflight = new Map<string, Promise<BudgetData>>();
 
-async function fetchData(projectId: string, force = false): Promise<BudgetData> {
+type FetchOptions = {
+  force?: boolean;
+  preferredRevision?: number | null;
+};
+
+const buildFetchKey = (projectId: string, revision: number | null): string =>
+  `${projectId}::${revision ?? "default"}`;
+
+async function fetchData(
+  projectId: string,
+  options: FetchOptions = {},
+): Promise<BudgetData> {
   if (!projectId) return { header: null, items: [] };
 
-  if (!force && budgetCache.has(projectId)) {
-    return budgetCache.get(projectId)!;
+  const { force = false, preferredRevision = null } = options;
+  const cached = budgetCache.get(projectId);
+  const cachedRevision = Number(cached?.header?.revision ?? NaN);
+
+  if (
+    !force &&
+    cached &&
+    (preferredRevision == null || preferredRevision === cachedRevision)
+  ) {
+    return cached;
   }
 
-  if (inflight.has(projectId)) {
-    return inflight.get(projectId)!;
+  const fetchKey = buildFetchKey(projectId, preferredRevision);
+
+  if (!force && inflight.has(fetchKey)) {
+    return inflight.get(fetchKey)!;
   }
 
   const promise = (async () => {
@@ -56,7 +77,26 @@ async function fetchData(projectId: string, force = false): Promise<BudgetData> 
     // Simple exponential backoff for 429 errors
     while (true) {
       try {
-        const header = await fetchBudgetHeader(projectId);
+        const headers = await fetchBudgetHeaders(projectId);
+
+        let header: BudgetHeader | null = null;
+        if (preferredRevision != null) {
+          header = headers.find(
+            (candidate) =>
+              Number(candidate?.revision ?? NaN) === preferredRevision,
+          ) ?? null;
+        }
+
+        if (!header) {
+          header =
+            headers.find(
+              (candidate) =>
+                candidate?.clientRevisionId != null &&
+                Number(candidate.clientRevisionId) ===
+                  Number(candidate.revision ?? NaN),
+            ) ?? headers[0] ?? null;
+        }
+
         let items: BudgetItem[] = [];
         if (header?.budgetId) {
           items = await fetchBudgetItems(header.budgetId, header.revision);
@@ -77,11 +117,11 @@ async function fetchData(projectId: string, force = false): Promise<BudgetData> 
     }
   })();
 
-  inflight.set(projectId, promise);
+  inflight.set(fetchKey, promise);
   try {
     return await promise;
   } finally {
-    inflight.delete(projectId);
+    inflight.delete(fetchKey);
   }
 }
 
@@ -101,13 +141,21 @@ export async function prefetchBudgetData(projectId: string): Promise<void> {
 
 export default function useBudgetData(projectId: string | undefined) {
   const cached = projectId ? budgetCache.get(projectId) : null;
-  const [budgetHeader, setBudgetHeader] = useState<BudgetHeader | null>(
+  const [budgetHeader, setBudgetHeaderState] = useState<BudgetHeader | null>(
     cached ? cached.header : null,
   );
   const [budgetItems, setBudgetItemsState] = useState<BudgetItem[]>(
     cached ? cached.items : [],
   );
   const [loading, setLoading] = useState(!cached);
+  const initialRevisionValue = (() => {
+    if (!cached?.header) return null;
+    const raw = (cached.header as Record<string, unknown>).revision;
+    if (raw == null) return null;
+    const parsed = Number(raw);
+    return Number.isNaN(parsed) ? null : parsed;
+  })();
+  const activeRevisionRef = useRef<number | null>(initialRevisionValue);
 
   useEffect(() => {
     let ignore = false;
@@ -121,11 +169,21 @@ export default function useBudgetData(projectId: string | undefined) {
 
       setLoading(true);
       try {
-        const { header, items } = await fetchData(projectId);
+        const { header, items } = await fetchData(projectId, {
+          preferredRevision: activeRevisionRef.current,
+        });
         if (!ignore) {
-          setBudgetHeader((prev) =>
-            shallowEqualObjects(prev, header) ? prev : header,
-          );
+          setBudgetHeaderState((prev) => {
+            if (shallowEqualObjects(prev, header)) return prev;
+            const revision =
+              header && header?.revision != null
+                ? Number((header as Record<string, unknown>).revision as number)
+                : null;
+            activeRevisionRef.current = Number.isNaN(revision)
+              ? null
+              : revision;
+            return header;
+          });
           setBudgetItemsState((prev) =>
             shallowEqualArrays(prev, items) ? prev : items,
           );
@@ -133,7 +191,10 @@ export default function useBudgetData(projectId: string | undefined) {
       } catch (err) {
         console.error("Error fetching budget data", err);
         if (!ignore) {
-          setBudgetHeader(null);
+          setBudgetHeaderState(() => {
+            activeRevisionRef.current = null;
+            return null;
+          });
           setBudgetItemsState([]);
         }
       } finally {
@@ -146,25 +207,47 @@ export default function useBudgetData(projectId: string | undefined) {
     };
   }, [projectId]);
 
-  const refresh = useCallback(async () => {
-    if (!projectId) return null;
-    setLoading(true);
-    try {
-      const data = await fetchData(projectId, true);
-      setBudgetHeader((prev) =>
-        shallowEqualObjects(prev, data.header) ? prev : data.header,
-      );
-      setBudgetItemsState((prev) =>
-        shallowEqualArrays(prev, data.items) ? prev : data.items,
-      );
-      return data;
-    } catch (err) {
-      console.error("Error refreshing budget data", err);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
+  const refresh = useCallback(
+    async (preferredRevision?: number | null) => {
+      if (!projectId) return null;
+      setLoading(true);
+      try {
+        if (preferredRevision != null && !Number.isNaN(preferredRevision)) {
+          activeRevisionRef.current = preferredRevision;
+        }
+        const data = await fetchData(projectId, {
+          force: true,
+          preferredRevision:
+            preferredRevision != null && !Number.isNaN(preferredRevision)
+              ? preferredRevision
+              : activeRevisionRef.current,
+        });
+        setBudgetHeaderState((prev) => {
+          if (shallowEqualObjects(prev, data.header)) return prev;
+          const revision =
+            data.header && data.header?.revision != null
+              ? Number(
+                  (data.header as Record<string, unknown>).revision as number,
+                )
+              : null;
+          activeRevisionRef.current = Number.isNaN(revision)
+            ? null
+            : revision;
+          return data.header;
+        });
+        setBudgetItemsState((prev) =>
+          shallowEqualArrays(prev, data.items) ? prev : data.items,
+        );
+        return data;
+      } catch (err) {
+        console.error("Error refreshing budget data", err);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [projectId],
+  );
 
   const setBudgetItems = useCallback(
     (items: BudgetItem[]) => {
@@ -182,13 +265,25 @@ export default function useBudgetData(projectId: string | undefined) {
   );
 
   const updateBudgetHeader = useCallback(
-    (headerOrUpdater: BudgetHeader | ((prev: BudgetHeader | null) => BudgetHeader)) => {
+    (
+      headerOrUpdater:
+        | BudgetHeader
+        | null
+        | ((prev: BudgetHeader | null) => BudgetHeader | null),
+    ) => {
       if (!projectId) return;
-      setBudgetHeader((prev) => {
+      setBudgetHeaderState((prev) => {
         const next =
           typeof headerOrUpdater === "function"
-            ? (headerOrUpdater as (p: BudgetHeader | null) => BudgetHeader)(prev)
+            ? (headerOrUpdater as (p: BudgetHeader | null) => BudgetHeader | null)(prev)
             : headerOrUpdater;
+        const nextRevision =
+          next && next?.revision != null
+            ? Number((next as Record<string, unknown>).revision as number)
+            : null;
+        activeRevisionRef.current = Number.isNaN(nextRevision)
+          ? null
+          : nextRevision;
         if (shallowEqualObjects(prev, next)) return prev;
         const cached = budgetCache.get(projectId) || {
           header: null,

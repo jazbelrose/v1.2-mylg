@@ -17,6 +17,10 @@ export type BudgetWebSocketOperations = {
   emitLineLock: (lineId: string) => void;
   emitLineUnlock: (lineId: string) => void;
   emitTimelineUpdate: (events: unknown[]) => void;
+  emitClientRevisionUpdate: (
+    clientRevisionId: number | null,
+    previousClientRevisionId: number | null,
+  ) => void;
 };
 
 

@@ -33,6 +33,7 @@ vi.mock("./useBudget", () => ({
     setBudgetItems: vi.fn(),
     refresh: vi.fn(),
     loading: false,
+    setManualRevision: vi.fn(),
   }),
 }));
 
@@ -69,7 +70,14 @@ vi.mock("./BudgetContext", async (importOriginal) => {
       getPie: () => [{ label: "Group A", value: 1200 }],
       getRows: () => [],
       getLocks: () => [],
-      wsOps: { emitBudgetUpdate: vi.fn() },
+      setManualRevision: vi.fn(),
+      wsOps: {
+        emitBudgetUpdate: vi.fn(),
+        emitLineLock: vi.fn(),
+        emitLineUnlock: vi.fn(),
+        emitTimelineUpdate: vi.fn(),
+        emitClientRevisionUpdate: vi.fn(),
+      },
     }),
   };
 });

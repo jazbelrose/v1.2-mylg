@@ -1,4 +1,10 @@
-import React, { PropsWithChildren, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+  PropsWithChildren,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import useBudgetData from "@/dashboard/project/features/budget/context/useBudget";
 import { useSocket } from "@/app/contexts/useSocket";
 import { useData } from "@/app/contexts/useData";
@@ -11,16 +17,34 @@ interface ProviderProps extends PropsWithChildren {
 }
 
 export const BudgetProvider: React.FC<ProviderProps> = ({ projectId, children }) => {
-  const { budgetHeader, budgetItems, setBudgetHeader, setBudgetItems, refresh, loading } = useBudgetData(projectId);
+  const {
+    budgetHeader,
+    budgetItems,
+    setBudgetHeader,
+    setBudgetItems,
+    refresh,
+    loading,
+  } = useBudgetData(projectId);
   const { ws } = useSocket();
   const { user, userId } = useData();
-  
+
   const refreshRef = useRef(refresh);
   const lockedLinesRef = useRef<string[]>([]);
+  const activeRevisionRef = useRef<number | null>(null);
+  const manualRevisionRef = useRef(false);
   
   useEffect(() => {
     refreshRef.current = refresh;
   }, [refresh]);
+
+  useEffect(() => {
+    const revision = Number((budgetHeader as Record<string, unknown>)?.revision ?? NaN);
+    activeRevisionRef.current = Number.isNaN(revision) ? null : revision;
+  }, [budgetHeader]);
+
+  const setManualRevision = useCallback((manual: boolean) => {
+    manualRevisionRef.current = manual;
+  }, []);
 
   // WebSocket operations - centralized here
   const emitBudgetUpdate = useCallback(() => {
@@ -88,6 +112,24 @@ export const BudgetProvider: React.FC<ProviderProps> = ({ projectId, children })
       )
     );
   }, [ws, projectId, budgetHeader, user, userId]);
+
+  const emitClientRevisionUpdate = useCallback(
+    (clientRevisionId: number | null, previousClientRevisionId: number | null) => {
+      if (!ws || ws.readyState !== WebSocket.OPEN || !projectId) return;
+      ws.send(
+        JSON.stringify({
+          action: 'clientRevisionUpdated',
+          projectId,
+          clientRevisionId,
+          previousClientRevisionId,
+          conversationId: `project#${projectId}`,
+          username: user?.firstName || 'Someone',
+          senderId: userId,
+        }),
+      );
+    },
+    [projectId, user?.firstName, userId, ws],
+  );
 
   // Memoized selectors with deep equality
   const getStats = useCallback((): BudgetStats => {
@@ -166,12 +208,16 @@ export const BudgetProvider: React.FC<ProviderProps> = ({ projectId, children })
   }, []);
 
   // WebSocket operations object
-  const wsOps = useMemo((): BudgetWebSocketOperations => ({
-    emitBudgetUpdate,
-    emitLineLock,
-    emitLineUnlock,
-    emitTimelineUpdate,
-  }), [emitBudgetUpdate, emitLineLock, emitLineUnlock, emitTimelineUpdate]);
+  const wsOps = useMemo(
+    (): BudgetWebSocketOperations => ({
+      emitBudgetUpdate,
+      emitLineLock,
+      emitLineUnlock,
+      emitTimelineUpdate,
+      emitClientRevisionUpdate,
+    }),
+    [emitBudgetUpdate, emitLineLock, emitLineUnlock, emitTimelineUpdate, emitClientRevisionUpdate],
+  );
 
   useEffect(() => {
     if (!ws) return;
@@ -197,28 +243,53 @@ export const BudgetProvider: React.FC<ProviderProps> = ({ projectId, children })
         return;
       }
       
+      const parseRevision = (value: unknown): number | null => {
+        if (typeof value === "number" && !Number.isNaN(value)) return value;
+        if (typeof value === "string") {
+          const parsed = Number(value);
+          return Number.isNaN(parsed) ? null : parsed;
+        }
+        return null;
+      };
+
+      const messageRevision = parseRevision(messageData.revision);
+      const currentRevision = activeRevisionRef.current;
+      const shouldProcessRevisionScoped =
+        messageRevision == null ||
+        currentRevision == null ||
+        Number(messageRevision) === Number(currentRevision);
+
       // Handle budgetUpdated messages
       if (messageData.action === "budgetUpdated") {
+        if (!shouldProcessRevisionScoped) {
+          return;
+        }
         refreshRef.current();
         return;
       }
-      
+
       // Handle lineLocked messages - update internal state and dispatch window events
       if (messageData.action === "lineLocked" || messageData.action === "lockLineUpdated") {
+        if (!shouldProcessRevisionScoped) {
+          return;
+        }
         if (messageData.senderId !== userId) {
           const lineId = messageData.lineId as string;
           if (lineId) {
-            lockedLinesRef.current = lockedLinesRef.current.includes(lineId) 
-              ? lockedLinesRef.current 
+            lockedLinesRef.current = lockedLinesRef.current.includes(lineId)
+              ? lockedLinesRef.current
               : [...lockedLinesRef.current, lineId];
           }
         }
         window.dispatchEvent(new CustomEvent("lineLocked", { detail: data }));
         return;
       }
-      
-      // Handle lineUnlocked messages - update internal state and dispatch window events  
+
+      // Handle lineUnlocked messages - update internal state and dispatch window events
       if (messageData.action === "lineUnlocked") {
+        if (!shouldProcessRevisionScoped) {
+          return;
+        }
         if (messageData.senderId !== userId) {
           const lineId = messageData.lineId as string;
           if (lineId) {
@@ -226,6 +297,44 @@ export const BudgetProvider: React.FC<ProviderProps> = ({ projectId, children })
           }
         }
         window.dispatchEvent(new CustomEvent("lineUnlocked", { detail: data }));
+        return;
+      }
+
+      if (messageData.action === "clientRevisionUpdated") {
+        const clientRevision = parseRevision(messageData.clientRevisionId);
+        const previousClientRevision = parseRevision(
+          messageData.previousClientRevisionId,
+        );
+
+        setBudgetHeader((prev) => {
+          if (!prev) return prev;
+          const nextClientRevision = clientRevision ?? null;
+          if ((prev as Record<string, unknown>).clientRevisionId === nextClientRevision) {
+            return prev;
+          }
+          return {
+            ...(prev as Record<string, unknown>),
+            clientRevisionId: nextClientRevision,
+          } as typeof prev;
+        });
+
+        window.dispatchEvent(
+          new CustomEvent("clientRevisionUpdated", { detail: data }),
+        );
+
+        const shouldAutoSwitch =
+          !manualRevisionRef.current &&
+          previousClientRevision != null &&
+          currentRevision != null &&
+          Number(previousClientRevision) === Number(currentRevision);
+
+        const noPreviousClient =
+          !manualRevisionRef.current && previousClientRevision == null;
+
+        if (shouldAutoSwitch || noPreviousClient || (!manualRevisionRef.current && currentRevision == null)) {
+          refreshRef.current(clientRevision ?? null);
+        }
+
         return;
       }
     };
@@ -247,20 +356,34 @@ export const BudgetProvider: React.FC<ProviderProps> = ({ projectId, children })
   }, [ws, projectId, userId]);
 
   const value = useMemo(
-    () => ({ 
-      budgetHeader, 
-      budgetItems, 
-      setBudgetHeader, 
-      setBudgetItems, 
-      refresh, 
+    () => ({
+      budgetHeader,
+      budgetItems,
+      setBudgetHeader,
+      setBudgetItems,
+      refresh,
       loading,
       getStats,
       getPie,
       getRows,
       getLocks,
       wsOps,
+      setManualRevision,
     }),
-    [budgetHeader, budgetItems, setBudgetHeader, setBudgetItems, refresh, loading, getStats, getPie, getRows, getLocks, wsOps]
+    [
+      budgetHeader,
+      budgetItems,
+      setBudgetHeader,
+      setBudgetItems,
+      refresh,
+      loading,
+      getStats,
+      getPie,
+      getRows,
+      getLocks,
+      wsOps,
+      setManualRevision,
+    ]
   );
 
   return <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>;

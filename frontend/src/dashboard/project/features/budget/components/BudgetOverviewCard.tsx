@@ -154,13 +154,47 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
       if (!parsed || typeof parsed !== "object") return;
 
       const action = (parsed as { action?: unknown }).action;
-      if (typeof action !== "string" || !RELEVANT_WS_ACTIONS.has(action)) return;
+      if (typeof action !== "string") return;
+
+      if (action === "clientRevisionUpdated") {
+        const targetProject = (parsed as { projectId?: unknown }).projectId;
+        if (
+          resolvedProjectKey &&
+          targetProject &&
+          String(targetProject) !== resolvedProjectKey
+        ) {
+          return;
+        }
+        scheduleUpdate();
+        return;
+      }
+
+      if (!RELEVANT_WS_ACTIONS.has(action)) return;
 
       const targetProject = (parsed as { projectId?: unknown }).projectId;
       if (
         resolvedProjectKey &&
         targetProject &&
         String(targetProject) !== resolvedProjectKey
+      ) {
+        return;
+      }
+
+      const parseRevision = (value: unknown): number | null => {
+        if (typeof value === "number" && !Number.isNaN(value)) return value;
+        if (typeof value === "string") {
+          const numeric = Number(value);
+          return Number.isNaN(numeric) ? null : numeric;
+        }
+        return null;
+      };
+
+      const messageRevision = parseRevision((parsed as { revision?: unknown }).revision);
+      const currentRevision = parseRevision((budgetHeader as { revision?: unknown })?.revision);
+      if (
+        messageRevision != null &&
+        currentRevision != null &&
+        Number(messageRevision) !== Number(currentRevision)
       ) {
         return;
       }
@@ -172,7 +206,12 @@ const BudgetOverviewCard: React.FC<BudgetOverviewCardProps> = ({ projectId }) =>
     return () => {
       ws.removeEventListener("message", handleMessage);
     };
-  }, [ws, scheduleUpdate, resolvedProjectKey]);
+  }, [
+    ws,
+    scheduleUpdate,
+    resolvedProjectKey,
+    budgetHeader,
+  ]);
 
   const formatDatumValue = useCallback(
     (slice: BudgetDonutSlice) => {

@@ -1,12 +1,40 @@
 .galleryTrigger {
   cursor: pointer;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
+  /* Ensure a strict two-column row layout even if parent styles try to override */
+  flex-direction: row !important;
+  align-items: stretch;
+  justify-content: space-between;
   width: 100%;
-  flex: .3;
+  flex: 0 1 auto;
   transition: transform 0.2s ease;
+  flex-wrap: nowrap;
+}
+
+/* Two equal columns inside the trigger */
+.titleColumn,
+.thumbsColumn {
+  /* Force equal columns and prevent them stacking */
+  width: 50% !important;
+  max-width: 50% !important;
+  box-sizing: border-box;
+  flex: 0 0 50% !important;
+}
+
+.titleColumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* align title to top */
+  padding-right: 12px;
+}
+
+.thumbsColumn {
+  display: flex;
+  align-items: center; /* vertically center thumbnails */
+  justify-content: flex-end; /* thumbnails aligned to the right area */
+  padding-left: 12px;
+  /* prevent column from collapsing when thumbnails are centered */
+  min-height: 56px;
 }
 
 
@@ -472,10 +500,38 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  
-  margin-left: auto;
-  justify-content: flex-end;
+  margin-left: 0;
+  justify-content: center;
+  align-items: center; /* vertically center thumbnails inside the column */
 }
+
+/* Extra guard: if any global rule forces children to be block-level rows, reset them */
+.galleryTrigger > div {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+/* But keep title column top-aligned specifically */
+.galleryTrigger > .titleColumn { justify-content: flex-start !important; }
+
+/* Stronger override when this module's element also has the global dashboard classes */
+:global(.dashboard-item.view-gallery).galleryTrigger {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+}
+
+:global(.dashboard-item.view-gallery).galleryTrigger > .titleColumn {
+  justify-content: flex-start !important;
+}
+
+:global(.dashboard-item.view-gallery).galleryTrigger > .thumbsColumn {
+  justify-content: center !important;
+  align-items: center !important;
+}
+
 
 .galleryCover {
   cursor: pointer;

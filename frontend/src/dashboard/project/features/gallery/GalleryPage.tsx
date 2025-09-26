@@ -452,6 +452,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
     unlocked,
     navigate,
     gallery?.link,
+    originalUrl,
     isPdf,
     normalizedUpdatedPdfUrl,
     normalizedOriginalPdfUrl,

@@ -23,23 +23,23 @@ const LayoutPdfButtons: React.FC<LayoutPdfButtonsProps> = ({
   backLabel = 'Back to dashboard',
 }) => (
   <div className={`${styles.container} ${className}`.trim()}>
-    <div className={styles.layoutToggle}>
-      <button
-        type="button"
-        onClick={onToggleLayout}
-        className={styles.actionButton}
-      >
-        <LayoutGrid size={16} />
-        <span>{useMasonryLayout ? 'Grid Layout' : 'Masonry Layout'}</span>
+    {onBack && (
+      <button type="button" onClick={onBack} className={styles.actionButton}>
+        <ArrowLeft size={16} />
+        <span>{backLabel}</span>
       </button>
-    </div>
+    )}
     <div className={styles.actionGroup}>
-      {onBack && (
-        <button type="button" onClick={onBack} className={styles.actionButton}>
-          <ArrowLeft size={16} />
-          <span>{backLabel}</span>
+      <div className={styles.layoutToggle}>
+        <button
+          type="button"
+          onClick={onToggleLayout}
+          className={styles.actionButton}
+        >
+          <LayoutGrid size={16} />
+          <span>{useMasonryLayout ? 'Grid Layout' : 'Masonry Layout'}</span>
         </button>
-      )}
+      </div>
       {downloadUrl && (
         <a href={getFileUrl(downloadUrl)} download className={styles.actionButton}>
           <FileDown size={16} />

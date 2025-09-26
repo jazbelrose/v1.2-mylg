@@ -150,8 +150,8 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           } 
         />
         
-        <Route 
-          path="/gallery/:projectSlug/:gallerySlug" 
+        <Route
+          path="/gallery/:projectId/:gallerySlug"
           element={
             <motion.div
               initial="initial"

@@ -13,7 +13,7 @@ import ReactModal from "react-modal";
 import { sha256 } from "@/shared/utils/hash";
 import useModalStack from "@/shared/utils/useModalStack";
 import { useData } from "@/app/contexts/useData";
-import { slugify, findProjectBySlug } from "@/shared/utils/slug";
+import { slugify } from "@/shared/utils/slug";
 import { fetchGalleries, fileUrlsToKeys, getFileUrl } from "@/shared/utils/api";
 import Preloader from "@/shared/ui/Preloader";
 import * as pdfjsLibLocal from "pdfjs-dist/legacy/build/pdf";
@@ -127,30 +127,33 @@ const renderScale = 2; // scale used when rendering pages in Lambda
    ============================ */
 
 const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
-  const { gallerySlug, projectSlug } = useParams<{
+  const { gallerySlug, projectId: projectIdParam } = useParams<{
     gallerySlug: string;
-    projectSlug: string;
+    projectId: string;
   }>();
   const navigate = useNavigate();
 
   const { projects } = useData() as { projects?: Project[] };
 
-  const projectObj = useMemo(
-    () => (projects ? (findProjectBySlug(projects, projectSlug) as Project | undefined) : undefined),
-    [projects, projectSlug]
-  );
-
-  const projectId = propProjectId || projectObj?.projectId;
+  const projectId = propProjectId || projectIdParam;
 
   if (import.meta.env.DEV) {
     console.log("Loaded projects in GalleryPage:", projects);
-    console.log("Project slug:", projectSlug);
+    console.log("Project route ID:", projectIdParam);
     console.log("Resolved project ID:", projectId);
   }
 
   if (typeof document !== "undefined") {
     ReactModal.setAppElement("#root");
   }
+
+  const handleBack = useCallback(() => {
+    if (projectId) {
+      navigate(`/dashboard/projects/${encodeURIComponent(projectId)}`);
+    } else {
+      navigate("/dashboard");
+    }
+  }, [navigate, projectId]);
 
   const [apiGalleries, setApiGalleries] = useState<Gallery[] | null>(null);
   const [loadingGalleries, setLoadingGalleries] = useState<boolean>(!!projectId);
@@ -580,7 +583,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
           onToggleLayout={() => setUseMasonryLayout((v) => !v)}
           downloadUrl={normalizedOriginalUrl || ""}
           isPdf={isPdf}
-          onBack={() => navigate("/dashboard")}
+          onBack={handleBack}
         />
 
         {useMasonryLayout ? (

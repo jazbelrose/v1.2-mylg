@@ -310,8 +310,12 @@ const useGalleryController = (): GalleryController => {
     if (combinedGalleries.length > 0) {
       const lastGallery = combinedGalleries[combinedGalleries.length - 1];
       const slug = lastGallery.slug || slugify(lastGallery.name || "");
+      if (!activeProjectId) {
+        console.warn("Cannot navigate to gallery without an active project ID");
+        return;
+      }
       await fetchProjects(1);
-      navigate(`/gallery/${slugify(activeProjectTitle || "")}/${slug}`);
+      navigate(`/gallery/${activeProjectId}/${slug}`);
     } else {
       openModal();
     }
@@ -329,8 +333,12 @@ const useGalleryController = (): GalleryController => {
       return;
     }
 
+    if (!activeProjectId) {
+      console.warn("Cannot navigate to gallery without an active project ID");
+      return;
+    }
     await fetchProjects(1);
-    navigate(`/gallery/${slugify(activeProjectTitle || "")}/${slug}`);
+    navigate(`/gallery/${activeProjectId}/${slug}`);
   };
 
   const isEditing = editingIndex !== null;

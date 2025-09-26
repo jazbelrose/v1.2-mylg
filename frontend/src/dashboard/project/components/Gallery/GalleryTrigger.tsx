@@ -8,13 +8,11 @@ import { getFileUrl } from "../../../../shared/utils/api";
 
 interface GalleryTriggerProps {
   galleries: Gallery[];
-  onTriggerClick: () => void;
   onOpenModal: () => void;
 }
 
 const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
   galleries,
-  onTriggerClick,
   onOpenModal,
 }) => {
   const hasGalleries = galleries.length > 0;
@@ -26,13 +24,13 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
     <div
       className={`dashboard-item view-gallery ${styles.galleryTrigger}`}
       style={{ display: "flex", flexDirection: "row", gap: 12 }}
-      onClick={onTriggerClick}
+      onClick={onOpenModal}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onTriggerClick();
+          onOpenModal();
         }
       }}
     >
@@ -76,18 +74,7 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
                 <div className={`${styles.thumbnailTile} ${styles.moreTile}`}>+{hiddenCount}</div>
               )}
             </div>
-            {hasGalleries && (
-              <button
-                type="button"
-                className={styles.viewAllButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenModal();
-                }}
-              >
-                View all galleries
-              </button>
-            )}
+            {/* Entire container navigates to the galleries list; individual button removed */}
           </div>
         ) : (
           <div className={styles.emptyState}>No galleries yet</div>

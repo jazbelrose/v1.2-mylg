@@ -18,7 +18,6 @@ const GalleryComponent: React.FC = () => {
   const {
     saving,
     combinedGalleries,
-    handleTriggerClick,
     openModal,
     isConfirmingDelete,
     setIsConfirmingDelete,
@@ -32,7 +31,6 @@ const GalleryComponent: React.FC = () => {
 
       <GalleryTrigger
         galleries={combinedGalleries}
-        onTriggerClick={handleTriggerClick}
         onOpenModal={openModal}
       />
 

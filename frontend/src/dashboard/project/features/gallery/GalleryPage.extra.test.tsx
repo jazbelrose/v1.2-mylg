@@ -161,6 +161,15 @@ describe('GalleryPage', () => {
     expect(screen.getByText('Grid Layout')).toBeInTheDocument();
   });
 
+  it('navigates back to dashboard when clicking back button', async () => {
+    const navigateMock = vi.fn();
+    useNavigateMock.mockReturnValue(navigateMock);
+    render(<GalleryPage projectId="1" />);
+    const backButton = await screen.findByRole('button', { name: /back to dashboard/i });
+    await userEvent.click(backButton);
+    expect(navigateMock).toHaveBeenCalledWith('/dashboard');
+  });
+
   it('renders gallery page with link navigation', async () => {
     const navigateMock = vi.fn();
     useNavigateMock.mockReturnValue(navigateMock);

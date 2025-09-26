@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, FileDown } from 'lucide-react';
+import { LayoutGrid, FileDown, ArrowLeft } from 'lucide-react';
 import styles from './layout-pdf-buttons.module.css';
 import { getFileUrl } from '../utils/api';
 
@@ -9,6 +9,8 @@ interface LayoutPdfButtonsProps {
   downloadUrl?: string;
   isPdf?: boolean;
   className?: string;
+  onBack?: () => void;
+  backLabel?: string;
 }
 
 const LayoutPdfButtons: React.FC<LayoutPdfButtonsProps> = ({
@@ -17,22 +19,34 @@ const LayoutPdfButtons: React.FC<LayoutPdfButtonsProps> = ({
   downloadUrl = '',
   isPdf = true,
   className = '',
+  onBack,
+  backLabel = 'Back to dashboard',
 }) => (
   <div className={`${styles.container} ${className}`.trim()}>
-    <button
-      type="button"
-      onClick={onToggleLayout}
-      className={styles.actionButton}
-    >
-      <LayoutGrid size={16} />
-      <span>{useMasonryLayout ? 'Grid Layout' : 'Masonry Layout'}</span>
-    </button>
-    {downloadUrl && (
-      <a href={getFileUrl(downloadUrl)} download className={styles.actionButton}>
-        <FileDown size={16} />
-        <span>{isPdf ? 'Download PDF' : 'Download SVG'}</span>
-      </a>
-    )}
+    <div className={styles.layoutToggle}>
+      <button
+        type="button"
+        onClick={onToggleLayout}
+        className={styles.actionButton}
+      >
+        <LayoutGrid size={16} />
+        <span>{useMasonryLayout ? 'Grid Layout' : 'Masonry Layout'}</span>
+      </button>
+    </div>
+    <div className={styles.actionGroup}>
+      {onBack && (
+        <button type="button" onClick={onBack} className={styles.actionButton}>
+          <ArrowLeft size={16} />
+          <span>{backLabel}</span>
+        </button>
+      )}
+      {downloadUrl && (
+        <a href={getFileUrl(downloadUrl)} download className={styles.actionButton}>
+          <FileDown size={16} />
+          <span>{isPdf ? 'Download PDF' : 'Download SVG'}</span>
+        </a>
+      )}
+    </div>
   </div>
 );
 

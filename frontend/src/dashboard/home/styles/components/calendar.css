@@ -112,11 +112,39 @@
 
 .location-wrapper,
 .tasks-wrapper {
-  width: 100%;
   height: 100%;
   overflow: hidden;
   min-width: 0;
   min-height: 0;
+}
+
+/* 30% / 70% split: location = 30%, tasks = 70% */
+.location-wrapper {
+  flex: 0 0 30%;
+  max-width: 30%;
+  width: 30%;
+  /* keep a sensible minimum so the map remains usable */
+  min-width: 240px;
+}
+.tasks-wrapper {
+  flex: 1 1 70%;
+  width: 70%;
+}
+
+/* Responsive: stack vertically on narrower viewports */
+@media (max-width: 1024px) {
+  .timeline-location-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .location-wrapper,
+  .tasks-wrapper {
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+    min-width: 0;
+  }
 }
 
 .location-wrapper .column-5 {

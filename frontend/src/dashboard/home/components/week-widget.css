@@ -217,6 +217,24 @@
   padding:3px 0;
 }
 
+button.ww-tt-item{
+  width:100%;
+  background:none;
+  border:none;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  padding:3px 0;
+}
+
+button.ww-tt-item:focus-visible{
+  outline:2px solid rgba(250,51,86,0.55);
+  outline-offset:2px;
+  border-radius:6px;
+}
+
 .ww-tt-dot{
   width:5px;                      /* smaller dot */
   height:5px;

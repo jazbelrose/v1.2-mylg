@@ -1,11 +1,19 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { startOfWeek, endOfWeek, addDays } from "../utils/dateUtils";
 import "./week-widget.css";
 
 export type Track = { id: string; color: string; start: Date | string | number; end: Date | string | number };
 export type Dot = { date: Date | string | number; color?: string };
-type TooltipItem = { id: string; title?: string; color?: string; time?: string; badge?: string; note?: string };
+type TooltipItem = {
+  id: string;
+  title?: string;
+  color?: string;
+  time?: string;
+  badge?: string;
+  note?: string;
+  onClick?: () => void;
+};
 
 type Props = {
   weekOf: Date;
@@ -114,14 +122,18 @@ export default function WeekWidget({
     return dayDots.map((c, i) => ({ id: `dot-${k}-${i}`, title: "Event", color: c } as TooltipItem));
   }, [tooltipDate, getTooltipItems, dotMap]);
 
+  const closeTooltip = useCallback(() => {
+    setTooltipDate(null);
+    setAnchor(null);
+    setShowAll(false);
+  }, []);
+
   // Close on outside / ESC / scroll-resize (keeps it simple on mobile)
   useEffect(() => {
     if (!tooltipDate) return;
     const close = (e: MouseEvent | TouchEvent | KeyboardEvent | Event) => {
       if ((e as KeyboardEvent).type === "keydown" && (e as KeyboardEvent).key !== "Escape") return;
-      setTooltipDate(null);
-      setAnchor(null);
-      setShowAll(false);
+      closeTooltip();
     };
     window.addEventListener("mousedown", close, { passive: true });
     window.addEventListener("touchstart", close, { passive: true });
@@ -135,7 +147,7 @@ export default function WeekWidget({
       window.removeEventListener("scroll", close as EventListener);
       window.removeEventListener("resize", close as EventListener);
     };
-  }, [tooltipDate]);
+  }, [tooltipDate, closeTooltip]);
 
   // Compute tooltip position (fixed, via portal)
   const tip = useMemo(() => {
@@ -169,16 +181,40 @@ export default function WeekWidget({
           } as React.CSSProperties
         }
       >
-        {list.map((it) => (
-          <div key={it.id} className="ww-tt-item">
-            <span className="ww-tt-dot" style={{ background: it.color || "#999" }} />
-            <div className="ww-tt-body">
-              <div className="ww-tt-title">{it.title ?? "Untitled"}</div>
-              {it.note && <div className="ww-tt-note">{it.note}</div>}
-              {it.time && <div className="ww-tt-time">{it.time}</div>}
+        {list.map((it) => {
+          const content = (
+            <>
+              <span className="ww-tt-dot" style={{ background: it.color || "#999" }} />
+              <div className="ww-tt-body">
+                <div className="ww-tt-title">{it.title ?? "Untitled"}</div>
+                {it.note && <div className="ww-tt-note">{it.note}</div>}
+                {it.time && <div className="ww-tt-time">{it.time}</div>}
+              </div>
+            </>
+          );
+
+          if (typeof it.onClick === "function") {
+            return (
+              <button
+                key={it.id}
+                type="button"
+                className="ww-tt-item"
+                onClick={() => {
+                  it.onClick?.();
+                  closeTooltip();
+                }}
+              >
+                {content}
+              </button>
+            );
+          }
+
+          return (
+            <div key={it.id} className="ww-tt-item">
+              {content}
             </div>
-          </div>
-        ))}
+          );
+        })}
         {overflow > 0 && !showAll && (
           <button
             className="ww-tt-more-pill"
@@ -189,7 +225,7 @@ export default function WeekWidget({
           </button>
         )}
 
-        <button className="ww-tt-close" onClick={() => { setTooltipDate(null); setAnchor(null); setShowAll(false); }} aria-label="Close">
+        <button className="ww-tt-close" onClick={closeTooltip} aria-label="Close">
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
@@ -197,7 +233,7 @@ export default function WeekWidget({
       </div>,
       document.body
     );
-  }, [mobile, tooltipDate, items, anchor, showAll]);
+  }, [mobile, tooltipDate, items, anchor, showAll, closeTooltip]);
 
   const containerClass = [
     "week-widget",
@@ -230,9 +266,9 @@ export default function WeekWidget({
             const same = tooltipDate && dateKey(tooltipDate) === k;
             onSelectDate?.(day);
             if (same) {
-              setTooltipDate(null);
-              setAnchor(null);
+              closeTooltip();
             } else {
+              setShowAll(false);
               const rect = el.getBoundingClientRect();
               setAnchor({ x: rect.left + rect.width / 2, y: rect.top });
               setTooltipDate(day);

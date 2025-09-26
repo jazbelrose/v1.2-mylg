@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import WeekWidget, { type Track, type Dot } from "./WeekWidget";
 import { useData } from "@/app/contexts/useData";
 import { getColor } from "@/shared/utils/colorUtils";
+import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 
 type TimelineEvent = { date?: string; description?: string; [k: string]: unknown };
 type Project = {
@@ -25,6 +27,7 @@ function sameDay(a: Date | null, b: Date | null) {
 export default function AllProjectsWeekWidget({ className = "" }: { className?: string }) {
   const { projects = [] } = useData() as { projects: Project[] };
   const [weekOf, setWeekOf] = useState<Date>(new Date());
+  const navigate = useNavigate();
 
   // Map for consistent colors
   const colorMap = useMemo(() => {
@@ -60,7 +63,7 @@ export default function AllProjectsWeekWidget({ className = "" }: { className?: 
   // 👉 Tooltip data for a tapped day (projects running that day + same-day events)
   const getTooltipItems = (date: Date) => {
     const day = toDay(date)!;
-    const items: { id: string; title?: string; color?: string; note?: string }[] = [];
+    const items: { id: string; title?: string; color?: string; note?: string; onClick?: () => void }[] = [];
 
     for (const p of projects) {
       const color = colorMap[p.projectId] || "#FA3356";
@@ -68,15 +71,29 @@ export default function AllProjectsWeekWidget({ className = "" }: { className?: 
       const end = toDay(p.finishline);
 
       if (start && end && day >= start && day <= end) {
-        items.push({ id: p.projectId, title: p.title || p.projectId, color });
+        items.push({
+          id: p.projectId,
+          title: p.title || p.projectId,
+          color,
+          onClick: () => navigate(getProjectDashboardPath(p.projectId, p.title)),
+        });
       }
       for (const ev of p.timelineEvents ?? []) {
         const d = toDay(ev.date);
         if (sameDay(d, day)) {
           const note = (ev.description as string) || undefined;
           const hit = items.find((i) => i.id === p.projectId);
-          if (hit) hit.note ??= note;
-          else items.push({ id: p.projectId, title: p.title || p.projectId, color, note });
+          if (hit) {
+            hit.note ??= note;
+          } else {
+            items.push({
+              id: p.projectId,
+              title: p.title || p.projectId,
+              color,
+              note,
+              onClick: () => navigate(getProjectDashboardPath(p.projectId, p.title)),
+            });
+          }
         }
       }
     }

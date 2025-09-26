@@ -632,19 +632,23 @@ export async function createTask(task: Task): Promise<Task> {
   const { projectId, ...payload } = task;
   if (!projectId) throw new Error('projectId is required for createTask');
   if (payload.budgetItemId === '' || payload.budgetItemId == null) delete payload.budgetItemId;
-  const url = `${TASKS_API_URL}`;
-  return apiFetch<Task>(url, {
+  const url = `${TASKS_API_URL}${encodeURIComponent(projectId)}/tasks`;
+  const res = await apiFetch<{ projectId?: string; task?: Task } | Task>(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...payload, projectId }),
   });
+  if (res && typeof res === 'object' && 'task' in res && res.task) {
+    return res.task as Task;
+  }
+  return res as Task;
 }
 
 export async function updateTask(task: Task): Promise<Task> {
   const { projectId, taskId, ...payload } = task;
   if (!projectId || !taskId) throw new Error('projectId and taskId are required for updateTask');
   if (payload.budgetItemId === '' || payload.budgetItemId == null) delete payload.budgetItemId;
-  const url = `${TASKS_API_URL}/${encodeURIComponent(taskId)}`;
+  const url = `${TASKS_API_URL}${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`;
   return apiFetch<Task>(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -654,7 +658,7 @@ export async function updateTask(task: Task): Promise<Task> {
 
 export async function deleteTask({ projectId, taskId }: { projectId: string; taskId: string }): Promise<{ ok: true }> {
   if (!projectId || !taskId) throw new Error('projectId and taskId are required for deleteTask');
-  const url = `${TASKS_API_URL}/${encodeURIComponent(taskId)}?projectId=${encodeURIComponent(projectId)}`;
+  const url = `${TASKS_API_URL}${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}`;
   await apiFetch<JsonRecord>(url, { method: 'DELETE' });
   return { ok: true };
 }

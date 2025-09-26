@@ -459,11 +459,7 @@ const GalleryModal: React.FC<GalleryModalProps> = ({ controller }) => {
           </div>
         )}
 
-        <div className={styles.modalActions}>
-          <button className="modal-submit-button uploads" onClick={closeModal}>
-            Close
-          </button>
-        </div>
+        {/* bottom Close button removed — Close/Cancel are available in the form actions when needed */}
 
         {uploadProgress > 0 && uploadProgress < 100 && (
           <div style={{ marginTop: "10px" }}>Uploading... {uploadProgress}%</div>

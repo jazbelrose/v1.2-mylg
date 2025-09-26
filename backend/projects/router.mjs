@@ -802,14 +802,34 @@ const getThumbnails = async (_e, C, { projectId }) => {
 
 /* ---------- Galleries ---------- */
 // GET /projects/{projectId}/galleries
+const sanitizeGalleryList = (list, projectId) =>
+  Array.isArray(list)
+    ? list
+        .filter((item) => item && typeof item === "object")
+        .map((item) => ({ ...item, projectId: item.projectId || projectId }))
+    : [];
+
 const listProjectGalleries = async (_e, C, { projectId }) => {
-  const r = await ddb.query({
-    TableName: GALLERIES_TABLE,
-    IndexName: GALLERIES_PROJECT_INDEX,
-    KeyConditionExpression: "projectId = :pid",
-    ExpressionAttributeValues: { ":pid": projectId },
-  });
-  return json(200, C, r.Items || []);
+  const [ddbResult, projectResult] = await Promise.all([
+    ddb.query({
+      TableName: GALLERIES_TABLE,
+      IndexName: GALLERIES_PROJECT_INDEX,
+      KeyConditionExpression: "projectId = :pid",
+      ExpressionAttributeValues: { ":pid": projectId },
+    }),
+    ddb.get({
+      TableName: PROJECTS_TABLE,
+      Key: { projectId },
+      ProjectionExpression: "gallery, galleries",
+    }),
+  ]);
+
+  const legacy = sanitizeGalleryList(projectResult.Item?.gallery, projectId);
+  const queriedCurrent = sanitizeGalleryList(ddbResult.Items, projectId);
+  const fallbackCurrent = sanitizeGalleryList(projectResult.Item?.galleries, projectId);
+  const current = queriedCurrent.length ? queriedCurrent : fallbackCurrent;
+
+  return json(200, C, { legacy, current, items: current });
 };
 
 // POST /projects/{projectId}/galleries
@@ -905,9 +925,25 @@ const deleteGalleryFilesBySlug = async (e, C, { projectId, gallerySlug }) => {
     return json(404, C, { error: "Gallery not found", projectId, gallerySlug });
   }
 
-  const prefix = `projects/${projectId}/gallery/${resolvedSlug}/`;
+  // Support both legacy ("gallery/") and current ("galleries/") folder layouts.
+  const folderNames = Array.from(new Set([resolvedSlug, galleryId].filter(Boolean)));
+  const prefixes = Array.from(new Set(folderNames.flatMap((name) => ([
+    `projects/${projectId}/galleries/${name}/`,
+    `projects/${projectId}/gallery/${name}/`,
+  ]))));
+
   try {
-    const keys = await listAllKeys(FILE_BUCKET, prefix);
+    if (!prefixes.length) {
+      return json(200, C, { ok: true, projectId, gallerySlug: resolvedSlug, galleryId, deletedCount: 0, errors: [] });
+    }
+
+    const keysSet = new Set();
+    for (const prefix of prefixes) {
+      const listed = await listAllKeys(FILE_BUCKET, prefix);
+      listed.forEach((key) => keysSet.add(key));
+    }
+
+    const keys = Array.from(keysSet);
     if (!keys.length) {
       return json(200, C, { ok: true, projectId, gallerySlug: resolvedSlug, galleryId, deletedCount: 0, errors: [] });
     }

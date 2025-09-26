@@ -27,7 +27,7 @@ vi.mock("aws-amplify/storage", () => ({
 }));
 
 vi.mock("../../../../shared/utils/api", () => ({
-  fetchGalleries: vi.fn(() => Promise.resolve([])),
+  fetchGalleries: vi.fn(() => Promise.resolve({ legacy: [], current: [] })),
   deleteGallery: vi.fn(() => Promise.resolve()),
   deleteGalleryFiles: vi.fn(() => Promise.resolve()),
   updateGallery: vi.fn(() => Promise.resolve()),

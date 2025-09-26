@@ -90,12 +90,11 @@ const useGalleryData = (): GalleryDataState => {
     };
 
     try {
-      const apiGals = await fetchGalleries(activeProject.projectId);
-      // Treat any array returned by the API (including an empty array) as authoritative.
-      if (Array.isArray(apiGals)) {
-        applyLists([], apiGals as Gallery[]);
-        return;
-      }
+      const { legacy: legacyFromApi, current: currentFromApi } = await fetchGalleries(
+        activeProject.projectId
+      );
+      applyLists(legacyFromApi, currentFromApi);
+      return;
     } catch (err) {
       // If the API call fails, fall back to using the cached `activeProject` data.
       // Log the error so debugging is easier when the UI shows galleries that don't exist server-side.

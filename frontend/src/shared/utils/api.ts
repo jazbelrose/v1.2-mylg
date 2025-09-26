@@ -743,11 +743,32 @@ export async function assignEventIdsBatch(projectIds: string[] = []): Promise<{ 
 // Galleries
 // ───────────────────────────────────────────────────────────────────────────────
 
-export async function fetchGalleries(projectId: string): Promise<Gallery[]> {
-  if (!projectId) return [];
+export interface GalleryListResponse {
+  legacy: Gallery[];
+  current: Gallery[];
+}
+
+const toGalleryListResponse = (data: unknown): GalleryListResponse => {
+  if (Array.isArray(data)) {
+    return { legacy: [], current: data as Gallery[] };
+  }
+
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    const legacy = Array.isArray(record.legacy) ? (record.legacy as Gallery[]) : [];
+    const currentFromField = Array.isArray(record.current) ? (record.current as Gallery[]) : [];
+    const current = currentFromField.length ? currentFromField : extractItems<Gallery>(record as JsonRecord);
+    return { legacy, current };
+  }
+
+  return { legacy: [], current: [] };
+};
+
+export async function fetchGalleries(projectId: string): Promise<GalleryListResponse> {
+  if (!projectId) return { legacy: [], current: [] };
   const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/galleries`;
-  const data = await apiFetch<MaybeItems<Gallery>>(url);
-  return extractItems<Gallery>(data);
+  const data = await apiFetch<MaybeItems<Gallery> | GalleryListResponse>(url);
+  return toGalleryListResponse(data);
 }
 
 export async function createGallery(projectId: string, gallery: Partial<Gallery>): Promise<Gallery> {

@@ -136,9 +136,18 @@ describe('GalleryPage', () => {
       const { default: GalleryPageImport } = await import('./GalleryPage');
       GalleryPage = GalleryPageImport;
     }
-    fetchGalleriesMock.mockResolvedValue([
-      { projectId: '1', name: 'client 001', slug: 'client-001', updatedSvgUrl: '/test.svg', imageUrls: ['img1.png'] },
-    ]);
+    fetchGalleriesMock.mockResolvedValue({
+      legacy: [],
+      current: [
+        {
+          projectId: '1',
+          name: 'client 001',
+          slug: 'client-001',
+          updatedSvgUrl: '/test.svg',
+          imageUrls: ['img1.png'],
+        },
+      ],
+    });
     useParamsMock.mockReturnValue({ projectId: 'project-1', gallerySlug: 'client-001' });
     useNavigateMock.mockReturnValue(vi.fn());
   });
@@ -173,9 +182,10 @@ describe('GalleryPage', () => {
   it('renders gallery page with link navigation', async () => {
     const navigateMock = vi.fn();
     useNavigateMock.mockReturnValue(navigateMock);
-    fetchGalleriesMock.mockResolvedValue([
-      { projectId: 'project-1', name: 'link-gallery', slug: 'link', link: '/other' },
-    ]);
+    fetchGalleriesMock.mockResolvedValue({
+      legacy: [],
+      current: [{ projectId: 'project-1', name: 'link-gallery', slug: 'link', link: '/other' }],
+    });
     useParamsMock.mockReturnValue({ projectId: 'project-2', gallerySlug: 'link' });
     render(<GalleryPage projectId="1" />);
     await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/other'));
@@ -193,9 +203,18 @@ describe('GalleryPage', () => {
       writable: true,
     });
 
-    fetchGalleriesMock.mockResolvedValue([
-      { projectId: 'project-1', name: 'secret', slug: 'secret', passwordHash: 'abc', passwordEnabled: true },
-    ]);
+    fetchGalleriesMock.mockResolvedValue({
+      legacy: [],
+      current: [
+        {
+          projectId: 'project-1',
+          name: 'secret',
+          slug: 'secret',
+          passwordHash: 'abc',
+          passwordEnabled: true,
+        },
+      ],
+    });
     useParamsMock.mockReturnValue({ projectId: 'project-3', gallerySlug: 'secret' });
     render(<GalleryPage projectId="1" />);
     const input = await screen.findByTestId('password-input');
@@ -220,9 +239,17 @@ describe('GalleryPage', () => {
       }),
     }));
 
-    fetchGalleriesMock.mockResolvedValue([
-      { projectId: 'project-1', slug: 'pdf', updatedPdfUrl: '/dummy.pdf', imageUrls: ['img1.png'] },
-    ]);
+    fetchGalleriesMock.mockResolvedValue({
+      legacy: [],
+      current: [
+        {
+          projectId: 'project-1',
+          slug: 'pdf',
+          updatedPdfUrl: '/dummy.pdf',
+          imageUrls: ['img1.png'],
+        },
+      ],
+    });
     useParamsMock.mockReturnValue({ projectId: 'project-4', gallerySlug: 'pdf' });
     const { default: GalleryPagePdf } = await import('./GalleryPage');
     render(<GalleryPagePdf />);
@@ -244,9 +271,10 @@ describe('GalleryPage', () => {
       }),
     }));
 
-    fetchGalleriesMock.mockResolvedValue([
-      { projectId: 'project-1', slug: 'pdf', updatedPdfUrl: '/dummy.pdf' },
-    ]);
+    fetchGalleriesMock.mockResolvedValue({
+      legacy: [],
+      current: [{ projectId: 'project-1', slug: 'pdf', updatedPdfUrl: '/dummy.pdf' }],
+    });
     useParamsMock.mockReturnValue({ projectId: 'project-5', gallerySlug: 'pdf' });
     const { default: GalleryPagePdf } = await import('./GalleryPage');
     render(<GalleryPagePdf />);

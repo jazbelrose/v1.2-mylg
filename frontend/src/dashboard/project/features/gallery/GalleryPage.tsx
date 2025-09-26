@@ -277,9 +277,9 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
     setLoadingGalleries(true);
 
     fetchGalleries(projectId)
-      .then((list: unknown) => {
+      .then(({ legacy, current }) => {
         if (!cancelled) {
-          setApiGalleries(Array.isArray(list) ? (list as Gallery[]) : []);
+          setApiGalleries([...(legacy || []), ...(current || [])]);
         }
       })
       .catch((err: unknown) => {

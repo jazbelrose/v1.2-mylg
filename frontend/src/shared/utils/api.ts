@@ -15,6 +15,7 @@ export interface ApiFetchOptions extends RequestInit {
   retryDelay?: number;          // ms
   skipRateLimit?: boolean;
   onNetworkError?: (error: Error) => void;
+  suppressErrorLog?: boolean;
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -362,6 +363,7 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
     retryDelay = 500,
     skipRateLimit = false,
     onNetworkError,
+    suppressErrorLog = false,
     ...fetchOptions
   } = options;
 
@@ -396,14 +398,18 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
       const res = await fetch(url, { ...fetchOptions, headers });
 
       if (res.status === 503 && attempt < retryCount) {
-        console.warn('[apiFetch] 503 Service Unavailable — retrying after delay');
+        if (!suppressErrorLog) {
+          console.warn('[apiFetch] 503 Service Unavailable — retrying after delay');
+        }
         await new Promise((r) => setTimeout(r, retryDelay));
         continue;
       }
 
       if (!res.ok) {
         const text = await res.text().catch(() => '');
-        console.error(`[apiFetch] ❌ ${url} → ${res.status} ${res.statusText} — ${text}`);
+        if (!suppressErrorLog) {
+          console.error(`[apiFetch] ❌ ${url} → ${res.status} ${res.statusText} — ${text}`);
+        }
 
         if (res.status === 401 || res.status === 403) {
           logSecurityEvent('authentication_error', { url, status: res.status, statusText: res.statusText });
@@ -431,7 +437,9 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
         try {
           return JSON.parse(text) as T;
         } catch {
-              console.warn('[apiFetch] Non-JSON response, returning {}:', { url, text });
+          if (!suppressErrorLog) {
+            console.warn('[apiFetch] Non-JSON response, returning {}:', { url, text });
+          }
           return ({} as unknown) as T;
         }
       }
@@ -439,7 +447,9 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
       try {
         data = await res.json();
       } catch {
-        console.warn('[apiFetch] Failed to parse JSON, returning {}:', { url });
+        if (!suppressErrorLog) {
+          console.warn('[apiFetch] Failed to parse JSON, returning {}:', { url });
+        }
         return ({} as unknown) as T;
       }
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes((fetchOptions.method || '').toUpperCase())) {
@@ -452,7 +462,9 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
     } catch (err) {
       lastError = err;
       if (attempt < retryCount) {
-        console.warn('[apiFetch] Error, will retry:', (err as Error)?.message);
+        if (!suppressErrorLog) {
+          console.warn('[apiFetch] Error, will retry:', (err as Error)?.message);
+        }
         await new Promise((r) => setTimeout(r, retryDelay));
       }
     }
@@ -464,7 +476,9 @@ export async function apiFetch<T = unknown>(url: string, options: ApiFetchOption
     lastError = networkErr;
   }
 
-  console.error('[apiFetch] Final error:', lastError);
+  if (!suppressErrorLog) {
+    console.error('[apiFetch] Final error:', lastError);
+  }
   logSecurityEvent('api_request_failed', { url: new URL(url).pathname, error: (lastError as Error).message });
   throw lastError;
 }
@@ -767,6 +781,8 @@ export async function deleteGalleryFiles(projectId: string, galleryId?: string, 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({}),
+    retryCount: 0,
+    suppressErrorLog: true,
     onNetworkError: (err: Error) => {
       try {
         console.error('[deleteGalleryFiles] Network error callback:', err);

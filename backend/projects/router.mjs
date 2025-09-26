@@ -120,6 +120,27 @@ const listAllKeys = async (bucket, prefix) => {
   return keys;
 };
 
+const resolveGallerySlug = async (projectId, slugOrId) => {
+  if (!projectId || !slugOrId) {
+    return { slug: null, galleryId: null };
+  }
+
+  try {
+    const res = await ddb.get({ TableName: GALLERIES_TABLE, Key: { galleryId: slugOrId } });
+    const item = res?.Item;
+    if (item && (!item.projectId || item.projectId === projectId)) {
+      return {
+        slug: item.slug || item.galleryId || slugOrId,
+        galleryId: item.galleryId || slugOrId,
+      };
+    }
+  } catch (err) {
+    console.warn('resolve_gallery_slug_failed', { projectId, slugOrId, err });
+  }
+
+  return { slug: slugOrId, galleryId: slugOrId };
+};
+
 const chunk = (arr, n = 1000) => {
   const out = [];
   for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
@@ -879,11 +900,16 @@ const deleteGalleryFilesBySlug = async (e, C, { projectId, gallerySlug }) => {
     return json(400, C, { error: "projectId and gallerySlug required" });
   }
 
-  const prefix = `projects/${projectId}/gallery/${gallerySlug}/`;
+  const { slug: resolvedSlug, galleryId } = await resolveGallerySlug(projectId, gallerySlug);
+  if (!resolvedSlug) {
+    return json(404, C, { error: "Gallery not found", projectId, gallerySlug });
+  }
+
+  const prefix = `projects/${projectId}/gallery/${resolvedSlug}/`;
   try {
     const keys = await listAllKeys(FILE_BUCKET, prefix);
     if (!keys.length) {
-      return json(200, C, { ok: true, projectId, gallerySlug, deletedCount: 0, errors: [] });
+      return json(200, C, { ok: true, projectId, gallerySlug: resolvedSlug, galleryId, deletedCount: 0, errors: [] });
     }
 
     const batches = chunk(keys, 1000);
@@ -900,13 +926,21 @@ const deleteGalleryFilesBySlug = async (e, C, { projectId, gallerySlug }) => {
 
     return json(200, C, {
       ok: errors.length === 0,
-      projectId, gallerySlug,
+      projectId,
+      gallerySlug: resolvedSlug,
+      galleryId,
       deletedCount: keys.length,
       errors
     });
   } catch (err) {
-    console.error("delete_gallery_files_error", { projectId, gallerySlug, err });
-    return json(500, C, { error: "Failed to delete gallery files", detail: String(err?.message || err) });
+    console.error("delete_gallery_files_error", { projectId, gallerySlug: resolvedSlug, err });
+    return json(500, C, {
+      error: "Failed to delete gallery files",
+      detail: String(err?.message || err),
+      projectId,
+      gallerySlug: resolvedSlug,
+      galleryId,
+    });
   }
 };
 

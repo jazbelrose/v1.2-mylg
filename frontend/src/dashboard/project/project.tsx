@@ -21,6 +21,7 @@ import type { Project } from "@/app/contexts/DataProvider";
 import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
+import Spinner from "@/shared/ui/Spinner";
 
 const MOBILE_LAYOUT_WIDTH = 640;
 
@@ -75,8 +76,24 @@ const SingleProject: React.FC = () => {
     return Number.isNaN(num) ? 0 : num;
   }, []);
 
-  const coverImage = useMemo(() => resolveProjectCoverUrl(activeProject), [activeProject]);
-  const projectPalette = useProjectPalette(coverImage, { color: activeProject?.color });
+  const resolvedActiveProject = useMemo(() => {
+    if (!projectId) return null;
+    return activeProject?.projectId === projectId ? activeProject : null;
+  }, [projectId, activeProject]);
+
+  const [isProjectLoading, setIsProjectLoading] = useState<boolean>(() =>
+    Boolean(projectId && !resolvedActiveProject)
+  );
+
+  const latestRequestedProjectId = useRef<string | null>(null);
+
+  const coverImage = useMemo(
+    () => resolveProjectCoverUrl(resolvedActiveProject),
+    [resolvedActiveProject]
+  );
+  const projectPalette = useProjectPalette(coverImage, {
+    color: resolvedActiveProject?.color,
+  });
 
 
   const showWelcome = useCallback(() => {
@@ -84,11 +101,15 @@ const SingleProject: React.FC = () => {
   }, [navigate]);
 
   const openCalendarPage = useCallback(() => {
-    if (!activeProject) return;
+    if (!resolvedActiveProject) return;
     navigate(
-      getProjectDashboardPath(activeProject.projectId, activeProject.title, "/calendar")
+      getProjectDashboardPath(
+        resolvedActiveProject.projectId,
+        resolvedActiveProject.title,
+        "/calendar"
+      )
     );
-  }, [activeProject, navigate]);
+  }, [resolvedActiveProject, navigate]);
 
   const handleProjectDeleted = useCallback(
     (deletedProjectId: string) => {
@@ -121,18 +142,60 @@ const SingleProject: React.FC = () => {
     };
   }, []);
 
-  // Keep the active project in sync with the ID from the route.
+  // Keep the active project in sync with the ID from the route and track loading state.
   useEffect(() => {
-    if (!projectId) return;
-    if (activeProject?.projectId === projectId) return;
-    fetchProjectDetails(projectId);
-  }, [projectId, activeProject?.projectId, fetchProjectDetails]);
+    if (!projectId) {
+      latestRequestedProjectId.current = null;
+      setIsProjectLoading(false);
+      return;
+    }
+
+    if (resolvedActiveProject?.projectId === projectId) {
+      latestRequestedProjectId.current = null;
+      setIsProjectLoading(false);
+      return;
+    }
+
+    latestRequestedProjectId.current = projectId;
+    let isSubscribed = true;
+
+    setIsProjectLoading(true);
+
+    void fetchProjectDetails(projectId).then((success) => {
+      if (!isSubscribed) return;
+      if (success) {
+        // Wait for the resolved project effect to clear the loading state.
+        return;
+      }
+
+      if (latestRequestedProjectId.current === projectId) {
+        latestRequestedProjectId.current = null;
+        setIsProjectLoading(false);
+      }
+    });
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [
+    projectId,
+    resolvedActiveProject?.projectId,
+    fetchProjectDetails,
+  ]);
 
   useEffect(() => {
     if (!projectId) return;
-    if (activeProject?.projectId !== projectId) return;
+    if (resolvedActiveProject?.projectId !== projectId) return;
 
-    const title = activeProject?.title;
+    latestRequestedProjectId.current = null;
+    setIsProjectLoading(false);
+  }, [projectId, resolvedActiveProject?.projectId]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    if (resolvedActiveProject?.projectId !== projectId) return;
+
+    const title = resolvedActiveProject?.title;
     if (!title) return;
 
     if (projectNameFromPath === title) return;
@@ -144,8 +207,8 @@ const SingleProject: React.FC = () => {
     navigate(canonicalPath, { replace: true });
   }, [
     projectId,
-    activeProject?.projectId,
-    activeProject?.title,
+    resolvedActiveProject?.projectId,
+    resolvedActiveProject?.title,
     projectNameFromPath,
     navigate,
     location.pathname,
@@ -153,26 +216,26 @@ const SingleProject: React.FC = () => {
 
   // Ensure team/details are loaded for the current project.
   useEffect(() => {
-    if (!activeProject?.projectId) return;
-    const hasTeamArray = Array.isArray(activeProject.team);
-    const hasDescription = typeof activeProject.description === "string";
+    if (!resolvedActiveProject?.projectId) return;
+    const hasTeamArray = Array.isArray(resolvedActiveProject.team);
+    const hasDescription = typeof resolvedActiveProject.description === "string";
     if (!hasTeamArray || !hasDescription) {
-      fetchProjectDetails(activeProject.projectId);
+      fetchProjectDetails(resolvedActiveProject.projectId);
     }
   }, [
-    activeProject?.projectId,
-    activeProject?.team,
-    activeProject?.description,
+    resolvedActiveProject?.projectId,
+    resolvedActiveProject?.team,
+    resolvedActiveProject?.description,
     fetchProjectDetails,
   ]);
 
   // Subscribe this client to live updates for the active project's "conversation".
   useEffect(() => {
-    if (!ws || !activeProject?.projectId) return;
+    if (!ws || !resolvedActiveProject?.projectId) return;
 
     const payload = JSON.stringify({
       action: "setActiveConversation",
-      conversationId: `project#${activeProject.projectId}`,
+      conversationId: `project#${resolvedActiveProject.projectId}`,
     });
 
     const onOpen = (): void => {
@@ -196,11 +259,11 @@ const SingleProject: React.FC = () => {
     return () => {
       ws.removeEventListener("open", onOpen);
     };
-  }, [ws, activeProject?.projectId]);
+  }, [ws, resolvedActiveProject?.projectId]);
 
   const calendarOverviewCard = (
     <CalendarOverviewCard
-      project={activeProject as {
+      project={resolvedActiveProject as {
         projectId: string;
         title?: string;
         color?: string;
@@ -234,14 +297,113 @@ const SingleProject: React.FC = () => {
     />
   );
 
+  const shouldShowLoader = Boolean(
+    projectId &&
+      (isProjectLoading || (!resolvedActiveProject && latestRequestedProjectId.current === projectId))
+  );
+
+  const shouldShowUnavailableState = Boolean(
+    projectId && !shouldShowLoader && !resolvedActiveProject
+  );
+
+  const loader = (
+    <div
+      style={{
+        alignItems: "center",
+        display: "flex",
+        justifyContent: "center",
+        minHeight: "40vh",
+        padding: "2rem 0",
+        width: "100%",
+      }}
+    >
+      <Spinner />
+    </div>
+  );
+
+  const unavailableState = (
+    <div
+      style={{
+        alignItems: "center",
+        color: "var(--text-muted, #6b7280)",
+        display: "flex",
+        fontSize: "1rem",
+        justifyContent: "center",
+        minHeight: "40vh",
+        padding: "2rem",
+        textAlign: "center",
+        width: "100%",
+      }}
+    >
+      We're having trouble loading this project right now.
+    </div>
+  );
+
+  const projectContent = resolvedActiveProject ? (
+    <BudgetProvider projectId={resolvedActiveProject.projectId}>
+      <div className="overview-layout">
+        <QuickLinksComponent ref={quickLinksRef} hideTrigger />
+
+        {FileManagerComponent && (
+          <FileManagerComponent
+            {...{
+              isOpen: filesOpen,
+              onRequestClose: () => setFilesOpen(false),
+              showTrigger: false,
+              folder: "uploads",
+            }}
+          />
+        )}
+
+        <div
+          className={`dashboard-layout budget-calendar-layout${
+            isMobileBudgetLayout ? " budget-calendar-layout--stacked" : ""
+          }`}
+        >
+          <div className="budget-column">
+            <BudgetOverviewCard projectId={resolvedActiveProject.projectId} />
+            {isMobileBudgetLayout && (
+              <div className="budget-calendar-mobile-card">{calendarOverviewCard}</div>
+            )}
+
+            <GalleryComponent />
+          </div>
+          {!isMobileBudgetLayout && <div className="calendar-column">{calendarOverviewCard}</div>}
+        </div>
+
+        {/* <Timeline
+          activeProject={resolvedActiveProject as Project & { status: string; milestoneTitles?: string[] }}
+          parseStatusToNumber={parseStatusToNumber}
+          onActiveProjectChange={handleActiveProjectChange}
+        /> */}
+
+        <div className="dashboard-layout timeline-location-row">
+          <div className="location-wrapper">
+            <LocationComponent
+              activeProject={resolvedActiveProject}
+              onActiveProjectChange={handleActiveProjectChange}
+            />
+          </div>
+          <div className="tasks-wrapper">
+            <TasksComponent
+              projectId={resolvedActiveProject.projectId}
+              userId={userId}
+              team={resolvedActiveProject.team}
+            />
+          </div>
+        </div>
+      </div>
+    </BudgetProvider>
+  ) : null;
+
   // Render
   return (
     <ProjectPageLayout
-      projectId={activeProject?.projectId}
+      projectId={resolvedActiveProject?.projectId}
       theme={projectPalette}
       header={
         <ProjectHeader
-          activeProject={activeProject}
+          activeProject={resolvedActiveProject}
           parseStatusToNumber={parseStatusToNumber}
           userId={userId}
           onProjectDeleted={handleProjectDeleted}
@@ -249,7 +411,7 @@ const SingleProject: React.FC = () => {
           onActiveProjectChange={handleActiveProjectChange}
           onOpenFiles={() => setFilesOpen(true)}
           onOpenQuickLinks={() => quickLinksRef.current?.openModal()}
-          title={activeProject?.title}
+          title={resolvedActiveProject?.title}
         />
       }
     >
@@ -262,60 +424,11 @@ const SingleProject: React.FC = () => {
           exit={{ x: -100, opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <BudgetProvider projectId={activeProject?.projectId}>
-            <div className="overview-layout">
-              <QuickLinksComponent ref={quickLinksRef} hideTrigger />
-
-            {FileManagerComponent && (
-              <FileManagerComponent
-                {...{
-                  isOpen: filesOpen,
-                  onRequestClose: () => setFilesOpen(false),
-                  showTrigger: false,
-                  folder: "uploads",
-                }}
-              />
-            )}
-
-              <div
-                className={`dashboard-layout budget-calendar-layout${
-                  isMobileBudgetLayout ? " budget-calendar-layout--stacked" : ""
-                }`}
-              >
-                <div className="budget-column">
-                  <BudgetOverviewCard projectId={activeProject?.projectId} />
-                  {isMobileBudgetLayout && (
-                    <div className="budget-calendar-mobile-card">{calendarOverviewCard}</div>
-                  )}
-
-                  <GalleryComponent />
-                </div>
-                {!isMobileBudgetLayout && <div className="calendar-column">{calendarOverviewCard}</div>}
-              </div>
-
-              {/* <Timeline
-                activeProject={activeProject as Project & { status: string; milestoneTitles?: string[] }}
-                parseStatusToNumber={parseStatusToNumber}
-                onActiveProjectChange={handleActiveProjectChange}
-              /> */}
-
-              <div className="dashboard-layout timeline-location-row">
-                <div className="location-wrapper">
-                  <LocationComponent
-                    activeProject={activeProject}
-                    onActiveProjectChange={handleActiveProjectChange}
-                  />
-                </div>
-                <div className="tasks-wrapper">
-                  <TasksComponent
-                    projectId={activeProject?.projectId}
-                    userId={userId}
-                    team={activeProject?.team}
-                  />
-                </div>
-              </div>
-            </div>
-          </BudgetProvider>
+          {shouldShowLoader
+            ? loader
+            : shouldShowUnavailableState
+            ? unavailableState
+            : projectContent}
         </motion.div>
       </AnimatePresence>
     </ProjectPageLayout>

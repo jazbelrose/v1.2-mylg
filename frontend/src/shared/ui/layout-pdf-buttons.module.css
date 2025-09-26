@@ -11,7 +11,7 @@
 
 .layoutToggle {
   display: flex;
-  flex: 1 1 auto;
+  flex: none;
 }
 
 .actionGroup {

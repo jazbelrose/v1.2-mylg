@@ -11,14 +11,13 @@
   flex-wrap: nowrap;
 }
 
-/* Two equal columns inside the trigger */
+/* Two columns inside the trigger */
 .titleColumn,
 .thumbsColumn {
-  /* Force equal columns and prevent them stacking */
-  width: 50% !important;
-  max-width: 50% !important;
+  width: auto;
+  max-width: 100%;
   box-sizing: border-box;
-  flex: 0 0 50% !important;
+  flex: 1 1 0%;
 }
 
 .titleColumn {
@@ -26,6 +25,7 @@
   flex-direction: column;
   justify-content: flex-start; /* align title to top */
   padding-right: 12px;
+  flex-basis: clamp(220px, 38%, 320px);
 }
 
 .thumbsColumn {
@@ -33,7 +33,6 @@
   align-items: center; /* vertically center thumbnails */
   justify-content: flex-end; /* thumbnails aligned to the right area */
   padding-left: 12px;
-  /* prevent column from collapsing when thumbnails are centered */
   min-height: 56px;
 }
 
@@ -42,6 +41,157 @@
 .topRow {
   display: flex;
   align-items: center;
+}
+
+.galleryCount {
+  margin-left: 8px;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.galleryHelperText {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.carouselSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+.thumbnailCarousel {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  width: 100%;
+  justify-content: flex-end;
+  overflow-x: auto;
+  padding: 4px 0;
+  scroll-behavior: smooth;
+}
+
+.thumbnailCarousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.thumbnailCarousel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+}
+
+.thumbnailCarousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thumbnailTile {
+  flex: 0 1 clamp(110px, 24vw, 150px);
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.thumbnailTile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnailTile:hover {
+  transform: translateY(-2px);
+  border-color: #FA3356;
+  background: rgba(250, 51, 86, 0.12);
+}
+
+.thumbnailPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 12, 12, 0.65);
+}
+
+.moreTile {
+  background: rgba(250, 51, 86, 0.15);
+  border-color: #FA3356;
+  color: #FA3356;
+}
+
+.viewAllButton {
+  align-self: flex-end;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.viewAllButton:hover {
+  background: rgba(250, 51, 86, 0.15);
+  border-color: #FA3356;
+  transform: translateY(-1px);
+}
+
+.emptyState {
+  font-size: 0.82rem;
+  opacity: 0.7;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  padding: 10px 14px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .galleryTrigger {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+
+  .titleColumn,
+  .thumbsColumn {
+    flex-basis: 100%;
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .thumbsColumn {
+    justify-content: flex-start;
+  }
+
+  .carouselSection {
+    align-items: flex-start;
+  }
+
+  .thumbnailCarousel {
+    justify-content: flex-start;
+  }
+
+  .viewAllButton {
+    align-self: flex-start;
+  }
 }
 
 .triggerIcon {
@@ -469,77 +619,8 @@
   box-sizing: border-box;
 }
 
-/* Rectangular thumbnail used for gallery previews outside the modal */
-.previewThumbnail {
-  max-height: 100px;
-  max-width: 150px;
-  width: auto;
-  height: auto;
-  border-radius: 8px;
-  object-fit: contain;
-  border: 2px solid white;
-  padding: 5px;
-  box-sizing: border-box;
-}
-
-.previewPlaceholder {
-  width: 150px;
-  height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f0f0f0;
-}
-
-
 .listThumbnail {
   margin-right: 12px;
-}
-
-.thumbnailRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-left: 0;
-  justify-content: center;
-  align-items: center; /* vertically center thumbnails inside the column */
-}
-
-/* Extra guard: if any global rule forces children to be block-level rows, reset them */
-.galleryTrigger > div {
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-}
-
-/* But keep title column top-aligned specifically */
-.galleryTrigger > .titleColumn { justify-content: flex-start !important; }
-
-/* Stronger override when this module's element also has the global dashboard classes */
-:global(.dashboard-item.view-gallery).galleryTrigger {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: stretch !important;
-}
-
-:global(.dashboard-item.view-gallery).galleryTrigger > .titleColumn {
-  justify-content: flex-start !important;
-}
-
-:global(.dashboard-item.view-gallery).galleryTrigger > .thumbsColumn {
-  justify-content: center !important;
-  align-items: center !important;
-}
-
-
-.galleryCover {
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.galleryCover:hover {
-  transform: scale(1.03);
 }
 
 .dotSpinner {

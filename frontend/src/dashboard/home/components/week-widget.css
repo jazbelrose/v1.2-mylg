@@ -215,6 +215,24 @@
   column-gap:8px;
   align-items:start;
   padding:3px 0;
+  outline: none;
+}
+
+.ww-tt-item--action{
+  cursor: pointer;
+  padding:3px 6px;
+  margin:0 -6px;
+  border-radius:6px;
+}
+
+.ww-tt-item--action:hover,
+.ww-tt-item--action:focus-visible{
+  background: rgba(255,255,255,0.08);
+}
+
+.ww-tt-item--action:focus-visible{
+  outline:2px solid rgba(250,51,86,0.55);
+  outline-offset:2px;
 }
 
 .ww-tt-dot{

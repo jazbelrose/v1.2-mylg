@@ -131,7 +131,7 @@ const WelcomeScreen: React.FC = () => {
   // 👉 Tooltip data for a tapped day (projects running that day + same-day events)
   const getTooltipItems = (date: Date) => {
     const day = toDay(date)!;
-    const items: { id: string; title?: string; color?: string; note?: string }[] = [];
+    const items: { id: string; title?: string; color?: string; note?: string; onSelect?: () => void }[] = [];
 
     for (const p of (projects as ProjectWithDetails[])) {
       const color = colorMap[p.projectId] || "#FA3356";
@@ -139,15 +139,30 @@ const WelcomeScreen: React.FC = () => {
       const end = toDay(p.finishline);
 
       if (start && end && day >= start && day <= end) {
-        items.push({ id: p.projectId, title: p.title || p.projectId, color });
+        items.push({
+          id: p.projectId,
+          title: p.title || p.projectId,
+          color,
+          onSelect: () => void handleNavigateToProject({ projectId: p.projectId }),
+        });
       }
       for (const ev of p.timelineEvents ?? []) {
         const d = toDay(ev.date);
         if (sameDay(d, day)) {
           const note = (ev.description as string) || undefined;
           const hit = items.find((i) => i.id === p.projectId);
-          if (hit) hit.note ??= note;
-          else items.push({ id: p.projectId, title: p.title || p.projectId, color, note });
+          if (hit) {
+            hit.note ??= note;
+            if (!hit.onSelect) hit.onSelect = () => void handleNavigateToProject({ projectId: p.projectId });
+          } else {
+            items.push({
+              id: p.projectId,
+              title: p.title || p.projectId,
+              color,
+              note,
+              onSelect: () => void handleNavigateToProject({ projectId: p.projectId }),
+            });
+          }
         }
       }
     }

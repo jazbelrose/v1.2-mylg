@@ -13,8 +13,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "gen:endpoints": "tsx scripts/scan-lambdas.ts",
-    "smoke:presign": "node ./scripts/smoke-presign.mjs"
-  ,"e2e:presign-upload": "node ./scripts/e2e-presign-upload.mjs"
+    "smoke:presign": "node ./scripts/smoke-presign.mjs",
+    "e2e:presign-upload": "node ./scripts/e2e-presign-upload.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.1",
@@ -71,7 +71,7 @@
     "react-player": "^3.3.1",
     "react-router-dom": "^7.8.1",
     "react-toastify": "^11.0.5",
-    "recharts": "^2.12.7",
+    "recharts": "^2.15.4",
     "scramble-text": "^0.0.9",
     "swiper": "^11.2.10",
     "typewriter-effect": "^2.22.0",

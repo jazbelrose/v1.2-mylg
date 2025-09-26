@@ -5,7 +5,15 @@ import "./week-widget.css";
 
 export type Track = { id: string; color: string; start: Date | string | number; end: Date | string | number };
 export type Dot = { date: Date | string | number; color?: string };
-type TooltipItem = { id: string; title?: string; color?: string; time?: string; badge?: string; note?: string };
+type TooltipItem = {
+  id: string;
+  title?: string;
+  color?: string;
+  time?: string;
+  badge?: string;
+  note?: string;
+  onSelect?: () => void;
+};
 
 type Props = {
   weekOf: Date;
@@ -104,10 +112,17 @@ export default function WeekWidgetDesktop({
   const items = useMemo(() => {
     if (!tooltipDate) return [];
     const cb = getTooltipItems?.(tooltipDate) ?? [];
-    if (cb.length) return cb;
+    if (cb.length) {
+      return [...cb].sort((a, b) => Number(Boolean(b.note)) - Number(Boolean(a.note)));
+    }
     const k = dateKey(tooltipDate);
     const dayDots = dotMap.get(k) || [];
-    return dayDots.map((c, i) => ({ id: `dot-${k}-${i}`, title: "Event", color: c } as TooltipItem));
+    return dayDots
+      .map(
+        (c, i) =>
+          ({ id: `dot-${k}-${i}`, title: "Event", color: c } satisfies TooltipItem)
+      )
+      .sort((a, b) => Number(Boolean(b.note)) - Number(Boolean(a.note)));
   }, [tooltipDate, getTooltipItems, dotMap]);
 
   // Close on outside / ESC / scroll-resize
@@ -166,7 +181,29 @@ export default function WeekWidgetDesktop({
         }
       >
         {list.map((it) => (
-          <div key={it.id} className="ww-tt-item">
+          <div
+            key={it.id}
+            className={`ww-tt-item${it.onSelect ? " ww-tt-item--action" : ""}`}
+            role={it.onSelect ? "button" : undefined}
+            tabIndex={it.onSelect ? 0 : undefined}
+            onClick={() => {
+              if (!it.onSelect) return;
+              it.onSelect();
+              setTooltipDate(null);
+              setAnchor(null);
+              setShowAll(false);
+            }}
+            onKeyDown={(e) => {
+              if (!it.onSelect) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                it.onSelect();
+                setTooltipDate(null);
+                setAnchor(null);
+                setShowAll(false);
+              }
+            }}
+          >
             <span className="ww-tt-dot" style={{ background: it.color || "#999" }} />
             <div className="ww-tt-body">
               <div className="ww-tt-title">{it.title ?? "Untitled"}</div>

@@ -491,18 +491,54 @@ const AllProjectsCalendar: React.FC = () => {
     const activeProjects = rangeMap[key] ?? [];
     const dayEvents = eventsMap[key] ?? [];
 
-    const byId: Record<string, { id: string; title?: string; color?: string; time?: string; badge?: string; note?: string }> = {};
-    activeProjects.forEach(p => {
+    const makeOnSelect = (projectId: string, title?: string) => () => {
+      const project =
+        activeProjects.find((p) => p.projectId === projectId) ||
+        projectsWithLanes.find((p) => p.projectId === projectId) ||
+        (projects?.find((p) => p.projectId === projectId) as Project | undefined);
+      if (project) {
+        void handleProjectClick(project, key ?? undefined);
+        return;
+      }
+      void handleProjectClick(
+        { projectId, title } as Project,
+        key ?? undefined
+      );
+    };
+
+    const byId: Record<
+      string,
+      {
+        id: string;
+        title?: string;
+        color?: string;
+        time?: string;
+        badge?: string;
+        note?: string;
+        onSelect?: () => void;
+      }
+    > = {};
+
+    activeProjects.forEach((p) => {
       byId[p.projectId] = {
         id: p.projectId,
         title: p.title,
         color: colorMap[p.projectId] || getColor(p.projectId),
+        onSelect: makeOnSelect(p.projectId, p.title),
       };
     });
-    dayEvents.forEach(ev => {
+
+    dayEvents.forEach((ev) => {
       const id = ev.projectId;
-      byId[id] = byId[id] || { id, title: ev.title, color: colorMap[id] || getColor(id) };
-      if (ev.description) byId[id].note = (ev.description as string);
+      if (!byId[id]) {
+        byId[id] = {
+          id,
+          title: ev.title,
+          color: colorMap[id] || getColor(id),
+          onSelect: makeOnSelect(id, ev.title),
+        };
+      }
+      if (ev.description) byId[id].note = ev.description as string;
     });
 
     return Object.values(byId);

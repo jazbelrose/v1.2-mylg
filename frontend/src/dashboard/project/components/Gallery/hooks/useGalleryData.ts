@@ -89,11 +89,21 @@ const useGalleryData = (): GalleryDataState => {
       setGalleries(mergedCurrent);
     };
 
+    const { legacy, current } = extractGalleries(activeProject as ProjectLite);
+
     try {
       const apiGals = await fetchGalleries(activeProject.projectId);
-      // Treat any array returned by the API (including an empty array) as authoritative.
       if (Array.isArray(apiGals)) {
-        applyLists([], apiGals as Gallery[]);
+        const sanitizedApi = sanitizeGalleries(apiGals);
+
+        // When the API returns an empty list we still want to expose the legacy
+        // galleries stored on the project so they remain accessible/editable.
+        if (sanitizedApi.length === 0 && legacy.length > 0) {
+          applyLists(legacy, []);
+          return;
+        }
+
+        applyLists(legacy, sanitizedApi);
         return;
       }
     } catch (err) {
@@ -102,7 +112,6 @@ const useGalleryData = (): GalleryDataState => {
       console.warn('fetchGalleries failed, falling back to cached activeProject galleries', err);
     }
 
-    const { legacy, current } = extractGalleries(activeProject as ProjectLite);
     applyLists(legacy, current);
   }, [activeProject, galleries]);
 

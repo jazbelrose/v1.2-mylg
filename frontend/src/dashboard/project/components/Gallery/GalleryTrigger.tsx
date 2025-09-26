@@ -40,11 +40,7 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
       <div className={styles.titleColumn} style={{ flex: "0 0 38%" }}>
         <div className={styles.topRow}>
           <span>Galleries</span>
-          {hasGalleries && (
-            <span className={styles.galleryCount}>
-              {galleries.length} {galleries.length === 1 ? "item" : "items"}
-            </span>
-          )}
+         
         </div>
         {hasGalleries ? (
           <p className={styles.galleryHelperText}>

@@ -574,23 +574,25 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
       {(loading || loadingGalleries) && <Preloader />}
       {error && <p className="text-danger mt-3">{error}</p>}
 
-      <LayoutPdfButtons
-        useMasonryLayout={useMasonryLayout}
-        onToggleLayout={() => setUseMasonryLayout((v) => !v)}
-        downloadUrl={normalizedOriginalUrl || ""}
-        isPdf={isPdf}
-      />
-
-      {useMasonryLayout ? (
-        <GalleryMasonry
-          imageUrls={imageUrls}
-          onImageClick={(i: number) => {
-            setCurrentIndex(i);
-            setIsModalOpen(true);
-          }}
+      <div className={styles.galleryContainer}>
+        <LayoutPdfButtons
+          useMasonryLayout={useMasonryLayout}
+          onToggleLayout={() => setUseMasonryLayout((v) => !v)}
+          downloadUrl={normalizedOriginalUrl || ""}
+          isPdf={isPdf}
+          onBack={() => navigate("/dashboard")}
         />
-      ) : isPdf ? (
-        <div data-testid="svg-container" className={styles.pdfContainer}>
+
+        {useMasonryLayout ? (
+          <GalleryMasonry
+            imageUrls={imageUrls}
+            onImageClick={(i: number) => {
+              setCurrentIndex(i);
+              setIsModalOpen(true);
+            }}
+          />
+        ) : isPdf ? (
+          <div data-testid="svg-container" className={styles.pdfContainer}>
           {totalPages > 0 && pagesLoaded < totalPages && (
             <div className={styles.loadingOverlay} data-testid="pdf-loading">
               <div className={styles.dotSpinner}>
@@ -669,6 +671,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
           dangerouslySetInnerHTML={{ __html: svgContent }}
         />
       )}
+      </div>
 
       <ReactModal
         isOpen={isModalOpen}

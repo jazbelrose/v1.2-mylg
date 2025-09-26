@@ -9,14 +9,9 @@ import { getFileUrl } from "../../../../shared/utils/api";
 interface GalleryTriggerProps {
   galleries: Gallery[];
   onTriggerClick: () => void;
-  onOpenModal: () => void;
 }
 
-const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
-  galleries,
-  onTriggerClick,
-  onOpenModal,
-}) => {
+const GalleryTrigger: React.FC<GalleryTriggerProps> = ({ galleries, onTriggerClick }) => {
   const hasGalleries = galleries.length > 0;
   const visibleCount = Math.min(3, galleries.length);
   const visibleGalleries = galleries.slice(0, visibleCount);
@@ -42,16 +37,16 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
           <span>Galleries</span>
           {hasGalleries && (
             <span className={styles.galleryCount}>
-              {galleries.length} {galleries.length === 1 ? "item" : "items"}
+              {galleries.length} {galleries.length === 1 ? "gallery" : "galleries"}
             </span>
           )}
         </div>
         {hasGalleries ? (
           <p className={styles.galleryHelperText}>
-            Peek at the latest uploads or jump into the full gallery.
+            Open the gallery drawer to review uploads, curate covers, or share links.
           </p>
         ) : (
-          <p className={styles.galleryHelperText}>Create your first gallery to showcase work.</p>
+          <p className={styles.galleryHelperText}>Create your first gallery to curate and deliver work.</p>
         )}
       </div>
 
@@ -80,18 +75,6 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
                 <div className={`${styles.thumbnailTile} ${styles.moreTile}`}>+{hiddenCount}</div>
               )}
             </div>
-            {hasGalleries && (
-              <button
-                type="button"
-                className={styles.viewAllButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenModal();
-                }}
-              >
-                View all galleries
-              </button>
-            )}
           </div>
         ) : (
           <div className={styles.emptyState}>No galleries yet</div>

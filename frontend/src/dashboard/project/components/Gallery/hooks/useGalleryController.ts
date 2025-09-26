@@ -23,7 +23,6 @@ const useGalleryController = (): GalleryController => {
     recentlyCreated,
     loadGalleries,
     activeProjectId,
-    activeProjectTitle,
     updateProjectFields,
     isAdmin,
     isBuilder,
@@ -306,19 +305,17 @@ const useGalleryController = (): GalleryController => {
   const legacyCount = legacyGalleries.length;
   const hasGalleries = combinedGalleries.length > 0;
 
-  const handleTriggerClick = async () => {
-    if (combinedGalleries.length > 0) {
-      const lastGallery = combinedGalleries[combinedGalleries.length - 1];
-      const slug = lastGallery.slug || slugify(lastGallery.name || "");
-      if (!activeProjectId) {
-        console.warn("Cannot navigate to gallery without an active project ID");
-        return;
-      }
-      await fetchProjects(1);
-      navigate(`/gallery/${activeProjectId}/${slug}`);
-    } else {
+  const handleTriggerClick = () => {
+    if (!combinedGalleries.length) {
       openModal();
+      return;
     }
+
+    if (!activeProjectId) {
+      console.warn("Cannot open gallery list without an active project ID");
+    }
+
+    openModal();
   };
 
   const handleGalleryNavigate = async (galleryItem: Gallery, slug: string) => {

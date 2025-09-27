@@ -62,10 +62,22 @@
   border-radius: 10px;
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.08);
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  appearance: none;
 }
 .week-day:hover { background: rgba(255,255,255,0.05); }
 .week-day.today { outline: 1px solid rgba(255,255,255,0.18); }
 .week-day.selected { background: rgba(255,255,255,0.08); }
+.week-day:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.45);
+  outline-offset: 2px;
+}
+.week-day::-moz-focus-inner {
+  border: 0;
+}
 
 .day-name { font-size: 11px; color: rgba(255,255,255,0.6); }
 .day-number { font-size: 14px; font-weight: 600; color: #fff; line-height: 1.1; margin-top: 2px; }

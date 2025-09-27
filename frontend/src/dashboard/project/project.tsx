@@ -7,6 +7,7 @@ import GalleryComponent from "@/dashboard/project/components/Gallery/GalleryComp
 
 import ProjectPageLayout from "@/dashboard/project/components/Shared/ProjectPageLayout";
 import CalendarOverviewCard from "@/dashboard/project/components/Shared/calendar/CalendarOverviewCard";
+import ProjectWeekWidget from "@/dashboard/project/components/Shared/calendar/ProjectWeekWidget";
 import QuickLinksComponent from "@/dashboard/project/components/Shared/QuickLinksComponent";
 import type { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickLinksComponent";
 import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
@@ -261,9 +262,8 @@ const SingleProject: React.FC = () => {
     };
   }, [ws, resolvedActiveProject?.projectId]);
 
-  const calendarOverviewCard = (
-    <CalendarOverviewCard
-      project={resolvedActiveProject as {
+  const calendarProject = resolvedActiveProject
+    ? (resolvedActiveProject as {
         projectId: string;
         title?: string;
         color?: string;
@@ -289,13 +289,28 @@ const SingleProject: React.FC = () => {
         invoiceBrandPhone?: string;
         clientPhone?: string;
         clientEmail?: string;
-      }}
+      })
+    : null;
+
+  const calendarOverviewCard = calendarProject ? (
+    <CalendarOverviewCard
+      project={calendarProject}
       initialFlashDate={flashDate}
       showEventList={false}
       onWrapperClick={openCalendarPage}
       onDateSelect={noop}
     />
-  );
+  ) : null;
+
+  const calendarWeekWidget = calendarProject ? (
+    <ProjectWeekWidget
+      project={calendarProject}
+      initialFlashDate={flashDate}
+      showEventList={false}
+      onWrapperClick={openCalendarPage}
+      onDateSelect={noop}
+    />
+  ) : null;
 
   const shouldShowLoader = Boolean(
     projectId &&
@@ -363,7 +378,7 @@ const SingleProject: React.FC = () => {
           <div className="budget-column">
             <BudgetOverviewCard projectId={resolvedActiveProject.projectId} />
             {isMobileBudgetLayout && (
-              <div className="budget-calendar-mobile-card">{calendarOverviewCard}</div>
+              <div className="budget-calendar-mobile-card">{calendarWeekWidget}</div>
             )}
 
             <GalleryComponent />

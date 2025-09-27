@@ -262,26 +262,26 @@
 
   .budget-chart {
     margin-inline: auto;
-    max-width: clamp(200px, 60cqw, 250px);
+    max-width: clamp(160px, 50cqw, 200px);
   }
 }
 
 @container budget-card (max-width: 760px) {
   .budget-chart {
-    max-width: clamp(180px, 70cqw, 200px);
+    max-width: clamp(120px, 50cqw, 160px);
   }
 }
 
 @media (max-height: 750px) {
   .budget-chart {
-    width: min(30vh, 40vw, 180px);
-    height: min(30vh, 40vw, 180px);
+    width: min(25vh, 35vw, 140px);
+    height: min(25vh, 35vw, 140px);
   }
   .budget-legend {
     min-width: clamp(90px, 22vw, 130px);
   }
   .dashboard-item.budget {
-    min-height: clamp(150px, 24vh, 200px);
+    min-height: clamp(100px, 18vh, 140px);
   }
 }
 
@@ -298,7 +298,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
-    min-height: 150px;
+    min-height: 100px;
   }
   .budget-overview-card {
     gap: 10px;
@@ -373,8 +373,19 @@
     white-space: pre-wrap;
   }
   .budget-chart {
-    width: min(140px, 45vw);
-    height: min(140px, 45vw);
+    width: min(120px, 40vw);
+    height: min(120px, 40vw);
+  }
+}
+
+/* Additional mobile height constraint for budget cards */
+@media (max-width: var(--breakpoint-sm)) and (max-height: 750px) {
+  .dashboard-item.budget {
+    min-height: 100px !important;
+  }
+  .budget-chart {
+    width: min(20vh, 32vw, 120px) !important;
+    height: min(20vh, 32vw, 120px) !important;
   }
 }
 

@@ -294,20 +294,20 @@
 /* Mobile adjustments for dashboard cards */
 @media (max-width: var(--breakpoint-sm)) {
   .dashboard-item.budget {
-    padding: 15px;
+    padding: 12px;
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
-    min-height: 180px;
+    gap: 12px;
+    min-height: 150px;
   }
   .budget-overview-card {
-    gap: 12px;
+    gap: 10px;
   }
   .budget-overview-summary {
     gap: 4px;
   }
   .budget-overview-header {
-    gap: 8px;
+    gap: 6px;
   }
   .budget-overview-revision {
     margin-left: 6px;
@@ -317,7 +317,7 @@
     margin-top: 6px;
   }
   .budget-overview-amount {
-    margin-top: 4px;
+    margin-top: 2px;
   }
   .budget-overview-invoice-icon {
     margin-left: 4px;

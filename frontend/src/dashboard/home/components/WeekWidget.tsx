@@ -25,6 +25,8 @@ type Props = {
   onSelectDate?: (d: Date) => void;
   getTooltipItems?: (date: Date) => TooltipItem[];
   isMobile?: boolean;
+  onDateTap?: (day: Date, meta: { anchor: HTMLButtonElement }) => void;
+  registerDayRef?: (day: Date, key: string, node: HTMLButtonElement | null) => void;
 };
 
 function toDate(v: Date | string | number) {
@@ -48,6 +50,8 @@ export default function WeekWidget({
   onSelectDate,
   getTooltipItems,
   isMobile,
+  onDateTap,
+  registerDayRef,
 }: Props) {
   const weekStart = startOfWeek(weekOf);
   const weekEnd = endOfWeek(weekOf);
@@ -278,9 +282,10 @@ export default function WeekWidget({
           const isToday = dateKey(new Date()) === k;
           const isSelected = dateKey(weekOf) === k;
 
-          const handleTap = (el: HTMLElement) => {
+          const handleTap = (el: HTMLButtonElement) => {
             const same = tooltipDate && dateKey(tooltipDate) === k;
             onSelectDate?.(day);
+            onDateTap?.(day, { anchor: el });
             if (same) {
               setTooltipDate(null);
               setAnchor(null);
@@ -292,13 +297,16 @@ export default function WeekWidget({
           };
 
           return (
-            <div
+            <button
               key={k}
               className={`week-day ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}`}
-              onClick={(e) => handleTap(e.currentTarget as HTMLElement)}             // always open on tap
-              onPointerUp={(e) => { if (e.pointerType === "touch") handleTap(e.currentTarget as HTMLElement); }} // touch reliability
-              role="button"
+              onClick={(e) => handleTap(e.currentTarget as HTMLButtonElement)}
+              onPointerUp={(e) => {
+                if (e.pointerType === "touch") handleTap(e.currentTarget as HTMLButtonElement);
+              }}
+              type="button"
               aria-label={day.toDateString()}
+              ref={(node) => registerDayRef?.(day, k, node)}
             >
               <div className="day-name">{day.toLocaleDateString(undefined, { weekday: "short" })}</div>
               <div className="day-number">{day.getDate()}</div>
@@ -341,7 +349,7 @@ export default function WeekWidget({
                   </span>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

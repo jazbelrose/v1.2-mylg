@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import { useTasksOverview } from "../hooks/useTasksOverview";
 import styles from "./MobileTasksOverviewCard.module.css";
@@ -8,7 +9,7 @@ type MobileTasksOverviewCardProps = {
 };
 
 const MobileTasksOverviewCard: React.FC<MobileTasksOverviewCardProps> = ({ className }) => {
-  const { loading, error, stats, groups, handleViewAll } = useTasksOverview();
+  const { loading, error, stats, groups } = useTasksOverview();
 
   const formatStatValue = (value: number): string | number => {
     if (error) return "—";
@@ -36,9 +37,9 @@ const MobileTasksOverviewCard: React.FC<MobileTasksOverviewCardProps> = ({ class
     >
       <header className={styles.header}>
         <h3 className={styles.title}>Tasks</h3>
-        <button type="button" className={styles.viewAllButton} onClick={handleViewAll}>
+        <Link to="/dashboard/tasks" className={styles.viewAllButton} aria-label="View all tasks">
           View all
-        </button>
+        </Link>
       </header>
 
       <div className={styles.statRow}>

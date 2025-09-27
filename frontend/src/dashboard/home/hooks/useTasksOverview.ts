@@ -35,7 +35,7 @@ type RawTask = {
   [key: string]: unknown;
 };
 
-type TaskStatus = "todo" | "in_progress" | "done" | string;
+export type TaskStatus = "todo" | "in_progress" | "done" | string;
 
 type NormalizedTask = {
   id: string;
@@ -47,6 +47,23 @@ type NormalizedTask = {
   projectColor: string;
   dueKey?: string;
   timeLabel?: string;
+};
+
+export type ProjectTask = {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  dueDate: Date | null;
+  dueLabel?: string;
+  timeLabel?: string;
+};
+
+export type ProjectTasksOverview = {
+  projectId: string;
+  projectName: string;
+  projectColor: string;
+  openTasks: ProjectTask[];
+  completedTasks: ProjectTask[];
 };
 
 export type TasksOverviewEvent = {
@@ -331,18 +348,100 @@ export function useTasksOverview() {
 
   const canNavigateToProject = Boolean(primaryProjectId && projectMap.has(primaryProjectId));
 
+  const tasksByProject: ProjectTasksOverview[] = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        projectId: string;
+        projectName: string;
+        projectColor: string;
+        open: ProjectTask[];
+        done: ProjectTask[];
+      }
+    >();
+
+    tasks.forEach((task) => {
+      let entry = map.get(task.projectId);
+      if (!entry) {
+        entry = {
+          projectId: task.projectId,
+          projectName: task.projectName,
+          projectColor: task.projectColor,
+          open: [],
+          done: [],
+        };
+        map.set(task.projectId, entry);
+      }
+
+      const projectTask: ProjectTask = {
+        id: task.id,
+        title: task.title,
+        status: task.status,
+        dueDate: task.dueDate,
+        dueLabel: task.dueDate ? dayFormatter.format(task.dueDate) : undefined,
+        timeLabel: task.timeLabel,
+      };
+
+      if (task.status === "done") {
+        entry.done.push(projectTask);
+      } else {
+        entry.open.push(projectTask);
+      }
+    });
+
+    const sortByDueDate = (a: ProjectTask, b: ProjectTask) => {
+      const aTime = a.dueDate ? a.dueDate.getTime() : Number.POSITIVE_INFINITY;
+      const bTime = b.dueDate ? b.dueDate.getTime() : Number.POSITIVE_INFINITY;
+      if (aTime !== bTime) {
+        return aTime - bTime;
+      }
+      return a.title.localeCompare(b.title);
+    };
+
+    const sortCompleted = (a: ProjectTask, b: ProjectTask) => {
+      const aTime = a.dueDate ? a.dueDate.getTime() : Number.NEGATIVE_INFINITY;
+      const bTime = b.dueDate ? b.dueDate.getTime() : Number.NEGATIVE_INFINITY;
+      if (aTime !== bTime) {
+        return bTime - aTime;
+      }
+      return a.title.localeCompare(b.title);
+    };
+
+    return Array.from(map.values())
+      .map((entry) => ({
+        projectId: entry.projectId,
+        projectName: entry.projectName,
+        projectColor: entry.projectColor,
+        openTasks: entry.open.sort(sortByDueDate),
+        completedTasks: entry.done.sort(sortCompleted),
+      }))
+      .sort((a, b) => a.projectName.localeCompare(b.projectName));
+  }, [tasks]);
+
+  const handleNavigateToProject = useCallback(
+    (projectId?: string | null) => {
+      if (!projectId) {
+        navigate("/dashboard/projects");
+        return;
+      }
+
+      const project = projectMap.get(projectId);
+      navigate(getProjectDashboardPath(projectId, project?.title));
+    },
+    [navigate, projectMap],
+  );
+
   const handleNavigateToPrimary = useCallback(() => {
     if (!primaryProjectId) {
       navigate("/dashboard/projects");
       return;
     }
 
-    const project = projectMap.get(primaryProjectId);
-    navigate(getProjectDashboardPath(primaryProjectId, project?.title));
-  }, [navigate, primaryProjectId, projectMap]);
+    handleNavigateToProject(primaryProjectId);
+  }, [handleNavigateToProject, navigate, primaryProjectId]);
 
   const handleViewAll = useCallback(() => {
-    navigate("/dashboard/projects");
+    navigate("/dashboard/tasks");
   }, [navigate]);
 
   return {
@@ -351,8 +450,10 @@ export function useTasksOverview() {
     stats: { completed, dueSoon, overdue } satisfies TasksOverviewStats,
     groups,
     handleNavigateToPrimary,
+    handleNavigateToProject,
     handleViewAll,
     canNavigateToProject,
+    tasksByProject,
   };
 }
 

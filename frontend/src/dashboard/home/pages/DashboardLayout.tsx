@@ -16,6 +16,7 @@ const Dashboard: React.FC = () => {
   const getPageTitle = (): string => {
     const path = location.pathname;
     if (path.startsWith("/dashboard/projects/")) return "Dashboard - Project Details";
+    if (path.startsWith("/dashboard/tasks")) return "Dashboard - Tasks";
     switch (path) {
       case "/dashboard":
         return `Dashboard - Welcome, ${userName ?? "Guest"}`;

@@ -1,0 +1,323 @@
+.wrapper {
+  min-height: 100dvh;
+  background: var(--dashboard-bg, var(--bg1, #050607));
+  padding: 32px 16px 96px;
+  color: var(--text-primary, #f6f7fb);
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 1040px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.headingGroup {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: clamp(1.75rem, 1.35rem + 1.2vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-secondary, rgba(246, 247, 251, 0.68));
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.primaryAction {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 51, 86, 0.6);
+  background: linear-gradient(135deg, rgba(250, 51, 86, 0.18), rgba(250, 51, 86, 0.32));
+  color: #fff;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.primaryAction:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.primaryAction:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(250, 51, 86, 0.24);
+}
+
+.statsGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.statCard {
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(6, 6, 6, 0.3));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, rgba(246, 247, 251, 0.55));
+}
+
+.statValue {
+  font-size: clamp(1.8rem, 1.4rem + 1vw, 2.4rem);
+  font-weight: 700;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.section {
+  padding: 24px;
+  border-radius: 22px;
+  background: rgba(17, 18, 19, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 48px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sectionAccent {
+  height: 4px;
+  width: 80px;
+  border-radius: 999px;
+  background: var(--section-accent, rgba(250, 51, 86, 0.65));
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.sectionCaption {
+  margin: 0;
+  color: var(--text-tertiary, rgba(246, 247, 251, 0.6));
+  font-size: 0.95rem;
+}
+
+.sectionNote {
+  margin: 0;
+  color: var(--text-tertiary, rgba(246, 247, 251, 0.6));
+  font-size: 0.85rem;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.sectionOverdue {
+  --section-accent: #fa3356;
+  border-color: rgba(250, 51, 86, 0.35);
+}
+
+.sectionDueSoon {
+  --section-accent: #faae33;
+  border-color: rgba(250, 174, 51, 0.28);
+}
+
+.sectionUpcoming {
+  --section-accent: #53d6ff;
+  border-color: rgba(83, 214, 255, 0.28);
+}
+
+.sectionCompleted {
+  --section-accent: #62f39e;
+  border-color: rgba(98, 243, 158, 0.28);
+}
+
+.sectionUndated {
+  --section-accent: rgba(255, 255, 255, 0.45);
+}
+
+.taskList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.taskItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.taskMain {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.projectDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.taskMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.taskTitle {
+  font-weight: 600;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskDetails {
+  color: var(--text-tertiary, rgba(246, 247, 251, 0.65));
+  font-size: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.startButton {
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: rgba(83, 214, 255, 0.16);
+  border: 1px solid rgba(83, 214, 255, 0.48);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.startButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(83, 214, 255, 0.25);
+}
+
+.completedTag {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(98, 243, 158, 0.18);
+  border: 1px solid rgba(98, 243, 158, 0.4);
+  color: #9af5c6;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.emptyState {
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  text-align: center;
+  color: var(--text-tertiary, rgba(246, 247, 251, 0.7));
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sectionEmpty {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  color: var(--text-tertiary, rgba(246, 247, 251, 0.6));
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .wrapper {
+    padding: 24px 12px 72px;
+  }
+
+  .section {
+    padding: 20px;
+  }
+
+  .taskItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .taskActions {
+    align-self: stretch;
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .primaryAction {
+    width: 100%;
+  }
+}

@@ -23,6 +23,8 @@ const Dashboard: React.FC = () => {
         return "Dashboard - Start something";
       case "/dashboard/projects":
         return "Dashboard - All Projects";
+      case "/dashboard/tasks":
+        return "Dashboard - Tasks";
       case "/dashboard/settings":
         return "Dashboard - Settings";
       case "/dashboard/collaborators":

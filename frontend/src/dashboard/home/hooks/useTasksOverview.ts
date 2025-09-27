@@ -49,6 +49,17 @@ type NormalizedTask = {
   timeLabel?: string;
 };
 
+export type TasksOverviewListItem = {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  dueDate: Date | null;
+  projectId: string;
+  projectName: string;
+  projectColor: string;
+  timeLabel?: string;
+};
+
 export type TasksOverviewEvent = {
   id: string;
   title: string;
@@ -231,7 +242,16 @@ export function useTasksOverview() {
     };
   }, [projects]);
 
-  const { completed, dueSoon, overdue, groups, primaryProjectId } = useMemo(() => {
+  const {
+    completed,
+    dueSoon,
+    overdue,
+    groups,
+    primaryProjectId,
+    openTasks,
+    undatedTasks,
+    completedThisWeek,
+  } = useMemo(() => {
     const now = new Date();
     const weekStart = startOfWeek(now);
     const weekEnd = endOfWeek(now);
@@ -320,30 +340,69 @@ export function useTasksOverview() {
 
     const primaryProjectId = sortedByUrgency[0]?.projectId ?? tasks[0]?.projectId ?? null;
 
+    const toListItem = (task: NormalizedTask): TasksOverviewListItem => ({
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      dueDate: task.dueDate,
+      projectId: task.projectId,
+      projectName: task.projectName,
+      projectColor: task.projectColor,
+      timeLabel: task.timeLabel,
+    });
+
+    const openTasks = sortedByUrgency.map(toListItem);
+
+    const undatedTasks = tasks
+      .filter((task) => !task.dueDate && task.status !== "done")
+      .map(toListItem);
+
+    const completedThisWeek = tasks
+      .filter(
+        (task) =>
+          task.status === "done" && task.dueDate && task.dueDate >= weekStart && task.dueDate <= weekEnd
+      )
+      .sort((a, b) => (a.dueDate && b.dueDate ? b.dueDate.getTime() - a.dueDate.getTime() : 0))
+      .map(toListItem);
+
     return {
       completed: completedCount,
       dueSoon: dueSoonCount,
       overdue: overdueCount,
       groups: sortedGroups,
       primaryProjectId,
+      openTasks,
+      undatedTasks,
+      completedThisWeek,
     };
   }, [tasks]);
 
   const canNavigateToProject = Boolean(primaryProjectId && projectMap.has(primaryProjectId));
 
-  const handleNavigateToPrimary = useCallback(() => {
-    if (!primaryProjectId) {
-      navigate("/dashboard/projects");
-      return;
-    }
+  const navigateToProject = useCallback(
+    (projectId?: string | null) => {
+      if (!projectId) {
+        navigate("/dashboard/projects");
+        return;
+      }
 
-    const project = projectMap.get(primaryProjectId);
-    navigate(getProjectDashboardPath(primaryProjectId, project?.title));
-  }, [navigate, primaryProjectId, projectMap]);
+      const project = projectMap.get(projectId);
+      navigate(getProjectDashboardPath(projectId, project?.title));
+    },
+    [navigate, projectMap]
+  );
+
+  const handleNavigateToPrimary = useCallback(() => {
+    navigateToProject(primaryProjectId);
+  }, [navigateToProject, primaryProjectId]);
 
   const handleViewAll = useCallback(() => {
-    navigate("/dashboard/projects");
+    navigate("/dashboard/tasks");
   }, [navigate]);
+
+  const primaryProjectName = primaryProjectId
+    ? projectMap.get(primaryProjectId)?.title ?? primaryProjectId
+    : undefined;
 
   return {
     loading,
@@ -353,6 +412,12 @@ export function useTasksOverview() {
     handleNavigateToPrimary,
     handleViewAll,
     canNavigateToProject,
+    openTasks,
+    undatedTasks,
+    completedThisWeek,
+    navigateToProject,
+    primaryProjectId,
+    primaryProjectName,
   };
 }
 

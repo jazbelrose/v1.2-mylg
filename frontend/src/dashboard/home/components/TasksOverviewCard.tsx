@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Plus, MoreHorizontal } from "lucide-react";
 
 import { useTasksOverview } from "../hooks/useTasksOverview";
@@ -11,6 +11,7 @@ type TasksOverviewCardProps = {
 const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
   const { loading, error, stats, groups, handleNavigateToPrimary, canNavigateToProject } =
     useTasksOverview();
+  const location = useLocation();
 
   const formatStatValue = (value: number): string | number => {
     if (error) return "—";
@@ -42,6 +43,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
             to="/dashboard/tasks"
             className={styles.iconButton}
             aria-label="View all tasks"
+            state={{ from: `${location.pathname}${location.search}` }}
           >
             <MoreHorizontal size={18} strokeWidth={2} />
           </Link>

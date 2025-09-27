@@ -123,6 +123,44 @@ describe("useProjectFilters", () => {
     expect(result.current.filteredProjects).toHaveLength(1);
     expect(result.current.filteredProjects[0]?.projectId).toBe("custom-2");
   });
+
+  it("restores persisted filters when a storage key is provided", () => {
+    const storageKey = "use-project-filters-test";
+
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        scope: "all",
+        query: "beta",
+        statusFilter: "archived",
+        sortOption: "titleDesc",
+      })
+    );
+
+    const { result } = renderHook(() =>
+      useProjectFilters({
+        projects,
+        recentsLimit: 3,
+        storageKey,
+        defaultScope: "recents",
+        defaultSortOption: "dateNewest",
+      })
+    );
+
+    expect(result.current.scope).toBe("all");
+    expect(result.current.query).toBe("beta");
+    expect(result.current.statusTriggerLabel).toBe("archived");
+    expect(result.current.sortTriggerLabel).toBe("Title (Z-A)");
+
+    act(() => {
+      result.current.setScope("recents");
+    });
+
+    const stored = JSON.parse(window.localStorage.getItem(storageKey) || "{}");
+    expect(stored.scope).toBe("recents");
+
+    window.localStorage.removeItem(storageKey);
+  });
 });
 
 

@@ -13,7 +13,12 @@ import SVGThumbnail from './SvgThumbnail';
 import Spinner from '../../../shared/ui/Spinner';
 import AvatarStack from '../../../shared/ui/AvatarStack';
 import { ProjectsFilterMenu } from './ProjectsFilterMenu';
-import { useProjectFilters } from './hooks/useProjectFilters';
+import {
+  PROJECT_FILTERS_STORAGE_KEY,
+  readStoredProjectFilters,
+  useProjectFilters,
+  writeStoredProjectFilters,
+} from './hooks/useProjectFilters';
 import {
   parseProjectStatusToNumber,
   useProjectKpis,
@@ -104,7 +109,10 @@ const AllProjects: React.FC = () => {
     return stored === 'grid' || stored === 'list' ? stored : 'list';
   });
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
-  const [showPendingOnly, setShowPendingOnly] = useState(false);
+  const [showPendingOnly, setShowPendingOnly] = useState(() => {
+    const stored = readStoredProjectFilters(PROJECT_FILTERS_STORAGE_KEY);
+    return Boolean(stored.showPendingOnly);
+  });
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
@@ -151,6 +159,7 @@ const AllProjects: React.FC = () => {
     defaultSortOption: 'titleAsc',
     queryMatcher,
     statusFilterPredicate,
+    storageKey: PROJECT_FILTERS_STORAGE_KEY,
   });
 
   const filteredProjects = useMemo(
@@ -299,6 +308,10 @@ const AllProjects: React.FC = () => {
       setShowPendingOnly(false);
     }
   }, [filteredProjects.length]);
+
+  useEffect(() => {
+    writeStoredProjectFilters(PROJECT_FILTERS_STORAGE_KEY, { showPendingOnly });
+  }, [showPendingOnly]);
 
   const handleShowAllProjectsChip = useCallback(() => {
     setScope('all');

@@ -15,6 +15,47 @@ import type { ProjectWithMeta } from "../../utils/types";
 
 export type SortOption = "titleAsc" | "titleDesc" | "dateNewest" | "dateOldest";
 
+export type StoredProjectFilters = {
+  scope?: "recents" | "all";
+  query?: string;
+  statusFilter?: string;
+  sortOption?: SortOption;
+  showPendingOnly?: boolean;
+};
+
+export const PROJECT_FILTERS_STORAGE_KEY = "all-projects-filters";
+
+const isBrowser = typeof window !== "undefined";
+
+const readFromStorage = (storageKey?: string): StoredProjectFilters => {
+  if (!storageKey || !isBrowser) return {};
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as StoredProjectFilters;
+  } catch {
+    return {};
+  }
+};
+
+const writeToStorage = (storageKey: string | undefined, patch: StoredProjectFilters): void => {
+  if (!storageKey || !isBrowser) return;
+
+  try {
+    const existing = readFromStorage(storageKey);
+    const next = { ...existing, ...patch } satisfies StoredProjectFilters;
+    window.localStorage.setItem(storageKey, JSON.stringify(next));
+  } catch {
+    // Ignore storage write errors (e.g., quota exceeded)
+  }
+};
+
+export const readStoredProjectFilters = readFromStorage;
+export const writeStoredProjectFilters = writeToStorage;
+
 type UseProjectFiltersArgs = {
   projects: ProjectLike[];
   recentsLimit: number;
@@ -25,6 +66,7 @@ type UseProjectFiltersArgs = {
     normalizedQuery: string
   ) => boolean;
   statusFilterPredicate?: (status: string) => boolean;
+  storageKey?: string;
 };
 
 type UseProjectFiltersResult = {
@@ -64,12 +106,34 @@ export const useProjectFilters = ({
   defaultSortOption = "dateNewest",
   queryMatcher,
   statusFilterPredicate,
+  storageKey,
 }: UseProjectFiltersArgs): UseProjectFiltersResult => {
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [scope, setScope] = useState<"recents" | "all">(defaultScope);
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [sortOption, setSortOption] = useState<SortOption>(defaultSortOption);
+  const initialFiltersRef = useRef<StoredProjectFilters | null>(null);
+
+  if (initialFiltersRef.current === null) {
+    initialFiltersRef.current = readFromStorage(storageKey);
+  }
+
+  const [scope, setScopeState] = useState<"recents" | "all">(() => {
+    const storedScope = initialFiltersRef.current?.scope;
+    if (storedScope === "recents" || storedScope === "all") return storedScope;
+    return defaultScope;
+  });
+
+  const [query, setQueryState] = useState(() => initialFiltersRef.current?.query ?? "");
+
+  const [statusFilter, setStatusFilterState] = useState(
+    () => initialFiltersRef.current?.statusFilter ?? ""
+  );
+
+  const [sortOption, setSortOptionState] = useState<SortOption>(() => {
+    const storedOption = initialFiltersRef.current?.sortOption;
+    if (storedOption && SORT_OPTIONS.some((option) => option.value === storedOption)) {
+      return storedOption;
+    }
+    return defaultSortOption;
+  });
 
   const filtersRef = useRef<HTMLDivElement | null>(null);
   const filtersId = useMemo(() => createRandomId("projects-filters"), []);
@@ -138,7 +202,7 @@ export const useProjectFilters = ({
   const statusDropdown = useDropdown({
     options: statusOptions,
     selectedValue: statusFilter,
-    onSelect: setStatusFilter,
+    onSelect: setStatusFilterState,
     idPrefix: "projects-status",
   });
 
@@ -147,7 +211,7 @@ export const useProjectFilters = ({
   const sortDropdown = useDropdown({
     options: sortOptions,
     selectedValue: sortOption,
-    onSelect: setSortOption,
+    onSelect: setSortOptionState,
     idPrefix: "projects-sort",
   });
 
@@ -224,6 +288,24 @@ export const useProjectFilters = ({
     return found ? found.label : sortOptions[0]?.label || "Sort";
   }, [sortOption, sortOptions]);
 
+  useEffect(() => {
+    if (!statusFilter) return;
+
+    const hasStatus = statusOptions.some((option) => option.value === statusFilter);
+    if (!hasStatus) {
+      setStatusFilterState("");
+    }
+  }, [statusFilter, statusOptions]);
+
+  useEffect(() => {
+    writeToStorage(storageKey, {
+      scope,
+      query,
+      statusFilter,
+      sortOption,
+    });
+  }, [scope, query, statusFilter, sortOption, storageKey]);
+
   return {
     filtersOpen,
     toggleFilters,
@@ -231,11 +313,11 @@ export const useProjectFilters = ({
     filtersRef,
     filtersId,
     scope,
-    setScope,
+    setScope: setScopeState,
     query,
-    setQuery,
+    setQuery: setQueryState,
     statusFilter,
-    setStatusFilter,
+    setStatusFilter: setStatusFilterState,
     statusOptions,
     statusTriggerLabel,
     statusDropdown,

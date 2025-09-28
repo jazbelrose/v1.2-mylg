@@ -23,7 +23,6 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
   return (
     <div
       className={`dashboard-item view-gallery ${styles.galleryTrigger}`}
-      style={{ display: "flex", flexDirection: "row", gap: 12 }}
       onClick={onOpenModal}
       role="button"
       tabIndex={0}
@@ -35,7 +34,7 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
       }}
     >
       {/* Two equal columns: title (left) and thumbnails (right) */}
-      <div className={styles.titleColumn} style={{ flex: "0 0 38%" }}>
+      <div className={styles.titleColumn}>
         <div className={styles.topRow}>
           <span>Galleries</span>
          
@@ -49,10 +48,7 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
         )}
       </div>
 
-      <div
-        className={styles.thumbsColumn}
-        style={{ flex: "1 1 62%", display: "flex", alignItems: "center", justifyContent: "flex-end" }}
-      >
+      <div className={styles.thumbsColumn}>
         {hasGalleries ? (
           <div className={styles.carouselSection}>
             <div className={styles.thumbnailCarousel} aria-label="Gallery previews">

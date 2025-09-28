@@ -175,6 +175,14 @@ function computeStats(tasks: QuickTask[]) {
   return { completed, overdue, dueSoon };
 }
 
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 function buildMarkerThumbnail(color?: string) {
   if (!color) return undefined;
   const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="4"/></svg>`;
@@ -238,18 +246,11 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
 
   const stats = useMemo(() => computeStats(tasks), [tasks]);
 
-  const activeTasks = useMemo(() => {
-    const openTasks = tasks.filter((task) => task.status !== "done");
-    return openTasks
-      .slice()
-      .sort((a, b) => {
-        if (a.dueDate && b.dueDate) return a.dueDate.getTime() - b.dueDate.getTime();
-        if (a.dueDate) return -1;
-        if (b.dueDate) return 1;
-        return a.title.localeCompare(b.title);
-      })
-      .slice(0, 3);
-  }, [tasks]);
+  const formatStatValue = (value: number): string | number => {
+    if (error) return "—";
+    if (loading) return "…";
+    return value;
+  };
 
   const drawerTasks = useMemo(() => {
     return tasks
@@ -280,6 +281,29 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
       })),
     [mapTasks, projectColor],
   );
+
+  const statusMessage = useMemo(() => {
+    if (error) return "We couldn’t load tasks right now.";
+    if (loading) return "Loading tasks…";
+    if (!tasks.length) return "No tasks for this project yet.";
+
+    const openTasks = tasks.filter((task) => task.status !== "done");
+    if (!openTasks.length) return "You're all caught up.";
+
+    const datedTasks = openTasks.filter((task): task is QuickTask & { dueDate: Date } => Boolean(task.dueDate));
+    if (!datedTasks.length) {
+      const noun = openTasks.length === 1 ? "task" : "tasks";
+      return `${openTasks.length} open ${noun} with no due date yet.`;
+    }
+
+    const sorted = datedTasks
+      .slice()
+      .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+    const nextDue = sorted[0];
+    const sameDayCount = sorted.filter((task) => isSameDay(task.dueDate, nextDue.dueDate)).length;
+    const noun = sameDayCount === 1 ? "task" : "tasks";
+    return `${sameDayCount} ${noun} due ${dueFormatter.format(nextDue.dueDate)}.`;
+  }, [error, loading, tasks]);
 
   const handleOpenDrawer = () => {
     setDrawerOpen(true);
@@ -469,58 +493,43 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   };
 
   return (
-    <section className={styles.section} aria-label="Project tasks overview">
+    <section className={styles.card} aria-label="Project tasks overview">
       <header className={styles.header}>
         <div className={styles.headingGroup}>
           <h3 className={styles.title}>Tasks</h3>
           <p className={styles.subtitle}>
             {projectName
-              ? `Track what's happening on ${projectName}.`
-              : "Track what's happening on this project."}
+              ? `Keep ${projectName} moving forward.`
+              : "Keep this project moving forward."}
           </p>
         </div>
-        <div className={styles.headerActions}>
-          <button type="button" className={styles.primaryButton} onClick={handleOpenDrawer} disabled={loading}>
-            <Plus size={16} strokeWidth={2.25} />
-            Open tasks
-          </button>
-        </div>
+        <button
+          type="button"
+          className={styles.primaryButton}
+          onClick={handleOpenDrawer}
+          disabled={loading}
+        >
+          <Plus size={16} strokeWidth={2.25} />
+          Open tasks
+        </button>
       </header>
 
-      <div className={styles.statsRow} aria-label="Task summary">
-        <div className={styles.statCard}>
-          <span className={styles.statLabel}>Completed</span>
-          <span className={styles.statValue}>{stats.completed}</span>
+      <div className={styles.statRow} aria-label="Task summary">
+        <div className={`${styles.statCard} ${styles.statOk}`}>
+          <span className={styles.statValue}>{formatStatValue(stats.completed)}</span>
+          <span className={styles.statLabel}>Done</span>
         </div>
-        <div className={styles.statCard}>
+        <div className={`${styles.statCard} ${styles.statDanger}`}>
+          <span className={styles.statValue}>{formatStatValue(stats.overdue)}</span>
           <span className={styles.statLabel}>Overdue</span>
-          <span className={styles.statValue}>{stats.overdue}</span>
         </div>
-        <div className={styles.statCard}>
+        <div className={`${styles.statCard} ${styles.statWarn}`}>
+          <span className={styles.statValue}>{formatStatValue(stats.dueSoon)}</span>
           <span className={styles.statLabel}>Due soon</span>
-          <span className={styles.statValue}>{stats.dueSoon}</span>
         </div>
       </div>
 
-      {error ? (
-        <div className={styles.error}>{error}</div>
-      ) : loading ? (
-        <div className={styles.loading}>Loading tasks…</div>
-      ) : activeTasks.length ? (
-        <ul className={styles.taskList}>
-          {activeTasks.map((task) => (
-            <li key={task.id} className={styles.taskItem}>
-              <span className={styles.taskTitle}>{task.title}</span>
-              <span className={styles.taskMeta}>
-                <span>{formatDueLabel(task)}</span>
-                <span>{task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className={styles.empty}>No active tasks right now.</div>
-      )}
+      <p className={styles.status}>{statusMessage}</p>
 
       {renderDrawer()}
     </section>

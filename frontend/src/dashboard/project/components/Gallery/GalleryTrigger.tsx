@@ -11,12 +11,50 @@ interface GalleryTriggerProps {
   onOpenModal: () => void;
 }
 
+const useCompactGalleryLayout = () => {
+  const query = '(max-width: 768px)';
+  const [isCompact, setIsCompact] = React.useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false;
+    }
+
+    return window.matchMedia(query).matches;
+  });
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia(query);
+
+    const updateMatches = (event: MediaQueryList | MediaQueryListEvent) => {
+      setIsCompact(event.matches);
+    };
+
+    updateMatches(mediaQuery);
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', updateMatches);
+      return () => mediaQuery.removeEventListener('change', updateMatches);
+    }
+
+    const legacyListener = (event: MediaQueryListEvent) => updateMatches(event);
+    mediaQuery.addListener(legacyListener);
+    return () => mediaQuery.removeListener(legacyListener);
+  }, [query]);
+
+  return isCompact;
+};
+
 const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
   galleries,
   onOpenModal,
 }) => {
+  const isCompact = useCompactGalleryLayout();
   const hasGalleries = galleries.length > 0;
-  const visibleCount = Math.min(3, galleries.length);
+  const maxVisibleThumbs = isCompact ? 2 : 3;
+  const visibleCount = Math.min(maxVisibleThumbs, galleries.length);
   const visibleGalleries = galleries.slice(0, visibleCount);
   const hiddenCount = galleries.length - visibleCount;
 

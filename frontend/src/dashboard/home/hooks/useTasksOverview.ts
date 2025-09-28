@@ -80,6 +80,12 @@ export type TasksOverviewStats = {
   overdue: number;
 };
 
+export type TasksOverviewProjectOption = {
+  id: string;
+  name: string;
+  color?: string;
+};
+
 function parseDueDate(value?: unknown): Date | null {
   if (value == null || value === "") return null;
 
@@ -151,6 +157,7 @@ export function useTasksOverview() {
   const navigate = useNavigate();
 
   const [tasks, setTasks] = useState<NormalizedTask[]>([]);
+  const [reloadToken, setReloadToken] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -240,7 +247,11 @@ export function useTasksOverview() {
     return () => {
       cancelled = true;
     };
-  }, [projects]);
+  }, [projects, reloadToken]);
+
+  const refreshTasks = useCallback(() => {
+    setReloadToken((token) => token + 1);
+  }, []);
 
   const {
     completed,
@@ -400,6 +411,18 @@ export function useTasksOverview() {
     navigate("/dashboard/tasks");
   }, [navigate]);
 
+  const projectOptions: TasksOverviewProjectOption[] = useMemo(
+    () =>
+      projects
+        .filter((project): project is Project & { projectId: string } => Boolean(project?.projectId))
+        .map((project) => ({
+          id: project.projectId,
+          name: project.title || project.projectId,
+          color: project.color || getColor(project.projectId),
+        })),
+    [projects]
+  );
+
   const primaryProjectName = primaryProjectId
     ? projectMap.get(primaryProjectId)?.title ?? primaryProjectId
     : undefined;
@@ -416,6 +439,8 @@ export function useTasksOverview() {
     undatedTasks,
     completedThisWeek,
     navigateToProject,
+    refreshTasks,
+    projectOptions,
     primaryProjectId,
     primaryProjectName,
   };

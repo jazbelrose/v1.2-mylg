@@ -23,7 +23,7 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: stretch;
-  min-height: clamp(150px, 22vh, 200px); /* Further reduced min-height */
+  min-height: 180px;
   background-color: #111;
   color: #fff;
   
@@ -31,18 +31,18 @@
 }
 .dashboard-item.budget span {
   margin: 4px 0;
-  font-size: clamp(1rem, 3vw, 1.75rem);
+  font-size: 1.2rem;
 }
 
 .dashboard-item.budget span:nth-child(2) {
-  font-size: clamp(1rem, 2.5vw, 2rem); /* Slightly reduced font size */
+  font-size: 1.4rem;
   font-weight: bold;
   margin: 2px 0;
 }
 
 
 .dashboard-item.budget span:last-child {
-  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-size: 1.1rem;
   margin: 2px 0 2px 5px;
   color: #FA3356;
 }
@@ -84,7 +84,7 @@
   flex-direction: row;
   align-items: stretch;
   justify-content: flex-start;
-  gap: clamp(12px, 2vw, 24px);
+  gap: 20px;
   width: 100%;
   container-type: inline-size;
   container-name: budget-card;
@@ -131,11 +131,11 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: clamp(1.5rem, 3vw, 2.5rem) !important;
+  font-size: 2rem !important;
 }
 
 .dashboard-item.budget .budget-overview-amount span {
-  font-size: clamp(1.5rem, 3vw, 2.5rem) !important;
+  font-size: 2rem !important;
 }
 
 .budget-overview-invoice-icon {
@@ -189,7 +189,7 @@
 
 .budget-chart {
   width: 100%;
-  max-width: clamp(220px, 50cqw, 110px);
+  max-width: 240px;
   aspect-ratio: 1 / 1;
   position: relative;
   margin-inline: auto;
@@ -203,7 +203,7 @@
   justify-content: center;
   padding: 0;
   margin: 0 0 0 8px;
-  min-width: clamp(100px, 16vw, 140px);
+  min-width: 120px;
   gap: 6px;
 }
 
@@ -214,33 +214,33 @@
 }
 
 .budget-legend-dot {
-  width: clamp(6px, 1vh, 8px);
-  height: clamp(6px, 1vh, 8px);
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   display: inline-block;
 }
 
 .budget-legend-title {
-  font-size: clamp(0.7rem, 1.5vh, 0.9rem);
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
 .budget-legend-value {
-  font-size: clamp(0.75rem, 1.7vh, 1rem);
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
 .budget-legend-percent {
-  font-size: clamp(0.65rem, 1.3vh, 0.85rem);
+  font-size: 0.7rem;
   color: #9ca3af;
 }
 
 
 .budget-legend-placeholder {
-  font-size: clamp(0.68rem, 1.4vh, 0.85rem);
+  font-size: 0.75rem;
   color: #9ca3af;
   line-height: 1.35;
-  max-width: clamp(120px, 18vw, 140px);
+  max-width: 130px;
 }
 
 @container budget-card (max-width: 1120px) {
@@ -262,26 +262,26 @@
 
   .budget-chart {
     margin-inline: auto;
-    max-width: clamp(160px, 50cqw, 200px);
+    max-width: 200px;
   }
 }
 
 @container budget-card (max-width: 760px) {
   .budget-chart {
-    max-width: clamp(120px, 50cqw, 160px);
+    max-width: 160px;
   }
 }
 
 @media (max-height: 750px) {
   .budget-chart {
-    width: min(25vh, 35vw, 140px);
-    height: min(25vh, 35vw, 140px);
+    width: 160px;
+    height: 160px;
   }
   .budget-legend {
-    min-width: clamp(90px, 22vw, 130px);
+    min-width: 100px;
   }
   .dashboard-item.budget {
-    min-height: clamp(100px, 18vh, 140px);
+    min-height: 120px;
   }
 }
 
@@ -298,7 +298,8 @@
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
-    min-height: 100px;
+    min-height: 80px;
+    max-height: 160px;
   }
   .budget-overview-card {
     gap: 10px;
@@ -373,19 +374,71 @@
     white-space: pre-wrap;
   }
   .budget-chart {
-    width: min(120px, 40vw);
-    height: min(120px, 40vw);
+    width: 140px;
+    height: 140px;
+  }
+  .budget-legend {
+    gap: 4px;
+  }
+  .budget-legend-item {
+    margin-right: 6px;
   }
 }
 
 /* Additional mobile height constraint for budget cards */
 @media (max-width: var(--breakpoint-sm)) and (max-height: 750px) {
   .dashboard-item.budget {
-    min-height: 100px !important;
+    min-height: 70px !important;
+    max-height: 140px !important;
   }
   .budget-chart {
-    width: min(20vh, 32vw, 120px) !important;
-    height: min(20vh, 32vw, 120px) !important;
+    width: 120px !important;
+    height: 120px !important;
+  }
+}
+
+/* Extra small screens - very aggressive height constraint */
+@media (max-width: 480px) {
+  .dashboard-item.budget {
+    min-height: 90px;
+    max-height: 120px;
+    padding: 8px;
+    gap: 8px;
+  }
+  .budget-overview-summary {
+    gap: 2px;
+  }
+  .budget-overview-amount {
+    margin-top: 1px;
+  }
+  .budget-chart {
+    width: 110px !important;
+    height: 110px !important;
+  }
+  .budget-overview-header {
+    gap: 4px;
+  }
+  .dashboard-item.budget span {
+    font-size: 14px;
+  }
+  .budget-overview-amount {
+    font-size: 18px !important;
+  }
+  .dashboard-item.budget .budget-overview-amount span {
+    font-size: 18px !important;
+  }
+  .budget-legend {
+    gap: 2px;
+    margin: 4px 0 0;
+  }
+  .budget-legend-title {
+    font-size: 0.6rem;
+  }
+  .budget-legend-value {
+    font-size: 0.65rem;
+  }
+  .budget-legend-percent {
+    font-size: 0.55rem;
   }
 }
 

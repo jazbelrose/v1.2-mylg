@@ -156,6 +156,7 @@
   min-width: 0;
   gap: clamp(16px, 1.8vw, 28px);
   justify-content: flex-start;
+  flex-wrap: nowrap;
 }
 
 .project-header:not(.new-project-header) .right-side {
@@ -170,19 +171,25 @@
   align-items: center;
   gap: clamp(12px, 1.5vw, 20px);
   min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .project-header:not(.new-project-header) .project-text-group {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  
+
   min-width: 0;
+  flex: 1 1 auto;
   color: inherit;
 }
 
 .project-header:not(.new-project-header) .project-title-heading {
   color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .project-header:not(.new-project-header) .finish-line-header {
   display: inline-flex;
@@ -323,6 +330,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .project-header:not(.new-project-header) .project-settings-button {
@@ -344,6 +353,7 @@
   display: flex;
   align-items: center;
   gap: clamp(12px, 1.4vw, 20px);
+  flex-shrink: 0;
 }
 
 .project-header:not(.new-project-header) .project-quick-actions .icon-button {
@@ -378,7 +388,15 @@
   }
 
   .project-header:not(.new-project-header) .header-content {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    row-gap: clamp(14px, 3vw, 24px);
+  }
+
+  .project-header:not(.new-project-header) .right-side {
+    justify-self: stretch;
+    justify-content: flex-start;
+    width: 100%;
   }
 }
 

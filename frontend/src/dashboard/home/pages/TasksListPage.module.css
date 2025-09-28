@@ -525,15 +525,22 @@
 
 @media (max-width: 720px) {
   .drawerOverlay {
-    padding: 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 0 0;
   }
 
   .drawer {
     border-radius: 24px 24px 0 0;
+    max-height: calc(100vh - (env(safe-area-inset-top, 0px) + 12px));
+  }
+
+  @supports (height: 100dvh) {
+    .drawer {
+      max-height: calc(100dvh - (env(safe-area-inset-top, 0px) + 12px));
+    }
   }
 
   .drawerHeader {
-    padding: env(safe-area-inset-top, 0px) 8px 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 8px 0;
   }
 
   .closeButton {

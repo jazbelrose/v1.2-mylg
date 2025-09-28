@@ -13,6 +13,14 @@ import {
   ConfigProvider,
   theme,
   message,
+  Card,
+  List,
+  Drawer,
+  Grid,
+  Space,
+  Typography,
+  Empty,
+  Tag,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { MenuProps } from "antd";
@@ -36,6 +44,7 @@ import {
 } from "@/shared/utils/api";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import "./task-table.css";
+import Map from "@/shared/ui/Map";
 
 /* =========================
    Types
@@ -109,6 +118,18 @@ const statusOptions = [
   { value: "done", label: "Done" },
 ];
 
+const statusLabelMap: Record<Status, string> = {
+  todo: "To Do",
+  in_progress: "In Progress",
+  done: "Done",
+};
+
+const statusColorMap: Record<Status, string> = {
+  todo: "default",
+  in_progress: "processing",
+  done: "success",
+};
+
 /* =========================
    Component
    ========================= */
@@ -124,21 +145,36 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   const [commentTask, setCommentTask] = useState<Task | null>(null);
   const [commentText, setCommentText] = useState("");
 
+  const { Title, Text } = Typography;
+
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const [assignForm] = Form.useForm();
   const [assignLocationSearch, setAssignLocationSearch] = useState("");
   const [assignLocationSuggestions, setAssignLocationSuggestions] = useState<
     NominatimSuggestion[]
   >([]);
-  const [assignTaskLocation, setAssignTaskLocation] = useState<TaskLocation>({
-    lat: "",
-    lng: "",
-  });
+  const [assignTaskLocation, setAssignTaskLocation] = useState<TaskLocation | null>(
+    null
+  );
   const [assignTaskAddress, setAssignTaskAddress] = useState("");
 
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
+
+  const defaultMapLocation = { lat: 37.0902, lng: -95.7129 };
+
+  const normalizeLocation = (loc?: TaskLocation | null) => {
+    if (!loc) return undefined;
+    const lat = typeof loc.lat === "string" ? parseFloat(loc.lat) : loc.lat;
+    const lng = typeof loc.lng === "string" ? parseFloat(loc.lng) : loc.lng;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
+    return { lat, lng };
+  };
 
   // Get user's current location
   useEffect(() => {
@@ -196,6 +232,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   ) => {
     setAssignLocationSearch(e.target.value);
     fetchAssignLocationSuggestions(e.target.value);
+    assignForm.setFieldsValue({ address: e.target.value });
   };
 
   const handleAssignLocationSuggestionSelect = (s: NominatimSuggestion) => {
@@ -207,15 +244,22 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     assignForm.setFieldsValue({ location: loc, address: s.display_name });
   };
 
+  const handleAssignMapLocationChange = (loc: { lat: number; lng: number }) => {
+    setAssignTaskLocation(loc);
+    setAssignLocationSearch(`${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`);
+    setAssignTaskAddress(`${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`);
+    assignForm.setFieldsValue({
+      location: loc,
+      address: `${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`,
+    });
+  };
+
   const [editForm] = Form.useForm();
   const [locationSearch, setLocationSearch] = useState("");
   const [locationSuggestions, setLocationSuggestions] = useState<
     NominatimSuggestion[]
   >([]);
-  const [taskLocation, setTaskLocation] = useState<TaskLocation>({
-    lat: "",
-    lng: "",
-  });
+  const [taskLocation, setTaskLocation] = useState<TaskLocation | null>(null);
   const [taskAddress, setTaskAddress] = useState("");
 
   const fetchLocationSuggestions = async (query: string) => {
@@ -238,6 +282,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   const handleLocationSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocationSearch(e.target.value);
     fetchLocationSuggestions(e.target.value);
+    editForm.setFieldsValue({ address: e.target.value });
   };
 
   const handleLocationSuggestionSelect = (s: NominatimSuggestion) => {
@@ -247,6 +292,16 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     setLocationSearch(s.display_name);
     setLocationSuggestions([]);
     editForm.setFieldsValue({ location: loc, address: s.display_name });
+  };
+
+  const handleEditMapLocationChange = (loc: { lat: number; lng: number }) => {
+    setTaskLocation(loc);
+    setLocationSearch(`${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`);
+    setTaskAddress(`${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`);
+    editForm.setFieldsValue({
+      location: loc,
+      address: `${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`,
+    });
   };
 
   const { budgetItems } = useBudget();
@@ -341,6 +396,8 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       const normalizedName = (values.name || "").toUpperCase();
       const due: Dayjs | string | undefined = values.dueDate;
 
+      const locationPayload = normalizeLocation(assignTaskLocation);
+
       const payload = {
         projectId,
         taskId: id,
@@ -354,7 +411,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
         title: normalizedName,
         priority: values.priority || "",
         status: "todo" as Status,
-        location: values.location || assignTaskLocation,
+        location: locationPayload,
         address: values.address || assignTaskAddress,
       };
 
@@ -369,7 +426,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       setTasks((prev) => [...prev, mapped]);
 
       assignForm.resetFields();
-      setAssignTaskLocation({ lat: "", lng: "" });
+      setAssignTaskLocation(null);
       setAssignTaskAddress("");
       setAssignLocationSearch("");
       setAssignLocationSuggestions([]);
@@ -392,12 +449,12 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
         priority: "",
         budgetItemId: "",
         eventId: "",
-        location: { lat: "", lng: "" },
+        location: undefined,
         address: "",
       }
     );
 
-    setTaskLocation(t?.location || { lat: "", lng: "" });
+    setTaskLocation(t?.location || null);
     setTaskAddress(t?.address || "");
     setLocationSearch(t?.address || "");
     setLocationSuggestions([]);
@@ -409,6 +466,8 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       const id = editingTask?.taskId || editingTask?.id || uuidv4();
       const normalizedName = (values.name || "").toUpperCase();
       const due: Dayjs | string | undefined = values.dueDate;
+
+      const locationPayload = normalizeLocation(taskLocation);
 
       const payload = {
         projectId,
@@ -423,7 +482,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
         title: normalizedName,
         priority: values.priority || editingTask?.priority || "",
         status: (editingTask?.status || "todo") as Status,
-        location: values.location || taskLocation,
+        location: locationPayload,
         address: values.address || taskAddress,
       };
 
@@ -446,7 +505,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       setIsTaskModalOpen(false);
       setEditingTask(null);
       editForm.resetFields();
-      setTaskLocation({ lat: "", lng: "" });
+      setTaskLocation(null);
       setTaskAddress("");
       setLocationSearch("");
       setLocationSuggestions([]);
@@ -499,6 +558,34 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       }
     };
 
+  const assignMapLocation =
+    normalizeLocation(assignTaskLocation) || userLocation || defaultMapLocation;
+  const editMapLocation =
+    normalizeLocation(taskLocation) || userLocation || defaultMapLocation;
+
+  const formatDueDate = (due?: string) => {
+    if (!due) return "No due date";
+    const date = new Date(due);
+    if (Number.isNaN(date.getTime())) return due;
+    return date.toLocaleDateString();
+  };
+
+  const upcomingTasks = React.useMemo(() => {
+    const sorted = [...tasks]
+      .filter((task) => task.status !== "done")
+      .sort((a, b) => {
+        const aTime = a.dueDate ? new Date(a.dueDate).getTime() : Number.POSITIVE_INFINITY;
+        const bTime = b.dueDate ? new Date(b.dueDate).getTime() : Number.POSITIVE_INFINITY;
+        return aTime - bTime;
+      });
+    return sorted.slice(0, 3);
+  }, [tasks]);
+
+  const handleCreateTaskClick = () => {
+    setIsDrawerOpen(false);
+    openTaskModal();
+  };
+
   /* Columns */
   const columns: ColumnsType<Task> = [
     {
@@ -529,6 +616,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       key: "dueDate",
       width: 110,
       ellipsis: true,
+      render: (value?: string) => formatDueDate(value),
     },
     {
       title: "Priority",
@@ -602,319 +690,386 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   ];
 
   /* Render */
-  return (
-    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
-      <div className="tasks-component">
-        <div className="tasks-card">
-          <Form form={assignForm} layout="vertical" className="assign-task-form">
-            <h3>Assign Task</h3>
+  const taskManagementContent = (
+    <div className="tasks-component">
+      <div className="tasks-card">
+        <Form form={assignForm} layout="vertical" className="assign-task-form">
+          <h3>Assign Task</h3>
 
-            <div className="form-row">
-              <Form.Item
-                label="Task Name"
-                name="name"
-                rules={[{ required: true, message: "Task name required" }]}
-              >
-                <AutoComplete
-                  size="small"
-                  options={uniqueTaskNameOptions}
-                  listHeight={160}
-                  placeholder="Enter or select task"
-                  filterOption={(inputValue, option) =>
-                    (option?.value as string)
-                      ?.toUpperCase()
-                      .includes(inputValue.toUpperCase())
-                  }
-                />
-              </Form.Item>
-
-              <Form.Item label="Assigned To" name="assignedTo">
-                <Select size="small" options={assigneeOptions} />
-              </Form.Item>
-
-              <Form.Item label="Due Date" name="dueDate">
-                <DatePicker size="small" format="YYYY-MM-DD" />
-              </Form.Item>
-            </div>
-
-            <div className="form-row">
-              <Form.Item label="Priority" name="priority">
-                <Select size="small" options={["Low", "Medium", "High"].map((p) => ({ value: p, label: p }))} />
-              </Form.Item>
-
-              <Form.Item label="Budget Element Id" name="budgetCode">
-                <Select
-                  size="small"
-                  options={budgetOptions}
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                  }
-                  optionLabelProp="elementId"
-                  getPopupContainer={(trigger) => trigger.parentNode as HTMLElement}
-                  value={assignForm.getFieldValue("budgetCode")}
-                  onChange={(value) => assignForm.setFieldsValue({ budgetCode: value })}
-                  popupRender={(menu) => menu}
-                />
-              </Form.Item>
-
-              <Form.Item label="Address" name="address">
-                <div>
-                  <Input
-                    placeholder="Search address"
-                    value={assignLocationSearch}
-                    onChange={handleAssignLocationSearchChange}
-                    autoComplete="off"
-                  />
-                  {assignLocationSuggestions.length > 0 && (
-                    <div
-                      className="suggestions-list"
-                      style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        background: "#222",
-                        border: "1px solid #444",
-                        borderRadius: 4,
-                        width: "100%",
-                      }}
-                    >
-                      {assignLocationSuggestions.map((s, idx) => (
-                        <div
-                          key={s.place_id}
-                          onClick={() => handleAssignLocationSuggestionSelect(s)}
-                          style={{
-                            padding: "6px 10px",
-                            cursor: "pointer",
-                            borderBottom:
-                              idx < assignLocationSuggestions.length - 1
-                                ? "1px solid #333"
-                                : "none",
-                            background: "inherit",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#eee";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#222";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "inherit";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#fff";
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontWeight: idx === 0 ? "bold" : "normal",
-                              color: "#fff",
-                            }}
-                          >
-                            {s.display_name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {assignTaskAddress && (
-                    <div style={{ marginTop: 4, fontSize: 12, color: "#888" }}>
-                      {assignTaskAddress}
-                    </div>
-                  )}
-                </div>
-              </Form.Item>
-            </div>
-
-            <div className="form-row actions">
-              <Button
-                type="primary"
+          <div className="form-row">
+            <Form.Item
+              label="Task Name"
+              name="name"
+              rules={[{ required: true, message: "Task name required" }]}
+            >
+              <AutoComplete
                 size="small"
-                className="modal-submit-button"
-                onClick={handleAssignTask}
-                style={{ background: "#FA3356", borderColor: "#FA3356" }}
-              >
-                Save
-              </Button>
-            </div>
-          </Form>
+                options={uniqueTaskNameOptions}
+                listHeight={160}
+                placeholder="Enter or select task"
+                filterOption={(inputValue, option) =>
+                  (option?.value as string)
+                    ?.toUpperCase()
+                    .includes(inputValue.toUpperCase())
+                }
+              />
+            </Form.Item>
 
-          <div
-            className="tasks-table-wrapper"
-            style={{ maxHeight: 400, overflow: "auto", position: "relative", paddingBottom: 0 }}
-          >
-            <Table<Task>
-              rowKey="id"
-              columns={columns}
-              dataSource={tasks}
-              pagination={false}
-              size="small"
-              tableLayout="fixed"
-              className="tasks-table custom-sticky-scrollbar"
-              scroll={{ x: "max-content", y: 340 }}
-              locale={{ emptyText: "No tasks yet!" }}
-              sticky={{ offsetHeader: 0, offsetScroll: 0 }}
-              style={{ fontSize: "11px" }}
-            />
+            <Form.Item label="Assigned To" name="assignedTo">
+              <Select size="small" options={assigneeOptions} allowClear placeholder="Select user" />
+            </Form.Item>
+
+            <Form.Item label="Due Date" name="dueDate">
+              <DatePicker size="small" format="YYYY-MM-DD" style={{ width: "100%" }} />
+            </Form.Item>
           </div>
 
-          <Modal
-            title={editingTask ? "Edit Task" : "Add Task"}
-            open={isTaskModalOpen}
-            onOk={saveTask}
-            onCancel={() => setIsTaskModalOpen(false)}
-            centered
-            okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
-            forceRender
-          >
-            <Form layout="vertical" form={editForm} preserve={false}>
-              <Form.Item
-                label="Task"
-                name="name"
-                rules={[{ required: true, message: "Task name required" }]}
-              >
-                <AutoComplete
-                  options={taskNameOptions}
-                  listHeight={160}
-                  placeholder="Enter or select task"
-                  filterOption={(inputValue, option) =>
-                    (option?.value as string)
-                      ?.toUpperCase()
-                      .includes(inputValue.toUpperCase())
-                  }
-                />
-              </Form.Item>
+          <div className="form-row">
+            <Form.Item label="Priority" name="priority">
+              <Select
+                size="small"
+                allowClear
+                placeholder="Priority"
+                options={["Low", "Medium", "High"].map((p) => ({ value: p, label: p }))}
+              />
+            </Form.Item>
 
-              <Form.Item label="Assignee" name="assignedTo">
-                <Select size="small" options={assigneeOptions} />
-              </Form.Item>
+            <Form.Item label="Budget Element" name="budgetCode">
+              <Select
+                size="small"
+                showSearch
+                allowClear
+                placeholder="Budget code"
+                options={budgetOptions}
+                filterOption={(input, option) =>
+                  (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                }
+              />
+            </Form.Item>
 
-              <Form.Item label="Due Date" name="dueDate">
-                <Input type="date" />
-              </Form.Item>
+            <Form.Item label="Event ID" name="eventId">
+              <Input placeholder="Event ID" />
+            </Form.Item>
+          </div>
 
-              <Form.Item label="Priority" name="priority">
-                <Input />
-              </Form.Item>
-
-              <Form.Item label="Budget Code" name="budgetItemId">
-                <div>
-                  <Select options={budgetOptions} />
-                  <Input />
-                </div>
-              </Form.Item>
-
-              <Form.Item label="Event ID" name="eventId">
-                <Input />
-              </Form.Item>
-
-              <Form.Item label="Location" name="location">
-                <div>
-                  <Input
-                    placeholder="{lat, lng}"
-                    value={
-                      taskLocation.lat && taskLocation.lng
-                        ? `${taskLocation.lat}, ${taskLocation.lng}`
-                        : ""
-                    }
-                    readOnly
-                  />
-                  <Input
-                    placeholder="Search address"
-                    value={locationSearch}
-                    onChange={handleLocationSearchChange}
-                  />
-                  {locationSuggestions.length > 0 && (
-                    <div className="suggestions-list">
-                      {locationSuggestions.map((s) => (
-                        <div
-                          key={s.place_id}
-                          onClick={() => handleLocationSuggestionSelect(s)}
-                        >
-                          {s.display_name}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </Form.Item>
-
-              <Form.Item label="Address" name="address">
-                <div>
-                  <Input
-                    placeholder="Search address"
-                    value={locationSearch}
-                    onChange={handleLocationSearchChange}
-                    autoComplete="off"
-                  />
-                  {locationSuggestions.length > 0 && (
+          <Form.Item label="Task Location">
+            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+              <Input
+                placeholder="{lat, lng}"
+                value={
+                  assignTaskLocation
+                    ? `${assignTaskLocation.lat}, ${assignTaskLocation.lng}`
+                    : ""
+                }
+                readOnly
+              />
+              <Input
+                placeholder="Search address"
+                value={assignLocationSearch}
+                onChange={handleAssignLocationSearchChange}
+                autoComplete="off"
+              />
+              {assignLocationSuggestions.length > 0 && (
+                <div
+                  className="suggestions-list"
+                  style={{
+                    maxHeight: 200,
+                    overflowY: "auto",
+                    background: "#1f1f1f",
+                    border: "1px solid #333",
+                    borderRadius: 6,
+                    width: "100%",
+                  }}
+                >
+                  {assignLocationSuggestions.map((s, idx) => (
                     <div
-                      className="suggestions-list"
+                      key={s.place_id}
+                      onClick={() => handleAssignLocationSuggestionSelect(s)}
                       style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        background: "#222",
-                        border: "1px solid #444",
-                        borderRadius: 4,
-                        width: "100%",
+                        padding: "6px 10px",
+                        cursor: "pointer",
+                        borderBottom:
+                          idx < assignLocationSuggestions.length - 1
+                            ? "1px solid #333"
+                            : "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#262626";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
                       }}
                     >
-                      {locationSuggestions.map((s, idx) => (
-                        <div
-                          key={s.place_id}
-                          onClick={() => handleLocationSuggestionSelect(s)}
-                          style={{
-                            padding: "6px 10px",
-                            cursor: "pointer",
-                            borderBottom:
-                              idx < locationSuggestions.length - 1
-                                ? "1px solid #333"
-                                : "none",
-                            background: "inherit",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#eee";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#222";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "inherit";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#fff";
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontWeight: idx === 0 ? "bold" : "normal",
-                              color: "#fff",
-                            }}
-                          >
-                            {s.display_name}
-                          </span>
-                        </div>
-                      ))}
+                      {s.display_name}
                     </div>
-                  )}
-                  {taskAddress && (
-                    <div style={{ marginTop: 4, fontSize: 12, color: "#888" }}>
-                      {taskAddress}
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </Form.Item>
-            </Form>
-          </Modal>
+              )}
+              <div style={{ height: 220, borderRadius: 8, overflow: "hidden" }}>
+                <Map
+                  location={assignMapLocation}
+                  address={assignTaskAddress || assignLocationSearch}
+                  scrollWheelZoom={!isMobile}
+                  dragging
+                  touchZoom
+                  showUserLocation={!!userLocation}
+                  isEditable
+                  onLocationChange={handleAssignMapLocationChange}
+                />
+              </div>
+              {assignTaskAddress && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {assignTaskAddress}
+                </Text>
+              )}
+            </Space>
+          </Form.Item>
 
-          <Modal
-            title="Edit Comment"
-            open={isCommentModalOpen}
-            onOk={saveComment}
-            onCancel={() => setIsCommentModalOpen(false)}
-            centered
-            okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
-          >
-            <Input.TextArea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              rows={4}
-            />
-          </Modal>
+          <div className="form-row actions">
+            <Button
+              type="primary"
+              size="small"
+              className="modal-submit-button"
+              onClick={handleAssignTask}
+              style={{ background: "#FA3356", borderColor: "#FA3356" }}
+            >
+              Save
+            </Button>
+          </div>
+        </Form>
+
+        <div
+          className="tasks-table-wrapper"
+          style={{ maxHeight: 400, overflow: "auto", position: "relative", paddingBottom: 0 }}
+        >
+          <Table<Task>
+            rowKey="id"
+            columns={columns}
+            dataSource={tasks}
+            pagination={false}
+            size="small"
+            tableLayout="fixed"
+            className="tasks-table custom-sticky-scrollbar"
+            scroll={{ x: "max-content", y: 340 }}
+            locale={{ emptyText: "No tasks yet!" }}
+            sticky={{ offsetHeader: 0, offsetScroll: 0 }}
+            style={{ fontSize: "11px" }}
+          />
         </div>
       </div>
+    </div>
+  );
+
+  const modals = (
+    <>
+      <Modal
+        title={editingTask ? "Edit Task" : "Add Task"}
+        open={isTaskModalOpen}
+        onOk={saveTask}
+        onCancel={() => setIsTaskModalOpen(false)}
+        centered
+        okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
+        forceRender
+      >
+        <Form layout="vertical" form={editForm} preserve={false}>
+          <Form.Item
+            label="Task"
+            name="name"
+            rules={[{ required: true, message: "Task name required" }]}
+          >
+            <AutoComplete
+              options={taskNameOptions}
+              listHeight={160}
+              placeholder="Enter or select task"
+              filterOption={(inputValue, option) =>
+                (option?.value as string)
+                  ?.toUpperCase()
+                  .includes(inputValue.toUpperCase())
+              }
+            />
+          </Form.Item>
+
+          <Form.Item label="Assignee" name="assignedTo">
+            <Select size="small" options={assigneeOptions} allowClear placeholder="Select user" />
+          </Form.Item>
+
+          <Form.Item label="Due Date" name="dueDate">
+            <Input type="date" />
+          </Form.Item>
+
+          <Form.Item label="Priority" name="priority">
+            <Input />
+          </Form.Item>
+
+          <Form.Item label="Budget Code" name="budgetItemId">
+            <Select
+              allowClear
+              showSearch
+              placeholder="Budget code"
+              options={budgetOptions}
+              filterOption={(input, option) =>
+                (option?.label as string).toLowerCase().includes(input.toLowerCase())
+              }
+            />
+          </Form.Item>
+
+          <Form.Item label="Event ID" name="eventId">
+            <Input />
+          </Form.Item>
+
+          <Form.Item label="Address" name="address">
+            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+              <Input
+                placeholder="Search address"
+                value={locationSearch}
+                onChange={handleLocationSearchChange}
+                autoComplete="off"
+              />
+              {locationSuggestions.length > 0 && (
+                <div
+                  className="suggestions-list"
+                  style={{
+                    maxHeight: 200,
+                    overflowY: "auto",
+                    background: "#1f1f1f",
+                    border: "1px solid #333",
+                    borderRadius: 6,
+                    width: "100%",
+                  }}
+                >
+                  {locationSuggestions.map((s, idx) => (
+                    <div
+                      key={s.place_id}
+                      onClick={() => handleLocationSuggestionSelect(s)}
+                      style={{
+                        padding: "6px 10px",
+                        cursor: "pointer",
+                        borderBottom:
+                          idx < locationSuggestions.length - 1 ? "1px solid #333" : "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#262626";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      {s.display_name}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Input
+                placeholder="{lat, lng}"
+                value={taskLocation ? `${taskLocation.lat}, ${taskLocation.lng}` : ""}
+                readOnly
+              />
+              <div style={{ height: 220, borderRadius: 8, overflow: "hidden" }}>
+                <Map
+                  location={editMapLocation}
+                  address={taskAddress || locationSearch}
+                  scrollWheelZoom={!isMobile}
+                  dragging
+                  touchZoom
+                  showUserLocation={!!userLocation}
+                  isEditable
+                  onLocationChange={handleEditMapLocationChange}
+                />
+              </div>
+              {taskAddress && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {taskAddress}
+                </Text>
+              )}
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Edit Comment"
+        open={isCommentModalOpen}
+        onOk={saveComment}
+        onCancel={() => setIsCommentModalOpen(false)}
+        centered
+        okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
+      >
+        <Input.TextArea
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          rows={4}
+        />
+      </Modal>
+    </>
+  );
+
+  const mobileCard = (
+    <Card className="mobile-tasks-card" bodyStyle={{ padding: 20 }}>
+      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+        <div>
+          <Title level={5} style={{ marginBottom: 4 }}>
+            Upcoming Tasks
+          </Title>
+          <Text type="secondary">Stay ahead with the next tasks in your project</Text>
+        </div>
+
+        {upcomingTasks.length > 0 ? (
+          <List
+            itemLayout="horizontal"
+            dataSource={upcomingTasks}
+            renderItem={(task) => (
+              <List.Item key={task.id} className="upcoming-task-item">
+                <List.Item.Meta
+                  title={<Text strong>{task.name || "Untitled Task"}</Text>}
+                  description={formatDueDate(task.dueDate)}
+                />
+                <Tag color={statusColorMap[task.status] || "default"}>
+                  {statusLabelMap[task.status] || task.status}
+                </Tag>
+              </List.Item>
+            )}
+          />
+        ) : (
+          <Empty description="No upcoming tasks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        )}
+
+        <Space size={12} wrap>
+          <Button type="primary" onClick={handleCreateTaskClick}>
+            Create Task
+          </Button>
+          <Button onClick={() => setIsDrawerOpen(true)}>View All</Button>
+        </Space>
+      </Space>
+    </Card>
+  );
+
+  return (
+    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+      {isMobile ? (
+        <>
+          {mobileCard}
+          <Drawer
+            title="Project Tasks"
+            open={isDrawerOpen}
+            onClose={() => setIsDrawerOpen(false)}
+            placement="right"
+            width="100%"
+            bodyStyle={{ padding: 0 }}
+            extra={
+              <Button type="primary" onClick={handleCreateTaskClick}>
+                Create Task
+              </Button>
+            }
+            destroyOnClose={false}
+            forceRender
+          >
+            <div style={{ padding: 20 }}>{taskManagementContent}</div>
+          </Drawer>
+        </>
+      ) : (
+        taskManagementContent
+      )}
+      {modals}
     </ConfigProvider>
   );
 };

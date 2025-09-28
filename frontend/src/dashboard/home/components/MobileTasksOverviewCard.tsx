@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { useTasksOverview } from "../hooks/useTasksOverview";
 import styles from "./MobileTasksOverviewCard.module.css";
@@ -10,6 +10,7 @@ type MobileTasksOverviewCardProps = {
 
 const MobileTasksOverviewCard: React.FC<MobileTasksOverviewCardProps> = ({ className }) => {
   const { loading, error, stats, groups } = useTasksOverview();
+  const location = useLocation();
 
   const formatStatValue = (value: number): string | number => {
     if (error) return "—";
@@ -37,7 +38,12 @@ const MobileTasksOverviewCard: React.FC<MobileTasksOverviewCardProps> = ({ class
     >
       <header className={styles.header}>
         <h3 className={styles.title}>Tasks</h3>
-        <Link to="/dashboard/tasks" className={styles.viewAllButton} aria-label="View all tasks">
+        <Link
+          to="/dashboard/tasks"
+          className={styles.viewAllButton}
+          aria-label="View all tasks"
+          state={{ from: `${location.pathname}${location.search}` }}
+        >
           View all
         </Link>
       </header>

@@ -1,8 +1,65 @@
-.wrapper {
-  min-height: 100dvh;
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 24px 16px 0;
+  background: rgba(5, 6, 7, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.drawer {
+  width: min(1040px, 100%);
+  max-height: min(92dvh, 980px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 28px 28px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   background: var(--dashboard-bg, var(--bg1, #050607));
-  padding: 32px 16px 96px;
   color: var(--text-primary, #f6f7fb);
+  box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.45);
+  transform-origin: bottom center;
+  animation: tasks-drawer-slide-up 220ms ease-out;
+}
+
+.drawerHeader {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 24px 0;
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.closeButton:hover,
+.closeButton:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.28);
+  outline: none;
+}
+
+.closeButton:active {
+  transform: translateY(1px);
+}
+
+.drawerContent {
+  flex: 1;
+  overflow: auto;
+  padding: 32px 24px 96px;
 }
 
 .container {
@@ -298,8 +355,25 @@
 }
 
 @media (max-width: 720px) {
-  .wrapper {
-    padding: 24px 12px 72px;
+  .drawerOverlay {
+    padding: 16px 12px 0;
+  }
+
+  .drawer {
+    border-radius: 24px 24px 0 0;
+  }
+
+  .drawerHeader {
+    padding: 12px 16px 0;
+  }
+
+  .closeButton {
+    width: 36px;
+    height: 36px;
+  }
+
+  .drawerContent {
+    padding: 24px 16px calc(80px + env(safe-area-inset-bottom, 16px));
   }
 
   .section {
@@ -319,5 +393,17 @@
 
   .primaryAction {
     width: 100%;
+  }
+}
+
+@keyframes tasks-drawer-slide-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }

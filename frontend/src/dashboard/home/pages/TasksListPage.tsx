@@ -1,5 +1,7 @@
-import React, { useMemo } from "react";
-import { Play } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Play, ChevronDown } from "lucide-react";
+import { createPortal } from "react-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { useTasksOverview, type TasksOverviewListItem } from "../hooks/useTasksOverview";
 import { endOfWeek } from "@/dashboard/home/utils/dateUtils";
@@ -72,6 +74,61 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, emptyLabel, onStart, showCom
 };
 
 const TasksListPage: React.FC = () => {
+  const [mounted, setMounted] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = (location.state as { from?: string } | undefined) ?? undefined;
+  const returnTo = locationState?.from;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || typeof document === "undefined") return;
+    const { style } = document.body;
+    const originalOverflow = style.overflow;
+    style.overflow = "hidden";
+    return () => {
+      style.overflow = originalOverflow;
+    };
+  }, [mounted]);
+
+  const handleClose = useCallback(() => {
+    if (returnTo) {
+      navigate(returnTo, { replace: true });
+      return;
+    }
+
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/dashboard");
+    }
+  }, [navigate, returnTo]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleClose]);
+
+  const onOverlayMouseDown = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (event.target === event.currentTarget) {
+        handleClose();
+      }
+    },
+    [handleClose]
+  );
+
   const {
     loading,
     error,
@@ -136,137 +193,167 @@ const TasksListPage: React.FC = () => {
     ? `Review everything on your radar and jump straight back into ${primaryProjectName}.`
     : "Review every task across your projects and start where you left off.";
 
-  return (
-    <div className={`dashboard-wrapper ${styles.wrapper}`}>
-      <div className={styles.container}>
-        <header className={styles.header}>
-          <div className={styles.headingGroup}>
-            <h1 className={styles.title}>All tasks</h1>
-            <p className={styles.subtitle}>{introMessage}</p>
-          </div>
+  const titleId = "tasks-drawer-title";
+
+  if (!mounted || typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
+    <div className={styles.drawerOverlay} role="presentation" onMouseDown={onOverlayMouseDown}>
+      <div
+        className={styles.drawer}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className={styles.drawerHeader}>
           <button
             type="button"
-            className={styles.primaryAction}
-            onClick={handleNavigateToPrimary}
-            disabled={!canNavigateToProject}
+            className={styles.closeButton}
+            onClick={handleClose}
+            aria-label="Close tasks"
           >
-            <Play size={18} strokeWidth={2.5} />
-            Start next task
+            <ChevronDown size={20} strokeWidth={2.5} />
           </button>
-        </header>
+        </div>
 
-        <section className={styles.statsGrid} aria-label="Task summary">
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>Completed this week</span>
-            <span className={styles.statValue}>{stats.completed}</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>Due soon</span>
-            <span className={styles.statValue}>{stats.dueSoon}</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statLabel}>Overdue</span>
-            <span className={styles.statValue}>{stats.overdue}</span>
-          </div>
-        </section>
-
-        {error ? (
-          <div className={styles.emptyState}>We couldn't load tasks right now. Please try again later.</div>
-        ) : loading ? (
-          <div className={styles.emptyState}>Loading your tasks…</div>
-        ) : !hasAnyTask ? (
-          <div className={styles.emptyState}>
-            You don't have any active tasks. Add a task from a project to see it appear here.
-          </div>
-        ) : (
-          <div className={styles.sections}>
-            <section className={`${styles.section} ${styles.sectionOverdue}`} aria-labelledby="tasks-overdue-heading">
-              <span className={styles.sectionAccent} aria-hidden="true" />
-              <div className={styles.sectionTitleRow}>
-                <h2 id="tasks-overdue-heading" className={styles.sectionTitle}>
-                  Overdue
-                </h2>
-                <p className={styles.sectionCaption}>Tasks that slipped past their due date.</p>
+        <div className={styles.drawerContent}>
+          <div className={styles.container}>
+            <header className={styles.header}>
+              <div className={styles.headingGroup}>
+                <h1 id={titleId} className={styles.title}>
+                  All tasks
+                </h1>
+                <p className={styles.subtitle}>{introMessage}</p>
               </div>
-              <TaskList
-                tasks={overdueTasks}
-                emptyLabel="No overdue tasks. Nice work keeping things on track!"
-                onStart={(task) => navigateToProject(task.projectId)}
-              />
+              <button
+                type="button"
+                className={styles.primaryAction}
+                onClick={handleNavigateToPrimary}
+                disabled={!canNavigateToProject}
+              >
+                <Play size={18} strokeWidth={2.5} />
+                Start next task
+              </button>
+            </header>
+
+            <section className={styles.statsGrid} aria-label="Task summary">
+              <div className={styles.statCard}>
+                <span className={styles.statLabel}>Completed this week</span>
+                <span className={styles.statValue}>{stats.completed}</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statLabel}>Due soon</span>
+                <span className={styles.statValue}>{stats.dueSoon}</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statLabel}>Overdue</span>
+                <span className={styles.statValue}>{stats.overdue}</span>
+              </div>
             </section>
 
-            <section className={`${styles.section} ${styles.sectionDueSoon}`} aria-labelledby="tasks-due-soon-heading">
-              <span className={styles.sectionAccent} aria-hidden="true" />
-              <div className={styles.sectionTitleRow}>
-                <h2 id="tasks-due-soon-heading" className={styles.sectionTitle}>
-                  Due this week
-                </h2>
-                <p className={styles.sectionCaption}>Everything scheduled between now and the end of the week.</p>
+            {error ? (
+              <div className={styles.emptyState}>We couldn't load tasks right now. Please try again later.</div>
+            ) : loading ? (
+              <div className={styles.emptyState}>Loading your tasks…</div>
+            ) : !hasAnyTask ? (
+              <div className={styles.emptyState}>
+                You don't have any active tasks. Add a task from a project to see it appear here.
               </div>
-              {dueSoonGroups.length ? (
-                dueSoonGroups.map((group) => (
-                  <div key={group.label} className={styles.group}>
-                    <h3 className={styles.groupTitle}>{group.label}</h3>
-                    <TaskList
-                      tasks={group.tasks}
-                      emptyLabel="All set for this day."
-                      onStart={(task) => navigateToProject(task.projectId)}
-                    />
+            ) : (
+              <div className={styles.sections}>
+                <section className={`${styles.section} ${styles.sectionOverdue}`} aria-labelledby="tasks-overdue-heading">
+                  <span className={styles.sectionAccent} aria-hidden="true" />
+                  <div className={styles.sectionTitleRow}>
+                    <h2 id="tasks-overdue-heading" className={styles.sectionTitle}>
+                      Overdue
+                    </h2>
+                    <p className={styles.sectionCaption}>Tasks that slipped past their due date.</p>
                   </div>
-                ))
-              ) : (
-                <div className={styles.sectionEmpty}>No tasks due for the rest of this week.</div>
-              )}
-            </section>
+                  <TaskList
+                    tasks={overdueTasks}
+                    emptyLabel="No overdue tasks. Nice work keeping things on track!"
+                    onStart={(task) => navigateToProject(task.projectId)}
+                  />
+                </section>
 
-            <section className={`${styles.section} ${styles.sectionUpcoming}`} aria-labelledby="tasks-upcoming-heading">
-              <span className={styles.sectionAccent} aria-hidden="true" />
-              <div className={styles.sectionTitleRow}>
-                <h2 id="tasks-upcoming-heading" className={styles.sectionTitle}>
-                  Coming up
-                </h2>
-                <p className={styles.sectionCaption}>Preview what's planned beyond this week.</p>
-              </div>
-              <TaskList
-                tasks={upcomingTasks}
-                emptyLabel="No future tasks yet. When you plan ahead they'll show up here."
-                onStart={(task) => navigateToProject(task.projectId)}
-              />
-            </section>
+                <section className={`${styles.section} ${styles.sectionDueSoon}`} aria-labelledby="tasks-due-soon-heading">
+                  <span className={styles.sectionAccent} aria-hidden="true" />
+                  <div className={styles.sectionTitleRow}>
+                    <h2 id="tasks-due-soon-heading" className={styles.sectionTitle}>
+                      Due this week
+                    </h2>
+                    <p className={styles.sectionCaption}>Everything scheduled between now and the end of the week.</p>
+                  </div>
+                  {dueSoonGroups.length ? (
+                    dueSoonGroups.map((group) => (
+                      <div key={group.label} className={styles.group}>
+                        <h3 className={styles.groupTitle}>{group.label}</h3>
+                        <TaskList
+                          tasks={group.tasks}
+                          emptyLabel="All set for this day."
+                          onStart={(task) => navigateToProject(task.projectId)}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <div className={styles.sectionEmpty}>No tasks due for the rest of this week.</div>
+                  )}
+                </section>
 
-            <section className={`${styles.section} ${styles.sectionUndated}`} aria-labelledby="tasks-undated-heading">
-              <span className={styles.sectionAccent} aria-hidden="true" />
-              <div className={styles.sectionTitleRow}>
-                <h2 id="tasks-undated-heading" className={styles.sectionTitle}>
-                  No due date
-                </h2>
-                <p className={styles.sectionCaption}>Ideas or tasks to tackle when you're ready.</p>
-              </div>
-              <TaskList
-                tasks={undatedTasks}
-                emptyLabel="Nothing in your backlog without a due date."
-                onStart={(task) => navigateToProject(task.projectId)}
-              />
-            </section>
+                <section className={`${styles.section} ${styles.sectionUpcoming}`} aria-labelledby="tasks-upcoming-heading">
+                  <span className={styles.sectionAccent} aria-hidden="true" />
+                  <div className={styles.sectionTitleRow}>
+                    <h2 id="tasks-upcoming-heading" className={styles.sectionTitle}>
+                      Coming up
+                    </h2>
+                    <p className={styles.sectionCaption}>Preview what's planned beyond this week.</p>
+                  </div>
+                  <TaskList
+                    tasks={upcomingTasks}
+                    emptyLabel="No future tasks yet. When you plan ahead they'll show up here."
+                    onStart={(task) => navigateToProject(task.projectId)}
+                  />
+                </section>
 
-            <section className={`${styles.section} ${styles.sectionCompleted}`} aria-labelledby="tasks-completed-heading">
-              <span className={styles.sectionAccent} aria-hidden="true" />
-              <div className={styles.sectionTitleRow}>
-                <h2 id="tasks-completed-heading" className={styles.sectionTitle}>
-                  Completed this week
-                </h2>
-                <p className={styles.sectionCaption}>Recently wrapped up items within the current week.</p>
+                <section className={`${styles.section} ${styles.sectionUndated}`} aria-labelledby="tasks-undated-heading">
+                  <span className={styles.sectionAccent} aria-hidden="true" />
+                  <div className={styles.sectionTitleRow}>
+                    <h2 id="tasks-undated-heading" className={styles.sectionTitle}>
+                      No due date
+                    </h2>
+                    <p className={styles.sectionCaption}>Ideas or tasks to tackle when you're ready.</p>
+                  </div>
+                  <TaskList
+                    tasks={undatedTasks}
+                    emptyLabel="Nothing in your backlog without a due date."
+                    onStart={(task) => navigateToProject(task.projectId)}
+                  />
+                </section>
+
+                <section className={`${styles.section} ${styles.sectionCompleted}`} aria-labelledby="tasks-completed-heading">
+                  <span className={styles.sectionAccent} aria-hidden="true" />
+                  <div className={styles.sectionTitleRow}>
+                    <h2 id="tasks-completed-heading" className={styles.sectionTitle}>
+                      Completed this week
+                    </h2>
+                    <p className={styles.sectionCaption}>Recently wrapped up items within the current week.</p>
+                  </div>
+                  <TaskList
+                    tasks={completedThisWeek}
+                    emptyLabel="No completed tasks this week yet."
+                    showCompleted
+                  />
+                </section>
               </div>
-              <TaskList
-                tasks={completedThisWeek}
-                emptyLabel="No completed tasks this week yet."
-                showCompleted
-              />
-            </section>
+            )}
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

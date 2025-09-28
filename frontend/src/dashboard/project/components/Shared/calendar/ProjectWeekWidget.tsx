@@ -51,15 +51,24 @@ const ProjectWeekWidget: React.FC<ProjectWeekWidgetProps> = ({
     return safeParse(initialFlashDate) || safeParse(selectedKey) || new Date();
   });
 
+  const weekOfRef = useRef<Date>(weekOf);
+  useEffect(() => {
+    weekOfRef.current = weekOf;
+  }, [weekOf]);
+
   useEffect(() => {
     const parsed = safeParse(selectedKey);
     if (!parsed) return;
-    const currentKey = getDateKey(weekOf);
+    const currentKey = getDateKey(weekOfRef.current);
     const nextKey = getDateKey(parsed);
     if (currentKey !== nextKey) {
       setWeekOf(parsed);
     }
-  }, [selectedKey, weekOf]);
+    // Only re-run when selectedKey changes. The ref above provides the latest
+    // weekOf value without requiring it in the dependency list, which prevents
+    // user-driven week navigation from being immediately overridden by the
+    // selectedKey sync.
+  }, [selectedKey]);
 
   const handleWeekChange = useCallback(
     (weekStartDate: Date) => {
@@ -130,7 +139,8 @@ const ProjectWeekWidget: React.FC<ProjectWeekWidgetProps> = ({
 
       const dayEvents = eventsByDate[key] || [];
 
-      const items = dayEvents.map((event, index) => ({
+      const items: Array<{ id: string; title?: string; time?: string; color?: string; note?: string; onSelect?: () => void }> =
+        dayEvents.map((event, index) => ({
         id: event.id || `${key}-event-${index}`,
         title: event.description || "Untitled Event",
         time: formatHours(event.hours) || undefined,

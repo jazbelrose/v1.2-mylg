@@ -13,6 +13,7 @@ import type { QuickLinksRef } from "@/dashboard/project/components/Shared/QuickL
 import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
 import FileManagerComponent from "@/dashboard/project/components/FileManager/FileManager";
 import TasksComponent from "@/dashboard/project/components/Tasks/TasksComponent";
+import TasksComponentMobile from "@/dashboard/project/components/Tasks/TasksComponentMobile";
 import { BudgetProvider } from "@/dashboard/project/features/budget/context/BudgetProvider";
 import { useData } from "@/app/contexts/useData";
 import { useSocket } from "@/app/contexts/useSocket";
@@ -25,6 +26,7 @@ import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import Spinner from "@/shared/ui/Spinner";
 
 const MOBILE_LAYOUT_WIDTH = 640;
+const TASKS_MOBILE_WIDTH = 768;
 
 interface LocationState {
   flashDate?: string;
@@ -51,6 +53,10 @@ const SingleProject: React.FC = () => {
   const [isMobileBudgetLayout, setIsMobileBudgetLayout] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth <= MOBILE_LAYOUT_WIDTH;
+  });
+  const [isMobileTasksLayout, setIsMobileTasksLayout] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth <= TASKS_MOBILE_WIDTH;
   });
 
   const projectNameFromPath = useMemo(() => {
@@ -134,7 +140,9 @@ const SingleProject: React.FC = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handleResize = () => {
-      setIsMobileBudgetLayout(window.innerWidth <= MOBILE_LAYOUT_WIDTH);
+      const width = window.innerWidth;
+      setIsMobileBudgetLayout(width <= MOBILE_LAYOUT_WIDTH);
+      setIsMobileTasksLayout(width <= TASKS_MOBILE_WIDTH);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -400,11 +408,19 @@ const SingleProject: React.FC = () => {
             />
           </div>
           <div className="tasks-wrapper">
-            <TasksComponent
-              projectId={resolvedActiveProject.projectId}
-              userId={userId}
-              team={resolvedActiveProject.team}
-            />
+            {isMobileTasksLayout ? (
+              <TasksComponentMobile
+                projectId={resolvedActiveProject.projectId}
+                projectName={resolvedActiveProject.title}
+                projectColor={resolvedActiveProject.color as string | undefined}
+              />
+            ) : (
+              <TasksComponent
+                projectId={resolvedActiveProject.projectId}
+                userId={userId}
+                team={resolvedActiveProject.team}
+              />
+            )}
           </div>
         </div>
       </div>

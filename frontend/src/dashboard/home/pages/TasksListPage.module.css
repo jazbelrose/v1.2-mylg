@@ -37,23 +37,32 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.08);
-  color: inherit;
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #f6f7fb);
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.closeButton svg {
+  width: 24px;
+  height: 24px;
 }
 
 .closeButton:hover,
 .closeButton:focus-visible {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
   outline: none;
 }
 
+.closeButton:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+}
+
 .closeButton:active {
-  transform: translateY(1px);
+  transform: translateY(0);
 }
 
 .drawerContent {
@@ -356,7 +365,7 @@
 
 @media (max-width: 720px) {
   .drawerOverlay {
-    padding: 16px 12px 0;
+    padding: 0;
   }
 
   .drawer {
@@ -364,12 +373,17 @@
   }
 
   .drawerHeader {
-    padding: 12px 16px 0;
+    padding: env(safe-area-inset-top, 0px) 8px 0;
   }
 
   .closeButton {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .closeButton svg {
+    width: 22px;
+    height: 22px;
   }
 
   .drawerContent {

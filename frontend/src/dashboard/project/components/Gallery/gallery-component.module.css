@@ -168,38 +168,71 @@
 
 @media (max-width: 768px) {
   .galleryTrigger {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 12px;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: clamp(12px, 3vw, 16px);
+    gap: 10px;
   }
 
-  .titleColumn,
-  .thumbsColumn {
-    flex: 0 0 auto;
-    width: 100%;
-    padding-right: 0;
-    padding-left: 0;
+  .titleColumn {
+    flex: 1 1 54%;
+    padding-right: 8px;
   }
 
   .thumbsColumn {
-    justify-content: flex-start;
-    align-items: stretch;
+    flex: 0 1 46%;
+    padding-left: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    min-height: auto;
   }
 
   .carouselSection {
-    align-items: flex-start;
+    align-items: center;
+    gap: 8px;
   }
 
   .thumbnailCarousel {
-    justify-content: flex-start;
-  }
-
-  .viewAllButton {
-    align-self: flex-start;
+    justify-content: flex-end;
+    gap: 8px;
   }
 
   .thumbnailTile {
-    flex: 0 0 clamp(88px, 32vw, 120px);
+    flex: 0 0 clamp(72px, 28vw, 110px);
+    border-radius: 12px;
+  }
+
+  .galleryHelperText {
+    margin-top: 4px;
+    font-size: 0.76rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 540px) {
+  .galleryTrigger {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .titleColumn {
+    flex: 1 1 58%;
+  }
+
+  .thumbsColumn {
+    flex: 0 1 42%;
+  }
+
+  .thumbnailCarousel {
+    gap: 6px;
+  }
+
+  .thumbnailTile {
+    flex: 0 0 clamp(68px, 34vw, 96px);
   }
 }
 

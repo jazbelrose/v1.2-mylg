@@ -189,7 +189,7 @@
 
 .budget-chart {
   width: 100%;
-  max-width: 240px;
+  max-width: 280px;
   aspect-ratio: 1 / 1;
   position: relative;
   margin-inline: auto;
@@ -262,20 +262,20 @@
 
   .budget-chart {
     margin-inline: auto;
-    max-width: 200px;
+    max-width: 240px;
   }
 }
 
 @container budget-card (max-width: 760px) {
   .budget-chart {
-    max-width: 160px;
+    max-width: 200px;
   }
 }
 
 @media (max-height: 750px) {
   .budget-chart {
-    width: 160px;
-    height: 160px;
+    width: 180px;
+    height: 180px;
   }
   .budget-legend {
     min-width: 100px;
@@ -374,8 +374,8 @@
     white-space: pre-wrap;
   }
   .budget-chart {
-    width: 140px;
-    height: 140px;
+    width: 160px;
+    height: 160px;
   }
   .budget-legend {
     gap: 4px;
@@ -392,8 +392,8 @@
     max-height: 140px !important;
   }
   .budget-chart {
-    width: 120px !important;
-    height: 120px !important;
+    width: 140px !important;
+    height: 140px !important;
   }
 }
 
@@ -412,8 +412,8 @@
     margin-top: 1px;
   }
   .budget-chart {
-    width: 110px !important;
-    height: 110px !important;
+    width: 130px !important;
+    height: 130px !important;
   }
   .budget-overview-header {
     gap: 4px;

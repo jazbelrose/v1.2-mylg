@@ -3,13 +3,13 @@
 .dashboard-item {
   
   padding: 32px;
-  border-radius: 20px;
+  border-radius: 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-    background: var(--bg2, #111213);
+  background: var(--bg2, #111213);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 48px rgba(0, 0, 0, 0.45);
-  border-radius: 32px 32px 32px 32px;
+ 
   border: 2px solid rgba(255, 255, 255, 0.10);
 }
 
@@ -292,7 +292,16 @@
 }
 
 /* Mobile adjustments for dashboard cards */
+@media (max-width: 768px) {
+  .dashboard-item {
+    border-radius: 16px !important;
+  }
+}
+
 @media (max-width: var(--breakpoint-sm)) {
+  .dashboard-item {
+    border-radius: 16px !important;
+  }
   .dashboard-item.budget {
     padding: 12px;
     flex-direction: column;
@@ -360,7 +369,7 @@
   .dashboard-item.finish-line span {
     font-size: 20px;
   }
-  .dashboard-item.dashboard-item.finish-line span:last-child {
+  .dashboard-item.finish-line span:last-child {
     font-size: 20px;
   }
   .dashboard-item.notes {

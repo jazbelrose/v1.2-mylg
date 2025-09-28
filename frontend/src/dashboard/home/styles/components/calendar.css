@@ -69,6 +69,13 @@
 }
 
 /* Mobile stacked layout height optimization */
+@media (max-width: 768px) {
+  .budget-calendar-layout .budget-column,
+  .budget-calendar-layout .calendar-column {
+    gap: 6px;
+  }
+}
+
 @media (max-width: 640px) {
   .budget-calendar-layout--stacked .budget-column .budget-overview-card {
     max-height: 160px;

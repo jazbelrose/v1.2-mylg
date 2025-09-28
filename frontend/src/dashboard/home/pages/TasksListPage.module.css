@@ -5,7 +5,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 24px 16px 0;
+  padding: 12px 16px 0;
   background: rgba(5, 6, 7, 0.72);
   backdrop-filter: blur(6px);
 }
@@ -283,6 +283,75 @@
 .textarea {
   min-height: 96px;
   resize: vertical;
+}
+
+.locationFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.locationInputRow {
+  position: relative;
+}
+
+.locationSuggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 19, 22, 0.95);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.locationSuggestions li:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.locationSuggestionButton {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #f6f7fb);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.locationSuggestionButton:hover,
+.locationSuggestionButton:focus-visible {
+  background: rgba(250, 51, 86, 0.18);
+  outline: none;
+}
+
+.locationSuggestionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.locationMap {
+  width: 100%;
+  height: 180px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(13, 14, 17, 0.85);
+}
+
+.locationSummary {
+  margin: 0;
+  color: var(--text-secondary, rgba(246, 247, 251, 0.68));
+  font-size: 0.9rem;
 }
 
 .fieldOptional {

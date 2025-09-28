@@ -9,7 +9,8 @@ import {
   type TasksOverviewProjectOption,
 } from "../hooks/useTasksOverview";
 import { endOfWeek } from "@/dashboard/home/utils/dateUtils";
-import { createTask } from "@/shared/utils/api";
+import Map from "@/shared/ui/Map";
+import { apiFetch, createTask, NOMINATIM_SEARCH_URL } from "@/shared/utils/api";
 import styles from "./TasksListPage.module.css";
 
 const dayLabelFormatter = new Intl.DateTimeFormat(undefined, {
@@ -44,6 +45,17 @@ type QuickTaskModalProps = {
   onCreated: () => void;
 };
 
+type LatLng = { lat: number; lng: number };
+
+type NominatimSuggestion = {
+  place_id: number | string;
+  display_name: string;
+  lat: string;
+  lon: string;
+};
+
+const DEFAULT_MAP_LOCATION: LatLng = { lat: 37.773972, lng: -122.431297 };
+
 const QuickCreateTaskModal: React.FC<QuickTaskModalProps> = ({
   open,
   onClose,
@@ -54,6 +66,11 @@ const QuickCreateTaskModal: React.FC<QuickTaskModalProps> = ({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [locationSuggestions, setLocationSuggestions] = useState<NominatimSuggestion[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<LatLng | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState("");
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -64,6 +81,10 @@ const QuickCreateTaskModal: React.FC<QuickTaskModalProps> = ({
       setTitle("");
       setDescription("");
       setDueDate("");
+      setLocationSearch("");
+      setLocationSuggestions([]);
+      setSelectedLocation(null);
+      setSelectedAddress("");
       setSubmitting(false);
       setErrorMessage(null);
       setSuccessMessage(null);
@@ -98,11 +119,113 @@ const QuickCreateTaskModal: React.FC<QuickTaskModalProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, onClose, submitting]);
 
+  useEffect(() => {
+    if (!open) return;
+    if (typeof window === "undefined" || !navigator.geolocation) return;
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (cancelled) return;
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => {
+        if (cancelled) return;
+        setUserLocation(null);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  const hasProjects = projects.length > 0;
+
+  const sortByProximity = useCallback(
+    (suggestions: NominatimSuggestion[]) => {
+      if (!userLocation) return suggestions;
+      return [...suggestions].sort((a, b) => {
+        const distA = Math.hypot(
+          userLocation.lat - parseFloat(a.lat),
+          userLocation.lng - parseFloat(a.lon)
+        );
+        const distB = Math.hypot(
+          userLocation.lat - parseFloat(b.lat),
+          userLocation.lng - parseFloat(b.lon)
+        );
+        return distA - distB;
+      });
+    },
+    [userLocation]
+  );
+
+  const fetchLocationSuggestions = useCallback(
+    async (query: string) => {
+      const trimmed = query.trim();
+      if (trimmed.length < 3) {
+        setLocationSuggestions([]);
+        return;
+      }
+
+      const url = `${NOMINATIM_SEARCH_URL}${encodeURIComponent(trimmed)}&addressdetails=1&limit=5`;
+
+      try {
+        const results = await apiFetch<NominatimSuggestion[]>(url);
+        if (!Array.isArray(results)) {
+          setLocationSuggestions([]);
+          return;
+        }
+        setLocationSuggestions(sortByProximity(results));
+      } catch (error) {
+        console.error("Failed to fetch location suggestions", error);
+        setLocationSuggestions([]);
+      }
+    },
+    [sortByProximity]
+  );
+
+  const handleLocationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setLocationSearch(value);
+    if (!value.trim()) {
+      setLocationSuggestions([]);
+      setSelectedLocation(null);
+      setSelectedAddress("");
+      return;
+    }
+    if (selectedAddress && value !== selectedAddress) {
+      setSelectedAddress("");
+      setSelectedLocation(null);
+    }
+    void fetchLocationSuggestions(value);
+  };
+
+  const handleSuggestionSelect = (suggestion: NominatimSuggestion) => {
+    const lat = parseFloat(suggestion.lat);
+    const lng = parseFloat(suggestion.lon);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) {
+      return;
+    }
+    setSelectedLocation({ lat, lng });
+    setSelectedAddress(suggestion.display_name);
+    setLocationSearch(suggestion.display_name);
+    setLocationSuggestions([]);
+  };
+
+  const mapLocation = selectedLocation ?? userLocation ?? DEFAULT_MAP_LOCATION;
+
+  const locationPayload = selectedLocation
+    ? {
+        lat: selectedLocation.lat.toString(),
+        lng: selectedLocation.lng.toString(),
+      }
+    : undefined;
+
   if (!open || typeof document === "undefined") {
     return null;
   }
-
-  const hasProjects = projects.length > 0;
 
   const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget && !submitting) {
@@ -141,11 +264,17 @@ const QuickCreateTaskModal: React.FC<QuickTaskModalProps> = ({
         description: description.trim() || undefined,
         dueDate: dueDateIso,
         status: "todo",
+        location: locationPayload,
+        address: selectedAddress.trim() || undefined,
       });
       setSuccessMessage("Task created. You'll see it in your lists shortly.");
       setTitle("");
       setDescription("");
       setDueDate("");
+      setLocationSearch("");
+      setLocationSuggestions([]);
+      setSelectedLocation(null);
+      setSelectedAddress("");
       onCreated();
     } catch (error) {
       console.error("Failed to create task", error);
@@ -209,6 +338,52 @@ const QuickCreateTaskModal: React.FC<QuickTaskModalProps> = ({
               onChange={(event) => setDueDate(event.target.value)}
               disabled={submitting}
             />
+          </label>
+          <label className={styles.fieldLabel}>
+            Location <span className={styles.fieldOptional}>(optional)</span>
+            <div className={styles.locationFieldGroup}>
+              <div className={styles.locationInputRow}>
+                <input
+                  type="text"
+                  className={styles.textInput}
+                  value={locationSearch}
+                  onChange={handleLocationChange}
+                  placeholder="Search for a location"
+                  disabled={submitting}
+                  autoComplete="off"
+                />
+                {locationSuggestions.length ? (
+                  <ul className={styles.locationSuggestions} role="listbox">
+                    {locationSuggestions.map((suggestion) => (
+                      <li key={suggestion.place_id}>
+                        <button
+                          type="button"
+                          className={styles.locationSuggestionButton}
+                          onClick={() => handleSuggestionSelect(suggestion)}
+                          disabled={submitting}
+                        >
+                          {suggestion.display_name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+              <div className={styles.locationMap}>
+                <Map
+                  key={`${mapLocation.lat}-${mapLocation.lng}`}
+                  location={mapLocation}
+                  address={selectedAddress || locationSearch || "Search for a location"}
+                  scrollWheelZoom={false}
+                  dragging={false}
+                  touchZoom={false}
+                  showUserLocation={false}
+                />
+              </div>
+              {selectedAddress ? (
+                <p className={styles.locationSummary}>{selectedAddress}</p>
+              ) : null}
+            </div>
           </label>
           <label className={styles.fieldLabel}>
             Notes <span className={styles.fieldOptional}>(optional)</span>

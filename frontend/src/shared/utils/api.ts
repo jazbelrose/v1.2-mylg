@@ -73,6 +73,12 @@ export interface Task extends JsonRecord {
   status?: 'todo' | 'in_progress' | 'done';
   assigneeId?: string;
   dueDate?: string; // ISO
+  location?: {
+    lat?: string | number;
+    lng?: string | number;
+    [key: string]: unknown;
+  };
+  address?: string;
 }
 
 export interface TimelineEvent extends JsonRecord {

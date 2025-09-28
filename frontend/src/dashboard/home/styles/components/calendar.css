@@ -77,7 +77,7 @@
 
 @media (max-width: 480px) {
   .budget-calendar-layout--stacked .budget-column .budget-overview-card {
-    max-height: 120px;
+    max-height: 140px;
   }
 }
 

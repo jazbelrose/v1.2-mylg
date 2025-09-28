@@ -401,8 +401,8 @@
 @media (max-width: 480px) {
   .dashboard-item.budget {
     min-height: 90px;
-    max-height: 120px;
-    padding: 8px;
+    max-height: 140px;
+    padding: 12px;
     gap: 8px;
   }
   .budget-overview-summary {

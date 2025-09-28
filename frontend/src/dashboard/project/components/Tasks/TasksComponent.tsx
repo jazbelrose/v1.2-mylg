@@ -1,22 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Table,
-  Select,
-  Button,
-  Dropdown,
-  Modal,
-  Form,
-  Input,
-  Tooltip,
-  DatePicker,
   AutoComplete,
+  Button,
+  Card,
   ConfigProvider,
-  theme,
+  DatePicker,
+  Drawer,
+  Dropdown,
+  Form,
+  Grid,
+  Input,
+  List,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Tooltip,
+  Typography,
   message,
+  theme,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type { MenuProps } from "antd";
 import type { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -35,11 +42,9 @@ import {
   fetchUserProfilesBatch,
 } from "@/shared/utils/api";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
+import LeafletMap from "@/shared/ui/Map";
 import "./task-table.css";
 
-/* =========================
-   Types
-   ========================= */
 type Status = "todo" | "in_progress" | "done";
 
 interface TeamMember {
@@ -65,25 +70,28 @@ interface ApiTask {
   description?: string;
   comments?: string;
   budgetItemId?: string | null;
-  status?: 'todo' | 'in_progress' | 'done';
+  status?: "todo" | "in_progress" | "done";
   assigneeId?: string;
   assignedTo?: string;
   dueDate?: string;
+  location?: TaskLocation | null;
+  address?: string;
 }
 
 interface Task {
-  id: string; // table row key
+  id: string;
   taskId?: string;
   projectId: string;
   name: string;
   assigneeId?: string;
+  assignedTo?: string;
   dueDate?: string;
   priority?: string;
   budgetItemId?: string;
   eventId?: string;
   description?: string;
   status: Status;
-  location?: TaskLocation;
+  location?: TaskLocation | null;
   address?: string;
 }
 
@@ -100,23 +108,20 @@ interface TasksComponentProps {
   team?: TeamMember[];
 }
 
-/* =========================
-   Constants
-   ========================= */
 const statusOptions = [
   { value: "todo", label: "To Do" },
   { value: "in_progress", label: "In Progress" },
   { value: "done", label: "Done" },
 ];
 
-/* =========================
-   Component
-   ========================= */
+const DEFAULT_LOCATION = { lat: 40.7128, lng: -74.006 };
+
 const TasksComponent: React.FC<TasksComponentProps> = ({
   projectId = "",
   team = [],
 }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
@@ -124,23 +129,32 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   const [commentTask, setCommentTask] = useState<Task | null>(null);
   const [commentText, setCommentText] = useState("");
 
-  const [assignForm] = Form.useForm();
-  const [assignLocationSearch, setAssignLocationSearch] = useState("");
-  const [assignLocationSuggestions, setAssignLocationSuggestions] = useState<
+  const [editForm] = Form.useForm();
+  const [locationSearch, setLocationSearch] = useState("");
+  const [locationSuggestions, setLocationSuggestions] = useState<
     NominatimSuggestion[]
   >([]);
-  const [assignTaskLocation, setAssignTaskLocation] = useState<TaskLocation>({
+  const [taskLocation, setTaskLocation] = useState<TaskLocation>({
     lat: "",
     lng: "",
   });
-  const [assignTaskAddress, setAssignTaskAddress] = useState("");
+  const [taskAddress, setTaskAddress] = useState("");
+
+  const [mapSearch, setMapSearch] = useState("");
+  const [mapSuggestions, setMapSuggestions] = useState<NominatimSuggestion[]>(
+    []
+  );
+  const [drawerMapAddress, setDrawerMapAddress] = useState("");
+  const [drawerMapLocation, setDrawerMapLocation] = useState(DEFAULT_LOCATION);
 
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
 
-  // Get user's current location
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -154,7 +168,12 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     }
   }, []);
 
-  // Sort suggestions by proximity to userLocation if available
+  useEffect(() => {
+    if (userLocation) {
+      setDrawerMapLocation(userLocation);
+    }
+  }, [userLocation]);
+
   const sortByProximity = (
     suggestions: NominatimSuggestion[],
     userLoc: { lat: number; lng: number } | null
@@ -173,71 +192,53 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     });
   };
 
-  const fetchAssignLocationSuggestions = async (query: string) => {
+  const requestLocationSuggestions = async (query: string) => {
     if (!query || query.length < 3) {
-      setAssignLocationSuggestions([]);
-      return;
+      return [];
     }
     try {
       const url = `${NOMINATIM_SEARCH_URL}${encodeURIComponent(
         query
       )}&addressdetails=1&limit=5`;
       const response = await apiFetch(url);
-      let results: NominatimSuggestion[] = response as NominatimSuggestion[];
-      results = sortByProximity(results, userLocation);
-      setAssignLocationSuggestions(results);
+      return (response as NominatimSuggestion[]) || [];
     } catch {
-      setAssignLocationSuggestions([]);
+      return [];
     }
   };
 
-  const handleAssignLocationSearchChange = (
+  const handleMapSearchChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setAssignLocationSearch(e.target.value);
-    fetchAssignLocationSuggestions(e.target.value);
+    const value = e.target.value;
+    setMapSearch(value);
+    if (!value || value.length < 3) {
+      setMapSuggestions([]);
+      return;
+    }
+    const results = await requestLocationSuggestions(value);
+    setMapSuggestions(sortByProximity(results, userLocation));
   };
 
-  const handleAssignLocationSuggestionSelect = (s: NominatimSuggestion) => {
+  const handleMapSuggestionSelect = (s: NominatimSuggestion) => {
     const loc = { lat: parseFloat(s.lat), lng: parseFloat(s.lon) };
-    setAssignTaskLocation(loc);
-    setAssignTaskAddress(s.display_name);
-    setAssignLocationSearch(s.display_name);
-    setAssignLocationSuggestions([]);
-    assignForm.setFieldsValue({ location: loc, address: s.display_name });
+    setDrawerMapLocation(loc);
+    setDrawerMapAddress(s.display_name);
+    setMapSearch(s.display_name);
+    setMapSuggestions([]);
   };
 
-  const [editForm] = Form.useForm();
-  const [locationSearch, setLocationSearch] = useState("");
-  const [locationSuggestions, setLocationSuggestions] = useState<
-    NominatimSuggestion[]
-  >([]);
-  const [taskLocation, setTaskLocation] = useState<TaskLocation>({
-    lat: "",
-    lng: "",
-  });
-  const [taskAddress, setTaskAddress] = useState("");
-
-  const fetchLocationSuggestions = async (query: string) => {
-    if (!query || query.length < 3) {
+  const handleLocationSearchChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setLocationSearch(value);
+    if (!value || value.length < 3) {
       setLocationSuggestions([]);
       return;
     }
-    try {
-      const url = `${NOMINATIM_SEARCH_URL}${encodeURIComponent(
-        query
-      )}&addressdetails=1&limit=5`;
-      const response = await apiFetch(url);
-      const results: NominatimSuggestion[] = response as NominatimSuggestion[];
-      setLocationSuggestions(results);
-    } catch {
-      setLocationSuggestions([]);
-    }
-  };
-
-  const handleLocationSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocationSearch(e.target.value);
-    fetchLocationSuggestions(e.target.value);
+    const results = await requestLocationSuggestions(value);
+    setLocationSuggestions(results);
   };
 
   const handleLocationSuggestionSelect = (s: NominatimSuggestion) => {
@@ -246,13 +247,12 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     setTaskAddress(s.display_name);
     setLocationSearch(s.display_name);
     setLocationSuggestions([]);
-    editForm.setFieldsValue({ location: loc, address: s.display_name });
+    editForm.setFieldsValue({ address: s.display_name });
   };
 
   const { budgetItems } = useBudget();
   const [teamProfiles, setTeamProfiles] = useState<TeamMember[]>([]);
 
-  // Fetch user profiles for team userIds
   useEffect(() => {
     const fetchProfiles = async () => {
       if (Array.isArray(team) && team.length > 0) {
@@ -266,17 +266,16 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     fetchProfiles();
   }, [team]);
 
-  // Load tasks
   useEffect(() => {
     const loadTasks = async () => {
       try {
         const data = await fetchTasks(projectId);
         const mapped: Task[] = (data || []).map((t: ApiTask) => ({
           ...t,
-          id: t.taskId || t.id,
+          id: t.taskId || t.id || uuidv4(),
           projectId: t.projectId,
           name: (t.title || t.name || "").toUpperCase(),
-          status: t.status || "todo",
+          status: (t.status as Status) || "todo",
           assigneeId: t.assigneeId || t.assignedTo,
           description: t.description || t.comments,
         }));
@@ -286,10 +285,11 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
         setTasks([]);
       }
     };
-    loadTasks();
+    if (projectId) {
+      loadTasks();
+    }
   }, [projectId]);
 
-  // Helpers
   const getDisplayName = (m: Partial<TeamMember> = {}) => {
     const first = m.firstName || "";
     const last = m.lastName || "";
@@ -322,7 +322,6 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     return { label: labelBase, value: labelBase, elementId: (it.elementId as string) || "" };
   });
 
-  // Deduplicate by value (task name)
   const uniqueTaskNameOptions = Array.from(
     taskNameOptions.reduce<Map<string, (typeof taskNameOptions)[number]>>(
       (map, opt) => {
@@ -333,51 +332,23 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     ).values()
   );
 
-  // Actions
-  const handleAssignTask = async () => {
-    try {
-      const values = await assignForm.validateFields();
-      const id = uuidv4();
-      const normalizedName = (values.name || "").toUpperCase();
-      const due: Dayjs | string | undefined = values.dueDate;
-
-      const payload = {
-        projectId,
-        taskId: id,
-        assigneeId: values.assignedTo || "",
-        budgetItemId: values.budgetCode || "",
-        description: "",
-        dueDate:
-          due && typeof due !== "string"
-            ? due.format("YYYY-MM-DD")
-            : (due as string) || "",
-        title: normalizedName,
-        priority: values.priority || "",
-        status: "todo" as Status,
-        location: values.location || assignTaskLocation,
-        address: values.address || assignTaskAddress,
-      };
-
-      const saved = await createTask(payload);
-      const mapped: Task = {
-        ...saved,
-        id: saved.taskId || id,
-        projectId: saved.projectId,
-        name: saved.title || '',
-        status: saved.status || "todo",
-      };
-      setTasks((prev) => [...prev, mapped]);
-
-      assignForm.resetFields();
-      setAssignTaskLocation({ lat: "", lng: "" });
-      setAssignTaskAddress("");
-      setAssignLocationSearch("");
-      setAssignLocationSuggestions([]);
-    } catch (err) {
-      console.error("Failed to assign task", err);
-      message.error("Failed to assign task");
-    }
+  const toNumericLocation = (loc?: TaskLocation | null) => {
+    if (!loc) return null;
+    const lat = typeof loc.lat === "string" ? parseFloat(loc.lat) : loc.lat;
+    const lng = typeof loc.lng === "string" ? parseFloat(loc.lng) : loc.lng;
+    if (typeof lat !== "number" || Number.isNaN(lat)) return null;
+    if (typeof lng !== "number" || Number.isNaN(lng)) return null;
+    return { lat, lng };
   };
+
+  const upcomingTasks = useMemo(() => {
+    if (!tasks.length) return [];
+    const withDue = tasks
+      .filter((t) => t.dueDate)
+      .sort((a, b) => dayjs(a.dueDate).diff(dayjs(b.dueDate)));
+    const withoutDue = tasks.filter((t) => !t.dueDate);
+    return [...withDue, ...withoutDue].slice(0, 3);
+  }, [tasks]);
 
   const openTaskModal = (task?: Task) => {
     const t = task || null;
@@ -392,14 +363,29 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
         priority: "",
         budgetItemId: "",
         eventId: "",
-        location: { lat: "", lng: "" },
         address: "",
       }
     );
 
-    setTaskLocation(t?.location || { lat: "", lng: "" });
+    const numericLoc = toNumericLocation(t?.location);
+    setTaskLocation(
+      numericLoc || {
+        lat: "",
+        lng: "",
+      }
+    );
     setTaskAddress(t?.address || "");
     setLocationSearch(t?.address || "");
+    setLocationSuggestions([]);
+  };
+
+  const closeTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setEditingTask(null);
+    editForm.resetFields();
+    setTaskLocation({ lat: "", lng: "" });
+    setTaskAddress("");
+    setLocationSearch("");
     setLocationSuggestions([]);
   };
 
@@ -409,6 +395,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       const id = editingTask?.taskId || editingTask?.id || uuidv4();
       const normalizedName = (values.name || "").toUpperCase();
       const due: Dayjs | string | undefined = values.dueDate;
+      const numericLocation = toNumericLocation(taskLocation);
 
       const payload = {
         projectId,
@@ -423,33 +410,27 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
         title: normalizedName,
         priority: values.priority || editingTask?.priority || "",
         status: (editingTask?.status || "todo") as Status,
-        location: values.location || taskLocation,
-        address: values.address || taskAddress,
+        location: numericLocation || editingTask?.location || null,
+        address: taskAddress || locationSearch || editingTask?.address || "",
       };
 
       const saved = editingTask ? await updateTask(payload) : await createTask(payload);
-      const mapped: Task = { 
-        ...saved, 
-        id: saved.taskId || id, 
+      const mapped: Task = {
+        ...saved,
+        id: saved.taskId || id,
         projectId: saved.projectId,
-        name: saved.title || '',
+        name: saved.title || "",
         status: saved.status || "todo",
       };
 
       setTasks((prev) => {
         const exists = prev.find((t) => t.id === mapped.id);
         return exists
-          ? prev.map((t) => (t.id === mapped.id ? mapped : t))
+          ? prev.map((t) => (t.id === mapped.id ? { ...t, ...mapped } : t))
           : [...prev, mapped];
       });
 
-      setIsTaskModalOpen(false);
-      setEditingTask(null);
-      editForm.resetFields();
-      setTaskLocation({ lat: "", lng: "" });
-      setTaskAddress("");
-      setLocationSearch("");
-      setLocationSuggestions([]);
+      closeTaskModal();
     } catch (err) {
       console.error("Failed to save task", err);
       message.error("Failed to save task");
@@ -499,7 +480,28 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       }
     };
 
-  /* Columns */
+  const focusTaskOnMap = (task?: Task) => {
+    const numeric = toNumericLocation(task?.location);
+    if (numeric) {
+      setDrawerMapLocation(numeric);
+      setDrawerMapAddress(task?.address || task?.name || "");
+    }
+  };
+
+  const resolvedDrawerMapAddress = drawerMapAddress || "Search for a location";
+  const resolvedModalLocation = useMemo(() => {
+    const numeric = toNumericLocation(taskLocation);
+    if (numeric) return numeric;
+    if (editingTask) {
+      const fromTask = toNumericLocation(editingTask.location);
+      if (fromTask) return fromTask;
+    }
+    if (userLocation) return userLocation;
+    return DEFAULT_LOCATION;
+  }, [taskLocation, editingTask, userLocation]);
+
+  const resolvedModalAddress = taskAddress || locationSearch || editingTask?.address || "";
+
   const columns: ColumnsType<Task> = [
     {
       title: "Task",
@@ -529,6 +531,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       key: "dueDate",
       width: 110,
       ellipsis: true,
+      render: (value?: string) => (value ? dayjs(value).format("MMM D, YYYY") : ""),
     },
     {
       title: "Priority",
@@ -601,333 +604,252 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     },
   ];
 
-  /* Render */
   return (
     <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
       <div className="tasks-component">
-        <div className="tasks-card">
-          <Form form={assignForm} layout="vertical" className="assign-task-form">
-            <h3>Assign Task</h3>
+        <Card
+          className="tasks-component__card"
+          size="small"
+          title={<Typography.Title level={5}>Upcoming Tasks</Typography.Title>}
+          extra={
+            <Space size={8}>
+              <Button type="primary" size="small" onClick={() => openTaskModal()}>
+                Create
+              </Button>
+              <Button size="small" onClick={() => setIsDrawerOpen(true)}>
+                View All
+              </Button>
+            </Space>
+          }
+          bodyStyle={{ padding: "12px 16px" }}
+        >
+          <List
+            dataSource={upcomingTasks}
+            locale={{
+              emptyText: (
+                <Typography.Text type="secondary">No upcoming tasks</Typography.Text>
+              ),
+            }}
+            renderItem={(item) => {
+              const statusLabel =
+                statusOptions.find((opt) => opt.value === item.status)?.label || "To Do";
+              return (
+                <List.Item
+                  className="tasks-component__list-item"
+                  onClick={() => {
+                    focusTaskOnMap(item);
+                    setIsDrawerOpen(true);
+                  }}
+                >
+                  <div className="tasks-component__list-item-content">
+                    <div className="tasks-component__list-item-title">{item.name}</div>
+                    <div className="tasks-component__list-item-meta">
+                      <Typography.Text type="secondary">
+                        {item.dueDate ? dayjs(item.dueDate).format("MMM D") : "No due date"}
+                      </Typography.Text>
+                      <span className={`tasks-component__status tasks-component__status--${item.status}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                  </div>
+                </List.Item>
+              );
+            }}
+          />
+        </Card>
 
-            <div className="form-row">
-              <Form.Item
-                label="Task Name"
-                name="name"
-                rules={[{ required: true, message: "Task name required" }]}
-              >
-                <AutoComplete
-                  size="small"
-                  options={uniqueTaskNameOptions}
-                  listHeight={160}
-                  placeholder="Enter or select task"
-                  filterOption={(inputValue, option) =>
-                    (option?.value as string)
-                      ?.toUpperCase()
-                      .includes(inputValue.toUpperCase())
-                  }
-                />
-              </Form.Item>
-
-              <Form.Item label="Assigned To" name="assignedTo">
-                <Select size="small" options={assigneeOptions} />
-              </Form.Item>
-
-              <Form.Item label="Due Date" name="dueDate">
-                <DatePicker size="small" format="YYYY-MM-DD" />
-              </Form.Item>
-            </div>
-
-            <div className="form-row">
-              <Form.Item label="Priority" name="priority">
-                <Select size="small" options={["Low", "Medium", "High"].map((p) => ({ value: p, label: p }))} />
-              </Form.Item>
-
-              <Form.Item label="Budget Element Id" name="budgetCode">
-                <Select
-                  size="small"
-                  options={budgetOptions}
-                  showSearch
-                  filterOption={(input, option) =>
-                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                  }
-                  optionLabelProp="elementId"
-                  getPopupContainer={(trigger) => trigger.parentNode as HTMLElement}
-                  value={assignForm.getFieldValue("budgetCode")}
-                  onChange={(value) => assignForm.setFieldsValue({ budgetCode: value })}
-                  popupRender={(menu) => menu}
-                />
-              </Form.Item>
-
-              <Form.Item label="Address" name="address">
-                <div>
-                  <Input
-                    placeholder="Search address"
-                    value={assignLocationSearch}
-                    onChange={handleAssignLocationSearchChange}
-                    autoComplete="off"
+        <Drawer
+          title="Tasks"
+          open={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          placement={isMobile ? "bottom" : "right"}
+          height={isMobile ? "100dvh" : undefined}
+          width={isMobile ? "100%" : 880}
+          destroyOnClose
+          maskClosable
+          bodyStyle={{ padding: 0, height: "100%" }}
+        >
+          <div className="tasks-component__drawer-body">
+            <div className="tasks-component__drawer-main">
+              <div className="tasks-component__drawer-table">
+                <div className="tasks-component__drawer-header">
+                  <Typography.Title level={5}>All Tasks</Typography.Title>
+                  <Button type="primary" size="small" onClick={() => openTaskModal()}>
+                    Create Task
+                  </Button>
+                </div>
+                <div className="tasks-component__drawer-table-scroll">
+                  <Table<Task>
+                    rowKey="id"
+                    columns={columns}
+                    dataSource={tasks}
+                    pagination={false}
+                    size="small"
+                    tableLayout="fixed"
+                    className="tasks-table custom-sticky-scrollbar"
+                    scroll={{ x: "max-content", y: isMobile ? 240 : 360 }}
+                    locale={{ emptyText: "No tasks yet!" }}
+                    sticky={{ offsetHeader: 0, offsetScroll: 0 }}
+                    style={{ fontSize: "11px" }}
+                    onRow={(record) => ({
+                      onClick: () => focusTaskOnMap(record),
+                    })}
                   />
-                  {assignLocationSuggestions.length > 0 && (
-                    <div
-                      className="suggestions-list"
-                      style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        background: "#222",
-                        border: "1px solid #444",
-                        borderRadius: 4,
-                        width: "100%",
-                      }}
-                    >
-                      {assignLocationSuggestions.map((s, idx) => (
-                        <div
-                          key={s.place_id}
-                          onClick={() => handleAssignLocationSuggestionSelect(s)}
-                          style={{
-                            padding: "6px 10px",
-                            cursor: "pointer",
-                            borderBottom:
-                              idx < assignLocationSuggestions.length - 1
-                                ? "1px solid #333"
-                                : "none",
-                            background: "inherit",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#eee";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#222";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "inherit";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#fff";
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontWeight: idx === 0 ? "bold" : "normal",
-                              color: "#fff",
-                            }}
+                </div>
+              </div>
+
+              {isDrawerOpen && (
+                <div className="tasks-component__drawer-map">
+                  <Typography.Title level={5}>Task Locations</Typography.Title>
+                  <div className="tasks-component__map-search">
+                    <Input
+                      placeholder="Search for a location"
+                      value={mapSearch}
+                      onChange={handleMapSearchChange}
+                      allowClear
+                    />
+                    {mapSuggestions.length > 0 && (
+                      <div className="tasks-component__suggestions" role="list">
+                        {mapSuggestions.map((s) => (
+                          <button
+                            key={s.place_id}
+                            type="button"
+                            className="tasks-component__suggestion-item"
+                            onClick={() => handleMapSuggestionSelect(s)}
                           >
                             {s.display_name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {assignTaskAddress && (
-                    <div style={{ marginTop: 4, fontSize: 12, color: "#888" }}>
-                      {assignTaskAddress}
-                    </div>
-                  )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="tasks-component__drawer-map-view">
+                  <LeafletMap
+                    location={drawerMapLocation}
+                    address={resolvedDrawerMapAddress}
+                    scrollWheelZoom={!isMobile}
+                    dragging
+                    touchZoom
+                    showUserLocation={Boolean(userLocation)}
+                  />
+                  </div>
+                  <Typography.Text type="secondary" className="tasks-component__map-address">
+                    {resolvedDrawerMapAddress}
+                  </Typography.Text>
                 </div>
-              </Form.Item>
+              )}
             </div>
+          </div>
+        </Drawer>
 
-            <div className="form-row actions">
-              <Button
-                type="primary"
-                size="small"
-                className="modal-submit-button"
-                onClick={handleAssignTask}
-                style={{ background: "#FA3356", borderColor: "#FA3356" }}
-              >
-                Save
-              </Button>
+        <Modal
+          title={editingTask ? "Edit Task" : "Create Task"}
+          open={isTaskModalOpen}
+          onOk={saveTask}
+          onCancel={closeTaskModal}
+          centered
+          okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
+          forceRender
+          width={isMobile ? "100%" : 600}
+          styles={{ body: { maxHeight: "70vh", overflowY: "auto" } }}
+        >
+          <Form layout="vertical" form={editForm} preserve={false}>
+            <Form.Item
+              label="Task"
+              name="name"
+              rules={[{ required: true, message: "Task name required" }]}
+            >
+              <AutoComplete
+                options={uniqueTaskNameOptions}
+                listHeight={160}
+                placeholder="Enter or select task"
+                filterOption={(inputValue, option) =>
+                  (option?.value as string)
+                    ?.toUpperCase()
+                    .includes(inputValue.toUpperCase())
+                }
+              />
+            </Form.Item>
+
+            <Form.Item label="Assignee" name="assignedTo">
+              <Select size="small" options={assigneeOptions} allowClear />
+            </Form.Item>
+
+            <Form.Item label="Due Date" name="dueDate">
+              <DatePicker format="YYYY-MM-DD" style={{ width: "100%" }} />
+            </Form.Item>
+
+            <Form.Item label="Priority" name="priority">
+              <Input placeholder="Priority" />
+            </Form.Item>
+
+            <Form.Item label="Budget Code" name="budgetItemId">
+              <Select options={budgetOptions} showSearch allowClear />
+            </Form.Item>
+
+            <Form.Item label="Event ID" name="eventId">
+              <Input placeholder="Event ID" />
+            </Form.Item>
+
+            <div className="tasks-component__modal-location">
+              <Typography.Title level={5}>Location</Typography.Title>
+              <Input
+                placeholder="Search address"
+                value={locationSearch}
+                onChange={handleLocationSearchChange}
+                autoComplete="off"
+              />
+              {locationSuggestions.length > 0 && (
+                <div className="tasks-component__suggestions" role="list">
+                  {locationSuggestions.map((s) => (
+                    <button
+                      key={s.place_id}
+                      type="button"
+                      className="tasks-component__suggestion-item"
+                      onClick={() => handleLocationSuggestionSelect(s)}
+                    >
+                      {s.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {resolvedModalAddress && (
+                <Typography.Text type="secondary" className="tasks-component__map-address">
+                  {resolvedModalAddress}
+                </Typography.Text>
+              )}
+              <div className="tasks-component__modal-map">
+                <LeafletMap
+                  location={resolvedModalLocation}
+                  address={resolvedModalAddress || "Select a location"}
+                  scrollWheelZoom={!isMobile}
+                  dragging
+                  touchZoom
+                  showUserLocation={Boolean(userLocation)}
+                  isEditable={false}
+                />
+              </div>
             </div>
           </Form>
+        </Modal>
 
-          <div
-            className="tasks-table-wrapper"
-            style={{ maxHeight: 400, overflow: "auto", position: "relative", paddingBottom: 0 }}
-          >
-            <Table<Task>
-              rowKey="id"
-              columns={columns}
-              dataSource={tasks}
-              pagination={false}
-              size="small"
-              tableLayout="fixed"
-              className="tasks-table custom-sticky-scrollbar"
-              scroll={{ x: "max-content", y: 340 }}
-              locale={{ emptyText: "No tasks yet!" }}
-              sticky={{ offsetHeader: 0, offsetScroll: 0 }}
-              style={{ fontSize: "11px" }}
-            />
-          </div>
-
-          <Modal
-            title={editingTask ? "Edit Task" : "Add Task"}
-            open={isTaskModalOpen}
-            onOk={saveTask}
-            onCancel={() => setIsTaskModalOpen(false)}
-            centered
-            okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
-            forceRender
-          >
-            <Form layout="vertical" form={editForm} preserve={false}>
-              <Form.Item
-                label="Task"
-                name="name"
-                rules={[{ required: true, message: "Task name required" }]}
-              >
-                <AutoComplete
-                  options={taskNameOptions}
-                  listHeight={160}
-                  placeholder="Enter or select task"
-                  filterOption={(inputValue, option) =>
-                    (option?.value as string)
-                      ?.toUpperCase()
-                      .includes(inputValue.toUpperCase())
-                  }
-                />
-              </Form.Item>
-
-              <Form.Item label="Assignee" name="assignedTo">
-                <Select size="small" options={assigneeOptions} />
-              </Form.Item>
-
-              <Form.Item label="Due Date" name="dueDate">
-                <Input type="date" />
-              </Form.Item>
-
-              <Form.Item label="Priority" name="priority">
-                <Input />
-              </Form.Item>
-
-              <Form.Item label="Budget Code" name="budgetItemId">
-                <div>
-                  <Select options={budgetOptions} />
-                  <Input />
-                </div>
-              </Form.Item>
-
-              <Form.Item label="Event ID" name="eventId">
-                <Input />
-              </Form.Item>
-
-              <Form.Item label="Location" name="location">
-                <div>
-                  <Input
-                    placeholder="{lat, lng}"
-                    value={
-                      taskLocation.lat && taskLocation.lng
-                        ? `${taskLocation.lat}, ${taskLocation.lng}`
-                        : ""
-                    }
-                    readOnly
-                  />
-                  <Input
-                    placeholder="Search address"
-                    value={locationSearch}
-                    onChange={handleLocationSearchChange}
-                  />
-                  {locationSuggestions.length > 0 && (
-                    <div className="suggestions-list">
-                      {locationSuggestions.map((s) => (
-                        <div
-                          key={s.place_id}
-                          onClick={() => handleLocationSuggestionSelect(s)}
-                        >
-                          {s.display_name}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </Form.Item>
-
-              <Form.Item label="Address" name="address">
-                <div>
-                  <Input
-                    placeholder="Search address"
-                    value={locationSearch}
-                    onChange={handleLocationSearchChange}
-                    autoComplete="off"
-                  />
-                  {locationSuggestions.length > 0 && (
-                    <div
-                      className="suggestions-list"
-                      style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        background: "#222",
-                        border: "1px solid #444",
-                        borderRadius: 4,
-                        width: "100%",
-                      }}
-                    >
-                      {locationSuggestions.map((s, idx) => (
-                        <div
-                          key={s.place_id}
-                          onClick={() => handleLocationSuggestionSelect(s)}
-                          style={{
-                            padding: "6px 10px",
-                            cursor: "pointer",
-                            borderBottom:
-                              idx < locationSuggestions.length - 1
-                                ? "1px solid #333"
-                                : "none",
-                            background: "inherit",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#eee";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#222";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "inherit";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#fff";
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontWeight: idx === 0 ? "bold" : "normal",
-                              color: "#fff",
-                            }}
-                          >
-                            {s.display_name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {taskAddress && (
-                    <div style={{ marginTop: 4, fontSize: 12, color: "#888" }}>
-                      {taskAddress}
-                    </div>
-                  )}
-                </div>
-              </Form.Item>
-            </Form>
-          </Modal>
-
-          <Modal
-            title="Edit Comment"
-            open={isCommentModalOpen}
-            onOk={saveComment}
-            onCancel={() => setIsCommentModalOpen(false)}
-            centered
-            okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
-          >
-            <Input.TextArea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              rows={4}
-            />
-          </Modal>
-        </div>
+        <Modal
+          title="Edit Comment"
+          open={isCommentModalOpen}
+          onOk={saveComment}
+          onCancel={() => setIsCommentModalOpen(false)}
+          centered
+          okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
+        >
+          <Input.TextArea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            rows={4}
+          />
+        </Modal>
       </div>
     </ConfigProvider>
   );
 };
 
 export default TasksComponent;
-
-
-
-
-
-
-
-
-
-
-

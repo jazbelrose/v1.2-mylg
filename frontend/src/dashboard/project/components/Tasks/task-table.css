@@ -5,6 +5,241 @@
   font-size: 11px !important;
 }
 
+.tasks-component {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  padding-top: 12px;
+  position: relative;
+}
+
+.tasks-component__card {
+  flex: 0 0 auto;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.tasks-component__card .ant-card-head {
+  border-bottom: none;
+}
+
+.tasks-component__card .ant-card-body {
+  max-height: 100%;
+  padding-bottom: 0 !important;
+}
+
+.tasks-component__list-item {
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+  padding: 12px 8px !important;
+}
+
+.tasks-component__list-item:hover {
+  background: rgba(250, 51, 86, 0.08);
+}
+
+.tasks-component__list-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tasks-component__list-item-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+}
+
+.tasks-component__list-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.tasks-component__status {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tasks-component__status--todo {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.tasks-component__status--in_progress {
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+}
+
+.tasks-component__status--done {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.tasks-component__drawer-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #121212;
+}
+
+.tasks-component__drawer-main {
+  display: flex;
+  gap: 16px;
+  flex: 1 1 auto;
+  padding: 16px;
+  min-height: 0;
+}
+
+.tasks-component__drawer-table {
+  flex: 1 1 60%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tasks-component__drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tasks-component__drawer-table-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.tasks-component__drawer-map {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 16px;
+  max-height: 100%;
+}
+
+.tasks-component__map-search {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tasks-component__suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 5;
+}
+
+.tasks-component__suggestion-item {
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.tasks-component__suggestion-item:hover,
+.tasks-component__suggestion-item:focus {
+  background: rgba(250, 51, 86, 0.2);
+  outline: none;
+}
+
+.tasks-component__drawer-map-view {
+  flex: 1 1 auto;
+  min-height: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tasks-component__map-address {
+  font-size: 12px;
+  display: block;
+}
+
+.tasks-component__modal-location {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tasks-component__modal-location .tasks-component__suggestions {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+}
+
+.tasks-component__modal-map {
+  height: 240px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .tasks-component__drawer-main {
+    flex-direction: column;
+  }
+
+  .tasks-component__drawer-map {
+    flex: none;
+    max-height: none;
+  }
+
+  .tasks-component__drawer-table {
+    flex: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .tasks-component {
+    padding-top: 8px;
+  }
+
+  .tasks-component__card {
+    border-radius: 12px;
+    box-shadow: none;
+  }
+
+  .tasks-component__drawer-main {
+    padding: 12px;
+  }
+
+  .tasks-component__drawer-map {
+    padding: 12px;
+  }
+
+  .tasks-component__drawer-map-view {
+    min-height: 200px;
+  }
+}
+
 
 
 

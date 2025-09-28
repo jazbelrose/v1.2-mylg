@@ -67,6 +67,12 @@
   flex: 2 1 0;
 }
 
+.budget-calendar-layout--stacked .budget-column > *,
+.budget-calendar-layout--stacked .budget-column .budget-overview-card,
+.budget-calendar-layout--stacked .budget-column .view-gallery {
+  flex: none;
+}
+
 @media (max-width: 1024px) {
   .budget-calendar-layout {
     grid-template-columns: minmax(0, 1fr);

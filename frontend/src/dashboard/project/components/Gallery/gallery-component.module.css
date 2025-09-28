@@ -9,6 +9,9 @@
   flex: 0 1 auto;
   transition: transform 0.2s ease;
   flex-wrap: nowrap;
+  gap: 12px;
+  padding: clamp(16px, 4vw, 24px);
+  box-sizing: border-box;
 }
 
 /* Two columns inside the trigger */
@@ -17,7 +20,6 @@
   width: auto;
   max-width: 100%;
   box-sizing: border-box;
-  flex: 1 1 0%;
 }
 
 .titleColumn {
@@ -25,7 +27,7 @@
   flex-direction: column;
   justify-content: flex-start; /* align title to top */
   padding-right: 12px;
-  flex-basis: clamp(220px, 38%, 320px);
+  flex: 0 0 clamp(220px, 38%, 320px);
 }
 
 .thumbsColumn {
@@ -34,6 +36,7 @@
   justify-content: flex-end; /* thumbnails aligned to the right area */
   padding-left: 12px;
   min-height: 56px;
+  flex: 1 1 62%;
 }
 
 
@@ -172,13 +175,15 @@
 
   .titleColumn,
   .thumbsColumn {
-    flex-basis: 100%;
+    flex: 0 0 auto;
+    width: 100%;
     padding-right: 0;
     padding-left: 0;
   }
 
   .thumbsColumn {
     justify-content: flex-start;
+    align-items: stretch;
   }
 
   .carouselSection {
@@ -191,6 +196,10 @@
 
   .viewAllButton {
     align-self: flex-start;
+  }
+
+  .thumbnailTile {
+    flex: 0 0 clamp(88px, 32vw, 120px);
   }
 }
 

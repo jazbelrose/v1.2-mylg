@@ -59,11 +59,15 @@ const makeEventId = (ts = Date.now()) => `E#${String(ts).padStart(13, "0")}#${uu
 
 function buildUpdate(obj) {
   const Names = {}, Values = {}, sets = [];
+  let i = 0;
   for (const [k, v] of Object.entries(obj)) {
     if (v === undefined) continue;
-    Names["#" + k] = k;
-    Values[":" + k] = v;
-    sets.push(`#${k} = :${k}`);
+    const nameToken = `#f${i}`;
+    const valueToken = `:v${i}`;
+    Names[nameToken] = k;
+    Values[valueToken] = v;
+    sets.push(`${nameToken} = ${valueToken}`);
+    i++;
   }
   if (!sets.length) return null;
   return {

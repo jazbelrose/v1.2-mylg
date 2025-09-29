@@ -50,6 +50,37 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
 
   const projectOptions = useMemo(() => projects ?? [], [projects]);
 
+  const sortSuggestionsByProximity = useCallback(
+    (suggestions: NominatimSuggestion[], origin: Coordinates | null) => {
+      if (!origin) return suggestions;
+      return [...suggestions].sort((a, b) => {
+        const distanceA = Math.hypot(origin.lat - parseFloat(a.lat), origin.lng - parseFloat(a.lon));
+        const distanceB = Math.hypot(origin.lat - parseFloat(b.lat), origin.lng - parseFloat(b.lon));
+        return distanceA - distanceB;
+      });
+    },
+    []
+  );
+
+  const fetchAddressSuggestions = useCallback(
+    async (query: string) => {
+      if (!query || query.length < 3) {
+        setAddressSuggestions([]);
+        return;
+      }
+
+      try {
+        const url = `${NOMINATIM_SEARCH_URL}${encodeURIComponent(query)}&addressdetails=1&limit=5`;
+        const results = await apiFetch<NominatimSuggestion[]>(url);
+        setAddressSuggestions(sortSuggestionsByProximity(results ?? [], userLocation));
+      } catch (error) {
+        console.error("Failed to fetch address suggestions", error);
+        setAddressSuggestions([]);
+      }
+    },
+    [sortSuggestionsByProximity, userLocation]
+  );
+
   const resetForm = useCallback(() => {
     setProjectId("");
     setTitle("");
@@ -101,12 +132,6 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, onClose, submitting]);
 
-  if (!open || typeof document === "undefined") {
-    return null;
-  }
-
-  const hasProjects = projectOptions.length > 0;
-
   useEffect(() => {
     if (!open) return;
 
@@ -134,41 +159,16 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     };
   }, [open]);
 
-  const sortSuggestionsByProximity = useCallback(
-    (suggestions: NominatimSuggestion[], origin: Coordinates | null) => {
-      if (!origin) return suggestions;
-      return [...suggestions].sort((a, b) => {
-        const distanceA = Math.hypot(origin.lat - parseFloat(a.lat), origin.lng - parseFloat(a.lon));
-        const distanceB = Math.hypot(origin.lat - parseFloat(b.lat), origin.lng - parseFloat(b.lon));
-        return distanceA - distanceB;
-      });
-    },
-    []
-  );
-
   useEffect(() => {
     if (!userLocation) return;
     setAddressSuggestions((prev) => sortSuggestionsByProximity(prev, userLocation));
   }, [sortSuggestionsByProximity, userLocation]);
 
-  const fetchAddressSuggestions = useCallback(
-    async (query: string) => {
-      if (!query || query.length < 3) {
-        setAddressSuggestions([]);
-        return;
-      }
+  if (!open || typeof document === "undefined") {
+    return null;
+  }
 
-      try {
-        const url = `${NOMINATIM_SEARCH_URL}${encodeURIComponent(query)}&addressdetails=1&limit=5`;
-        const results = await apiFetch<NominatimSuggestion[]>(url);
-        setAddressSuggestions(sortSuggestionsByProximity(results ?? [], userLocation));
-      } catch (error) {
-        console.error("Failed to fetch address suggestions", error);
-        setAddressSuggestions([]);
-      }
-    },
-    [sortSuggestionsByProximity, userLocation]
-  );
+  const hasProjects = projectOptions.length > 0;
 
   const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget && !submitting) {

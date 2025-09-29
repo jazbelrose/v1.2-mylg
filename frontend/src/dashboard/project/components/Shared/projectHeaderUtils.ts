@@ -135,7 +135,11 @@ export function useRangeLabels(project: Project) {
   }, [startDate, endDate, totalHours]);
 
   const mobileRangeLabel = useMemo(() => {
-    return rangeLabel;
+    if (!rangeLabel.includes("⏱")) {
+      return rangeLabel;
+    }
+
+    return rangeLabel.replace("  ⏱ ", " • ");
   }, [rangeLabel]);
 
   return { rangeLabel, mobileRangeLabel, totalHours };

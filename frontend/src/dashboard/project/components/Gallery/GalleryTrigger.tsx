@@ -53,7 +53,7 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
 }) => {
   const isCompact = useCompactGalleryLayout();
   const hasGalleries = galleries.length > 0;
-  const maxVisibleThumbs = isCompact ? 2 : 3;
+  const maxVisibleThumbs = isCompact ? 6 : 3;
   const visibleCount = Math.min(maxVisibleThumbs, galleries.length);
   const visibleGalleries = galleries.slice(0, visibleCount);
   const hiddenCount = galleries.length - visibleCount;
@@ -89,26 +89,55 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
       <div className={styles.thumbsColumn}>
         {hasGalleries ? (
           <div className={styles.carouselSection}>
-            <div className={styles.thumbnailCarousel} aria-label="Gallery previews">
+            <div
+              className={styles.thumbnailCarousel}
+              aria-label="Gallery preview thumbnails"
+            >
               {visibleGalleries.map((galleryItem, idx) => {
                 const previewUrl = getPreviewUrl(galleryItem);
+                const galleryName = galleryItem.name?.trim() || `Gallery ${idx + 1}`;
+
                 return (
-                  <div className={styles.thumbnailTile} key={galleryItem.slug || idx}>
+                  <button
+                    key={galleryItem.slug || idx}
+                    type="button"
+                    className={styles.thumbnailButton}
+                    aria-label={`Open ${galleryName}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onOpenModal();
+                    }}
+                  >
                     {previewUrl ? (
-                      <img src={getFileUrl(previewUrl)} alt={galleryItem.name || "Gallery preview"} />
+                      <img
+                        src={getFileUrl(previewUrl)}
+                        alt={galleryName}
+                        loading="lazy"
+                      />
                     ) : (
-                      <div className={styles.thumbnailPlaceholder}>
-                        <GalleryVerticalEnd size={28} />
-                      </div>
+                      <span className={styles.thumbnailPlaceholder}>
+                        <GalleryVerticalEnd size={24} aria-hidden="true" />
+                      </span>
                     )}
-                  </div>
+                  </button>
                 );
               })}
               {hiddenCount > 0 && (
-                <div className={`${styles.thumbnailTile} ${styles.moreTile}`}>+{hiddenCount}</div>
+                <button
+                  type="button"
+                  className={`${styles.thumbnailButton} ${styles.moreTile}`}
+                  aria-label={`View ${hiddenCount} more galleries`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onOpenModal();
+                  }}
+                >
+                  +{hiddenCount}
+                </button>
               )}
             </div>
-            {/* Entire container navigates to the galleries list; individual button removed */}
+            <span className={`${styles.carouselEdge} ${styles.carouselEdgeLeft}`} aria-hidden="true" />
+            <span className={`${styles.carouselEdge} ${styles.carouselEdgeRight}`} aria-hidden="true" />
           </div>
         ) : (
           <div className={styles.emptyState}>No galleries yet</div>

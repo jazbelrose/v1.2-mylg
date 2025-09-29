@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus, MapPin, Calendar, ChevronDown } from "lucide-react";
+import { motion, useDragControls, useMotionValue, animate, type PanInfo } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
@@ -183,11 +184,21 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-function buildMarkerThumbnail(color?: string) {
+function buildMarkerThumbnail(
+  color?: string,
+  options: { active?: boolean } = {},
+): { url: string; size: number } | undefined {
   if (!color) return undefined;
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="4"/></svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  const size = options.active ? 40 : 32;
+  const radius = size / 2 - (options.active ? 6 : 4);
+  const highlightRing = options.active
+    ? `<circle cx="${size / 2}" cy="${size / 2}" r="${radius + 4}" fill="rgba(255,255,255,0.16)" />`
+    : "";
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">${highlightRing}<circle cx="${size / 2}" cy="${size / 2}" r="${radius}" fill="${color}" stroke="white" stroke-width="${options.active ? 6 : 4}"/></svg>`;
+  return { url: `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`, size };
 }
+
+const SNAP_POINTS = [0.2, 0.5, 1] as const;
 
 const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   projectId = "",
@@ -198,12 +209,45 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isSheetVisible, setSheetVisible] = useState(false);
+  const [sheetSnapIndex, setSheetSnapIndex] = useState<0 | 1 | 2>(1);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [viewportHeight, setViewportHeight] = useState(() =>
+    typeof window === "undefined" ? 0 : window.innerHeight,
+  );
+  const sheetY = useMotionValue(viewportHeight || 0);
+  const dragControls = useDragControls();
+  const taskRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const closingRef = useRef(false);
+
+  const computeSnapOffset = useCallback(
+    (index: 0 | 1 | 2) => {
+      if (!viewportHeight) return 0;
+      const fraction = SNAP_POINTS[index];
+      return Math.max(viewportHeight * (1 - fraction), 0);
+    },
+    [viewportHeight],
+  );
+
+  const animateToSnap = useCallback(
+    (index: 0 | 1 | 2) => {
+      if (!viewportHeight) return;
+      const target = computeSnapOffset(index);
+      void animate(sheetY, target, {
+        type: "spring",
+        stiffness: 280,
+        damping: 32,
+        mass: 0.9,
+      });
+    },
+    [computeSnapOffset, sheetY, viewportHeight],
+  );
 
   const refreshTasks = useCallback(async () => {
     if (!projectId) {
@@ -233,16 +277,62 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   }, [refreshTasks]);
 
   useEffect(() => {
-    if (!drawerOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setDrawerOpen(false);
-      }
-    };
+    if (!isSheetVisible) {
+      sheetY.set(viewportHeight || 0);
+    }
+  }, [isSheetVisible, sheetY, viewportHeight]);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [drawerOpen]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !isSheetVisible) return;
+    const update = () => setViewportHeight(window.innerHeight);
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+    };
+  }, [isSheetVisible]);
+
+  useEffect(() => {
+    if (!isSheetVisible || typeof document === "undefined") return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isSheetVisible]);
+
+  useEffect(() => {
+    if (!isSheetVisible || !drawerOpen || !viewportHeight) return;
+    closingRef.current = false;
+    sheetY.set(viewportHeight + 80);
+  }, [drawerOpen, isSheetVisible, sheetY, viewportHeight]);
+
+  useEffect(() => {
+    if (!isSheetVisible || closingRef.current || !viewportHeight) return;
+    animateToSnap(sheetSnapIndex);
+  }, [animateToSnap, isSheetVisible, sheetSnapIndex, viewportHeight]);
+
+  useEffect(() => {
+    if (!selectedTaskId || !isSheetVisible) return;
+    const target = taskRefs.current[selectedTaskId];
+    if (target) {
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }, [isSheetVisible, selectedTaskId]);
+
+  useEffect(() => {
+    const ids = new Set(tasks.map((task) => task.id));
+    Object.keys(taskRefs.current).forEach((key) => {
+      if (!ids.has(key)) {
+        delete taskRefs.current[key];
+      }
+    });
+    if (selectedTaskId && !ids.has(selectedTaskId)) {
+      setSelectedTaskId(null);
+    }
+  }, [selectedTaskId, tasks]);
 
   const stats = useMemo(() => computeStats(tasks), [tasks]);
 
@@ -268,18 +358,27 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     [tasks],
   );
 
-  const mapLocation = mapTasks[0]?.location ?? DEFAULT_LOCATION;
-  const mapAddress = mapTasks[0]?.address ?? projectName ?? "Project";
+  const focusedTask = useMemo(
+    () => mapTasks.find((task) => task.id === selectedTaskId) ?? mapTasks[0] ?? null,
+    [mapTasks, selectedTaskId],
+  );
+
+  const mapLocation = focusedTask?.location ?? DEFAULT_LOCATION;
+  const mapAddress = focusedTask?.address ?? projectName ?? "Project";
 
   const mapMarkers = useMemo(
     () =>
-      mapTasks.map((task) => ({
-        id: task.id,
-        lat: task.location!.lat,
-        lng: task.location!.lng,
-        thumbnail: buildMarkerThumbnail(projectColor),
-      })),
-    [mapTasks, projectColor],
+      mapTasks.map((task) => {
+        const markerVisual = buildMarkerThumbnail(projectColor, { active: task.id === selectedTaskId });
+        return {
+          id: task.id,
+          lat: task.location!.lat,
+          lng: task.location!.lng,
+          thumbnail: markerVisual?.url,
+          size: markerVisual?.size,
+        };
+      }),
+    [mapTasks, projectColor, selectedTaskId],
   );
 
   const statusMessage = useMemo(() => {
@@ -305,22 +404,101 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     return `${sameDayCount} ${noun} due ${dueFormatter.format(nextDue.dueDate)}.`;
   }, [error, loading, tasks]);
 
-  const handleOpenDrawer = () => {
+  const handleOpenDrawer = useCallback(() => {
+    setSheetSnapIndex(1);
+    setSheetVisible(true);
     setDrawerOpen(true);
     setFormError(null);
     setSuccessMessage(null);
-  };
+  }, []);
 
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
+  const handleCloseDrawer = useCallback(() => {
     setFormError(null);
-  };
+    setSuccessMessage(null);
+    setSelectedTaskId(null);
+
+    if (!isSheetVisible || closingRef.current) {
+      setDrawerOpen(false);
+      setSheetVisible(false);
+      return;
+    }
+
+    setDrawerOpen(false);
+    closingRef.current = true;
+
+    if (!viewportHeight) {
+      closingRef.current = false;
+      setSheetVisible(false);
+      sheetY.set(0);
+      return;
+    }
+
+    const animation = animate(sheetY, viewportHeight + 80, {
+      duration: 0.25,
+      ease: [0.22, 0.61, 0.36, 1],
+    });
+
+    animation.then(
+      () => {
+        closingRef.current = false;
+        setSheetVisible(false);
+        sheetY.set(viewportHeight);
+      },
+      () => {
+        closingRef.current = false;
+        setSheetVisible(false);
+        sheetY.set(viewportHeight);
+      },
+    );
+  }, [isSheetVisible, sheetY, viewportHeight]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleCloseDrawer();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawerOpen, handleCloseDrawer]);
+
+  const handleMarkerSelect = useCallback(
+    (taskId: string) => {
+      if (closingRef.current) return;
+      setSelectedTaskId(taskId);
+      setFormError(null);
+      setSuccessMessage(null);
+
+      if (!isSheetVisible) {
+        setSheetSnapIndex(2);
+        setSheetVisible(true);
+        setDrawerOpen(true);
+        return;
+      }
+
+      if (sheetSnapIndex !== 2) {
+        setSheetSnapIndex(2);
+      } else {
+        animateToSnap(2);
+      }
+    },
+    [animateToSnap, isSheetVisible, sheetSnapIndex],
+  );
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setDueDate("");
   };
+
+  const handleTaskSelect = useCallback((taskId: string) => {
+    setSelectedTaskId(taskId);
+    setFormError(null);
+    setSuccessMessage(null);
+  }, []);
 
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -365,92 +543,168 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   };
 
   const renderDrawer = () => {
-    if (!drawerOpen || typeof document === "undefined") {
+    if (!isSheetVisible || typeof document === "undefined") {
       return null;
     }
 
-    const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-      if (event.target === event.currentTarget) {
+    const startDrag = (event: React.PointerEvent<HTMLElement>) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      event.preventDefault();
+      dragControls.start(event);
+    };
+
+    const handleSheetDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, __: PanInfo) => {
+      if (closingRef.current) return;
+      const currentOffset = sheetY.get();
+      const collapsedOffset = computeSnapOffset(0);
+      const hideThreshold = Math.max(viewportHeight * 0.2, 120);
+
+      if (currentOffset > collapsedOffset + hideThreshold) {
         handleCloseDrawer();
+        return;
+      }
+
+      const nearest = SNAP_POINTS.reduce<{ index: 0 | 1 | 2; distance: number }>(
+        (acc, _, index) => {
+          const idx = index as 0 | 1 | 2;
+          const target = computeSnapOffset(idx);
+          const distance = Math.abs(currentOffset - target);
+          if (distance < acc.distance) {
+            return { index: idx, distance };
+          }
+          return acc;
+        },
+        { index: sheetSnapIndex, distance: Number.POSITIVE_INFINITY },
+      );
+
+      if (nearest.index !== sheetSnapIndex) {
+        setSheetSnapIndex(nearest.index);
+      } else {
+        animateToSnap(nearest.index);
       }
     };
 
+    const mapStatus = error
+      ? { message: error, variant: "error" as const }
+      : loading
+        ? { message: "Loading tasks…", variant: "muted" as const }
+        : mapMarkers.length
+          ? null
+          : { message: "Add locations to your tasks to see them appear on the map.", variant: "muted" as const };
+
     return createPortal(
-      <div className={styles.drawerOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
-        <div className={styles.drawer} role="dialog" aria-modal="true" aria-label="Project tasks quick view" onMouseDown={(event) => event.stopPropagation()}>
-          <div className={styles.drawerHeader}>
-            <div className={styles.drawerTitleGroup}>
-              <span className={styles.drawerTitle}>Project tasks</span>
-              <span className={styles.drawerSubtitle}>
-                {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
+      <div className={styles.sheetOverlay} role="dialog" aria-modal="true" aria-label="Project tasks map view">
+        <div className={styles.mapCanvas}>
+          <Map
+            location={mapLocation}
+            address={mapAddress}
+            scrollWheelZoom={false}
+            dragging={true}
+            touchZoom={true}
+            showUserLocation={false}
+            otherUsers={mapMarkers}
+            onOtherMarkerClick={handleMarkerSelect}
+          />
+          {mapStatus ? (
+            <div
+              className={`${styles.mapMessage} ${
+                mapStatus.variant === "error" ? styles.mapMessageError : styles.mapMessageMuted
+              }`}
+            >
+              {mapStatus.message}
+            </div>
+          ) : null}
+        </div>
+
+        <motion.div
+          className={styles.sheet}
+          drag="y"
+          dragControls={dragControls}
+          dragListener={false}
+          dragMomentum={false}
+          dragElastic={{ top: 0.08, bottom: 0.35 }}
+          dragConstraints={{ top: 0, bottom: Math.max(viewportHeight + 80, 160) }}
+          onDragEnd={handleSheetDragEnd}
+          style={{ y: sheetY }}
+        >
+          <div className={styles.sheetHandle} onPointerDown={startDrag} role="presentation" />
+          <div
+            className={styles.sheetHeader}
+            onPointerDown={(event) => {
+              const target = event.target as HTMLElement;
+              if (target.closest("button")) return;
+              startDrag(event);
+            }}
+          >
+            <div className={styles.sheetTitleGroup}>
+              <span className={styles.sheetTitle}>Project tasks</span>
+              <span className={styles.sheetSubtitle}>
+                {focusedTask
+                  ? `${focusedTask.title}${focusedTask.address ? ` • ${focusedTask.address}` : ""}`
+                  : projectName
+                    ? `Everything happening in ${projectName}`
+                    : "Keep work on track"}
               </span>
             </div>
-            <button type="button" className={styles.closeButton} onClick={handleCloseDrawer} aria-label="Close tasks drawer">
+            <button type="button" className={styles.closeButton} onClick={handleCloseDrawer} aria-label="Close tasks view">
               <ChevronDown size={20} strokeWidth={2.5} />
             </button>
           </div>
 
-          <div className={styles.drawerContent}>
-            <section className={styles.drawerSection} aria-label="Task map">
-              <h3 className={styles.sectionHeading}>Task map</h3>
-              {error ? (
-                <div className={styles.mapEmpty}>{error}</div>
-              ) : loading ? (
-                <div className={styles.mapEmpty}>Loading tasks…</div>
-              ) : mapTasks.length ? (
-                <div className={styles.mapContainer}>
-                  <Map
-                    location={mapLocation}
-                    address={mapAddress}
-                    scrollWheelZoom={false}
-                    dragging={true}
-                    touchZoom={true}
-                    showUserLocation={false}
-                    otherUsers={mapMarkers}
-                  />
-                </div>
-              ) : (
-                <div className={styles.mapEmpty}>
-                  Add locations to your tasks to see them appear on the map.
-                </div>
-              )}
-            </section>
-
-            <section className={styles.drawerSection} aria-label="All project tasks">
-              <h3 className={styles.sectionHeading}>Task list</h3>
+          <div className={styles.sheetScrollArea}>
+            <section className={styles.sheetSection} aria-label="All project tasks">
+              <div className={styles.sectionHeadingRow}>
+                <h3 className={styles.sectionHeading}>Task list</h3>
+                <span className={styles.sectionHint}>{statusMessage}</span>
+              </div>
               {error ? (
                 <div className={styles.error}>{error}</div>
               ) : loading ? (
                 <div className={styles.loading}>Loading tasks…</div>
               ) : drawerTasks.length ? (
                 <ul className={styles.drawerTaskList}>
-                  {drawerTasks.map((task) => (
-                    <li key={task.id} className={styles.drawerTaskItem}>
-                      <div className={styles.drawerTaskTop}>
-                        <span className={styles.drawerTaskTitle}>{task.title}</span>
-                        <span className={styles.statusBadge}>
-                          {task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}
-                        </span>
-                      </div>
-                      <div className={styles.drawerTaskMeta}>
-                        <span className={styles.metaLine}>
-                          <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
-                        </span>
-                        {task.address ? (
-                          <span className={styles.metaLine}>
-                            <MapPin size={14} aria-hidden="true" /> {task.address}
-                          </span>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
+                  {drawerTasks.map((task) => {
+                    const isActive = selectedTaskId === task.id;
+                    return (
+                      <li
+                        key={task.id}
+                        ref={(node) => {
+                          taskRefs.current[task.id] = node;
+                        }}
+                        className={`${styles.drawerTaskItem} ${isActive ? styles.drawerTaskItemActive : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className={styles.taskItemButton}
+                          onClick={() => handleTaskSelect(task.id)}
+                        >
+                          <div className={styles.drawerTaskTop}>
+                            <span className={styles.drawerTaskTitle}>{task.title}</span>
+                            <span className={styles.statusBadge}>
+                              {task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}
+                            </span>
+                          </div>
+                          <div className={styles.drawerTaskMeta}>
+                            <span className={styles.metaLine}>
+                              <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
+                            </span>
+                            {task.address ? (
+                              <span className={styles.metaLine}>
+                                <MapPin size={14} aria-hidden="true" /> {task.address}
+                              </span>
+                            ) : null}
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <div className={styles.empty}>No tasks yet. Create one to get started.</div>
               )}
             </section>
 
-            <section className={styles.drawerSection} aria-label="Create a quick task">
+            <section className={styles.sheetSection} aria-label="Create a quick task">
               <h3 className={styles.sectionHeading}>Create quick task</h3>
               <form className={styles.createForm} onSubmit={handleCreateTask}>
                 <input
@@ -486,7 +740,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
               </form>
             </section>
           </div>
-        </div>
+        </motion.div>
       </div>,
       document.body,
     );

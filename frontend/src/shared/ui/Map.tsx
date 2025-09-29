@@ -18,6 +18,8 @@ interface UserLocation {
   lng: number;
   thumbnail?: string;
   accuracy?: number;
+  size?: number;
+  isHighlighted?: boolean;
 }
 
 interface LatLng {
@@ -38,6 +40,7 @@ interface MapProps {
   onLocationChange?: (loc: LatLng) => void;
   otherUsers?: UserLocation[];
   onUserLocation?: (loc: { lat: number; lng: number; accuracy: number }) => void;
+  onOtherMarkerClick?: (id: string) => void;
 }
 
 const Map = forwardRef<MapRef, MapProps>(
@@ -55,6 +58,7 @@ const Map = forwardRef<MapRef, MapProps>(
       onLocationChange,
       otherUsers = [],
       onUserLocation,
+      onOtherMarkerClick,
     },
     ref,
   ) => {
@@ -295,11 +299,14 @@ const Map = forwardRef<MapRef, MapProps>(
 
       users.forEach((u) => {
         const userLatLng: [number, number] = [u.lat, u.lng];
+        const size = Math.max(16, Math.round(u.size ?? (u.thumbnail ? 32 : 24)));
+        const isSvgThumbnail = typeof u.thumbnail === 'string' && u.thumbnail.startsWith('data:image/svg+xml');
+        const border = u.thumbnail && !isSvgThumbnail ? 2 : 0;
         const iconHtml = u.thumbnail
-          ? `<img src="${u.thumbnail}" style="width:32px;height:32px;border-radius:50%;border:2px solid white;" />`
-          : `<svg width="24" height="24" viewBox="0 0 24 24"><path fill="#ff5722" stroke="white" stroke-width="2" d="M12 2C8.1 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="3" fill="white"/></svg>`;
-        const iconSize: [number, number] = u.thumbnail ? [32, 32] : [24, 24];
-        const iconAnchor: [number, number] = u.thumbnail ? [16, 16] : [12, 24];
+          ? `<img src="${u.thumbnail}" style="width:${size}px;height:${size}px;border-radius:50%;border:${border}px solid white;" />`
+          : `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><path fill="#ff5722" stroke="white" stroke-width="2" d="M12 2C8.1 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="3" fill="white"/></svg>`;
+        const iconSize: [number, number] = [size, size];
+        const iconAnchor: [number, number] = [size / 2, size];
         const icon = L.divIcon({ html: iconHtml, className: '', iconSize, iconAnchor });
 
         if (markers[u.id]) {
@@ -307,6 +314,11 @@ const Map = forwardRef<MapRef, MapProps>(
           markers[u.id].setIcon(icon);
         } else {
           markers[u.id] = L.marker(userLatLng, { icon }).addTo(mapInstance.current!);
+        }
+
+        markers[u.id].off('click');
+        if (onOtherMarkerClick) {
+          markers[u.id].on('click', () => onOtherMarkerClick(u.id));
         }
 
         const radius = u.accuracy || 0;
@@ -340,7 +352,7 @@ const Map = forwardRef<MapRef, MapProps>(
       if (latLngs.length > 1) {
         mapInstance.current!.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
       }
-    }, [otherUsers]);
+    }, [otherUsers, onOtherMarkerClick]);
 
     useEffect(() => {
       if (!mapInstance.current || !isEditable) return;

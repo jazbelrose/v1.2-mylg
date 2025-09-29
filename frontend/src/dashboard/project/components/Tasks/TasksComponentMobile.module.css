@@ -170,120 +170,237 @@
   color: var(--text-tertiary, rgba(246, 247, 251, 0.6));
 }
 
-.drawerOverlay {
+.sheetOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 6, 7, 0.72);
-  backdrop-filter: blur(6px);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  
   z-index: 1600;
-}
-
-.drawer {
-  width: min(720px, 100%);
-  max-height: min(100vh, 100dvh);
-  background:
-    linear-gradient(135deg, rgba(17, 18, 19, 0.94), rgba(5, 6, 7, 0.98));
-  border-radius: 24px 24px 16px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  background: #050607;
   color: var(--text-primary, #f6f7fb);
-  backdrop-filter: blur(12px);
-  animation: drawer-slide-up 220ms ease-out;
 }
 
-.drawerHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+.mapLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.drawerTitleGroup {
+.mapCanvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+.mapGradient {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: min(45vh, 320px);
+  background: linear-gradient(180deg, rgba(5, 6, 7, 0) 0%, rgba(5, 6, 7, 0.92) 70%, rgba(5, 6, 7, 0.98) 100%);
+  pointer-events: none;
+}
+
+.mapHeader {
+  position: absolute;
+  top: 16px;
+  left: 16px;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: rgba(7, 8, 10, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+  max-width: min(280px, 85vw);
 }
 
-.drawerTitle {
-  font-size: 1rem;
+.mapProject {
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary, #f6f7fb);
 }
 
-.drawerSubtitle {
-  font-size: 0.8rem;
-  color: var(--text-secondary, rgba(246, 247, 251, 0.7));
+.mapMeta {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(246, 247, 251, 0.65);
 }
 
-.closeButton {
-  background: rgba(255, 255, 255, 0.06);
+.mapEmptyBanner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1rem 1.4rem;
+  border-radius: 18px;
+  background: rgba(9, 10, 12, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+  max-width: min(320px, 90vw);
+  font-size: 0.85rem;
+  color: var(--text-secondary, rgba(246, 247, 251, 0.76));
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+
+.mapActiveCard {
+  position: absolute;
+  top: 84px;
+  left: 16px;
+  right: 16px;
+  max-width: min(360px, 85vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(7, 8, 10, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 0.35rem;
-  border-radius: 999px;
-  color: var(--text-primary, #f6f7fb);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.mapActiveTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+}
+
+.mapActiveMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary, rgba(246, 247, 251, 0.74));
+}
+
+.sheetDismiss {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(7, 8, 10, 0.72);
+  color: var(--text-primary, #f6f7fb);
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  pointer-events: auto;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.closeButton:hover,
-.closeButton:focus-visible {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.24);
-  color: var(--text-primary, #ffffff);
+.sheetDismiss:hover,
+.sheetDismiss:focus-visible {
+  background: rgba(7, 8, 10, 0.92);
   transform: translateY(-1px);
 }
 
-.drawerContent {
-  overflow-y: auto;
-  
+.sheetDismiss:focus-visible {
+  outline: 2px solid var(--brand, #fa3356);
+  outline-offset: 2px;
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  width: min(720px, 100%);
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.mapContainer {
-  height: 220px;
-  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(7, 8, 10, 0.98), rgba(4, 5, 7, 0.98));
+  border-radius: 28px 28px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 -22px 48px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
-.mapEmpty {
-  height: 220px;
+.sheetHandle {
+  align-self: center;
+  margin: 10px 0 4px;
+  width: 76px;
+  height: 32px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
-  border: 1px dashed rgba(148, 163, 184, 0.5);
-  color: var(--text-tertiary, rgba(246, 247, 251, 0.6));
-  background: rgba(12, 13, 16, 0.65);
-  font-size: 0.85rem;
-  text-align: center;
-  padding: 0 1.5rem;
+  background: transparent;
+  cursor: pointer;
 }
 
-.drawerSection {
+.sheetHandle:focus-visible {
+  outline: 2px solid var(--brand, #fa3356);
+  outline-offset: 2px;
+}
+
+.sheetHandleBar {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.sheetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0 1.75rem 0.5rem;
+}
+
+.sheetTitleGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  padding: 1.15rem 1.25rem;
-  border-radius: 18px;
-  background: rgba(17, 18, 19, 0.92);
-  
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 48px rgba(0, 0, 0, 0.35);
+  gap: 0.25rem;
+}
+
+.sheetTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.sheetSubtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary, rgba(246, 247, 251, 0.72));
+}
+
+.sheetSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0 1.75rem 1.25rem;
+}
+
+.sheetScrollArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  padding: 0 1.5rem 1.75rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sheetSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 20px;
+  background: rgba(10, 11, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
 .sectionHeading {
@@ -292,45 +409,79 @@
   color: var(--text-primary, #f6f7fb);
 }
 
-.drawerTaskList {
+.locationContainer {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  background: rgba(7, 8, 10, 0.75);
+}
+
+.taskList {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
-.drawerTaskItem {
+.taskItem {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 11, 14, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.taskItemActive {
+  border-color: var(--brand, #fa3356);
+  box-shadow:
+    0 18px 42px rgba(250, 51, 86, 0.32),
+    inset 0 0 0 1px rgba(250, 51, 86, 0.38);
+  transform: translateY(-2px);
+}
+
+.taskButton {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 1rem 1.05rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.85rem 0.9rem;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(12, 13, 16, 0.75);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  gap: 0.55rem;
+  text-align: left;
+  cursor: pointer;
 }
 
-.drawerTaskTop {
+.taskButton:focus-visible {
+  outline: 2px solid var(--brand, #fa3356);
+  outline-offset: 2px;
+}
+
+.taskTitleRow {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
-.drawerTaskTitle {
-  font-size: 0.95rem;
+.taskTitle {
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary, #ffffff);
 }
 
-.drawerTaskMeta {
+.taskMeta {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-  color: var(--text-secondary, rgba(246, 247, 251, 0.7));
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary, rgba(246, 247, 251, 0.72));
+}
+
+.metaLineMuted {
+  color: var(--text-tertiary, rgba(246, 247, 251, 0.6));
 }
 
 .metaLine {
@@ -410,21 +561,4 @@
 .formError {
   color: #f87171;
   font-size: 0.8rem;
-}
-
-@keyframes drawer-slide-up {
-  from {
-    transform: translateY(24px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@media (min-width: 768px) {
-  .section {
-    padding: 1.5rem;
-  }
 }

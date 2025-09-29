@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus, MapPin, Calendar, ChevronDown } from "lucide-react";
+import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
@@ -61,6 +62,13 @@ const dueFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const DEFAULT_LOCATION = { lat: 37.0902, lng: -95.7129 }; // Geographic centre of contiguous US
+const SNAP_POINTS = [0.2, 0.5, 1] as const;
+type SnapIndex = 0 | 1 | 2;
+
+function getViewportHeight(): number {
+  if (typeof window === "undefined") return 0;
+  return window.visualViewport?.height ?? window.innerHeight;
+}
 
 function parseDueDate(value?: unknown): Date | null {
   if (value == null || value === "") return null;
@@ -217,6 +225,31 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [snapIndex, setSnapIndex] = useState<SnapIndex>(1);
+  const [viewportHeight, setViewportHeight] = useState(() => getViewportHeight());
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(null);
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  const taskListRef = useRef<HTMLUListElement | null>(null);
+  const initialScrollDoneRef = useRef(false);
+
+  const handleOpenDrawer = useCallback(() => {
+    setDrawerOpen(true);
+    setFormError(null);
+    setSuccessMessage(null);
+    setSnapIndex(0);
+    initialScrollDoneRef.current = false;
+    setViewportHeight(getViewportHeight());
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    setFormError(null);
+    setSnapIndex(1);
+    setActiveTaskId(null);
+    setMapFocus(null);
+    initialScrollDoneRef.current = false;
+  }, []);
 
   const refreshTasks = useCallback(async () => {
     if (!projectId) {
@@ -249,12 +282,35 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     if (!drawerOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setDrawerOpen(false);
+        handleCloseDrawer();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawerOpen, handleCloseDrawer]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const update = () => setViewportHeight(getViewportHeight());
+    update();
+    window.addEventListener("resize", update);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      viewport?.removeEventListener("resize", update);
+    };
+  }, [drawerOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen || typeof document === "undefined") return;
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.overflow = previousOverflow;
+    };
   }, [drawerOpen]);
 
   const stats = useMemo(() => computeStats(tasks), [tasks]);
@@ -284,16 +340,124 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const mapLocation = mapTasks[0]?.location ?? DEFAULT_LOCATION;
   const mapAddress = mapTasks[0]?.address ?? projectName ?? "Project";
 
+  const markerThumbnail = useMemo(() => buildMarkerThumbnail(projectColor), [projectColor]);
+
   const mapMarkers = useMemo(
     () =>
       mapTasks.map((task) => ({
         id: task.id,
         lat: task.location!.lat,
         lng: task.location!.lng,
-        thumbnail: buildMarkerThumbnail(projectColor),
+        iconUrl: markerThumbnail,
+        title: task.title,
+        isActive: task.id === activeTaskId,
       })),
-    [mapTasks, projectColor],
+    [mapTasks, markerThumbnail, activeTaskId],
   );
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const existingIds = new Set(drawerTasks.map((task) => task.id));
+    if (activeTaskId && existingIds.has(activeTaskId)) {
+      return;
+    }
+
+    initialScrollDoneRef.current = false;
+
+    if (mapTasks.length) {
+      setActiveTaskId(mapTasks[0].id);
+    } else if (drawerTasks.length) {
+      setActiveTaskId(drawerTasks[0].id);
+    } else {
+      setActiveTaskId(null);
+    }
+  }, [drawerOpen, drawerTasks, mapTasks, activeTaskId]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    if (!activeTaskId) {
+      setMapFocus(null);
+      return;
+    }
+
+    const locatedTask = mapTasks.find((task) => task.id === activeTaskId);
+    if (!locatedTask?.location) {
+      setMapFocus(null);
+      return;
+    }
+
+    setMapFocus(locatedTask.location);
+
+    if (typeof window === "undefined") return;
+    const timeout = window.setTimeout(() => setMapFocus(null), 420);
+    return () => window.clearTimeout(timeout);
+  }, [activeTaskId, mapTasks, drawerOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen || !activeTaskId || !taskListRef.current) return;
+    const container = taskListRef.current;
+    const target = container.querySelector<HTMLLIElement>(`[data-task-id="${activeTaskId}"]`);
+    if (!target) return;
+
+    const behavior: ScrollBehavior = initialScrollDoneRef.current ? "smooth" : "auto";
+    target.scrollIntoView({ block: "center", behavior });
+    initialScrollDoneRef.current = true;
+  }, [activeTaskId, drawerOpen]);
+
+  const sheetHeights = useMemo(() => SNAP_POINTS.map((point) => viewportHeight * point), [viewportHeight]);
+  const targetY = viewportHeight ? viewportHeight - sheetHeights[snapIndex] : 0;
+  const maxDragOffset = Math.max(0, viewportHeight - sheetHeights[0]);
+  const hasMapMarkers = mapMarkers.length > 0;
+  const selectedTask = useMemo(
+    () => drawerTasks.find((task) => task.id === activeTaskId) ?? null,
+    [drawerTasks, activeTaskId],
+  );
+
+  const handleMarkerClick = useCallback((markerId: string) => {
+    setActiveTaskId(markerId);
+    setSnapIndex((current) => (current === 0 ? 1 : current));
+  }, []);
+
+  const handleTaskSelect = useCallback((taskId: string) => {
+    setActiveTaskId(taskId);
+    setSnapIndex((current) => (current === 0 ? 1 : current));
+  }, []);
+
+  const handleHandleClick = useCallback(() => {
+    setSnapIndex((current) => {
+      if (current === 2) return 1;
+      if (current === 1) return 2;
+      return 1;
+    });
+  }, []);
+
+  const handleSnapToNearest = useCallback(() => {
+    if (!sheetRef.current || !viewportHeight) return;
+    const rect = sheetRef.current.getBoundingClientRect();
+    const visibleHeight = viewportHeight - rect.top;
+    if (visibleHeight < viewportHeight * 0.16) {
+      handleCloseDrawer();
+      return;
+    }
+
+    const ratio = visibleHeight / viewportHeight;
+    let closestIndex: SnapIndex = 0;
+    let smallestDistance = Number.POSITIVE_INFINITY;
+
+    SNAP_POINTS.forEach((point, index) => {
+      const diff = Math.abs(point - ratio);
+      if (diff < smallestDistance) {
+        smallestDistance = diff;
+        closestIndex = index as SnapIndex;
+      }
+    });
+
+    setSnapIndex(closestIndex);
+  }, [viewportHeight, handleCloseDrawer]);
+
+  const handleDragEnd = useCallback(() => {
+    handleSnapToNearest();
+  }, [handleSnapToNearest]);
 
   const statusMessage = useMemo(() => {
     if (error) return "We couldn’t load tasks right now.";
@@ -317,17 +481,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     const noun = sameDayCount === 1 ? "task" : "tasks";
     return `${sameDayCount} ${noun} due ${dueFormatter.format(nextDue.dueDate)}.`;
   }, [error, loading, tasks]);
-
-  const handleOpenDrawer = () => {
-    setDrawerOpen(true);
-    setFormError(null);
-    setSuccessMessage(null);
-  };
-
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
-    setFormError(null);
-  };
 
   const resetForm = () => {
     setTitle("");
@@ -382,95 +535,183 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
       return null;
     }
 
-    const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-      if (event.target === event.currentTarget) {
-        handleCloseDrawer();
-      }
-    };
+    const taskCountLabel = drawerTasks.length
+      ? `${drawerTasks.length} ${drawerTasks.length === 1 ? "task" : "tasks"}`
+      : "No tasks yet";
+
+    const mapStatusMessage = error
+      ? "We couldn’t load task locations."
+      : loading
+        ? "Loading task locations…"
+        : "Add locations to your tasks to see them appear here.";
 
     return createPortal(
-      <div className={styles.drawerOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
-        <div className={styles.drawer} role="dialog" aria-modal="true" aria-label="Project tasks quick view" onMouseDown={(event) => event.stopPropagation()}>
-          <div className={styles.drawerHeader}>
-            <div className={styles.drawerTitleGroup}>
-              <span className={styles.drawerTitle}>Project tasks</span>
-              <span className={styles.drawerSubtitle}>
+      <div className={styles.sheetOverlay} role="presentation">
+        <div className={styles.mapLayer}>
+          <div className={styles.mapCanvas}>
+            <Map
+              location={mapLocation}
+              address={mapAddress}
+              scrollWheelZoom={false}
+              dragging={true}
+              touchZoom={true}
+              showUserLocation={false}
+              markers={mapMarkers}
+              onMarkerClick={handleMarkerClick}
+              focusLocation={mapFocus}
+              focusZoom={15}
+            />
+          </div>
+          <div className={styles.mapGradient} aria-hidden="true" />
+          <div className={styles.mapHeader}>
+            <span className={styles.mapProject}>{projectName ?? "Project tasks"}</span>
+            <span className={styles.mapMeta}>{taskCountLabel}</span>
+          </div>
+          {!hasMapMarkers ? <div className={styles.mapEmptyBanner}>{mapStatusMessage}</div> : null}
+          {selectedTask ? (
+            <div className={styles.mapActiveCard}>
+              <span className={styles.mapActiveTitle}>{selectedTask.title}</span>
+              <div className={styles.mapActiveMeta}>
+                <span className={styles.metaLine}>
+                  <Calendar size={14} aria-hidden="true" /> {formatDueLabel(selectedTask)}
+                </span>
+                {selectedTask.address ? (
+                  <span className={styles.metaLine}>
+                    <MapPin size={14} aria-hidden="true" /> {selectedTask.address}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          className={styles.sheetDismiss}
+          onClick={handleCloseDrawer}
+          aria-label="Close tasks drawer"
+        >
+          <ChevronDown size={22} strokeWidth={2.5} />
+        </button>
+        <motion.div
+          ref={sheetRef}
+          className={styles.sheet}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Project tasks quick view"
+          drag="y"
+          dragElastic={{ top: 0.2, bottom: 0.3 }}
+          dragConstraints={{ top: 0, bottom: maxDragOffset }}
+          dragMomentum={false}
+          onDragEnd={handleDragEnd}
+          initial={{ y: viewportHeight }}
+          animate={{ y: targetY }}
+          transition={{ type: "spring", stiffness: 360, damping: 42, mass: 0.9 }}
+        >
+          <div
+            className={styles.sheetHandle}
+            role="button"
+            tabIndex={0}
+            aria-label="Toggle tasks drawer size"
+            onClick={handleHandleClick}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleHandleClick();
+              }
+            }}
+          >
+            <span className={styles.sheetHandleBar} aria-hidden="true" />
+          </div>
+          <header className={styles.sheetHeader}>
+            <div className={styles.sheetTitleGroup}>
+              <span className={styles.sheetTitle}>Project tasks</span>
+              <span className={styles.sheetSubtitle}>
                 {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
               </span>
             </div>
-            <button type="button" className={styles.closeButton} onClick={handleCloseDrawer} aria-label="Close tasks drawer">
-              <ChevronDown size={20} strokeWidth={2.5} />
-            </button>
+          </header>
+          <div className={styles.sheetSummary}>
+            <div className={styles.statRow} aria-label="Task summary">
+              <div className={`${styles.statCard} ${styles.statOk}`}>
+                <span className={styles.statValue}>{formatStatValue(stats.completed)}</span>
+                <span className={styles.statLabel}>Done</span>
+              </div>
+              <div className={`${styles.statCard} ${styles.statDanger}`}>
+                <span className={styles.statValue}>{formatStatValue(stats.overdue)}</span>
+                <span className={styles.statLabel}>Overdue</span>
+              </div>
+              <div className={`${styles.statCard} ${styles.statWarn}`}>
+                <span className={styles.statValue}>{formatStatValue(stats.dueSoon)}</span>
+                <span className={styles.statLabel}>Due soon</span>
+              </div>
+            </div>
+            <p className={styles.status}>{statusMessage}</p>
           </div>
-
-          <div className={styles.drawerContent}>
-            <section className={styles.drawerSection} aria-label="Project map">
-              <h3 className={styles.sectionHeading}>Project map</h3>
-              {activeProject && onActiveProjectChange ? (
+          <div className={styles.sheetScrollArea}>
+            {activeProject && onActiveProjectChange ? (
+              <section className={styles.sheetSection} aria-label="Project area">
+                <h3 className={styles.sectionHeading}>Project area</h3>
                 <div className={styles.locationContainer}>
                   <LocationComponent
                     activeProject={activeProject}
                     onActiveProjectChange={onActiveProjectChange}
                   />
                 </div>
-              ) : error ? (
-                <div className={styles.mapEmpty}>{error}</div>
-              ) : loading ? (
-                <div className={styles.mapEmpty}>Loading tasks…</div>
-              ) : mapTasks.length ? (
-                <div className={styles.mapContainer}>
-                  <Map
-                    location={mapLocation}
-                    address={mapAddress}
-                    scrollWheelZoom={false}
-                    dragging={true}
-                    touchZoom={true}
-                    showUserLocation={false}
-                    otherUsers={mapMarkers}
-                  />
-                </div>
-              ) : (
-                <div className={styles.mapEmpty}>
-                  Add locations to your tasks to see them appear on the map.
-                </div>
-              )}
-            </section>
+              </section>
+            ) : null}
 
-            <section className={styles.drawerSection} aria-label="All project tasks">
+            <section className={styles.sheetSection} aria-label="All project tasks">
               <h3 className={styles.sectionHeading}>Task list</h3>
               {error ? (
                 <div className={styles.error}>{error}</div>
               ) : loading ? (
                 <div className={styles.loading}>Loading tasks…</div>
               ) : drawerTasks.length ? (
-                <ul className={styles.drawerTaskList}>
-                  {drawerTasks.map((task) => (
-                    <li key={task.id} className={styles.drawerTaskItem}>
-                      <div className={styles.drawerTaskTop}>
-                        <span className={styles.drawerTaskTitle}>{task.title}</span>
-                        <span className={styles.statusBadge}>
-                          {task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}
-                        </span>
-                      </div>
-                      <div className={styles.drawerTaskMeta}>
-                        <span className={styles.metaLine}>
-                          <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
-                        </span>
-                        {task.address ? (
-                          <span className={styles.metaLine}>
-                            <MapPin size={14} aria-hidden="true" /> {task.address}
-                          </span>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
+                <ul className={styles.taskList} ref={taskListRef}>
+                  {drawerTasks.map((task) => {
+                    const isActive = task.id === activeTaskId;
+                    return (
+                      <li
+                        key={task.id}
+                        data-task-id={task.id}
+                        className={`${styles.taskItem}${isActive ? ` ${styles.taskItemActive}` : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className={styles.taskButton}
+                          onClick={() => handleTaskSelect(task.id)}
+                        >
+                          <div className={styles.taskTitleRow}>
+                            <span className={styles.taskTitle}>{task.title}</span>
+                            <span className={styles.statusBadge}>
+                              {task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}
+                            </span>
+                          </div>
+                          <div className={styles.taskMeta}>
+                            <span className={styles.metaLine}>
+                              <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
+                            </span>
+                            {task.address ? (
+                              <span className={styles.metaLine}>
+                                <MapPin size={14} aria-hidden="true" /> {task.address}
+                              </span>
+                            ) : (
+                              <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
+                                <MapPin size={14} aria-hidden="true" /> No location
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <div className={styles.empty}>No tasks yet. Create one to get started.</div>
               )}
             </section>
 
-            <section className={styles.drawerSection} aria-label="Create a quick task">
+            <section className={styles.sheetSection} aria-label="Create a quick task">
               <h3 className={styles.sectionHeading}>Create quick task</h3>
               <form className={styles.createForm} onSubmit={handleCreateTask}>
                 <input
@@ -506,7 +747,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
               </form>
             </section>
           </div>
-        </div>
+        </motion.div>
       </div>,
       document.body,
     );

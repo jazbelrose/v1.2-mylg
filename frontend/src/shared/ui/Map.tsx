@@ -25,6 +25,15 @@ interface LatLng {
   lng: number;
 }
 
+interface MapMarker {
+  id: string;
+  lat: number;
+  lng: number;
+  iconUrl?: string;
+  title?: string;
+  isActive?: boolean;
+}
+
 interface MapProps {
   location: LatLng;
   address: string;
@@ -38,6 +47,10 @@ interface MapProps {
   onLocationChange?: (loc: LatLng) => void;
   otherUsers?: UserLocation[];
   onUserLocation?: (loc: { lat: number; lng: number; accuracy: number }) => void;
+  markers?: MapMarker[];
+  onMarkerClick?: (markerId: string) => void;
+  focusLocation?: LatLng | null;
+  focusZoom?: number;
 }
 
 const Map = forwardRef<MapRef, MapProps>(
@@ -55,6 +68,10 @@ const Map = forwardRef<MapRef, MapProps>(
       onLocationChange,
       otherUsers = [],
       onUserLocation,
+      markers = [],
+      onMarkerClick,
+      focusLocation = null,
+      focusZoom,
     },
     ref,
   ) => {
@@ -65,6 +82,23 @@ const Map = forwardRef<MapRef, MapProps>(
     const projectMarkerRef = useRef<L.Marker | null>(null);
     const otherUsersMarkersRef = useRef<Record<string, L.Marker>>({});
     const otherUsersAccuracyRef = useRef<Record<string, L.Circle>>({});
+    const customMarkersRef = useRef<Record<string, L.Marker>>({});
+    const lastFocusRef = useRef<string | null>(null);
+    const markerIdsRef = useRef<string[]>([]);
+
+    const createMarkerIcon = (iconUrl?: string, isActive?: boolean) => {
+      const markerClass = `task-marker${isActive ? ' task-marker--active' : ''}`;
+      const inner = iconUrl
+        ? `<img src="${iconUrl}" alt="" />`
+        : '<span class="task-marker__dot"></span>';
+
+      return L.divIcon({
+        html: `<div class="${markerClass}">${inner}<span class="task-marker__pointer" aria-hidden="true"></span></div>`,
+        className: '',
+        iconSize: [36, 48],
+        iconAnchor: [18, 44],
+      });
+    };
 
     useEffect(() => {
       if (!mapRef.current || mapInstance.current) return;
@@ -179,6 +213,9 @@ const Map = forwardRef<MapRef, MapProps>(
           const b = c.getBounds();
           latLngs.push(b.getNorthEast(), b.getSouthWest());
         });
+        Object.values(customMarkersRef.current).forEach((marker) => {
+          latLngs.push(marker.getLatLng());
+        });
 
         if (latLngs.length > 1) {
           mapInstance.current.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
@@ -278,14 +315,14 @@ const Map = forwardRef<MapRef, MapProps>(
 
     useEffect(() => {
       if (!mapInstance.current) return;
-      const markers = otherUsersMarkersRef.current;
+      const userMarkers = otherUsersMarkersRef.current;
       const circles = otherUsersAccuracyRef.current;
       const users = otherUsers || [];
 
-      Object.keys(markers).forEach((id) => {
+      Object.keys(userMarkers).forEach((id) => {
         if (!users.find((u) => u.id === id)) {
-          mapInstance.current?.removeLayer(markers[id]);
-          delete markers[id];
+          mapInstance.current?.removeLayer(userMarkers[id]);
+          delete userMarkers[id];
           if (circles[id]) {
             mapInstance.current?.removeLayer(circles[id]);
             delete circles[id];
@@ -302,11 +339,11 @@ const Map = forwardRef<MapRef, MapProps>(
         const iconAnchor: [number, number] = u.thumbnail ? [16, 16] : [12, 24];
         const icon = L.divIcon({ html: iconHtml, className: '', iconSize, iconAnchor });
 
-        if (markers[u.id]) {
-          markers[u.id].setLatLng(userLatLng);
-          markers[u.id].setIcon(icon);
+        if (userMarkers[u.id]) {
+          userMarkers[u.id].setLatLng(userLatLng);
+          userMarkers[u.id].setIcon(icon);
         } else {
-          markers[u.id] = L.marker(userLatLng, { icon }).addTo(mapInstance.current!);
+          userMarkers[u.id] = L.marker(userLatLng, { icon }).addTo(mapInstance.current!);
         }
 
         const radius = u.accuracy || 0;
@@ -332,15 +369,109 @@ const Map = forwardRef<MapRef, MapProps>(
           latLngs.push(b.getNorthEast(), b.getSouthWest());
         }
       }
-      Object.values(markers).forEach((m) => latLngs.push(m.getLatLng()));
+      Object.values(userMarkers).forEach((m) => latLngs.push(m.getLatLng()));
       Object.values(circles).forEach((c) => {
         const b = c.getBounds();
         latLngs.push(b.getNorthEast(), b.getSouthWest());
       });
+      Object.values(customMarkersRef.current).forEach((marker) => latLngs.push(marker.getLatLng()));
       if (latLngs.length > 1) {
         mapInstance.current!.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
       }
     }, [otherUsers]);
+
+    useEffect(() => {
+      if (!mapInstance.current) return;
+      const map = mapInstance.current;
+      const activeMarkers = customMarkersRef.current;
+      const list = markers || [];
+      const ids = new Set(list.map((item) => item.id));
+
+      Object.keys(activeMarkers).forEach((id) => {
+        if (!ids.has(id)) {
+          activeMarkers[id].off('click');
+          map.removeLayer(activeMarkers[id]);
+          delete activeMarkers[id];
+        }
+      });
+
+      list.forEach((marker) => {
+        const latLng: [number, number] = [marker.lat, marker.lng];
+        const icon = createMarkerIcon(marker.iconUrl, marker.isActive);
+        const existing = activeMarkers[marker.id];
+
+        if (existing) {
+          existing.setLatLng(latLng);
+          existing.setIcon(icon);
+          existing.off('click');
+          existing.unbindTooltip();
+        } else {
+          activeMarkers[marker.id] = L.marker(latLng, { icon }).addTo(map);
+        }
+
+        const current = activeMarkers[marker.id];
+
+        if (marker.title) {
+          current.bindTooltip(marker.title, { direction: 'top', offset: [0, -32] });
+        } else {
+          current.unbindTooltip();
+        }
+
+        if (onMarkerClick) {
+          current.on('click', () => onMarkerClick(marker.id));
+        }
+      });
+
+      const sortedIds = list.map((item) => item.id).sort();
+      const previousIds = markerIdsRef.current;
+      const changed =
+        sortedIds.length !== previousIds.length ||
+        sortedIds.some((id, index) => id !== previousIds[index]);
+      markerIdsRef.current = sortedIds;
+
+      if (changed) {
+        const latLngs: L.LatLngExpression[] = [];
+        if (projectMarkerRef.current) latLngs.push(projectMarkerRef.current.getLatLng());
+        if (userMarkerRef.current) latLngs.push(userMarkerRef.current.getLatLng());
+        Object.values(otherUsersMarkersRef.current).forEach((marker) => latLngs.push(marker.getLatLng()));
+        Object.values(activeMarkers).forEach((marker) => latLngs.push(marker.getLatLng()));
+        if (latLngs.length > 1) {
+          map.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
+        } else if (latLngs.length === 1) {
+          map.setView(latLngs[0], map.getZoom());
+        }
+      }
+
+      return () => {
+        Object.values(activeMarkers).forEach((marker) => marker.off('click'));
+      };
+    }, [markers, onMarkerClick]);
+
+    useEffect(() => {
+      if (!mapInstance.current) return;
+      if (!focusLocation) {
+        lastFocusRef.current = null;
+        return;
+      }
+
+      const key = `${focusLocation.lat.toFixed(6)}:${focusLocation.lng.toFixed(6)}`;
+      if (lastFocusRef.current === key) return;
+      lastFocusRef.current = key;
+
+      const zoom = focusZoom ?? Math.max(mapInstance.current.getZoom(), 13);
+      mapInstance.current.setView([focusLocation.lat, focusLocation.lng], zoom, { animate: true });
+    }, [focusLocation, focusZoom]);
+
+    useEffect(() => {
+      return () => {
+        if (!mapInstance.current) return;
+        Object.values(customMarkersRef.current).forEach((marker) => {
+          marker.off('click');
+          mapInstance.current?.removeLayer(marker);
+        });
+        customMarkersRef.current = {};
+      };
+    }, []);
 
     useEffect(() => {
       if (!mapInstance.current || !isEditable) return;

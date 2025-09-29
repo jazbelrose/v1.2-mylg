@@ -190,6 +190,20 @@
   inset: 0;
   pointer-events: auto;
   z-index: 1;
+  touch-action: manipulation;
+}
+
+/* Prevent the map from being draggable by the motion sheet */
+.mapCanvas *,
+.mapCanvas .leaflet-container,
+.mapCanvas .leaflet-container * {
+  touch-action: manipulation !important;
+}
+
+/* Ensure map controls are properly accessible */
+.mapCanvas .leaflet-control {
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .mapGradient {

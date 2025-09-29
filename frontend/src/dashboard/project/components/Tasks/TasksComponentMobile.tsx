@@ -540,7 +540,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
             <Map
               location={mapLocation}
               address={mapAddress}
-              scrollWheelZoom={false}
+              scrollWheelZoom={true}
               dragging={true}
               touchZoom={true}
               showUserLocation={false}

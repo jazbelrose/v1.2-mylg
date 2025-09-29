@@ -611,7 +611,8 @@ const patchTask = async (e, C, { projectId, taskId }) => {
     const curr = await ddb.get({
       TableName: TASKS_TABLE,
       Key: { projectId, taskId },
-      ProjectionExpression: "status, dueAt",
+      ProjectionExpression: "#status, dueAt",
+      ExpressionAttributeNames: { "#status": "status" },
     });
     const newStatus = b.status ?? curr.Item?.status ?? "todo";
     const newDueAt = b.dueAt ?? curr.Item?.dueAt;

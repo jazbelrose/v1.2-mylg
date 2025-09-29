@@ -1,14 +1,6 @@
 import React, { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Sector,
-  type TooltipProps,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Sector } from "recharts";
 
 interface SectorProps {
   cx?: number;
@@ -40,6 +32,11 @@ export type BudgetDonutDatum = InternalSlice;
 type TooltipValueType = number | string | Array<number | string>;
 
 type TooltipNameType = number | string;
+
+type DonutTooltipRenderArgs = {
+  active?: boolean;
+  payload?: Array<{ payload?: BudgetDonutDatum }> | undefined;
+};
 
 export interface BudgetDonutProps {
   data: BudgetDonutSlice[];
@@ -281,7 +278,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   );
 
   const tooltipRenderer = useCallback(
-    ({ active, payload }: TooltipProps<TooltipValueType, TooltipNameType>) => {
+    ({ active, payload }: DonutTooltipRenderArgs) => {
       if (!active || !payload || payload.length === 0) return null;
       const datum = payload[0]?.payload as BudgetDonutDatum | undefined;
       if (!datum) return null;

@@ -33,6 +33,7 @@
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: 12px;
   min-height: 0;
+  grid-auto-rows: minmax(0, auto);
 }
 
 .budget-calendar-layout--stacked {
@@ -79,6 +80,11 @@
 @media (max-width: 640px) {
   .budget-calendar-layout--stacked .budget-column .budget-overview-card {
     max-height: 160px;
+  }
+
+  .budget-calendar-layout {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 16px;
   }
 }
 
@@ -167,6 +173,8 @@
   .timeline-location-row {
     flex-direction: column;
     gap: 12px;
+    height: auto;
+    min-height: 0;
   }
 
   .location-wrapper,
@@ -175,6 +183,7 @@
     max-width: 100%;
     flex: none;
     min-width: 0;
+    height: auto;
   }
 }
 

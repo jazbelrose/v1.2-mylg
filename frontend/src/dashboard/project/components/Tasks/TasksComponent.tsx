@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Select,
@@ -601,9 +601,28 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     },
   ];
 
+  const tasksTheme = useMemo(
+    () => ({
+      algorithm: theme.darkAlgorithm,
+      token: {
+        colorPrimary: "#FA3356",
+        colorLink: "#FA3356",
+        colorBgBase: "#050607",
+        colorBgContainer: "#111213",
+        colorBorder: "rgba(255, 255, 255, 0.14)",
+        colorText: "#f6f7fb",
+        colorTextSecondary: "rgba(246, 247, 251, 0.72)",
+        colorTextTertiary: "rgba(246, 247, 251, 0.55)",
+        colorTextHeading: "#ffffff",
+        controlHeight: 32,
+      },
+    }),
+    []
+  );
+
   /* Render */
   return (
-    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+    <ConfigProvider theme={tasksTheme}>
       <div className="tasks-component">
         <div className="tasks-card">
           <Form form={assignForm} layout="vertical" className="assign-task-form">
@@ -672,10 +691,12 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                       style={{
                         position: "absolute",
                         zIndex: 10,
-                        background: "#222",
-                        border: "1px solid #444",
-                        borderRadius: 4,
+                        background: "#131517",
+                        border: "1px solid rgba(255, 255, 255, 0.12)",
+                        borderRadius: 8,
                         width: "100%",
+                        boxShadow: "0 12px 32px rgba(0,0,0,0.38)",
+                        overflow: "hidden",
                       }}
                     >
                       {assignLocationSuggestions.map((s, idx) => (
@@ -683,27 +704,27 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                           key={s.place_id}
                           onClick={() => handleAssignLocationSuggestionSelect(s)}
                           style={{
-                            padding: "6px 10px",
+                            padding: "8px 12px",
                             cursor: "pointer",
                             borderBottom:
                               idx < assignLocationSuggestions.length - 1
-                                ? "1px solid #333"
+                                ? "1px solid rgba(255, 255, 255, 0.08)"
                                 : "none",
-                            background: "inherit",
+                            background: "transparent",
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#eee";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#222";
+                            e.currentTarget.style.background = "rgba(250, 51, 86, 0.18)";
+                            (e.currentTarget.firstChild as HTMLElement).style.color = "#f6f7fb";
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "inherit";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#fff";
+                            e.currentTarget.style.background = "transparent";
+                            (e.currentTarget.firstChild as HTMLElement).style.color = "rgba(246, 247, 251, 0.78)";
                           }}
                         >
                           <span
                             style={{
                               fontWeight: idx === 0 ? "bold" : "normal",
-                              color: "#fff",
+                              color: "rgba(246, 247, 251, 0.78)",
                             }}
                           >
                             {s.display_name}

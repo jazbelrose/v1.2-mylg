@@ -78,7 +78,7 @@
   --thumb-column: calc(var(--row-h) * 0.78);
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: var(--thumb-column);
+  grid-auto-columns: max-content;
   gap: 12px;
   width: 100%;
   justify-content: flex-end;
@@ -88,12 +88,13 @@
 
 
 .thumbnailButton {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   overflow: hidden;
   border: none;
-  padding: 0;
+  padding: 6px;
   margin: 0;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
@@ -102,19 +103,22 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  aspect-ratio: 5 / 4;
-  width: 100%;
-  min-width: 0;
+  height: var(--thumb-column);
+  min-width: calc(var(--thumb-column) * 0.66);
+  max-width: calc(var(--thumb-column) * 1.6);
   isolation: isolate;
   background-clip: padding-box;
   cursor: pointer;
 }
 
 .thumbnailButton img {
-  width: 100%;
+  width: auto;
   height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
   display: block;
+  background-color: transparent;
 }
 
 .thumbnailButton:focus-visible {

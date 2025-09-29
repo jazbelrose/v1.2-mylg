@@ -101,6 +101,7 @@ const CollaboratorList: React.FC<CollaboratorListProps> = ({
                               thumb={p.thumbnails && p.thumbnails[0]}
                               name={p.title}
                               className={styles.projectIcon}
+                              shape="circle"
                             />
                           ))}
                           {isMobile && userProjects.length > 3 && (

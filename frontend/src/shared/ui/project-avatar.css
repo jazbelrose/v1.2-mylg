@@ -6,6 +6,10 @@
   background: var(--bg, #0c0c0c);
 }
 
+.project-avatar--circle {
+  border-radius: 50%;
+}
+
 .project-avatar__media {
   width: 100%;
   height: 100%;

@@ -821,6 +821,7 @@ interface EditValues {
                             thumb={p.thumbnails && p.thumbnails[0]}
                             name={p.title}
                             className="project-thumb"
+                            shape="circle"
                           />
                           <span className="project-name">{p.title}</span>
                         </label>

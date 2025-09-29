@@ -237,7 +237,8 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     setDrawerOpen(true);
     setFormError(null);
     setSuccessMessage(null);
-    setSnapIndex(0);
+    // Start the sheet in the mid snap-point so tasks are visible immediately.
+    setSnapIndex(1);
     initialScrollDoneRef.current = false;
     setViewportHeight(getViewportHeight());
   }, []);

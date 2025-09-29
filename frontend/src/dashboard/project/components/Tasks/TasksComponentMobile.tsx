@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Plus, MapPin, Calendar } from "lucide-react";
 
-import Map from "@/shared/ui/Map";
+import LeafletMap from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
 import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
 
@@ -534,7 +534,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   return (
     <div className={styles.container} aria-label="Project tasks map view">
       <div className={styles.mapLayer} aria-hidden={false}>
-        <Map
+        <LeafletMap
           location={mapLocation}
           address={mapAddress}
           scrollWheelZoom={true}

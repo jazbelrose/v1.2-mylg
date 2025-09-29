@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import User from "@/assets/svg/user.svg?react";
 import { useOnlineStatus } from '@/app/contexts/OnlineStatusContext';
 import { Trash2, Pencil, Smile } from "lucide-react";
@@ -7,6 +7,30 @@ import ReactPlayer from "react-player";
 import { normalizeFileUrl, getFileUrl } from "../../../shared/utils/api";
 import ReactionBar from "@/shared/ui/ReactionBar";
 import { ChatMessage, ChatFile, DMFile } from "@/shared/utils/messageUtils";
+import { getWithTTL, setWithTTL } from "@/shared/utils/storageWithTTL";
+
+const FAVICON_CACHE_PREFIX = "messages:favicon:";
+const FAVICON_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+const fetchFaviconAsDataUrl = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    if (!blob || blob.size === 0) return null;
+    return await new Promise<string | null>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(typeof reader.result === "string" ? reader.result : null);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.warn("Failed to fetch favicon", error);
+    return null;
+  }
+};
 
 type Emoji = string;
 
@@ -123,10 +147,61 @@ const MessageItem: React.FC<MessageItemProps> = ({
       domain !== ""
         ? `https://icons.duckduckgo.com/ip3/${domain}.ico`
         : undefined;
-    const faviconUrl =
+    const googleIconUrl =
       domain !== ""
         ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}`
-        : fallbackIcon ?? defaultIcon;
+        : undefined;
+    const cacheKey = domain ? `${FAVICON_CACHE_PREFIX}${domain}` : "";
+
+    const initialFavicon = useMemo(() => {
+      if (!domain) return defaultIcon;
+      if (typeof window === "undefined") return defaultIcon;
+      try {
+        const cached = getWithTTL<string>(cacheKey);
+        if (cached) return cached;
+      } catch {
+        // ignore cache read errors
+      }
+      return defaultIcon;
+    }, [domain, cacheKey, defaultIcon]);
+
+    const [faviconSrc, setFaviconSrc] = useState<string>(initialFavicon);
+
+    useEffect(() => {
+      if (!domain || typeof window === "undefined") return;
+      let cancelled = false;
+      const cached = getWithTTL<string>(cacheKey);
+      if (cached) {
+        setFaviconSrc(cached);
+        return;
+      }
+
+      const loadFavicon = async () => {
+        const sources = [googleIconUrl, fallbackIcon].filter(
+          (src): src is string => Boolean(src)
+        );
+        for (const src of sources) {
+          const dataUrl = await fetchFaviconAsDataUrl(src);
+          if (dataUrl) {
+            if (!cancelled) {
+              setFaviconSrc(dataUrl);
+              setWithTTL(cacheKey, dataUrl, FAVICON_CACHE_TTL);
+            }
+            return;
+          }
+        }
+        if (!cancelled) {
+          setFaviconSrc(defaultIcon);
+          setWithTTL(cacheKey, defaultIcon, FAVICON_CACHE_TTL);
+        }
+      };
+
+      loadFavicon();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [domain, cacheKey, fallbackIcon, googleIconUrl, defaultIcon]);
     return (
       <div style={{ maxWidth: "300px" }}>
         <a
@@ -136,17 +211,17 @@ const MessageItem: React.FC<MessageItemProps> = ({
           style={{ color: "#4ea1f3", display: "flex", alignItems: "center" }}
         >
           <img
-            src={faviconUrl}
+            src={faviconSrc}
             alt=""
             style={{ width: 16, height: 16, marginRight: 4 }}
             referrerPolicy="no-referrer"
-            onError={(event) => {
-              if (fallbackIcon && event.currentTarget.src !== fallbackIcon) {
-                event.currentTarget.src = fallbackIcon;
-                return;
+            onError={() => {
+              if (faviconSrc !== defaultIcon) {
+                setFaviconSrc(defaultIcon);
+                if (domain) {
+                  setWithTTL(`${FAVICON_CACHE_PREFIX}${domain}`, defaultIcon, FAVICON_CACHE_TTL);
+                }
               }
-              event.currentTarget.onerror = null;
-              event.currentTarget.src = defaultIcon;
             }}
           />
           {url}

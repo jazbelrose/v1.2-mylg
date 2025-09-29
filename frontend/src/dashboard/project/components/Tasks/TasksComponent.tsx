@@ -116,6 +116,11 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   projectId = "",
   team = [],
 }) => {
+  const getPopupContainer = (triggerNode: HTMLElement) =>
+    triggerNode.parentElement ?? triggerNode;
+  const dropdownOverlayClass = "tasks-menu-overlay";
+  const modalRootClassName = "tasks-dark-modal";
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -588,7 +593,11 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
           { key: "delete", label: "Delete", icon: <DeleteOutlined /> },
         ];
         return (
-          <Dropdown menu={{ items, onClick: handleMenuClick(record) }} trigger={["click"]}>
+          <Dropdown
+            menu={{ items, onClick: handleMenuClick(record) }}
+            trigger={["click"]}
+            overlayClassName={dropdownOverlayClass}
+          >
             <Button
               type="text"
               size="small"
@@ -603,7 +612,51 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
 
   /* Render */
   return (
-    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorBgBase: "#050607",
+          colorBgContainer: "var(--bg2, #111213)",
+          colorBorder: "rgba(255, 255, 255, 0.12)",
+          colorText: "var(--text-primary, #f6f7fb)",
+          borderRadius: 12,
+          controlItemBgHover: "rgba(250, 51, 86, 0.12)",
+        },
+        components: {
+          Table: {
+            headerBg: "rgba(255, 255, 255, 0.04)",
+            headerColor: "rgba(246, 247, 251, 0.7)",
+            colorText: "var(--text-primary, #f6f7fb)",
+            rowHoverBg: "rgba(250, 51, 86, 0.08)",
+          },
+          Modal: {
+            colorBgElevated: "var(--bg2, #111213)",
+            colorText: "var(--text-primary, #f6f7fb)",
+            headerBg: "var(--bg2, #111213)",
+            borderRadiusLG: 18,
+          },
+          Select: {
+            selectorBg: "#1f1f1f",
+            colorText: "var(--text-primary, #f6f7fb)",
+            optionSelectedBg: "rgba(250, 51, 86, 0.2)",
+            optionActiveBg: "rgba(250, 51, 86, 0.12)",
+          },
+          DatePicker: {
+            colorBgContainer: "#1f1f1f",
+            colorText: "var(--text-primary, #f6f7fb)",
+            controlItemBgActive: "rgba(250, 51, 86, 0.2)",
+          },
+          Dropdown: {
+            controlItemBgHover: "rgba(250, 51, 86, 0.18)",
+          },
+          Tooltip: {
+            colorBgDefault: "rgba(17, 18, 19, 0.92)",
+            colorTextLightSolid: "#f6f7fb",
+          },
+        },
+      }}
+    >
       <div className="tasks-component">
         <div className="tasks-card">
           <Form form={assignForm} layout="vertical" className="assign-task-form">
@@ -625,21 +678,38 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                       ?.toUpperCase()
                       .includes(inputValue.toUpperCase())
                   }
+                  popupClassName={dropdownOverlayClass}
+                  getPopupContainer={getPopupContainer}
                 />
               </Form.Item>
 
               <Form.Item label="Assigned To" name="assignedTo">
-                <Select size="small" options={assigneeOptions} />
+                <Select
+                  size="small"
+                  options={assigneeOptions}
+                  popupClassName={dropdownOverlayClass}
+                  getPopupContainer={getPopupContainer}
+                />
               </Form.Item>
 
               <Form.Item label="Due Date" name="dueDate">
-                <DatePicker size="small" format="YYYY-MM-DD" />
+                <DatePicker
+                  size="small"
+                  format="YYYY-MM-DD"
+                  popupClassName={dropdownOverlayClass}
+                  getPopupContainer={getPopupContainer}
+                />
               </Form.Item>
             </div>
 
             <div className="form-row">
               <Form.Item label="Priority" name="priority">
-                <Select size="small" options={["Low", "Medium", "High"].map((p) => ({ value: p, label: p }))} />
+                <Select
+                  size="small"
+                  options={["Low", "Medium", "High"].map((p) => ({ value: p, label: p }))}
+                  popupClassName={dropdownOverlayClass}
+                  getPopupContainer={getPopupContainer}
+                />
               </Form.Item>
 
               <Form.Item label="Budget Element Id" name="budgetCode">
@@ -651,10 +721,11 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                     (option?.label as string).toLowerCase().includes(input.toLowerCase())
                   }
                   optionLabelProp="elementId"
-                  getPopupContainer={(trigger) => trigger.parentNode as HTMLElement}
+                  getPopupContainer={getPopupContainer}
                   value={assignForm.getFieldValue("budgetCode")}
                   onChange={(value) => assignForm.setFieldsValue({ budgetCode: value })}
                   popupRender={(menu) => menu}
+                  popupClassName={dropdownOverlayClass}
                 />
               </Form.Item>
 
@@ -668,47 +739,20 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                   />
                   {assignLocationSuggestions.length > 0 && (
                     <div
-                      className="suggestions-list"
-                      style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        background: "#222",
-                        border: "1px solid #444",
-                        borderRadius: 4,
-                        width: "100%",
-                      }}
+                      className="suggestions-list tasks-suggestions-panel"
+                      style={{ position: "absolute", zIndex: 10, width: "100%" }}
                     >
                       {assignLocationSuggestions.map((s, idx) => (
-                        <div
+                        <button
                           key={s.place_id}
+                          type="button"
+                          className={`tasks-suggestion-option${
+                            idx === 0 ? " tasks-suggestion-option--primary" : ""
+                          }`}
                           onClick={() => handleAssignLocationSuggestionSelect(s)}
-                          style={{
-                            padding: "6px 10px",
-                            cursor: "pointer",
-                            borderBottom:
-                              idx < assignLocationSuggestions.length - 1
-                                ? "1px solid #333"
-                                : "none",
-                            background: "inherit",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#eee";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#222";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "inherit";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#fff";
-                          }}
                         >
-                          <span
-                            style={{
-                              fontWeight: idx === 0 ? "bold" : "normal",
-                              color: "#fff",
-                            }}
-                          >
-                            {s.display_name}
-                          </span>
-                        </div>
+                          {s.display_name}
+                        </button>
                       ))}
                     </div>
                   )}
@@ -762,6 +806,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
             centered
             okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
             forceRender
+            rootClassName={modalRootClassName}
           >
             <Form layout="vertical" form={editForm} preserve={false}>
               <Form.Item
@@ -778,11 +823,18 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                       ?.toUpperCase()
                       .includes(inputValue.toUpperCase())
                   }
+                  popupClassName={dropdownOverlayClass}
+                  getPopupContainer={getPopupContainer}
                 />
               </Form.Item>
 
               <Form.Item label="Assignee" name="assignedTo">
-                <Select size="small" options={assigneeOptions} />
+                <Select
+                  size="small"
+                  options={assigneeOptions}
+                  popupClassName={dropdownOverlayClass}
+                  getPopupContainer={getPopupContainer}
+                />
               </Form.Item>
 
               <Form.Item label="Due Date" name="dueDate">
@@ -795,7 +847,11 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
 
               <Form.Item label="Budget Code" name="budgetItemId">
                 <div>
-                  <Select options={budgetOptions} />
+                  <Select
+                    options={budgetOptions}
+                    popupClassName={dropdownOverlayClass}
+                    getPopupContainer={getPopupContainer}
+                  />
                   <Input />
                 </div>
               </Form.Item>
@@ -821,14 +877,18 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                     onChange={handleLocationSearchChange}
                   />
                   {locationSuggestions.length > 0 && (
-                    <div className="suggestions-list">
-                      {locationSuggestions.map((s) => (
-                        <div
+                    <div className="suggestions-list tasks-suggestions-panel">
+                      {locationSuggestions.map((s, idx) => (
+                        <button
                           key={s.place_id}
+                          type="button"
+                          className={`tasks-suggestion-option${
+                            idx === 0 ? " tasks-suggestion-option--primary" : ""
+                          }`}
                           onClick={() => handleLocationSuggestionSelect(s)}
                         >
                           {s.display_name}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -845,47 +905,20 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
                   />
                   {locationSuggestions.length > 0 && (
                     <div
-                      className="suggestions-list"
-                      style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        background: "#222",
-                        border: "1px solid #444",
-                        borderRadius: 4,
-                        width: "100%",
-                      }}
+                      className="suggestions-list tasks-suggestions-panel"
+                      style={{ position: "absolute", zIndex: 10, width: "100%" }}
                     >
                       {locationSuggestions.map((s, idx) => (
-                        <div
+                        <button
                           key={s.place_id}
+                          type="button"
+                          className={`tasks-suggestion-option${
+                            idx === 0 ? " tasks-suggestion-option--primary" : ""
+                          }`}
                           onClick={() => handleLocationSuggestionSelect(s)}
-                          style={{
-                            padding: "6px 10px",
-                            cursor: "pointer",
-                            borderBottom:
-                              idx < locationSuggestions.length - 1
-                                ? "1px solid #333"
-                                : "none",
-                            background: "inherit",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#eee";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#222";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "inherit";
-                            (e.currentTarget.firstChild as HTMLElement).style.color = "#fff";
-                          }}
                         >
-                          <span
-                            style={{
-                              fontWeight: idx === 0 ? "bold" : "normal",
-                              color: "#fff",
-                            }}
-                          >
-                            {s.display_name}
-                          </span>
-                        </div>
+                          {s.display_name}
+                        </button>
                       ))}
                     </div>
                   )}
@@ -906,6 +939,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
             onCancel={() => setIsCommentModalOpen(false)}
             centered
             okButtonProps={{ style: { background: "#FA3356", borderColor: "#FA3356" } }}
+            rootClassName={modalRootClassName}
           >
             <Input.TextArea
               value={commentText}

@@ -392,21 +392,39 @@ const SingleProject: React.FC = () => {
           onActiveProjectChange={handleActiveProjectChange}
         /> */}
 
-        <div className="dashboard-layout timeline-location-row">
-          <div className="location-wrapper">
-            <LocationComponent
-              activeProject={resolvedActiveProject}
-              onActiveProjectChange={handleActiveProjectChange}
-            />
+        {isMobileBudgetLayout ? (
+          <div className="project-mobile-stack">
+            <div className="location-wrapper">
+              <LocationComponent
+                activeProject={resolvedActiveProject}
+                onActiveProjectChange={handleActiveProjectChange}
+              />
+            </div>
+            <div className="tasks-wrapper">
+              <TasksComponent
+                projectId={resolvedActiveProject.projectId}
+                userId={userId}
+                team={resolvedActiveProject.team}
+              />
+            </div>
           </div>
-          <div className="tasks-wrapper">
-            <TasksComponent
-              projectId={resolvedActiveProject.projectId}
-              userId={userId}
-              team={resolvedActiveProject.team}
-            />
+        ) : (
+          <div className="dashboard-layout timeline-location-row">
+            <div className="location-wrapper">
+              <LocationComponent
+                activeProject={resolvedActiveProject}
+                onActiveProjectChange={handleActiveProjectChange}
+              />
+            </div>
+            <div className="tasks-wrapper">
+              <TasksComponent
+                projectId={resolvedActiveProject.projectId}
+                userId={userId}
+                team={resolvedActiveProject.team}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </BudgetProvider>
   ) : null;

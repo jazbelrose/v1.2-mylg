@@ -167,6 +167,7 @@
   .timeline-location-row {
     flex-direction: column;
     gap: 12px;
+    height: auto;
   }
 
   .location-wrapper,
@@ -175,6 +176,37 @@
     max-width: 100%;
     flex: none;
     min-width: 0;
+    height: auto;
+  }
+}
+
+.project-mobile-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.project-mobile-stack .location-wrapper,
+.project-mobile-stack .tasks-wrapper {
+  width: 100%;
+  max-width: 100%;
+  flex: none;
+}
+
+.project-mobile-stack .tasks-wrapper > .tasks-component {
+  min-height: 0;
+}
+
+@media (max-width: 768px) {
+  .project-mobile-stack {
+    gap: 10px;
+    padding-top: 10px;
+  }
+
+  .project-mobile-stack .location-wrapper,
+  .project-mobile-stack .tasks-wrapper {
+    min-height: 0;
   }
 }
 
@@ -255,24 +287,40 @@
 
 .suggestions-list {
   position: absolute;
-  background: #ffffff;
-  color: #000;
+  background: rgba(17, 18, 19, 0.94);
+  color: var(--text-primary, #f6f7fb);
   width: 100%;
-  max-height: 150px;
+  max-height: 180px;
   overflow-y: auto;
-  border-radius: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
   z-index: 1100;
   top: 100%;
   left: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.suggestions-list div {
-  padding: 8px;
+.suggestions-list > * {
+  padding: 8px 12px;
   cursor: pointer;
+  border-radius: 10px;
+  color: inherit;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 0.85rem;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-.suggestions-list div:hover {
-  background: #eeeeee;
+.suggestions-list > *:hover,
+.suggestions-list > *:focus-visible {
+  background: rgba(250, 51, 86, 0.2);
+  color: #fff;
+  outline: none;
 }
 
 .budget-overview-revision {

@@ -77,6 +77,7 @@ interface Task {
   projectId: string;
   name: string;
   assigneeId?: string;
+  assignedTo?: string;
   dueDate?: string;
   priority?: string;
   budgetItemId?: string;
@@ -278,6 +279,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
           name: (t.title || t.name || "").toUpperCase(),
           status: t.status || "todo",
           assigneeId: t.assigneeId || t.assignedTo,
+          assignedTo: t.assigneeId || t.assignedTo,
           description: t.description || t.comments,
         }));
         setTasks(mapped);
@@ -359,12 +361,16 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       };
 
       const saved = await createTask(payload);
+      const savedAssignee =
+        saved.assigneeId || (saved as ApiTask).assignedTo || payload.assigneeId || "";
       const mapped: Task = {
         ...saved,
         id: saved.taskId || id,
         projectId: saved.projectId,
         name: saved.title || '',
         status: saved.status || "todo",
+        assigneeId: savedAssignee,
+        assignedTo: savedAssignee,
       };
       setTasks((prev) => [...prev, mapped]);
 
@@ -385,16 +391,18 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     setIsTaskModalOpen(true);
 
     editForm.setFieldsValue(
-      t || {
-        name: "",
-        assignedTo: "",
-        dueDate: "",
-        priority: "",
-        budgetItemId: "",
-        eventId: "",
-        location: { lat: "", lng: "" },
-        address: "",
-      }
+      t
+        ? { ...t, assignedTo: t.assignedTo || t.assigneeId || "" }
+        : {
+          name: "",
+          assignedTo: "",
+          dueDate: "",
+          priority: "",
+          budgetItemId: "",
+          eventId: "",
+          location: { lat: "", lng: "" },
+          address: "",
+        }
     );
 
     setTaskLocation(t?.location || { lat: "", lng: "" });
@@ -428,12 +436,16 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       };
 
       const saved = editingTask ? await updateTask(payload) : await createTask(payload);
-      const mapped: Task = { 
-        ...saved, 
-        id: saved.taskId || id, 
+      const savedAssignee =
+        saved.assigneeId || (saved as ApiTask).assignedTo || payload.assigneeId || "";
+      const mapped: Task = {
+        ...saved,
+        id: saved.taskId || id,
         projectId: saved.projectId,
         name: saved.title || '',
         status: saved.status || "todo",
+        assigneeId: savedAssignee,
+        assignedTo: savedAssignee,
       };
 
       setTasks((prev) => {

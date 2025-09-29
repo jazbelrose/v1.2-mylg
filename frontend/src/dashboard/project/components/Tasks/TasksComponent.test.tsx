@@ -36,7 +36,7 @@ vi.mock('antd', () => ({
   ConfigProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   message: { error: vi.fn(), success: vi.fn() },
   theme: { defaultAlgorithm: {}, darkAlgorithm: {} },
-  Table: vi.fn(({ columns, dataSource }) => 
+  Table: vi.fn(({ columns, dataSource }) =>
     !dataSource || dataSource.length === 0 ? <div>No tasks yet!</div> : (
       <div>
         {dataSource.map((record: any) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -44,6 +44,14 @@ vi.mock('antd', () => ({
             {columns.map((col: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
               if (col.dataIndex === 'name') {
                 return <div key={col.key}>{(record[col.dataIndex] || "").toUpperCase()}</div>;
+              }
+              if (col.dataIndex === 'assignedTo') {
+                const value = record[col.dataIndex] ?? record.assigneeId;
+                return (
+                  <div key={col.key || col.dataIndex}>
+                    {col.render ? col.render(value, record) : value}
+                  </div>
+                );
               }
               if (col.key === 'actions') {
                 return <div key={col.key}>{col.render(null, record)}</div>;
@@ -188,6 +196,23 @@ test('invokes deleteTask when deleting a task', async () => {
   await userEvent.click(await screen.findByText('Delete'));
 
   await waitFor(() => expect(deleteTaskMock).toHaveBeenCalledWith({ projectId: 'p1', taskId: '1' }));
+});
+
+test('renders assignee from assigneeId field returned by API', async () => {
+  fetchTasksMock.mockResolvedValue([
+    {
+      projectId: 'p1',
+      taskId: 'task-1',
+      title: 'Lighting Design',
+      assigneeId: 'Alice Wonderland__user-1',
+      status: 'todo',
+    },
+  ]);
+
+  render(<TasksComponent projectId="p1" team={[]} />);
+
+  await screen.findByText('LIGHTING DESIGN');
+  expect(await screen.findByText('Alice Wonderland')).toBeInTheDocument();
 });
 
 test('restores task and shows error message when deleteTask fails', async () => {

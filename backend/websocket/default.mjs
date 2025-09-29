@@ -10,17 +10,126 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand, PutCommand, UpdateCommand, DeleteCommand, QueryCommand, GetCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
+import { S3Client, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "crypto";
 import { v4 as uuid } from "uuid";
+import { getFileUrl } from "/opt/nodejs/utils/files.mjs";
 
 const dynamoClient = new DynamoDBClient({});
 const dynamoDb = DynamoDBDocumentClient.from(dynamoClient);
 const apigwManagementApi = new ApiGatewayManagementApiClient({
   endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
+const REGION = process.env.AWS_REGION || "us-west-2";
+const FILE_BUCKET = process.env.FILE_BUCKET || "mylg-files-v12";
+const FAVICON_PREFIX = process.env.FAVICON_PREFIX || "public/favicons";
+const s3Client = new S3Client({ region: REGION });
 const inboxTable = process.env.INBOX_TABLE;
 const notificationsTable = process.env.NOTIFICATIONS_TABLE;
 const projectsTable = process.env.PROJECTS_TABLE;
+
+const TRAILING_PUNCTUATION_REGEX = /[)\],.!?]+$/;
+const URL_REGEX = /https?:\/\/[^\s<>"]+/i;
+const DEFAULT_FAVICON_SVG =
+  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='#4ea1f3'/><path d='M5.75 10.25l4.5-4.5M6.5 5.75h3.75V9.5' fill='none' stroke='#fff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+
+function sanitizeDomain(hostname = "") {
+  return String(hostname).toLowerCase().replace(/[^a-z0-9.-]/g, "-");
+}
+
+async function ensureCachedFavicon(url) {
+  if (!FILE_BUCKET || !url) return null;
+
+  let hostname = "";
+  try {
+    hostname = new URL(url).hostname;
+  } catch {
+    return null;
+  }
+
+  if (!hostname) return null;
+
+  const safeDomain = sanitizeDomain(hostname);
+  const key = `${FAVICON_PREFIX}/${safeDomain}`;
+
+  try {
+    await s3Client.send(new HeadObjectCommand({ Bucket: FILE_BUCKET, Key: key }));
+    return { key, url: getFileUrl(key) };
+  } catch (err) {
+    if (err?.$metadata?.httpStatusCode !== 404) {
+      console.warn("⚠️ Failed to HEAD cached favicon", { domain: hostname, err: err?.message });
+    }
+  }
+
+  const sources = [
+    `https://${hostname}/favicon.ico`,
+    `https://${hostname}/favicon.png`,
+    `https://${hostname}/apple-touch-icon.png`,
+    `https://${hostname}/apple-touch-icon-precomposed.png`,
+    `https://www.google.com/s2/favicons?sz=64&domain=${hostname}`,
+  ];
+
+  let iconBuffer = null;
+  let contentType = "image/png";
+
+  for (const source of sources) {
+    try {
+      const response = await fetch(source, { redirect: "follow" });
+      if (!response?.ok) continue;
+      const arrayBuffer = await response.arrayBuffer();
+      if (!arrayBuffer || !arrayBuffer.byteLength) continue;
+      iconBuffer = Buffer.from(arrayBuffer);
+      const headerType = response.headers?.get?.("content-type");
+      if (headerType) contentType = headerType;
+      break;
+    } catch (err) {
+      console.warn("⚠️ Failed to fetch favicon", { source, err: err?.message });
+    }
+  }
+
+  if (!iconBuffer) {
+    iconBuffer = Buffer.from(DEFAULT_FAVICON_SVG, "utf8");
+    contentType = "image/svg+xml";
+  }
+
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: FILE_BUCKET,
+        Key: key,
+        Body: iconBuffer,
+        ContentType: contentType,
+        CacheControl: "public, max-age=2592000, immutable",
+        Metadata: { domain: hostname, source: "messages-link-preview" },
+      })
+    );
+  } catch (err) {
+    console.error("❌ Failed to store cached favicon", { domain: hostname, err });
+    return null;
+  }
+
+  return { key, url: getFileUrl(key) };
+}
+
+async function buildLinkPreviewFromText(text) {
+  if (typeof text !== "string" || !text.trim()) return null;
+  const match = text.match(URL_REGEX);
+  if (!match || !match[0]) return null;
+  const rawUrl = match[0].replace(TRAILING_PUNCTUATION_REGEX, "");
+
+  try {
+    // Validate URL
+    new URL(rawUrl);
+  } catch {
+    return null;
+  }
+
+  const cached = await ensureCachedFavicon(rawUrl);
+  if (cached?.key) {
+    return { url: rawUrl, faviconKey: cached.key, faviconUrl: cached.url };
+  }
+  return { url: rawUrl };
+}
 
 export const handler = async (event) => {
   console.log("📩 Received WS Message:", JSON.stringify(event, null, 2));
@@ -439,6 +548,15 @@ const handleSendMessage = async (payload) => {
       };
     });
 
+  let linkPreview = null;
+  if (typeof text === "string" && text.trim()) {
+    try {
+      linkPreview = await buildLinkPreviewFromText(text);
+    } catch (err) {
+      console.warn("⚠️ Failed to build link preview", { conversationId: finalConversationId, err });
+    }
+  }
+
   const messageItem = {
     messageId: `MESSAGE#${String(timestamp).padStart(13, "0")}#${uuid()}`,
     senderId,
@@ -452,6 +570,7 @@ const handleSendMessage = async (payload) => {
     reactions: {},
     attachments: cleanAttachments,
     ...(conversationType === "dm" && recipientId ? { recipientId } : {}),
+    ...(linkPreview ? { linkPreview } : {}),
   };
 
   if (conversationType === "project") {
@@ -629,6 +748,13 @@ const handleEditMessage = async (payload) => {
     return { statusCode: 400, body: "Missing fields" };
   }
 
+  let linkPreview = null;
+  try {
+    linkPreview = await buildLinkPreviewFromText(text);
+  } catch (err) {
+    console.warn("⚠️ Failed to rebuild link preview on edit", { conversationId, messageId, err });
+  }
+
   const eventPayload = {
     action: "editMessage",
     conversationType,
@@ -639,6 +765,7 @@ const handleEditMessage = async (payload) => {
     editedBy,
     timestamp,
     projectId,
+    linkPreview: linkPreview || null,
   };
 
   if (conversationType === "dm") {
@@ -647,13 +774,15 @@ const handleEditMessage = async (payload) => {
       await dynamoDb.send(new UpdateCommand({
         TableName: process.env.MESSAGES_TABLE,
         Key: { conversationId, messageId },
-        UpdateExpression: "SET #t = :text, edited = :edited, editedAt = :editedAt, editedBy = :editedBy",
+        UpdateExpression:
+          "SET #t = :text, edited = :edited, editedAt = :editedAt, editedBy = :editedBy, linkPreview = :linkPreview",
         ExpressionAttributeNames: { "#t": "text" },
         ExpressionAttributeValues: {
           ":text": text,
           ":edited": true,
           ":editedAt": editedAt || new Date().toISOString(),
           ":editedBy": editedBy,
+          ":linkPreview": linkPreview || null,
         },
       }));
       console.log("✅ DM message updated in DB:", messageId);
@@ -674,13 +803,15 @@ const handleEditMessage = async (payload) => {
       await dynamoDb.send(new UpdateCommand({
         TableName: process.env.PROJECT_MESSAGES_TABLE,
         Key: { projectId, messageId },
-        UpdateExpression: "SET #t = :text, edited = :edited, editedAt = :editedAt, editedBy = :editedBy",
+        UpdateExpression:
+          "SET #t = :text, edited = :edited, editedAt = :editedAt, editedBy = :editedBy, linkPreview = :linkPreview",
         ExpressionAttributeNames: { "#t": "text" },
         ExpressionAttributeValues: {
           ":text": text,
           ":edited": true,
           ":editedAt": editedAt || new Date().toISOString(),
           ":editedBy": editedBy,
+          ":linkPreview": linkPreview || null,
         },
       }));
       console.log("✅ Project message updated in DB:", messageId);

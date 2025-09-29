@@ -125,22 +125,25 @@ const ChatWindow: React.FC<ChatWindowProps & {
             Looks quiet. Drop your first idea here.
           </div>
         ) : (
-          displayMessages.map((msg, index) => (
-            <MessageItem
-              key={msg.optimisticId || msg.messageId || String(msg.timestamp)}
-              msg={msg as ChatMessage}
-              prevMsg={displayMessages[index - 1] as ChatMessage}
-              userData={userData}
-              allUsers={allUsers}
-              openPreviewModal={openPreviewModal}
-              folderKey={folderKey}
-              renderFilePreview={renderFilePreview}
-              getFileNameFromUrl={getFileNameFromUrl}
-              onDelete={onDelete}
-              onEditRequest={onEditRequest}
-              onReact={onReact}
-            />
-          ))
+          displayMessages.map((msg, index) => {
+            const messageKey = msg.messageId || msg.optimisticId || `temp-${index}`;
+            return (
+              <MessageItem
+                key={messageKey}
+                msg={msg as ChatMessage}
+                prevMsg={displayMessages[index - 1] as ChatMessage}
+                userData={userData}
+                allUsers={allUsers}
+                openPreviewModal={openPreviewModal}
+                folderKey={folderKey}
+                renderFilePreview={renderFilePreview}
+                getFileNameFromUrl={getFileNameFromUrl}
+                onDelete={onDelete}
+                onEditRequest={onEditRequest}
+                onReact={onReact}
+              />
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>

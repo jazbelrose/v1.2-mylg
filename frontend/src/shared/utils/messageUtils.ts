@@ -19,6 +19,11 @@ export interface BaseMessage {
   conversationId?: string;
   read?: boolean;
   reactions?: Record<string, string[]>;
+  linkPreview?: {
+    url?: string;
+    faviconKey?: string;
+    faviconUrl?: string;
+  } | null;
   [key: string]: unknown;
 }
 

@@ -42,6 +42,79 @@ interface MessageItemProps {
   onReact?: (messageId: string, emoji: Emoji) => void;
 }
 
+const DEFAULT_FAVICON_DATA_URI =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%234ea1f3'/%3E%3Cpath d='M5.75 10.25l4.5-4.5M6.5 5.75h3.75V9.5' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
+const TRAILING_PUNCTUATION_REGEX = /[)\],.!?]+$/;
+const VIDEO_HOST_REGEX = /(?:youtu\.be|youtube\.com|vimeo\.com)/i;
+const FAVICON_IMAGE_STYLE: React.CSSProperties = {
+  width: 20,
+  height: 20,
+  objectFit: "contain",
+  display: "block",
+};
+const ICON_WRAPPER_STYLE: React.CSSProperties = {
+  width: 20,
+  height: 20,
+  marginRight: 6,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+};
+const LINK_CONTAINER_STYLE: React.CSSProperties = { maxWidth: "300px" };
+const LINK_ANCHOR_STYLE: React.CSSProperties = {
+  color: "#4ea1f3",
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  textDecoration: "none",
+};
+const LINK_TEXT_STYLE: React.CSSProperties = {
+  overflowWrap: "anywhere",
+  wordBreak: "break-word",
+};
+
+type LinkPreviewData = { url: string; faviconSrc?: string } | null;
+
+const FaviconImage = React.memo(({ src }: { src?: string }) => {
+  const [errored, setErrored] = useState(false);
+
+  React.useEffect(() => {
+    setErrored(false);
+  }, [src]);
+
+  const finalSrc = !errored && src ? src : DEFAULT_FAVICON_DATA_URI;
+
+  return (
+    <img
+      src={finalSrc}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      width={20}
+      height={20}
+      style={FAVICON_IMAGE_STYLE}
+      onError={() => {
+        if (!errored) setErrored(true);
+      }}
+    />
+  );
+}, (prev, next) => prev.src === next.src);
+
+const LinkPreviewRow = React.memo(
+  ({ url, faviconSrc }: { url: string; faviconSrc?: string }) => (
+    <div style={LINK_CONTAINER_STYLE}>
+      <a href={url} target="_blank" rel="noopener noreferrer" style={LINK_ANCHOR_STYLE}>
+        <span style={ICON_WRAPPER_STYLE}>
+          <FaviconImage src={faviconSrc} />
+        </span>
+        <span style={LINK_TEXT_STYLE}>{url}</span>
+      </a>
+    </div>
+  ),
+  (prev, next) => prev.url === next.url && prev.faviconSrc === next.faviconSrc
+);
+
 const MessageItem: React.FC<MessageItemProps> = ({
   msg,
   prevMsg,
@@ -103,57 +176,26 @@ const MessageItem: React.FC<MessageItemProps> = ({
   const urlRegex = /(https?:\/\/[^\s]+)/;
   const matchedUrl = text.match(urlRegex)?.[0];
 
-  const RenderLinkContent: React.FC<{ url: string }> = ({ url }) => {
-    if (/youtu\.be|youtube\.com|vimeo\.com/.test(url)) {
-      return (
-        <div style={{ maxWidth: "300px" }}>
-          <ReactPlayer src={url} width="100%" height="200px" controls />
-        </div>
-      );
-    }
-    let domain = "";
-    try {
-      domain = new URL(url).hostname;
-    } catch {
-      domain = "";
-    }
-    const defaultIcon =
-      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%234ea1f3'/%3E%3Cpath d='M5.75 10.25l4.5-4.5M6.5 5.75h3.75V9.5' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
-    const fallbackIcon =
-      domain !== ""
-        ? `https://icons.duckduckgo.com/ip3/${domain}.ico`
-        : undefined;
-    const faviconUrl =
-      domain !== ""
-        ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}`
-        : fallbackIcon ?? defaultIcon;
-    return (
-      <div style={{ maxWidth: "300px" }}>
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "#4ea1f3", display: "flex", alignItems: "center" }}
-        >
-          <img
-            src={faviconUrl}
-            alt=""
-            style={{ width: 16, height: 16, marginRight: 4 }}
-            referrerPolicy="no-referrer"
-            onError={(event) => {
-              if (fallbackIcon && event.currentTarget.src !== fallbackIcon) {
-                event.currentTarget.src = fallbackIcon;
-                return;
-              }
-              event.currentTarget.onerror = null;
-              event.currentTarget.src = defaultIcon;
-            }}
-          />
-          {url}
-        </a>
-      </div>
-    );
-  };
+  const linkPreviewData: LinkPreviewData = useMemo(() => {
+    const preview = msg.linkPreview || null;
+    const previewUrl = typeof preview?.url === "string" ? preview.url : undefined;
+    const candidate = previewUrl || matchedUrl || "";
+    if (!candidate) return null;
+
+    const trimmed = candidate.trim();
+    if (!trimmed) return null;
+
+    const sanitizedUrl = trimmed.replace(TRAILING_PUNCTUATION_REGEX, "");
+    if (!sanitizedUrl) return null;
+
+    const faviconSource = preview?.faviconUrl || preview?.faviconKey;
+    const normalizedFavicon = faviconSource ? normalizeFileUrl(faviconSource) : undefined;
+
+    return {
+      url: sanitizedUrl,
+      faviconSrc: normalizedFavicon,
+    };
+  }, [matchedUrl, msg.linkPreview?.url, msg.linkPreview?.faviconKey, msg.linkPreview?.faviconUrl]);
 
   const messageDate = new Date(msg.timestamp);
   const formattedDate = messageDate.toLocaleDateString("en-US", {
@@ -209,8 +251,15 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       );
     }
-    if (matchedUrl) {
-      return <RenderLinkContent url={matchedUrl} />;
+    if (linkPreviewData) {
+      if (VIDEO_HOST_REGEX.test(linkPreviewData.url)) {
+        return (
+          <div style={{ maxWidth: "300px" }}>
+            <ReactPlayer src={linkPreviewData.url} width="100%" height="200px" controls />
+          </div>
+        );
+      }
+      return <LinkPreviewRow url={linkPreviewData.url} faviconSrc={linkPreviewData.faviconSrc} />;
     }
     return text;
   };

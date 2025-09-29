@@ -100,6 +100,11 @@ type Message = {
   file?: FileObj;
   attachments?: Attachment[]; // NEW: explicit attachments
   reactions?: Record<string, string[]>; // emoji -> [userId]
+  linkPreview?: {
+    url?: string;
+    faviconKey?: string;
+    faviconUrl?: string;
+  } | null;
 };
 
 type GetProjectMessagesResponse =
@@ -900,7 +905,7 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
           : [];
         const updated = msgs.map((m) =>
           m.messageId === message.messageId
-            ? { ...m, text: newText, edited: true, editedAt: ts }
+            ? { ...m, text: newText, edited: true, editedAt: ts, linkPreview: null }
             : m
         );
         setWithTTL(pmKey(projectId), updated);
@@ -1052,22 +1057,25 @@ const ProjectMessagesThread: React.FC<ProjectMessagesThreadProps> = ({
                 Looks quiet. Drop your first idea here.
               </div>
             ) : (
-              displayMessages.map((msg, index) => (
-                <MessageItem
-                  key={msg.messageId || msg.optimisticId || String(msg.timestamp)}
-                  msg={msg as ChatMessage}
-                  prevMsg={displayMessages[index - 1] as ChatMessage}
-                  userData={userData}
-                  allUsers={allUsers}
-                  openPreviewModal={openPreviewModal}
-                  folderKey={folderKey}
-                  renderFilePreview={renderFilePreview}
-                  getFileNameFromUrl={getFileNameFromUrl}
-                  onDelete={(m: ChatMessage) => setDeleteTarget(m as Message)}
-                  onEditRequest={(m: ChatMessage) => setEditTarget(m as Message)}
-                  onReact={reactToMessage}
-                />
-              ))
+              displayMessages.map((msg, index) => {
+                const messageKey = msg.messageId || msg.optimisticId || `temp-${index}`;
+                return (
+                  <MessageItem
+                    key={messageKey}
+                    msg={msg as ChatMessage}
+                    prevMsg={displayMessages[index - 1] as ChatMessage}
+                    userData={userData}
+                    allUsers={allUsers}
+                    openPreviewModal={openPreviewModal}
+                    folderKey={folderKey}
+                    renderFilePreview={renderFilePreview}
+                    getFileNameFromUrl={getFileNameFromUrl}
+                    onDelete={(m: ChatMessage) => setDeleteTarget(m as Message)}
+                    onEditRequest={(m: ChatMessage) => setEditTarget(m as Message)}
+                    onReact={reactToMessage}
+                  />
+                );
+              })
             )}
             {messages.length > 0 && <div />}
           </div>

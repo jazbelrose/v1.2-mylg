@@ -248,7 +248,9 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                 return {
                   ...prev,
                   messages: msgs.map((m) =>
-                    m.messageId === data.messageId ? { ...m, text: data.text, edited: true, editedAt: data.editedAt } : m
+                    m.messageId === data.messageId
+                      ? { ...m, text: data.text, edited: true, editedAt: data.editedAt, linkPreview: data.linkPreview || null }
+                      : m
                   ),
                 };
               });
@@ -302,7 +304,9 @@ export const SocketProvider: React.FC<React.PropsWithChildren> = ({ children }) 
                 return {
                   ...prev,
                   [projectId]: msgs.map((m) =>
-                    m.messageId === data.messageId ? { ...m, text: data.text, edited: true, editedAt: data.editedAt } : m
+                    m.messageId === data.messageId
+                      ? { ...m, text: data.text, edited: true, editedAt: data.editedAt, linkPreview: data.linkPreview || null }
+                      : m
                   ),
                 };
               });

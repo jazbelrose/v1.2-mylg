@@ -740,7 +740,7 @@ const fetchMessages = async () => {
           ...prev,
           messages: msgs.map((m) =>
             m.messageId === message.messageId
-              ? { ...m, text: newText, edited: true, editedAt: ts }
+              ? { ...m, text: newText, edited: true, editedAt: ts, linkPreview: null }
               : m
           ),
         };

@@ -1,5 +1,5 @@
 .galleryTrigger {
-  --row-h: clamp(120px, 18vw + 72px, 168px);
+  --row-h: 140px;
   cursor: pointer;
   display: flex;
   /* Ensure a strict two-column row layout even if parent styles try to override */
@@ -12,7 +12,7 @@
   transition: transform 0.2s ease;
   flex-wrap: nowrap;
   gap: 12px;
-  padding: clamp(16px, 4vw, 24px);
+  padding: 20px;
   box-sizing: border-box;
   background-color: rgba(12, 12, 12, 0.75);
   border-radius: 16px;
@@ -193,11 +193,13 @@
 
 @media (max-width: 768px) {
   .galleryTrigger {
-    --row-h: clamp(108px, 10vw + 96px, 148px);
+    --row-h: 140px;
     flex-direction: row !important;
     align-items: center !important;
-    padding: clamp(12px, 3vw, 16px);
+    padding: 16px;
     gap: 10px;
+    height: var(--row-h);
+    flex-shrink: 0;
   }
 
   .titleColumn {
@@ -233,6 +235,7 @@
     line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -240,9 +243,11 @@
 
 @media (max-width: 540px) {
   .galleryTrigger {
-    --row-h: clamp(104px, 12vw + 84px, 138px);
+    --row-h: 120px;
     padding: 12px;
     gap: 8px;
+    height: var(--row-h);
+    flex-shrink: 0;
   }
 
   .titleColumn {
@@ -292,11 +297,13 @@
 
 @media (max-width: 330px) {
   .galleryTrigger {
-    --row-h: clamp(90px, 20vw + 64px, 124px);
+    --row-h: 100px;
+    height: var(--row-h);
+    flex-shrink: 0;
   }
 
   .thumbnailCarousel {
-    --thumb-column: clamp(70px, calc(var(--row-h) * 0.7), 110px);
+    --thumb-column: 70px;
     gap: 6px;
   }
 

@@ -74,17 +74,37 @@
   .budget-calendar-layout .calendar-column {
     gap: 6px;
   }
+  
+  /* Ensure gallery maintains minimum height on mobile */
+  .budget-calendar-layout--stacked .budget-column .view-gallery {
+    min-height: 120px;
+    flex-shrink: 0;
+  }
 }
 
 @media (max-width: 640px) {
   .budget-calendar-layout--stacked .budget-column .budget-overview-card {
     max-height: 160px;
   }
+  
+  .budget-calendar-layout--stacked .budget-column .view-gallery {
+    min-height: 110px;
+  }
 }
 
 @media (max-width: 480px) {
   .budget-calendar-layout--stacked .budget-column .budget-overview-card {
     max-height: 140px;
+  }
+  
+  .budget-calendar-layout--stacked .budget-column .view-gallery {
+    min-height: 110px;
+  }
+}
+
+@media (max-width: 330px) {
+  .budget-calendar-layout--stacked .budget-column .view-gallery {
+    min-height: 120px;
   }
 }
 

@@ -574,8 +574,24 @@
 
 
 .calendar-overview-card-wrapper .calendar-day.in-range {
-  border-color:none;
-  background: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.calendar-overview-card-wrapper .calendar-day.in-range:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.calendar-overview-card-wrapper .calendar-day.in-range.selected {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.calendar-overview-card-wrapper .calendar-day.in-range.today {
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.10);
 }
 
 .day-popover {

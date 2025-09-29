@@ -4,10 +4,19 @@ import { Plus, MapPin, Calendar, ChevronDown } from "lucide-react";
 
 import Map from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
+import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
 
 import styles from "./TasksComponentMobile.module.css";
 
 type Status = "todo" | "in_progress" | "done" | string;
+
+type Project = {
+  projectId?: string;
+  title?: string;
+  thumbnails?: string[];
+  address?: string;
+  location?: { lat: number; lng: number };
+};
 
 type RawTask = {
   taskId?: string;
@@ -41,6 +50,8 @@ type TasksComponentMobileProps = {
   projectId?: string;
   projectName?: string;
   projectColor?: string;
+  activeProject?: Project;
+  onActiveProjectChange?: (project: Project) => void;
 };
 
 const dueFormatter = new Intl.DateTimeFormat(undefined, {
@@ -193,6 +204,8 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   projectId = "",
   projectName,
   projectColor,
+  activeProject,
+  onActiveProjectChange,
 }) => {
   const [tasks, setTasks] = useState<QuickTask[]>([]);
   const [loading, setLoading] = useState(false);
@@ -391,9 +404,16 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
           </div>
 
           <div className={styles.drawerContent}>
-            <section className={styles.drawerSection} aria-label="Task map">
-              <h3 className={styles.sectionHeading}>Task map</h3>
-              {error ? (
+            <section className={styles.drawerSection} aria-label="Project map">
+              <h3 className={styles.sectionHeading}>Project map</h3>
+              {activeProject && onActiveProjectChange ? (
+                <div className={styles.locationContainer}>
+                  <LocationComponent
+                    activeProject={activeProject}
+                    onActiveProjectChange={onActiveProjectChange}
+                  />
+                </div>
+              ) : error ? (
                 <div className={styles.mapEmpty}>{error}</div>
               ) : loading ? (
                 <div className={styles.mapEmpty}>Loading tasks…</div>

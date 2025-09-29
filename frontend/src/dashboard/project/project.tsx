@@ -419,6 +419,8 @@ const SingleProject: React.FC = () => {
                 projectId={resolvedActiveProject.projectId}
                 projectName={resolvedActiveProject.title}
                 projectColor={resolvedActiveProject.color as string | undefined}
+                activeProject={resolvedActiveProject}
+                onActiveProjectChange={handleActiveProjectChange}
               />
             ) : (
               <TasksComponent

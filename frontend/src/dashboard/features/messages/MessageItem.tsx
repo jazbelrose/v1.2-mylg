@@ -7,6 +7,7 @@ import ReactPlayer from "react-player";
 import { normalizeFileUrl, getFileUrl } from "../../../shared/utils/api";
 import ReactionBar from "@/shared/ui/ReactionBar";
 import { ChatMessage, ChatFile, DMFile } from "@/shared/utils/messageUtils";
+import CachedFavicon from "./components/CachedFavicon";
 
 type Emoji = string;
 
@@ -117,38 +118,15 @@ const MessageItem: React.FC<MessageItemProps> = ({
     } catch {
       domain = "";
     }
-    const defaultIcon =
-      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%234ea1f3'/%3E%3Cpath d='M5.75 10.25l4.5-4.5M6.5 5.75h3.75V9.5' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
-    const fallbackIcon =
-      domain !== ""
-        ? `https://icons.duckduckgo.com/ip3/${domain}.ico`
-        : undefined;
-    const faviconUrl =
-      domain !== ""
-        ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}`
-        : fallbackIcon ?? defaultIcon;
     return (
       <div style={{ maxWidth: "300px" }}>
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: "#4ea1f3", display: "flex", alignItems: "center" }}
+          style={{ color: "#4ea1f3", display: "flex", alignItems: "center", gap: 6 }}
         >
-          <img
-            src={faviconUrl}
-            alt=""
-            style={{ width: 16, height: 16, marginRight: 4 }}
-            referrerPolicy="no-referrer"
-            onError={(event) => {
-              if (fallbackIcon && event.currentTarget.src !== fallbackIcon) {
-                event.currentTarget.src = fallbackIcon;
-                return;
-              }
-              event.currentTarget.onerror = null;
-              event.currentTarget.src = defaultIcon;
-            }}
-          />
+          <CachedFavicon domain={domain} />
           {url}
         </a>
       </div>

@@ -10,10 +10,16 @@ export type QuickCreateTaskModalProject = {
   name: string;
 };
 
+export type QuickCreateTaskModalAssignee = {
+  id: string;
+  name: string;
+};
+
 export type QuickCreateTaskModalProps = {
   open: boolean;
   onClose: () => void;
   projects: QuickCreateTaskModalProject[];
+  assignees?: QuickCreateTaskModalAssignee[];
   onCreated: () => void;
 };
 
@@ -21,23 +27,27 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   open,
   onClose,
   projects,
+  assignees,
   onCreated,
 }) => {
   const [projectId, setProjectId] = useState<string>("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [assigneeId, setAssigneeId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const projectOptions = useMemo(() => projects ?? [], [projects]);
+  const assigneeOptions = useMemo(() => assignees ?? [], [assignees]);
 
   const resetForm = useCallback(() => {
     setProjectId("");
     setTitle("");
     setDescription("");
     setDueDate("");
+    setAssigneeId("");
     setSubmitting(false);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -64,6 +74,19 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       return projectOptions[0].id;
     });
   }, [open, projectOptions, resetForm]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setAssigneeId((current) => {
+      if (current && assigneeOptions.some((assignee) => assignee.id === current)) {
+        return current;
+      }
+      return "";
+    });
+  }, [open, assigneeOptions]);
 
   useEffect(() => {
     if (!open) return;
@@ -124,11 +147,13 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
         description: description.trim() || undefined,
         dueDate: dueDateIso,
         status: "todo",
+        assigneeId: assigneeId || undefined,
       });
       setSuccessMessage("Task created. You'll see it in your lists shortly.");
       setTitle("");
       setDescription("");
       setDueDate("");
+      setAssigneeId("");
       onCreated();
     } catch (error) {
       console.error("Failed to create task", error);
@@ -165,6 +190,22 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
               {projectOptions.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.fieldLabel}>
+            Assigned to <span className={styles.fieldOptional}>(optional)</span>
+            <select
+              className={styles.selectInput}
+              value={assigneeId}
+              onChange={(event) => setAssigneeId(event.target.value)}
+              disabled={submitting}
+            >
+              <option value="">Unassigned</option>
+              {assigneeOptions.map((assignee) => (
+                <option key={assignee.id} value={assignee.id}>
+                  {assignee.name}
                 </option>
               ))}
             </select>

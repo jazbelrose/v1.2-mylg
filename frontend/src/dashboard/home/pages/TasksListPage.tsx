@@ -143,6 +143,7 @@ const TasksListPage: React.FC = () => {
     navigateToProject,
     refreshTasks,
     projectOptions,
+    assigneeOptions,
   } = useTasksOverview();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -376,6 +377,7 @@ const TasksListPage: React.FC = () => {
         open={isCreateModalOpen}
         onClose={closeCreateModal}
         projects={projectOptions}
+        assignees={assigneeOptions}
         onCreated={refreshTasks}
       />
     </>

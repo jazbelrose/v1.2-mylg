@@ -10,7 +10,8 @@ type TasksOverviewCardProps = {
   className?: string;
 };
 const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
-  const { loading, error, stats, groups, refreshTasks, projectOptions } = useTasksOverview();
+  const { loading, error, stats, groups, refreshTasks, projectOptions, assigneeOptions } =
+    useTasksOverview();
   const location = useLocation();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -114,6 +115,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
         open={isCreateModalOpen}
         onClose={closeCreateModal}
         projects={projectOptions}
+        assignees={assigneeOptions}
         onCreated={refreshTasks}
       />
     </>

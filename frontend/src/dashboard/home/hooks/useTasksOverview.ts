@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useData } from "@/app/contexts/useData";
-import type { Project } from "@/app/contexts/DataProvider";
+import type { Project, UserLite } from "@/app/contexts/DataProvider";
 import { fetchTasks } from "@/shared/utils/api";
 import { getColor } from "@/shared/utils/colorUtils";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import pLimit from "@/shared/utils/pLimit";
 import { endOfWeek, startOfWeek } from "@/dashboard/home/utils/dateUtils";
+import type { AppUser } from "@/dashboard/features/messages/types";
+import { getUserDisplayName } from "@/dashboard/features/messages/utils/userHelpers";
 
 const dayFormatter = new Intl.DateTimeFormat(undefined, {
   weekday: "short",
@@ -86,6 +88,11 @@ export type TasksOverviewProjectOption = {
   color?: string;
 };
 
+type TasksOverviewAssigneeOption = {
+  id: string;
+  name: string;
+};
+
 function parseDueDate(value?: unknown): Date | null {
   if (value == null || value === "") return null;
 
@@ -153,7 +160,11 @@ function pickDue(raw: RawTask): { value: Date | null; key?: string; timeLabel?: 
 }
 
 export function useTasksOverview() {
-  const { projects = [] } = useData() as { projects: Project[] };
+  const { projects = [], userData, allUsers } = useData() as {
+    projects: Project[];
+    userData?: UserLite | null;
+    allUsers?: UserLite[];
+  };
   const navigate = useNavigate();
 
   const [tasks, setTasks] = useState<NormalizedTask[]>([]);
@@ -423,6 +434,32 @@ export function useTasksOverview() {
     [projects]
   );
 
+  const assigneeOptions: TasksOverviewAssigneeOption[] = useMemo(() => {
+    const collaboratorIds = Array.isArray(userData?.collaborators)
+      ? userData.collaborators.filter(
+          (id): id is string => typeof id === "string" && id.trim().length > 0
+        )
+      : [];
+
+    if (!collaboratorIds.length) {
+      return [];
+    }
+
+    const collaboratorsSet = new Set(collaboratorIds);
+    const users = Array.isArray(allUsers) ? allUsers : [];
+
+    const options = users
+      .filter((user): user is UserLite & { userId: string } =>
+        Boolean(user?.userId && collaboratorsSet.has(user.userId))
+      )
+      .map((user) => ({
+        id: user.userId,
+        name: getUserDisplayName(user as AppUser),
+      }));
+
+    return options.sort((a, b) => a.name.localeCompare(b.name));
+  }, [allUsers, userData]);
+
   const primaryProjectName = primaryProjectId
     ? projectMap.get(primaryProjectId)?.title ?? primaryProjectId
     : undefined;
@@ -441,6 +478,7 @@ export function useTasksOverview() {
     navigateToProject,
     refreshTasks,
     projectOptions,
+    assigneeOptions,
     primaryProjectId,
     primaryProjectName,
   };

@@ -177,8 +177,8 @@
   backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-  padding: clamp(12px, 4vh, 24px) 12px 12px;
+  align-items: flex-start;
+  
   z-index: 1600;
 }
 

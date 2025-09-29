@@ -5,19 +5,10 @@ import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
-import LocationComponent from "@/dashboard/project/components/Shared/LocationComponent";
 
 import styles from "./TasksComponentMobile.module.css";
 
 type Status = "todo" | "in_progress" | "done" | string;
-
-type Project = {
-  projectId?: string;
-  title?: string;
-  thumbnails?: string[];
-  address?: string;
-  location?: { lat: number; lng: number };
-};
 
 type RawTask = {
   taskId?: string;
@@ -51,8 +42,6 @@ type TasksComponentMobileProps = {
   projectId?: string;
   projectName?: string;
   projectColor?: string;
-  activeProject?: Project;
-  onActiveProjectChange?: (project: Project) => void;
 };
 
 const dueFormatter = new Intl.DateTimeFormat(undefined, {
@@ -212,8 +201,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   projectId = "",
   projectName,
   projectColor,
-  activeProject,
-  onActiveProjectChange,
 }) => {
   const [tasks, setTasks] = useState<QuickTask[]>([]);
   const [loading, setLoading] = useState(false);
@@ -649,18 +636,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
             <p className={styles.status}>{statusMessage}</p>
           </div>
           <div className={styles.sheetScrollArea}>
-            {activeProject && onActiveProjectChange ? (
-              <section className={styles.sheetSection} aria-label="Project area">
-                <h3 className={styles.sectionHeading}>Project area</h3>
-                <div className={styles.locationContainer}>
-                  <LocationComponent
-                    activeProject={activeProject}
-                    onActiveProjectChange={onActiveProjectChange}
-                  />
-                </div>
-              </section>
-            ) : null}
-
             <section className={styles.sheetSection} aria-label="All project tasks">
               <h3 className={styles.sectionHeading}>Task list</h3>
               {error ? (

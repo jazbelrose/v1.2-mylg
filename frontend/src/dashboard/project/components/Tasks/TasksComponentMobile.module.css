@@ -173,7 +173,7 @@
 .sheetOverlay {
   position: fixed;
   inset: 0;
-  z-index: 1600;
+  z-index: 10000;
   background: #050607;
   color: var(--text-primary, #f6f7fb);
 }
@@ -189,6 +189,7 @@
   position: absolute;
   inset: 0;
   pointer-events: auto;
+  z-index: 1;
 }
 
 .mapGradient {
@@ -215,6 +216,7 @@
   backdrop-filter: blur(16px);
   pointer-events: auto;
   max-width: min(280px, 85vw);
+  z-index: 10001;
 }
 
 .mapProject {
@@ -263,6 +265,7 @@
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(14px);
   pointer-events: auto;
+  z-index: 10002;
 }
 
 .mapActiveTitle {
@@ -283,7 +286,7 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  z-index: 3;
+  z-index: 10003;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -322,7 +325,7 @@
   border-radius: 28px 28px 0 0;
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 -22px 48px rgba(0, 0, 0, 0.55);
-  z-index: 4;
+  z-index: 10004;
   pointer-events: auto;
   overflow: hidden;
 }
@@ -408,13 +411,6 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary, #f6f7fb);
-}
-
-.locationContainer {
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  overflow: hidden;
-  background: rgba(7, 8, 10, 0.75);
 }
 
 .taskList {
@@ -562,4 +558,36 @@
 .formError {
   color: #f87171;
   font-size: 0.8rem;
+}
+
+/* Ensure Leaflet controls don't interfere with sheet interactions */
+.sheetOverlay :global(.leaflet-control-container) {
+  pointer-events: none;
+  z-index: 1 !important;
+}
+
+.sheetOverlay :global(.leaflet-control) {
+  pointer-events: none;
+  z-index: 1 !important;
+}
+
+.sheetOverlay :global(.leaflet-zoom-box) {
+  z-index: 1 !important;
+}
+
+.sheetOverlay :global(.leaflet-marker-pane) {
+  z-index: 2 !important;
+}
+
+.sheetOverlay :global(.leaflet-tile-pane) {
+  z-index: 0 !important;
+}
+
+/* Ensure map canvas allows interaction when drawer is open but prevent interference */
+.mapCanvas :global(.leaflet-container) {
+  z-index: inherit;
+}
+
+.mapCanvas :global(.leaflet-map-pane) {
+  z-index: inherit;
 }

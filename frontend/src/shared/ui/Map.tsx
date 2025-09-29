@@ -110,7 +110,7 @@ const Map = forwardRef<MapRef, MapProps>(
         dragging,
         touchZoom,
         attributionControl: false,
-        zoomControl: scrollWheelZoom, // Add zoom controls when scrollWheelZoom is enabled for better accessibility
+        zoomControl: false, // Disable zoom controls since touch zoom is available
       });
 
       const apiKey = 'YOUR_API_KEY';

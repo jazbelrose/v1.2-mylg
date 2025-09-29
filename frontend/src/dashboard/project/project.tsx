@@ -400,13 +400,19 @@ const SingleProject: React.FC = () => {
           onActiveProjectChange={handleActiveProjectChange}
         /> */}
 
-        <div className="dashboard-layout timeline-location-row">
-          <div className="location-wrapper">
-            <LocationComponent
-              activeProject={resolvedActiveProject}
-              onActiveProjectChange={handleActiveProjectChange}
-            />
-          </div>
+        <div
+          className={`dashboard-layout timeline-location-row${
+            isMobileTasksLayout ? " timeline-location-row--tasks-only" : ""
+          }`}
+        >
+          {!isMobileTasksLayout && (
+            <div className="location-wrapper">
+              <LocationComponent
+                activeProject={resolvedActiveProject}
+                onActiveProjectChange={handleActiveProjectChange}
+              />
+            </div>
+          )}
           <div className="tasks-wrapper">
             {isMobileTasksLayout ? (
               <TasksComponentMobile

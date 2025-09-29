@@ -103,6 +103,11 @@
   height: 85vh;
 }
 
+.timeline-location-row--tasks-only {
+  height: auto;
+  min-height: 0;
+}
+
 .timeline-location-row > * {
   flex: 1 1 0;
   min-width: 0;
@@ -160,6 +165,11 @@
 .tasks-wrapper {
   flex: 1 1 70%;
   width: 70%;
+}
+
+.timeline-location-row--tasks-only .tasks-wrapper {
+  width: 100%;
+  flex: 1 1 auto;
 }
 
 /* Responsive: stack vertically on narrower viewports */

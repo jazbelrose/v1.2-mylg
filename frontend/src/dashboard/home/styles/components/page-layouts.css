@@ -120,6 +120,26 @@
   flex: .7;
 }
 
+@media (max-width: 768px) {
+  .dashboard-layout {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .column-2 {
+    height: auto;
+    min-height: 0;
+  }
+
+  .overview-layout {
+    height: auto;
+    min-height: 0;
+    gap: 16px;
+    padding-bottom: 16px;
+  }
+}
+
 .column-new-project-description {
   max-height: 400px;
   display: flex;

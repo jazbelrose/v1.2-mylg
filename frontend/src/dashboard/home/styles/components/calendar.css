@@ -116,8 +116,15 @@
 
 @media (max-height: 900px) {
   .timeline-location-row {
-    
+
     height: 50vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .timeline-location-row {
+    height: auto;
+    min-height: 0;
   }
 }
 

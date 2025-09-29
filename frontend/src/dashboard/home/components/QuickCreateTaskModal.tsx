@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { NOMINATIM_SEARCH_URL, apiFetch, createTask } from "@/shared/utils/api";
+import { useUser } from "@/app/contexts/useUser";
 
 import styles from "./QuickCreateTaskModal.module.css";
 
@@ -35,6 +36,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   projects,
   onCreated,
 }) => {
+  const { userData, allUsers } = useUser();
   const [projectId, setProjectId] = useState<string>("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -43,12 +45,39 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const [addressSuggestions, setAddressSuggestions] = useState<NominatimSuggestion[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Coordinates | null>(null);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
+  const [assigneeId, setAssigneeId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const suggestionsListId = "quick-create-task-location-suggestions";
 
   const projectOptions = useMemo(() => projects ?? [], [projects]);
+  const collaboratorIds = useMemo(
+    () =>
+      Array.isArray(userData?.collaborators)
+        ? userData.collaborators.filter(
+            (id): id is string => typeof id === "string" && id.trim().length > 0
+          )
+        : [],
+    [userData?.collaborators]
+  );
+
+  const collaboratorOptions = useMemo(() => {
+    if (!collaboratorIds.length) return [] as { value: string; label: string }[];
+    return collaboratorIds
+      .map((id) => {
+        const collaborator = allUsers.find((user) => user.userId === id);
+        const first = collaborator?.firstName?.trim() ?? "";
+        const last = collaborator?.lastName?.trim() ?? "";
+        const fullName = `${first} ${last}`.trim();
+        const label =
+          fullName || collaborator?.username || collaborator?.email || collaborator?.userId || id;
+        return { value: id, label };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+  }, [allUsers, collaboratorIds]);
+
+  const hasCollaborators = collaboratorOptions.length > 0;
 
   const sortSuggestionsByProximity = useCallback(
     (suggestions: NominatimSuggestion[], origin: Coordinates | null) => {
@@ -89,6 +118,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setAddressSearch("");
     setAddressSuggestions([]);
     setSelectedLocation(null);
+    setAssigneeId("");
     setSubmitting(false);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -226,6 +256,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
         description: description.trim() || undefined,
         dueDate: dueDateIso,
         status: "todo",
+        ...(assigneeId ? { assigneeId } : {}),
         ...(trimmedAddress ? { address: trimmedAddress } : {}),
         ...(locationPayload ? { location: locationPayload } : {}),
       });
@@ -236,6 +267,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       setAddressSearch("");
       setAddressSuggestions([]);
       setSelectedLocation(null);
+      setAssigneeId("");
       onCreated();
     } catch (error) {
       console.error("Failed to create task", error);
@@ -278,6 +310,25 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
           </label>
           {!hasProjects ? (
             <p className={styles.emptyProjects}>Add a project to start creating tasks.</p>
+          ) : null}
+          <label className={styles.fieldLabel}>
+            Assign to <span className={styles.fieldOptional}>(optional)</span>
+            <select
+              className={styles.selectInput}
+              value={assigneeId}
+              onChange={(event) => setAssigneeId(event.target.value)}
+              disabled={submitting}
+            >
+              <option value="">Unassigned</option>
+              {collaboratorOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {!hasCollaborators ? (
+            <p className={styles.emptyProjects}>Invite collaborators to assign tasks.</p>
           ) : null}
           <label className={styles.fieldLabel}>
             Task name

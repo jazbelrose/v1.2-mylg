@@ -18,6 +18,23 @@
   border-radius: 16px;
 }
 
+.galleryTriggerEmpty {
+  --row-h: clamp(168px, 10vw + 156px, 220px);
+  align-items: stretch !important;
+}
+
+.galleryTriggerEmpty .thumbsColumn {
+  align-items: stretch;
+}
+
+.galleryTriggerEmpty .emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  width: 100%;
+}
+
 /* Two columns inside the trigger */
 .titleColumn,
 .thumbsColumn {
@@ -200,6 +217,10 @@
     gap: 10px;
   }
 
+  .galleryTriggerEmpty {
+    --row-h: clamp(196px, 24vw + 132px, 244px);
+  }
+
   .titleColumn {
     flex: 1 1 54%;
     padding-right: 8px;
@@ -243,6 +264,10 @@
     --row-h: clamp(104px, 12vw + 84px, 138px);
     padding: 12px;
     gap: 8px;
+  }
+
+  .galleryTriggerEmpty {
+    --row-h: clamp(188px, 26vw + 120px, 236px);
   }
 
   .titleColumn {
@@ -293,6 +318,10 @@
 @media (max-width: 330px) {
   .galleryTrigger {
     --row-h: clamp(90px, 20vw + 64px, 124px);
+  }
+
+  .galleryTriggerEmpty {
+    --row-h: clamp(176px, 34vw + 108px, 220px);
   }
 
   .thumbnailCarousel {

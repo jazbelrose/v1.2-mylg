@@ -58,9 +58,18 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
   const visibleGalleries = galleries.slice(0, visibleCount);
   const hiddenCount = galleries.length - visibleCount;
 
+  const triggerClassName = [
+    "dashboard-item",
+    "view-gallery",
+    styles.galleryTrigger,
+    !hasGalleries ? styles.galleryTriggerEmpty : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
-      className={`dashboard-item view-gallery ${styles.galleryTrigger}`}
+      className={triggerClassName}
       onClick={onOpenModal}
       role="button"
       tabIndex={0}

@@ -60,12 +60,17 @@
 
 .budget-calendar-layout .budget-column .view-gallery {
   flex: 2 1 0;
+  min-height: clamp(120px, 18vw + 72px, 168px);
 }
 
 .budget-calendar-layout--stacked .budget-column > *,
 .budget-calendar-layout--stacked .budget-column .budget-overview-card,
 .budget-calendar-layout--stacked .budget-column .view-gallery {
   flex: none;
+}
+
+.budget-calendar-layout--stacked .budget-column .view-gallery {
+  min-height: clamp(188px, 24vw + 132px, 236px);
 }
 
 /* Mobile stacked layout height optimization */

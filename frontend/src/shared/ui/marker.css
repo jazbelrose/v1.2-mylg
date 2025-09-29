@@ -5,6 +5,59 @@
   border: 2px solid white;
 }
 
+.task-marker {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(17, 18, 21, 0.92);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-marker img,
+.task-marker__dot {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.task-marker__dot {
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #93c5fd 100%);
+}
+
+.task-marker__pointer {
+  position: absolute;
+  bottom: -11px;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(17, 18, 21, 0.92);
+  border-left: 2px solid rgba(255, 255, 255, 0.9);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.9);
+  border-top: none;
+  border-right: none;
+  border-radius: 0 0 4px 0;
+}
+
+.task-marker--active {
+  transform: scale(1.08);
+  border-color: var(--brand, #fa3356);
+  box-shadow: 0 14px 32px rgba(250, 51, 86, 0.38);
+}
+
+.task-marker--active .task-marker__pointer {
+  border-left-color: var(--brand, #fa3356);
+  border-bottom-color: var(--brand, #fa3356);
+}
+
 
 
 

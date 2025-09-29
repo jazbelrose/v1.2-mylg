@@ -1,6 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import { Plus, MapPin, Calendar, ChevronDown } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Plus, MapPin, Calendar } from "lucide-react";
 
 import Map from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
@@ -60,7 +65,20 @@ const dueFormatter = new Intl.DateTimeFormat(undefined, {
   weekday: "short",
 });
 
-const DEFAULT_LOCATION = { lat: 37.0902, lng: -95.7129 }; // Geographic centre of contiguous US
+const DEFAULT_LOCATION = { lat: 37.0902, lng: -95.7129 };
+
+const SNAP_POINTS = {
+  collapsed: 0.2,
+  mid: 0.5,
+  expanded: 1,
+} as const;
+
+type SnapPointKey = keyof typeof SNAP_POINTS;
+
+const SNAP_SEQUENCE: SnapPointKey[] = ["collapsed", "mid", "expanded"];
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
 
 function parseDueDate(value?: unknown): Date | null {
   if (value == null || value === "") return null;
@@ -124,7 +142,7 @@ function parseLocation(value: unknown): { lat: number; lng: number } | null {
       const parsed = JSON.parse(value);
       return parseLocation(parsed);
     } catch {
-      const [latPart, lngPart] = value.split(/[,\s]+/);
+      const [latPart, lngPart] = value.split(/[\,\s]+/);
       const lat = Number(latPart);
       const lng = Number(lngPart);
       if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
@@ -200,6 +218,19 @@ function buildMarkerThumbnail(color?: string) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+const getNearestSnapPoint = (ratio: number): SnapPointKey => {
+  let nearest: SnapPointKey = "collapsed";
+  let smallestDiff = Number.POSITIVE_INFINITY;
+  (Object.entries(SNAP_POINTS) as [SnapPointKey, number][]).forEach(([key, value]) => {
+    const diff = Math.abs(value - ratio);
+    if (diff < smallestDiff) {
+      smallestDiff = diff;
+      nearest = key;
+    }
+  });
+  return nearest;
+};
+
 const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   projectId = "",
   projectName,
@@ -210,13 +241,25 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const [tasks, setTasks] = useState<QuickTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [sheetSnap, setSheetSnap] = useState<SnapPointKey>("collapsed");
+  const [sheetRatio, setSheetRatio] = useState<number>(SNAP_POINTS.collapsed);
+  const [isDraggingSheet, setIsDraggingSheet] = useState(false);
+  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+
+  const dragStateRef = useRef<{
+    pointerId: number | null;
+    startY: number;
+    startRatio: number;
+    moved: boolean;
+  }>({ pointerId: null, startY: 0, startRatio: SNAP_POINTS.collapsed, moved: false });
+
+  const taskRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
   const refreshTasks = useCallback(async () => {
     if (!projectId) {
@@ -246,16 +289,10 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   }, [refreshTasks]);
 
   useEffect(() => {
-    if (!drawerOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setDrawerOpen(false);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [drawerOpen]);
+    if (focusedTaskId && !tasks.some((task) => task.id === focusedTaskId)) {
+      setFocusedTaskId(null);
+    }
+  }, [focusedTaskId, tasks]);
 
   const stats = useMemo(() => computeStats(tasks), [tasks]);
 
@@ -281,8 +318,9 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     [tasks],
   );
 
-  const mapLocation = mapTasks[0]?.location ?? DEFAULT_LOCATION;
-  const mapAddress = mapTasks[0]?.address ?? projectName ?? "Project";
+  const mapLocation = activeProject?.location ?? mapTasks[0]?.location ?? DEFAULT_LOCATION;
+  const mapAddress =
+    activeProject?.address ?? mapTasks[0]?.address ?? projectName ?? "Project";
 
   const mapMarkers = useMemo(
     () =>
@@ -291,6 +329,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         lat: task.location!.lat,
         lng: task.location!.lng,
         thumbnail: buildMarkerThumbnail(projectColor),
+        label: task.title,
       })),
     [mapTasks, projectColor],
   );
@@ -318,22 +357,125 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     return `${sameDayCount} ${noun} due ${dueFormatter.format(nextDue.dueDate)}.`;
   }, [error, loading, tasks]);
 
-  const handleOpenDrawer = () => {
-    setDrawerOpen(true);
-    setFormError(null);
-    setSuccessMessage(null);
+  const cycleSnapPoint = useCallback(() => {
+    setSheetSnap((current) => {
+      const currentIndex = SNAP_SEQUENCE.indexOf(current);
+      const nextIndex = (currentIndex + 1) % SNAP_SEQUENCE.length;
+      return SNAP_SEQUENCE[nextIndex];
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isDraggingSheet) return;
+    setSheetRatio(SNAP_POINTS[sheetSnap]);
+  }, [sheetSnap, isDraggingSheet]);
+
+  const updateSheetFromPointer = useCallback((clientY: number) => {
+    if (typeof window === "undefined") return;
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight ?? 1;
+    if (!viewportHeight) return;
+
+    const { startY, startRatio } = dragStateRef.current;
+    const delta = clientY - startY;
+    const desired = startRatio * viewportHeight - delta;
+    const ratio = clamp(desired / viewportHeight, SNAP_POINTS.collapsed, SNAP_POINTS.expanded);
+    setSheetRatio(ratio);
+  }, []);
+
+  const handleHandlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startRatio: sheetRatio,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setIsDraggingSheet(true);
   };
 
-  const handleCloseDrawer = () => {
-    setDrawerOpen(false);
-    setFormError(null);
+  const handleHandlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingSheet || dragStateRef.current.pointerId !== event.pointerId) return;
+    if (!dragStateRef.current.moved) {
+      const delta = Math.abs(event.clientY - dragStateRef.current.startY);
+      if (delta > 6) {
+        dragStateRef.current.moved = true;
+      }
+    }
+    updateSheetFromPointer(event.clientY);
   };
 
-  const resetForm = () => {
-    setTitle("");
-    setDescription("");
-    setDueDate("");
+  const finishDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingSheet || dragStateRef.current.pointerId !== event.pointerId) {
+      return false;
+    }
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    setIsDraggingSheet(false);
+    const ratio = clamp(sheetRatio, SNAP_POINTS.collapsed, SNAP_POINTS.expanded);
+    const nearest = getNearestSnapPoint(ratio);
+    setSheetSnap(nearest);
+    setSheetRatio(SNAP_POINTS[nearest]);
+    const moved = dragStateRef.current.moved;
+    dragStateRef.current = { pointerId: null, startY: 0, startRatio: SNAP_POINTS[nearest], moved: false };
+    return moved;
   };
+
+  const handleHandlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const moved = finishDrag(event);
+    if (!moved) {
+      cycleSnapPoint();
+    }
+  };
+
+  const handleHandlePointerCancel = (event: React.PointerEvent<HTMLDivElement>) => {
+    finishDrag(event);
+  };
+
+  const handleHandleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      cycleSnapPoint();
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setSheetSnap((current) => {
+        if (current === "expanded") return current;
+        if (current === "mid") return "expanded";
+        return "mid";
+      });
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setSheetSnap((current) => {
+        if (current === "collapsed") return current;
+        if (current === "mid") return "collapsed";
+        return "mid";
+      });
+    }
+  };
+
+  const handleMarkerSelect = useCallback((taskId: string) => {
+    setFocusedTaskId(taskId);
+    setSheetSnap((current) => (current === "expanded" ? current : "mid"));
+  }, []);
+
+  const handleTaskSelect = useCallback(
+    (task: QuickTask) => {
+      setFocusedTaskId(task.id);
+      if (task.location) {
+        setSheetSnap((current) => (current === "collapsed" ? "mid" : current));
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!focusedTaskId || sheetSnap === "collapsed") return;
+    const element = taskRefs.current.get(focusedTaskId);
+    if (!element) return;
+    window.requestAnimationFrame(() => {
+      element.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }, [focusedTaskId, sheetSnap]);
 
   const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -367,7 +509,9 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         status: "todo",
       });
       setSuccessMessage("Task created. It'll appear here shortly.");
-      resetForm();
+      setTitle("");
+      setDescription("");
+      setDueDate("");
       void refreshTasks();
     } catch (err) {
       console.error("Failed to create project task", err);
@@ -377,182 +521,189 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     }
   };
 
-  const renderDrawer = () => {
-    if (!drawerOpen || typeof document === "undefined") {
-      return null;
-    }
+  const mapStatus = error
+    ? "We couldn't load locations for these tasks."
+    : loading
+      ? "Loading tasks…"
+      : mapTasks.length
+        ? null
+        : "Add locations to your tasks to see them appear on the map.";
 
-    const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-      if (event.target === event.currentTarget) {
-        handleCloseDrawer();
-      }
-    };
-
-    return createPortal(
-      <div className={styles.drawerOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
-        <div className={styles.drawer} role="dialog" aria-modal="true" aria-label="Project tasks quick view" onMouseDown={(event) => event.stopPropagation()}>
-          <div className={styles.drawerHeader}>
-            <div className={styles.drawerTitleGroup}>
-              <span className={styles.drawerTitle}>Project tasks</span>
-              <span className={styles.drawerSubtitle}>
-                {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
-              </span>
-            </div>
-            <button type="button" className={styles.closeButton} onClick={handleCloseDrawer} aria-label="Close tasks drawer">
-              <ChevronDown size={20} strokeWidth={2.5} />
-            </button>
-          </div>
-
-          <div className={styles.drawerContent}>
-            <section className={styles.drawerSection} aria-label="Project map">
-              <h3 className={styles.sectionHeading}>Project map</h3>
-              {activeProject && onActiveProjectChange ? (
-                <div className={styles.locationContainer}>
-                  <LocationComponent
-                    activeProject={activeProject}
-                    onActiveProjectChange={onActiveProjectChange}
-                  />
-                </div>
-              ) : error ? (
-                <div className={styles.mapEmpty}>{error}</div>
-              ) : loading ? (
-                <div className={styles.mapEmpty}>Loading tasks…</div>
-              ) : mapTasks.length ? (
-                <div className={styles.mapContainer}>
-                  <Map
-                    location={mapLocation}
-                    address={mapAddress}
-                    scrollWheelZoom={false}
-                    dragging={true}
-                    touchZoom={true}
-                    showUserLocation={false}
-                    otherUsers={mapMarkers}
-                  />
-                </div>
-              ) : (
-                <div className={styles.mapEmpty}>
-                  Add locations to your tasks to see them appear on the map.
-                </div>
-              )}
-            </section>
-
-            <section className={styles.drawerSection} aria-label="All project tasks">
-              <h3 className={styles.sectionHeading}>Task list</h3>
-              {error ? (
-                <div className={styles.error}>{error}</div>
-              ) : loading ? (
-                <div className={styles.loading}>Loading tasks…</div>
-              ) : drawerTasks.length ? (
-                <ul className={styles.drawerTaskList}>
-                  {drawerTasks.map((task) => (
-                    <li key={task.id} className={styles.drawerTaskItem}>
-                      <div className={styles.drawerTaskTop}>
-                        <span className={styles.drawerTaskTitle}>{task.title}</span>
-                        <span className={styles.statusBadge}>
-                          {task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}
-                        </span>
-                      </div>
-                      <div className={styles.drawerTaskMeta}>
-                        <span className={styles.metaLine}>
-                          <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
-                        </span>
-                        {task.address ? (
-                          <span className={styles.metaLine}>
-                            <MapPin size={14} aria-hidden="true" /> {task.address}
-                          </span>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className={styles.empty}>No tasks yet. Create one to get started.</div>
-              )}
-            </section>
-
-            <section className={styles.drawerSection} aria-label="Create a quick task">
-              <h3 className={styles.sectionHeading}>Create quick task</h3>
-              <form className={styles.createForm} onSubmit={handleCreateTask}>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="Task name"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  disabled={submitting}
-                />
-                <textarea
-                  className={styles.textarea}
-                  placeholder="Description (optional)"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  disabled={submitting}
-                />
-                <input
-                  type="date"
-                  className={styles.dateInput}
-                  value={dueDate}
-                  onChange={(event) => setDueDate(event.target.value)}
-                  disabled={submitting}
-                />
-                {formError ? <div className={styles.formError}>{formError}</div> : null}
-                {successMessage ? <div className={styles.successMessage}>{successMessage}</div> : null}
-                <div className={styles.formActions}>
-                  <button type="submit" className={styles.submitButton} disabled={submitting}>
-                    <Plus size={18} strokeWidth={2.5} />
-                    Create task
-                  </button>
-                </div>
-              </form>
-            </section>
-          </div>
-        </div>
-      </div>,
-      document.body,
-    );
-  };
+  const sheetTransform = `${(1 - sheetRatio) * 100}%`;
 
   return (
-    <section className={styles.card} aria-label="Project tasks overview">
-      <header className={styles.header}>
-        <div className={styles.headingGroup}>
-          <h3 className={styles.title}>Tasks</h3>
-          <p className={styles.subtitle}>
-            {projectName
-              ? `Keep ${projectName} moving forward.`
-              : "Keep this project moving forward."}
-          </p>
-        </div>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={handleOpenDrawer}
-          disabled={loading}
-        >
-          <Plus size={16} strokeWidth={2.25} />
-          Open tasks
-        </button>
-      </header>
-
-      <div className={styles.statRow} aria-label="Task summary">
-        <div className={`${styles.statCard} ${styles.statOk}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.completed)}</span>
-          <span className={styles.statLabel}>Done</span>
-        </div>
-        <div className={`${styles.statCard} ${styles.statDanger}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.overdue)}</span>
-          <span className={styles.statLabel}>Overdue</span>
-        </div>
-        <div className={`${styles.statCard} ${styles.statWarn}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.dueSoon)}</span>
-          <span className={styles.statLabel}>Due soon</span>
-        </div>
+    <div className={styles.container} aria-label="Project tasks map view">
+      <div className={styles.mapLayer} aria-hidden={false}>
+        <Map
+          location={mapLocation}
+          address={mapAddress}
+          scrollWheelZoom={true}
+          dragging={true}
+          touchZoom={true}
+          showUserLocation={false}
+          markers={mapMarkers}
+          onMarkerSelect={handleMarkerSelect}
+          activeMarkerId={focusedTaskId}
+        />
+        {mapStatus ? <div className={styles.mapMessage}>{mapStatus}</div> : null}
       </div>
 
-      <p className={styles.status}>{statusMessage}</p>
+      <div className={styles.sheet}>
+        <div
+          className={styles.sheetSurface}
+          style={{ transform: `translateY(${sheetTransform})`, transition: isDraggingSheet ? "none" : undefined }}
+        >
+          <div
+            className={styles.sheetHandle}
+            role="button"
+            tabIndex={0}
+            aria-label="Drag to resize the task panel"
+            onPointerDown={handleHandlePointerDown}
+            onPointerMove={handleHandlePointerMove}
+            onPointerUp={handleHandlePointerUp}
+            onPointerCancel={handleHandlePointerCancel}
+            onKeyDown={handleHandleKeyDown}
+          >
+            <span className={styles.sheetGrabber} />
+          </div>
 
-      {renderDrawer()}
-    </section>
+          <header className={styles.sheetHeader}>
+            <div className={styles.headingGroup}>
+              <h3 className={styles.title}>Tasks</h3>
+              <p className={styles.subtitle}>
+                {projectName
+                  ? `Keep ${projectName} moving forward.`
+                  : "Keep this project moving forward."}
+              </p>
+            </div>
+          </header>
+
+          <div className={styles.sheetContent}>
+            <div className={styles.scrollRegion}>
+              <section className={styles.section} aria-label="Project status">
+                <div className={styles.statRow} aria-label="Task summary">
+                  <div className={`${styles.statCard} ${styles.statOk}`}>
+                    <span className={styles.statValue}>{formatStatValue(stats.completed)}</span>
+                    <span className={styles.statLabel}>Done</span>
+                  </div>
+                  <div className={`${styles.statCard} ${styles.statDanger}`}>
+                    <span className={styles.statValue}>{formatStatValue(stats.overdue)}</span>
+                    <span className={styles.statLabel}>Overdue</span>
+                  </div>
+                  <div className={`${styles.statCard} ${styles.statWarn}`}>
+                    <span className={styles.statValue}>{formatStatValue(stats.dueSoon)}</span>
+                    <span className={styles.statLabel}>Due soon</span>
+                  </div>
+                </div>
+                <p className={styles.status}>{statusMessage}</p>
+              </section>
+
+              {activeProject && onActiveProjectChange ? (
+                <section className={styles.section} aria-label="Project location">
+                  <div className={styles.locationContainer}>
+                    <LocationComponent
+                      activeProject={activeProject}
+                      onActiveProjectChange={onActiveProjectChange}
+                    />
+                  </div>
+                </section>
+              ) : null}
+
+              <section className={styles.section} aria-label="All project tasks">
+                <h3 className={styles.sectionHeading}>Task list</h3>
+                {error ? (
+                  <div className={styles.error}>{error}</div>
+                ) : loading ? (
+                  <div className={styles.loading}>Loading tasks…</div>
+                ) : drawerTasks.length ? (
+                  <ul className={styles.taskList}>
+                    {drawerTasks.map((task) => {
+                      const isSelected = focusedTaskId === task.id;
+                      return (
+                        <li
+                          key={task.id}
+                          ref={(element) => {
+                            if (!element) {
+                              taskRefs.current.delete(task.id);
+                            } else {
+                              taskRefs.current.set(task.id, element);
+                            }
+                          }}
+                          className={`${styles.taskItem} ${isSelected ? styles.taskItemActive : ""}`}
+                        >
+                          <button
+                            type="button"
+                            className={styles.taskButton}
+                            onClick={() => handleTaskSelect(task)}
+                          >
+                            <div className={styles.taskTop}>
+                              <span className={styles.taskTitle}>{task.title}</span>
+                              <span className={styles.statusBadge}>
+                                {task.status === "done"
+                                  ? "Completed"
+                                  : task.status.replace(/_/g, " ")}
+                              </span>
+                            </div>
+                            <div className={styles.taskMeta}>
+                              <span className={styles.metaLine}>
+                                <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
+                              </span>
+                              {task.address ? (
+                                <span className={styles.metaLine}>
+                                  <MapPin size={14} aria-hidden="true" /> {task.address}
+                                </span>
+                              ) : null}
+                            </div>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div className={styles.empty}>No tasks yet. Create one to get started.</div>
+                )}
+              </section>
+
+              <section className={styles.section} aria-label="Create a quick task">
+                <h3 className={styles.sectionHeading}>Create quick task</h3>
+                <form className={styles.createForm} onSubmit={handleCreateTask}>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder="Task name"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    disabled={submitting}
+                  />
+                  <textarea
+                    className={styles.textarea}
+                    placeholder="Description (optional)"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    disabled={submitting}
+                  />
+                  <input
+                    type="date"
+                    className={styles.dateInput}
+                    value={dueDate}
+                    onChange={(event) => setDueDate(event.target.value)}
+                    disabled={submitting}
+                  />
+                  {formError ? <div className={styles.formError}>{formError}</div> : null}
+                  {successMessage ? <div className={styles.successMessage}>{successMessage}</div> : null}
+                  <div className={styles.formActions}>
+                    <button type="submit" className={styles.submitButton} disabled={submitting}>
+                      <Plus size={18} strokeWidth={2.5} />
+                      Create task
+                    </button>
+                  </div>
+                </form>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

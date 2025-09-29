@@ -25,6 +25,14 @@ interface LatLng {
   lng: number;
 }
 
+interface MapMarker {
+  id: string;
+  lat: number;
+  lng: number;
+  thumbnail?: string;
+  label?: string;
+}
+
 interface MapProps {
   location: LatLng;
   address: string;
@@ -38,7 +46,40 @@ interface MapProps {
   onLocationChange?: (loc: LatLng) => void;
   otherUsers?: UserLocation[];
   onUserLocation?: (loc: { lat: number; lng: number; accuracy: number }) => void;
+  markers?: MapMarker[];
+  onMarkerSelect?: (markerId: string) => void;
+  activeMarkerId?: string | null;
 }
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const createTaskMarkerIcon = ({
+  thumbnail,
+  active,
+}: {
+  thumbnail?: string;
+  active?: boolean;
+}) => {
+  const size = active ? 40 : 32;
+  const border = active ? 4 : 3;
+  const background = thumbnail
+    ? `background-image:url('${thumbnail}');background-size:cover;background-position:center;`
+    : `background:linear-gradient(135deg, #fa3356, #fb7185);`;
+  const ring = active
+    ? 'box-shadow:0 0 0 4px rgba(250, 51, 86, 0.32), 0 16px 36px rgba(3, 7, 18, 0.55);'
+    : 'box-shadow:0 12px 28px rgba(3, 7, 18, 0.45);';
+  const borderColor = active ? '#ffffff' : 'rgba(255, 255, 255, 0.78)';
+
+  const html = `<div style="width:${size}px;height:${size}px;border-radius:50%;border:${border}px solid ${borderColor};${background}${ring}"></div>`;
+
+  return L.divIcon({
+    html,
+    className: 'task-marker-icon',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size - clamp(border * 1.5, 6, 14)],
+    popupAnchor: [0, -size / 2],
+  });
+};
 
 const Map = forwardRef<MapRef, MapProps>(
   (
@@ -55,6 +96,9 @@ const Map = forwardRef<MapRef, MapProps>(
       onLocationChange,
       otherUsers = [],
       onUserLocation,
+      markers = [],
+      onMarkerSelect,
+      activeMarkerId = null,
     },
     ref,
   ) => {
@@ -65,6 +109,8 @@ const Map = forwardRef<MapRef, MapProps>(
     const projectMarkerRef = useRef<L.Marker | null>(null);
     const otherUsersMarkersRef = useRef<Record<string, L.Marker>>({});
     const otherUsersAccuracyRef = useRef<Record<string, L.Circle>>({});
+    const interactiveMarkersRef = useRef<Record<string, L.Marker>>({});
+    const interactiveMarkerMetaRef = useRef<Record<string, MapMarker>>({});
 
     useEffect(() => {
       if (!mapRef.current || mapInstance.current) return;
@@ -179,6 +225,9 @@ const Map = forwardRef<MapRef, MapProps>(
           const b = c.getBounds();
           latLngs.push(b.getNorthEast(), b.getSouthWest());
         });
+        Object.values(interactiveMarkersRef.current).forEach((marker) => {
+          latLngs.push(marker.getLatLng());
+        });
 
         if (latLngs.length > 1) {
           mapInstance.current.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
@@ -196,6 +245,7 @@ const Map = forwardRef<MapRef, MapProps>(
       isEditable,
       onLocationChange,
       otherUsers,
+      markers,
     ]);
 
     useEffect(() => {
@@ -337,6 +387,9 @@ const Map = forwardRef<MapRef, MapProps>(
         const b = c.getBounds();
         latLngs.push(b.getNorthEast(), b.getSouthWest());
       });
+      Object.values(interactiveMarkersRef.current).forEach((marker) => {
+        latLngs.push(marker.getLatLng());
+      });
       if (latLngs.length > 1) {
         mapInstance.current!.fitBounds(L.latLngBounds(latLngs), { padding: [50, 50] });
       }
@@ -353,6 +406,84 @@ const Map = forwardRef<MapRef, MapProps>(
         mapInstance.current?.off('click', handleClick);
       };
     }, [isEditable, onLocationChange]);
+
+    useEffect(() => {
+      if (!mapInstance.current) return;
+      const currentMarkers = interactiveMarkersRef.current;
+      const meta = interactiveMarkerMetaRef.current;
+      const incoming = markers || [];
+
+      Object.keys(currentMarkers).forEach((id) => {
+        if (!incoming.find((marker) => marker.id === id)) {
+          mapInstance.current?.removeLayer(currentMarkers[id]);
+          currentMarkers[id].off('click');
+          delete currentMarkers[id];
+          delete meta[id];
+        }
+      });
+
+      incoming.forEach((marker) => {
+        const { id, lat, lng, thumbnail, label } = marker;
+        const latLng: [number, number] = [lat, lng];
+        meta[id] = marker;
+
+        const icon = createTaskMarkerIcon({ thumbnail, active: id === activeMarkerId });
+
+        if (currentMarkers[id]) {
+          currentMarkers[id].setLatLng(latLng);
+          currentMarkers[id].setIcon(icon);
+          if (label) {
+            currentMarkers[id].bindTooltip(label, { direction: 'top', offset: [0, -12] });
+          }
+          currentMarkers[id].off('click');
+          currentMarkers[id].on('click', () => onMarkerSelect?.(id));
+        } else {
+          const leafletMarker = L.marker(latLng, { icon });
+          if (label) {
+            leafletMarker.bindTooltip(label, { direction: 'top', offset: [0, -12] });
+          }
+          if (onMarkerSelect) {
+            leafletMarker.on('click', () => onMarkerSelect(id));
+          }
+          leafletMarker.addTo(mapInstance.current!);
+          currentMarkers[id] = leafletMarker;
+        }
+      });
+
+      return () => {
+        Object.values(currentMarkers).forEach((markerInstance) => {
+          markerInstance.closeTooltip();
+        });
+      };
+    }, [markers, onMarkerSelect, activeMarkerId]);
+
+    useEffect(() => {
+      if (!mapInstance.current) return;
+      const meta = interactiveMarkerMetaRef.current;
+      const markersMap = interactiveMarkersRef.current;
+
+      Object.entries(markersMap).forEach(([id, marker]) => {
+        const details = meta[id];
+        const icon = createTaskMarkerIcon({
+          thumbnail: details?.thumbnail,
+          active: id === activeMarkerId,
+        });
+        marker.setIcon(icon);
+        if (id !== activeMarkerId) {
+          marker.closeTooltip();
+        }
+      });
+
+      if (activeMarkerId) {
+        const activeMarker = markersMap[activeMarkerId];
+        if (activeMarker) {
+          const latLng = activeMarker.getLatLng();
+          const zoom = mapInstance.current.getZoom();
+          mapInstance.current.flyTo(latLng, Math.max(zoom, 15), { duration: 0.6 });
+          activeMarker.openTooltip();
+        }
+      }
+    }, [activeMarkerId, markers]);
 
     return <div id="map" style={{ height: '100%', width: '100%' }} ref={mapRef} />;
   },

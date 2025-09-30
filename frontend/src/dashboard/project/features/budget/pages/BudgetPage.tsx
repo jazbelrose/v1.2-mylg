@@ -649,7 +649,14 @@ const BudgetPageContent = () => {
                                     openCreateModal={eventHandlers.openCreateModal}
                                   />
                                   <BudgetItemsTable
-                                    dataSource={budgetItems.length > 0 ? (tableConfig.tableData as (Record<string, unknown> & { budgetItemId: string; key: string })[]) : []}
+                                    dataSource={
+                                      budgetItems.length > 0
+                                        ? (tableConfig.groupedTableData as (Record<string, unknown> & {
+                                            budgetItemId: string;
+                                            key: string;
+                                          })[])
+                                        : []
+                                    }
                                     columns={tableConfig.tableColumns}
                                     selectedRowKeys={stateManager.selectedRowKeys}
                                     lockedLines={stateManager.lockedLines}

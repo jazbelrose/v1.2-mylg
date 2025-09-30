@@ -460,6 +460,17 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     }
   };
 
+  const handleFormBodyClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    // If clicked outside of input/textarea/select elements, blur the active element to dismiss keyboard
+    if (!target.closest('input, textarea, select, button')) {
+      const activeElement = document.activeElement as HTMLElement;
+      if (activeElement && activeElement.blur) {
+        activeElement.blur();
+      }
+    }
+  };
+
   const handleAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setAddressSearch(value);
@@ -606,7 +617,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
           aria-describedby={feedbackRegionId}
           noValidate
         >
-          <div className={styles.formBody}>
+          <div className={styles.formBody} onClick={handleFormBodyClick}>
             <div className={styles.createHeader}>
               <h2 id="quick-task-title">Create a task</h2>
               <p id={descriptionId} className={styles.createDescription}>

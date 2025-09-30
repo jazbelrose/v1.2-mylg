@@ -1,7 +1,15 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { NOMINATIM_SEARCH_URL, apiFetch, createTask } from "@/shared/utils/api";
+import {
+  NOMINATIM_SEARCH_URL,
+  apiFetch,
+  createTask,
+  deleteTask,
+  fetchTasks,
+  updateTask,
+  type Task,
+} from "@/shared/utils/api";
 import { useUser } from "@/app/contexts/useUser";
 
 import styles from "./QuickCreateTaskModal.module.css";
@@ -17,6 +25,131 @@ type Coordinates = {
   lat: number;
   lng: number;
 };
+
+type QuickTaskListItem = {
+  taskId: string;
+  projectId: string;
+  title: string;
+  description?: string;
+  dueDate?: string;
+  status?: Task["status"];
+  assigneeId?: string;
+  address?: string;
+  location?: Coordinates | null;
+};
+
+function parseCoordinateValue(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number.parseFloat(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function parseCoordinates(value: unknown): Coordinates | null {
+  if (!value) return null;
+
+  if (typeof value === "string") {
+    const [latRaw, lngRaw] = value.split(",");
+    const lat = parseCoordinateValue(latRaw);
+    const lng = parseCoordinateValue(lngRaw);
+    return lat != null && lng != null ? { lat, lng } : null;
+  }
+
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const lat =
+      parseCoordinateValue(record.lat) ??
+      parseCoordinateValue(record.latitude) ??
+      null;
+    const lng =
+      parseCoordinateValue(record.lng) ??
+      parseCoordinateValue(record.lon) ??
+      parseCoordinateValue(record.long) ??
+      parseCoordinateValue(record.longitude) ??
+      null;
+    return lat != null && lng != null ? { lat, lng } : null;
+  }
+
+  return null;
+}
+
+function normalizeTask(raw: Task, fallbackProjectId: string): QuickTaskListItem | null {
+  const record = raw as Record<string, unknown>;
+  const rawId =
+    raw.taskId ||
+    record.task_id ||
+    record.taskID ||
+    record.id ||
+    record.ID ||
+    null;
+  const taskId = rawId != null ? String(rawId) : null;
+  const title = typeof raw.title === "string" ? raw.title.trim() : "";
+
+  if (!taskId || !title) {
+    return null;
+  }
+
+  const description = typeof raw.description === "string" ? raw.description : undefined;
+  const dueDate = typeof raw.dueDate === "string" && raw.dueDate ? raw.dueDate : undefined;
+  const status = typeof raw.status === "string" ? (raw.status as Task["status"]) : undefined;
+  const assigneeId = typeof raw.assigneeId === "string" ? raw.assigneeId : undefined;
+  const address = typeof record.address === "string" ? record.address : undefined;
+  const location = parseCoordinates(record.location ?? record.coordinates);
+  const projectId = typeof raw.projectId === "string" && raw.projectId ? raw.projectId : fallbackProjectId;
+
+  return {
+    taskId,
+    projectId,
+    title,
+    description,
+    dueDate,
+    status,
+    assigneeId,
+    address,
+    location,
+  };
+}
+
+function sortTasksForList(tasks: QuickTaskListItem[]): QuickTaskListItem[] {
+  return [...tasks].sort((a, b) => {
+    const statusWeight = (a.status === "done" ? 1 : 0) - (b.status === "done" ? 1 : 0);
+    if (statusWeight !== 0) {
+      return statusWeight;
+    }
+
+    const aDue = a.dueDate ? Date.parse(a.dueDate) : Number.NaN;
+    const bDue = b.dueDate ? Date.parse(b.dueDate) : Number.NaN;
+    const aHasDue = Number.isFinite(aDue);
+    const bHasDue = Number.isFinite(bDue);
+
+    if (aHasDue && bHasDue) {
+      if (aDue !== bDue) {
+        return aDue - bDue;
+      }
+    } else if (aHasDue) {
+      return -1;
+    } else if (bHasDue) {
+      return 1;
+    }
+
+    return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+  });
+}
+
+function toInputDateFromIso(value?: string): string {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return toInputDate(parsed);
+}
 
 function toInputDate(date: Date): string {
   const year = date.getFullYear();
@@ -69,6 +202,10 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [projectTasks, setProjectTasks] = useState<QuickTaskListItem[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [tasksError, setTasksError] = useState<string | null>(null);
+  const [editingTask, setEditingTask] = useState<QuickTaskListItem | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
   const suggestionsListId = "quick-create-task-location-suggestions";
@@ -200,6 +337,22 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const titleRemaining = 120 - title.length;
   const showTitleCounter = titleRemaining <= 20;
   const canSubmit = Boolean(effectiveProjectId && trimmedTitle);
+  const quickTaskDueFormatter = useMemo(
+    () => new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }),
+    []
+  );
+  const formatTaskListDueDate = useCallback(
+    (value?: string) => {
+      if (!value) return "No due date";
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return "No due date";
+      return `Due ${quickTaskDueFormatter.format(parsed)}`;
+    },
+    [quickTaskDueFormatter]
+  );
+  const submitButtonLabel = editingTask ? "Save changes" : "Save task";
+  const showTaskList = Boolean(effectiveProjectId);
+  const hasProjectTasks = projectTasks.length > 0;
 
   const sortSuggestionsByProximity = useCallback(
     (suggestions: NominatimSuggestion[], origin: Coordinates | null) => {
@@ -232,8 +385,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     [sortSuggestionsByProximity, userLocation]
   );
 
-  const resetForm = useCallback(() => {
-    setProjectId("");
+  const clearTaskFields = useCallback(() => {
     setTitle("");
     setDescription("");
     setDueDate("");
@@ -241,12 +393,21 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setAddressSuggestions([]);
     setSelectedLocation(null);
     setAssigneeId("");
-    setSubmitting(false);
-    setErrorMessage(null);
-    setSuccessMessage(null);
     setTitleError(null);
     setProjectError(null);
   }, []);
+
+  const resetForm = useCallback(() => {
+    setProjectId("");
+    clearTaskFields();
+    setSubmitting(false);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setTasksLoading(false);
+    setProjectTasks([]);
+    setTasksError(null);
+    setEditingTask(null);
+  }, [clearTaskFields]);
 
   useEffect(() => {
     if (!open) {
@@ -440,6 +601,47 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     }
   }, [effectiveProjectId]);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (!effectiveProjectId) {
+      setProjectTasks([]);
+      setTasksError(null);
+      setTasksLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setTasksLoading(true);
+    setTasksError(null);
+
+    fetchTasks(effectiveProjectId)
+      .then((tasks) => {
+        if (cancelled) return;
+        const normalized = (tasks ?? [])
+          .map((task) => normalizeTask(task, effectiveProjectId))
+          .filter((task): task is QuickTaskListItem => Boolean(task));
+        setProjectTasks(sortTasksForList(normalized));
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error("Failed to load tasks", error);
+        setTasksError("We couldn't load tasks for this project.");
+        setProjectTasks([]);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setTasksLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [effectiveProjectId, open]);
+
   if (!open || typeof document === "undefined") {
     return null;
   }
@@ -549,9 +751,12 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   };
 
   const handleProjectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setProjectId(event.target.value);
+    const nextProjectId = event.target.value;
+    setProjectId(nextProjectId);
     setSuccessMessage(null);
     setErrorMessage(null);
+    setEditingTask(null);
+    clearTaskFields();
   };
 
   const handleAssigneeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -576,6 +781,58 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setDescription(event.target.value);
     setSuccessMessage(null);
     setErrorMessage(null);
+  };
+
+  const handleTaskSelect = (task: QuickTaskListItem) => {
+    setEditingTask(task);
+    setProjectId(task.projectId);
+    setTitle(task.title);
+    setDescription(task.description ?? "");
+    setDueDate(toInputDateFromIso(task.dueDate));
+    setAssigneeId(task.assigneeId ?? "");
+    setAddressSearch(task.address ?? "");
+    setSelectedLocation(task.location ?? null);
+    setAddressSuggestions([]);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+    requestAnimationFrame(() => {
+      titleInputRef.current?.focus({ preventScroll: true });
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTask(null);
+    clearTaskFields();
+    setSuccessMessage(null);
+    setErrorMessage(null);
+    requestAnimationFrame(() => {
+      titleInputRef.current?.focus({ preventScroll: true });
+    });
+  };
+
+  const handleDeleteTask = async () => {
+    if (!editingTask) return;
+
+    setSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      await deleteTask({ projectId: editingTask.projectId, taskId: editingTask.taskId });
+      setProjectTasks((prev) => prev.filter((task) => task.taskId !== editingTask.taskId));
+      setSuccessMessage("Task deleted.");
+      setEditingTask(null);
+      clearTaskFields();
+      onCreated();
+      requestAnimationFrame(() => {
+        titleInputRef.current?.focus({ preventScroll: true });
+      });
+    } catch (error) {
+      console.error("Failed to delete task", error);
+      setErrorMessage("We couldn't delete that task. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -605,37 +862,111 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
 
     try {
       const trimmedAddress = addressSearch.trim();
+      const trimmedDescription = description.trim();
       const locationPayload = selectedLocation
         ? { lat: selectedLocation.lat, lng: selectedLocation.lng }
         : undefined;
 
-      await createTask({
-        projectId: effectiveProjectId,
-        title: trimmedTitle,
-        description: description.trim() || undefined,
-        dueDate: dueDateIso,
-        status: "todo",
-        ...(assigneeId ? { assigneeId } : {}),
-        ...(trimmedAddress ? { address: trimmedAddress } : {}),
-        ...(locationPayload ? { location: locationPayload } : {}),
-      });
-      setSuccessMessage("Task created. You'll see it in your lists shortly.");
-      setTitle("");
-      setDescription("");
-      setDueDate("");
-      setAddressSearch("");
-      setAddressSuggestions([]);
-      setSelectedLocation(null);
-      setAssigneeId("");
-      setTitleError(null);
-      setProjectError(null);
-      onCreated();
-      requestAnimationFrame(() => {
-        titleInputRef.current?.focus({ preventScroll: true });
-      });
+      if (editingTask) {
+        const payload: Task = {
+          projectId: editingTask.projectId,
+          taskId: editingTask.taskId,
+          title: trimmedTitle,
+          status: editingTask.status ?? "todo",
+        };
+
+        if (trimmedDescription || editingTask.description) {
+          payload.description = trimmedDescription || "";
+        }
+
+        if (dueDateIso) {
+          payload.dueDate = dueDateIso;
+        } else if (editingTask.dueDate) {
+          payload.dueDate = "";
+        }
+
+        if (assigneeId) {
+          payload.assigneeId = assigneeId;
+        } else if (editingTask.assigneeId) {
+          payload.assigneeId = "";
+        }
+
+        if (trimmedAddress) {
+          (payload as Record<string, unknown>).address = trimmedAddress;
+        } else if (editingTask.address) {
+          (payload as Record<string, unknown>).address = "";
+        }
+
+        if (locationPayload) {
+          (payload as Record<string, unknown>).location = locationPayload;
+        } else if (editingTask.location) {
+          (payload as Record<string, unknown>).location = null;
+        }
+
+        const saved = await updateTask(payload);
+        const normalized = normalizeTask(saved, editingTask.projectId);
+        if (normalized) {
+          setProjectTasks((prev) => {
+            const others = prev.filter((task) => task.taskId !== normalized.taskId);
+            return sortTasksForList([normalized, ...others]);
+          });
+        }
+
+        setSuccessMessage("Task updated.");
+        setEditingTask(null);
+        clearTaskFields();
+        onCreated();
+        requestAnimationFrame(() => {
+          titleInputRef.current?.focus({ preventScroll: true });
+        });
+      } else {
+        const payload: Task = {
+          projectId: effectiveProjectId,
+          title: trimmedTitle,
+          description: trimmedDescription || undefined,
+          status: "todo",
+        };
+
+        if (dueDateIso) {
+          payload.dueDate = dueDateIso;
+        }
+
+        if (assigneeId) {
+          payload.assigneeId = assigneeId;
+        }
+
+        if (trimmedAddress) {
+          (payload as Record<string, unknown>).address = trimmedAddress;
+        }
+
+        if (locationPayload) {
+          (payload as Record<string, unknown>).location = locationPayload;
+        }
+
+        const saved = await createTask(payload);
+        const normalized = normalizeTask(saved, effectiveProjectId);
+        if (normalized) {
+          setProjectTasks((prev) => {
+            const others = prev.filter((task) => task.taskId !== normalized.taskId);
+            return sortTasksForList([normalized, ...others]);
+          });
+        }
+
+        setSuccessMessage("Task created. You'll see it in your lists shortly.");
+        clearTaskFields();
+        onCreated();
+        requestAnimationFrame(() => {
+          titleInputRef.current?.focus({ preventScroll: true });
+        });
+      }
     } catch (error) {
-      console.error("Failed to create task", error);
-      setErrorMessage("We couldn't create that task. Please try again.");
+      if (editingTask) {
+        console.error("Failed to update task", error);
+        setErrorMessage("We couldn't update that task. Please try again.");
+      } else {
+        console.error("Failed to create task", error);
+        setErrorMessage("We couldn't create that task. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -677,6 +1008,59 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 {descriptionCopy}
               </p>
             </div>
+            {showTaskList ? (
+              <div className={styles.taskListSection} aria-live="polite">
+                <div className={styles.taskListHeader}>
+                  <span className={styles.taskListTitle}>Tasks in this project</span>
+                  <span className={styles.taskListHint}>Tap a task to edit or delete it.</span>
+                </div>
+                {tasksLoading ? (
+                  <div className={styles.taskListStatus} role="status">Loading tasks…</div>
+                ) : tasksError ? (
+                  <div className={styles.taskListError} role="alert">{tasksError}</div>
+                ) : hasProjectTasks ? (
+                  <ul className={styles.taskList} role="list">
+                    {projectTasks.map((task) => {
+                      const statusLabel =
+                        task.status === "done"
+                          ? "Done"
+                          : task.status === "in_progress"
+                          ? "In progress"
+                          : null;
+                      const isActive = editingTask?.taskId === task.taskId;
+                      return (
+                        <li key={task.taskId}>
+                          <button
+                            type="button"
+                            className={`${styles.taskListButton} ${
+                              isActive ? styles.taskListButtonActive : ""
+                            }`}
+                            onClick={() => handleTaskSelect(task)}
+                            disabled={submitting}
+                          >
+                            <span className={styles.taskListButtonTitle}>{task.title}</span>
+                            <span className={styles.taskListButtonMeta}>
+                              {formatTaskListDueDate(task.dueDate)}
+                              {statusLabel ? (
+                                <span className={styles.taskListStatusTag}>{statusLabel}</span>
+                              ) : null}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div className={styles.taskListEmpty}>Tasks you create will appear here.</div>
+                )}
+              </div>
+            ) : null}
+            {editingTask ? (
+              <div className={styles.editingNotice} role="status" aria-live="polite">
+                <span className={styles.editingNoticeLabel}>Editing</span>
+                <span className={styles.editingNoticeTitle}>{editingTask.title}</span>
+              </div>
+            ) : null}
             {showProjectSelect ? (
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor={projectFieldId}>
@@ -878,13 +1262,33 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
               ) : null}
             </div>
             <div className={styles.actionBar}>
+              {editingTask ? (
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={handleCancelEdit}
+                  disabled={submitting}
+                >
+                  Cancel edit
+                </button>
+              ) : null}
+              {editingTask ? (
+                <button
+                  type="button"
+                  className={styles.deleteButton}
+                  onClick={handleDeleteTask}
+                  disabled={submitting}
+                >
+                  Delete task
+                </button>
+              ) : null}
               <button
                 type="submit"
                 className={styles.submitButton}
                 disabled={isSubmitDisabled}
               >
                 {submitting ? <span className={styles.spinner} aria-hidden="true" /> : null}
-                <span>Save task</span>
+                <span>{submitButtonLabel}</span>
               </button>
             </div>
           </div>

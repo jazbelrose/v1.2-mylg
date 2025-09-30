@@ -5,6 +5,9 @@ import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
+import QuickCreateTaskModal, {
+  type QuickCreateTaskModalProject,
+} from "@/dashboard/home/components/QuickCreateTaskModal";
 
 import styles from "./TasksComponentMobile.module.css";
 
@@ -215,6 +218,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -228,6 +232,15 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const taskListRef = useRef<HTMLUListElement | null>(null);
   const initialScrollDoneRef = useRef(false);
+
+  const quickCreateProjects = useMemo<QuickCreateTaskModalProject[]>(() => {
+    if (!projectId || !projectName) {
+      return [];
+    }
+
+    return [{ id: projectId, name: projectName }];
+  }, [projectId, projectName]);
+  const hasQuickCreateProject = quickCreateProjects.length > 0;
 
   const handleOpenDrawer = useCallback(() => {
     setDrawerOpen(true);
@@ -246,6 +259,15 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     setActiveTaskId(null);
     setMapFocus(null);
     initialScrollDoneRef.current = false;
+  }, []);
+
+  const handleOpenQuickCreate = useCallback(() => {
+    if (!hasQuickCreateProject) return;
+    setQuickCreateOpen(true);
+  }, [hasQuickCreateProject]);
+
+  const handleCloseQuickCreate = useCallback(() => {
+    setQuickCreateOpen(false);
   }, []);
 
   const refreshTasks = useCallback(async () => {
@@ -274,6 +296,12 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   useEffect(() => {
     void refreshTasks();
   }, [refreshTasks]);
+
+  useEffect(() => {
+    if (!hasQuickCreateProject) {
+      setQuickCreateOpen(false);
+    }
+  }, [hasQuickCreateProject]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -758,15 +786,25 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
               : "Keep this project moving forward."}
           </p>
         </div>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={handleOpenDrawer}
-          disabled={loading}
-        >
-          <Plus size={16} strokeWidth={2.25} />
-          Open tasks
-        </button>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={handleOpenQuickCreate}
+            aria-label="Quick create a task"
+            disabled={loading || !hasQuickCreateProject}
+          >
+            <Plus size={18} strokeWidth={2.25} />
+          </button>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            onClick={handleOpenDrawer}
+            disabled={loading}
+          >
+            Open tasks
+          </button>
+        </div>
       </header>
 
       <div className={styles.statRow} aria-label="Task summary">
@@ -787,6 +825,12 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
       <p className={styles.status}>{statusMessage}</p>
 
       {renderDrawer()}
+      <QuickCreateTaskModal
+        open={quickCreateOpen}
+        onClose={handleCloseQuickCreate}
+        projects={quickCreateProjects}
+        onCreated={refreshTasks}
+      />
     </section>
   );
 };

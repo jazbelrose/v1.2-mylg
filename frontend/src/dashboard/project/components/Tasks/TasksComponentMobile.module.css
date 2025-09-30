@@ -20,6 +20,12 @@
   gap: 12px;
 }
 
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .headingGroup {
   display: flex;
   flex-direction: column;
@@ -54,6 +60,36 @@
   line-height: 1;
   cursor: pointer;
   transition: background 160ms ease, transform 160ms ease;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.iconButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.iconButton:not(:disabled):hover,
+.iconButton:not(:disabled):focus-visible {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--color-focus, var(--brand, #fa3356));
+  outline-offset: 2px;
 }
 
 .primaryButton:disabled {

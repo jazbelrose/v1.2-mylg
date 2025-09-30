@@ -72,8 +72,29 @@
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
-  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-    max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-bottom: calc(env(safe-area-inset-bottom) + 24px);
+  scrollbar-width: none;
+}
+
+.formBody::-webkit-scrollbar {
+  display: none;
+}
+
+.grabZone {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 8px;
+  touch-action: none;
+}
+
+.grabHandle {
+  width: 64px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(246, 247, 251, 0.32);
 }
 
 .fieldGroup {

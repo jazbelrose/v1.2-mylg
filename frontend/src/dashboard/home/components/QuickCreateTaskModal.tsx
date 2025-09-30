@@ -47,6 +47,8 @@ export type QuickCreateTaskModalProps = {
   scopedProjectId?: string | null;
 };
 
+const GRAB_ZONE_HEIGHT = 48;
+
 const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   open,
   onClose,
@@ -417,7 +419,21 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       return;
     }
 
-    touchStartYRef.current = event.touches[0].clientY;
+    const touch = event.touches[0];
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const rect = modal.getBoundingClientRect();
+    const distanceFromTop = touch.clientY - rect.top;
+    if (distanceFromTop < 0 || distanceFromTop > GRAB_ZONE_HEIGHT) {
+      touchStartYRef.current = null;
+      isDraggingRef.current = false;
+      lastOffsetRef.current = 0;
+      setIsDragging(false);
+      return;
+    }
+
+    touchStartYRef.current = touch.clientY;
     isDraggingRef.current = true;
     lastOffsetRef.current = 0;
     setIsDragging(true);
@@ -603,6 +619,9 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
           noValidate
         >
           <div className={styles.formBody}>
+            <div className={styles.grabZone} aria-hidden="true">
+              <span className={styles.grabHandle} />
+            </div>
             <div className={styles.createHeader}>
               <h2 id="quick-task-title">Create a task</h2>
               <p id={descriptionId} className={styles.createDescription}>

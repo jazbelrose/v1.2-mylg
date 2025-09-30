@@ -271,36 +271,6 @@
   pointer-events: none;
 }
 
-.mapHeader {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.85rem 1rem;
-  border-radius: 16px;
-  background: rgba(7, 8, 10, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(16px);
-  pointer-events: auto;
-  max-width: min(280px, 85vw);
-  z-index: 10001;
-}
-
-.mapProject {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-primary, #f6f7fb);
-}
-
-.mapMeta {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(246, 247, 251, 0.65);
-}
-
 .mapEmptyBanner {
   position: absolute;
   top: 50%;
@@ -320,10 +290,11 @@
 
 .mapActiveCard {
   position: absolute;
-  top: 84px;
+  top: 16px;
   left: 16px;
-  right: 16px;
-  max-width: min(360px, 85vw);
+  right: auto;
+  max-width: min(320px, 85vw);
+  width: min(320px, 85vw);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -351,15 +322,15 @@
   color: var(--text-secondary, rgba(246, 247, 251, 0.74));
 }
 
-.sheetDismiss {
+.sheetDismiss,
+.sheetCreate {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  right: 8px;
   z-index: 10003;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.55rem;
+  padding: 6px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(7, 8, 10, 0.72);
@@ -369,15 +340,32 @@
   transition: background 0.2s ease, transform 0.2s ease;
 }
 
+.sheetDismiss {
+  top: 16px;
+}
+
+.sheetCreate {
+  top: 72px;
+}
+
 .sheetDismiss:hover,
-.sheetDismiss:focus-visible {
+.sheetDismiss:focus-visible,
+.sheetCreate:hover,
+.sheetCreate:focus-visible {
   background: rgba(7, 8, 10, 0.92);
   transform: translateY(-1px);
 }
 
-.sheetDismiss:focus-visible {
+.sheetDismiss:focus-visible,
+.sheetCreate:focus-visible {
   outline: 2px solid var(--brand, #fa3356);
   outline-offset: 2px;
+}
+
+.sheetCreate:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .sheet {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { NOMINATIM_SEARCH_URL, apiFetch, createTask } from "@/shared/utils/api";
@@ -50,8 +50,20 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const suggestionsListId = "quick-create-task-location-suggestions";
+  const touchStartYRef = useRef<number | null>(null);
+  const isDraggingRef = useRef(false);
+  const lastOffsetRef = useRef(0);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const projectOptions = useMemo(() => projects ?? [], [projects]);
+  const isSingleProject = projectOptions.length === 1;
+  const activeProjectName = useMemo(() => {
+    if (!projectOptions.length) return "";
+    const selected = projectOptions.find((project) => project.id === projectId);
+    if (selected) return selected.name;
+    return projectOptions[0]?.name ?? "";
+  }, [projectId, projectOptions]);
   const collaboratorIds = useMemo(
     () =>
       Array.isArray(userData?.collaborators)
@@ -127,6 +139,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   useEffect(() => {
     if (!open) {
       resetForm();
+      setSwipeOffset(0);
+      setIsDragging(false);
+      isDraggingRef.current = false;
+      touchStartYRef.current = null;
+      lastOffsetRef.current = 0;
       return;
     }
 
@@ -145,6 +162,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       return projectOptions[0].id;
     });
   }, [open, projectOptions, resetForm]);
+
+  useEffect(() => {
+    if (!isSingleProject || !projectOptions[0]) return;
+    setProjectId(projectOptions[0].id);
+  }, [isSingleProject, projectOptions]);
 
   useEffect(() => {
     if (!open) return;
@@ -199,6 +221,55 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   }
 
   const hasProjects = projectOptions.length > 0;
+  const descriptionCopy = isSingleProject && activeProjectName
+    ? `Launch work for ${activeProjectName} `
+    : "Launch work for any project without leaving this view.";
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (submitting) return;
+    if (event.touches.length !== 1) return;
+    const target = event.target as HTMLElement | null;
+    if (target && target.closest("input, textarea, select, button, a")) {
+      return;
+    }
+
+    touchStartYRef.current = event.touches[0].clientY;
+    isDraggingRef.current = true;
+    lastOffsetRef.current = 0;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || touchStartYRef.current === null) return;
+
+    const currentY = event.touches[0].clientY;
+    const delta = currentY - touchStartYRef.current;
+    const offset = delta > 0 ? delta : 0;
+    lastOffsetRef.current = offset;
+    setSwipeOffset(offset);
+    if (offset > 0) {
+      event.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDraggingRef.current) return;
+
+    const threshold = 140;
+    const shouldClose = lastOffsetRef.current > threshold && !submitting;
+
+    if (shouldClose) {
+      setSwipeOffset(0);
+      onClose();
+    } else {
+      setSwipeOffset(0);
+    }
+
+    isDraggingRef.current = false;
+    touchStartYRef.current = null;
+    lastOffsetRef.current = 0;
+    setIsDragging(false);
+  };
 
   const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget && !submitting) {
@@ -223,7 +294,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const targetProjectId = projectId || projectOptions[0]?.id || "";
+    const targetProjectId = (isSingleProject ? projectOptions[0]?.id : projectId) || projectOptions[0]?.id || "";
     if (!targetProjectId) {
       setErrorMessage("Add a project before creating tasks.");
       return;
@@ -280,39 +351,49 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   return createPortal(
     <div className={styles.createOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
       <div
-        className={styles.createModal}
+        className={`${styles.createModal} ${isDragging ? styles.createModalDragging : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="quick-task-title"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
         onMouseDown={(event) => event.stopPropagation()}
+        style={swipeOffset ? { transform: `translateY(${swipeOffset}px)` } : undefined}
       >
         <div className={styles.createHeader}>
           <h2 id="quick-task-title">Create a task</h2>
-          <p className={styles.createDescription}>
-            Launch work for any project on your radar without leaving this view.
-          </p>
+          <p className={styles.createDescription}>{descriptionCopy}</p>
         </div>
         <form className={styles.createForm} onSubmit={handleSubmit}>
-          <label className={styles.fieldLabel}>
-            Project
-            <select
-              className={styles.selectInput}
-              value={projectId}
-              onChange={(event) => setProjectId(event.target.value)}
-              disabled={!hasProjects || submitting}
-            >
-              {projectOptions.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          {!hasProjects ? (
+          {!isSingleProject ? (
+            <label className={styles.fieldLabel}>
+              Project
+              <select
+                className={styles.selectInput}
+                value={projectId}
+                onChange={(event) => setProjectId(event.target.value)}
+                disabled={!hasProjects || submitting}
+              >
+                {projectOptions.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <div className={styles.projectSummary} aria-live="polite">
+              <span className={styles.projectSummaryLabel}>Project</span>
+              <span className={styles.projectSummaryName}>{activeProjectName}</span>
+            </div>
+          )}
+          {!hasProjects && !isSingleProject ? (
             <p className={styles.emptyProjects}>Add a project to start creating tasks.</p>
           ) : null}
           <label className={styles.fieldLabel}>
-            Assign to <span className={styles.fieldOptional}>(optional)</span>
+            Assign to <span className={styles.fieldOptional}></span>
             <select
               className={styles.selectInput}
               value={assigneeId}
@@ -342,7 +423,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
             />
           </label>
           <label className={styles.fieldLabel}>
-            Location <span className={styles.fieldOptional}>(optional)</span>
+            Location <span className={styles.fieldOptional}></span>
             <div className={styles.locationInputWrapper}>
               <input
                 type="text"
@@ -383,7 +464,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
             ) : null}
           </label>
           <label className={styles.fieldLabel}>
-            Due date <span className={styles.fieldOptional}>(optional)</span>
+            Due date <span className={styles.fieldOptional}></span>
             <input
               type="date"
               className={styles.textInput}
@@ -393,7 +474,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
             />
           </label>
           <label className={styles.fieldLabel}>
-            Notes <span className={styles.fieldOptional}>(optional)</span>
+            Notes <span className={styles.fieldOptional}></span>
             <textarea
               className={styles.textarea}
               value={description}

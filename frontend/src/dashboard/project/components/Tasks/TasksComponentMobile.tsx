@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { MapPin, Calendar, ChevronDown, User } from "lucide-react";
+import { MapPin, Calendar, ChevronDown, User, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
@@ -575,10 +575,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
       return null;
     }
 
-    const taskCountLabel = drawerTasks.length
-      ? `${drawerTasks.length} ${drawerTasks.length === 1 ? "task" : "tasks"}`
-      : "No tasks yet";
-
     const mapStatusMessage = error
       ? "We couldn’t load task locations."
       : loading
@@ -603,10 +599,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
             />
           </div>
           <div className={styles.mapGradient} aria-hidden="true" />
-          <div className={styles.mapHeader}>
-            <span className={styles.mapProject}>{projectName ?? "Project tasks"}</span>
-            <span className={styles.mapMeta}>{taskCountLabel}</span>
-          </div>
           {!hasMapMarkers ? <div className={styles.mapEmptyBanner}>{mapStatusMessage}</div> : null}
           {selectedTask ? (
             <div className={styles.mapActiveCard}>
@@ -638,6 +630,15 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
           aria-label="Close tasks drawer"
         >
           <ChevronDown size={22} strokeWidth={2.5} />
+        </button>
+        <button
+          type="button"
+          className={styles.sheetCreate}
+          onClick={handleOpenQuickCreate}
+          aria-label="Quick create a task"
+          disabled={loading || !hasQuickCreateProject}
+        >
+          <Plus size={18} strokeWidth={2.5} />
         </button>
         <motion.div
           ref={sheetRef}

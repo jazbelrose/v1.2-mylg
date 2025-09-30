@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { MapPin, Calendar, ChevronDown, User, Plus, Edit3 } from "lucide-react";
+import { MapPin, Calendar, ChevronDown, User, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
@@ -537,33 +537,20 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
 
   const handleTaskSelect = useCallback(
     (taskId: string) => {
-      setActiveTaskId(taskId);
-      setSnapIndex((current) => (current === 0 ? 1 : current));
-
-      // Also open edit modal when clicking on task (keeping existing behavior)
-      const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
-      if (match) {
-        setTaskToEdit(toModalTask(match));
-        setQuickCreateOpen(true);
+      if (activeTaskId === taskId) {
+        // Second tap on already selected task - open edit modal
+        const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
+        if (match) {
+          setTaskToEdit(toModalTask(match));
+          setQuickCreateOpen(true);
+        }
+      } else {
+        // First tap - select task and show on map
+        setActiveTaskId(taskId);
+        setSnapIndex((current) => (current === 0 ? 1 : current));
       }
     },
-    [drawerTasks, tasks, toModalTask],
-  );
-
-  const handleTaskEdit = useCallback(
-    (taskId: string, event: React.MouseEvent) => {
-      event.stopPropagation();
-      
-      const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
-      if (!match) {
-        console.warn('Task not found for editing:', taskId);
-        return;
-      }
-
-      setTaskToEdit(toModalTask(match));
-      setQuickCreateOpen(true);
-    },
-    [drawerTasks, tasks, toModalTask],
+    [activeTaskId, drawerTasks, tasks, toModalTask],
   );
 
   const handleMarkerClick = useCallback(
@@ -823,56 +810,43 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
                         data-task-id={task.id}
                         className={`${styles.taskItem}${isActive ? ` ${styles.taskItemActive}` : ""}`}
                       >
-                        <div className={styles.taskContainer}>
-                          <button
-                            type="button"
-                            className={styles.taskButton}
-                            onClick={() => handleTaskSelect(task.id)}
-                          >
-                            <div className={styles.taskTitleRow}>
-                              <span className={styles.taskTitle}>{task.title}</span>
-                              <span className={styles.statusBadge}>
-                                {task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}
-                              </span>
-                            </div>
-                            <div className={styles.taskMeta}>
+                        <button
+                          type="button"
+                          className={styles.taskButton}
+                          onClick={() => handleTaskSelect(task.id)}
+                        >
+                          <div className={styles.taskTitleRow}>
+                            <span className={styles.taskTitle}>{task.title}</span>
+                            <span className={styles.statusBadge}>
+                              {task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}
+                            </span>
+                          </div>
+                          <div className={styles.taskMeta}>
+                            <span className={styles.metaLine}>
+                              <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
+                            </span>
+                            {task.address ? (
                               <span className={styles.metaLine}>
-                                <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
+                                <MapPin size={14} aria-hidden="true" /> {task.address}
                               </span>
-                              {task.address ? (
-                                <span className={styles.metaLine}>
-                                  <MapPin size={14} aria-hidden="true" /> {task.address}
-                                </span>
-                              ) : (
-                                <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
-                                  <MapPin size={14} aria-hidden="true" /> No location
-                                </span>
-                              )}
-                              {assigneeLabel ? (
-                                <span className={styles.metaLine}>
-                                  <User size={14} aria-hidden="true" /> Assigned to :
-                                  {" "}
-                                  {assigneeLabel}
-                                </span>
-                              ) : (
-                                <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
-                                  <User size={14} aria-hidden="true" /> No assignee
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.editButton}
-                            onClick={(e) => handleTaskEdit(task.id, e)}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onTouchEnd={(e) => e.stopPropagation()}
-                            aria-label="Edit task"
-                            title="Edit task"
-                          >
-                            <Edit3 size={16} strokeWidth={2} />
-                          </button>
-                        </div>
+                            ) : (
+                              <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
+                                <MapPin size={14} aria-hidden="true" /> No location
+                              </span>
+                            )}
+                            {assigneeLabel ? (
+                              <span className={styles.metaLine}>
+                                <User size={14} aria-hidden="true" /> Assigned to :
+                                {" "}
+                                {assigneeLabel}
+                              </span>
+                            ) : (
+                              <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
+                                <User size={14} aria-hidden="true" /> No assignee
+                              </span>
+                            )}
+                          </div>
+                        </button>
                       </li>
                     );
                   })}

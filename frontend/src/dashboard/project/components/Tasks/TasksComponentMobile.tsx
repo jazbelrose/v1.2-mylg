@@ -168,6 +168,20 @@ function formatDueLabel(task: QuickTask): string {
   return dueFormatter.format(task.dueDate);
 }
 
+function formatAssigneeDisplay(value?: string): string | undefined {
+  if (!value) return undefined;
+
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const doubleUnderscoreIndex = trimmed.indexOf("__");
+  const base =
+    doubleUnderscoreIndex >= 0 ? trimmed.slice(0, doubleUnderscoreIndex) : trimmed;
+
+  const formatted = base.replace(/([a-z])([A-Z])/g, "$1 $2").trim();
+  return formatted || undefined;
+}
+
 function computeStats(tasks: QuickTask[]) {
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -437,6 +451,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     () => drawerTasks.find((task) => task.id === activeTaskId) ?? null,
     [drawerTasks, activeTaskId],
   );
+  const selectedAssigneeName = formatAssigneeDisplay(selectedTask?.assignedTo);
 
   const handleMarkerClick = useCallback((markerId: string) => {
     setActiveTaskId(markerId);
@@ -605,9 +620,11 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
                     <MapPin size={14} aria-hidden="true" /> {selectedTask.address}
                   </span>
                 ) : null}
-                {selectedTask.assignedTo ? (
+                {selectedAssigneeName ? (
                   <span className={styles.metaLine}>
-                    <User size={14} aria-hidden="true" /> Assigned to : {selectedTask.assignedTo}
+                    <User size={14} aria-hidden="true" /> Assigned to :
+                    {" "}
+                    {selectedAssigneeName}
                   </span>
                 ) : null}
               </div>
@@ -688,6 +705,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
                 <ul className={styles.taskList} ref={taskListRef}>
                   {drawerTasks.map((task) => {
                     const isActive = task.id === activeTaskId;
+                    const assigneeLabel = formatAssigneeDisplay(task.assignedTo);
                     return (
                       <li
                         key={task.id}
@@ -718,9 +736,11 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
                                 <MapPin size={14} aria-hidden="true" /> No location
                               </span>
                             )}
-                            {task.assignedTo ? (
+                            {assigneeLabel ? (
                               <span className={styles.metaLine}>
-                                <User size={14} aria-hidden="true" /> Assignee / Assigned to: {task.assignedTo}
+                                <User size={14} aria-hidden="true" /> Assigned to :
+                                {" "}
+                                {assigneeLabel}
                               </span>
                             ) : (
                               <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>

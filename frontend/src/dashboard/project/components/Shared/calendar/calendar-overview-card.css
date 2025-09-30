@@ -125,7 +125,7 @@
 .calendar-overview-card-wrapper .calendar-day {
   position: relative;
   width: 100%;
-  min-height: clamp(40px, 9vh, 60px);
+  min-height: 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -464,7 +464,7 @@
 .calendar-overview-card-wrapper .calendar-weeks {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 9px;
 }
 
 .calendar-overview-card-wrapper .calendar-week {
@@ -490,8 +490,8 @@
   padding: 6px 0 14px;
   cursor: pointer;
   border-radius: 10px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: transparent;
+  border: none;
   display: block;
   width: 100%;
   font: inherit;
@@ -573,7 +573,7 @@
 
 
 .calendar-overview-card-wrapper .calendar-day.in-range {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.18);
 }
 

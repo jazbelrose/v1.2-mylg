@@ -218,8 +218,8 @@ function isSameDay(a: Date, b: Date): boolean {
 }
 
 function buildMarkerThumbnail(color?: string) {
-  if (!color) return undefined;
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="14" fill="${color}" stroke="white" stroke-width="4"/></svg>`;
+  const fill = color && color.trim() ? color : "#2563eb";
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg width="40" height="52" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg"><path d="M20 2C11.163 2 4 9.163 4 18c0 11.046 16 30 16 30s16-18.954 16-30C36 9.163 28.837 2 20 2z" fill="${fill}" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="18" r="7" fill="#ffffff"/></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
@@ -390,6 +390,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         iconUrl: markerThumbnail,
         title: task.title,
         isActive: task.id === activeTaskId,
+        variant: "pin" as const,
       })),
     [mapTasks, markerThumbnail, activeTaskId],
   );

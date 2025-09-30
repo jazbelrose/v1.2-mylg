@@ -8,6 +8,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './marker.css';
 
+const DEFAULT_PIN_ICON = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<?xml version="1.0" encoding="UTF-8"?>\n<svg width="40" height="52" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg"><path d="M20 2C11.163 2 4 9.163 4 18c0 11.046 16 30 16 30s16-18.954 16-30C36 9.163 28.837 2 20 2z" fill="#2563eb" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="18" r="7" fill="#ffffff"/></svg>`,
+)}`;
+
 export interface MapRef {
   locateUser: () => void;
 }
@@ -32,6 +36,9 @@ interface MapMarker {
   iconUrl?: string;
   title?: string;
   isActive?: boolean;
+  markerColor?: string;
+  borderColor?: string;
+  variant?: 'pin' | 'avatar';
 }
 
 interface MapProps {
@@ -86,17 +93,43 @@ const Map = forwardRef<MapRef, MapProps>(
     const lastFocusRef = useRef<string | null>(null);
     const markerIdsRef = useRef<string[]>([]);
 
-    const createMarkerIcon = (iconUrl?: string, isActive?: boolean) => {
-      const markerClass = `task-marker${isActive ? ' task-marker--active' : ''}`;
-      const inner = iconUrl
-        ? `<img src="${iconUrl}" alt="" />`
-        : '<span class="task-marker__dot"></span>';
+    const createMarkerIcon = (marker: MapMarker) => {
+      const { iconUrl, isActive, markerColor, borderColor, variant } = marker;
+      const mode = variant === 'avatar' ? 'avatar' : 'pin';
+      const markerClasses = ['task-marker', `task-marker--${mode}`];
+      if (isActive) {
+        markerClasses.push('task-marker--active');
+      }
+
+      const styleParts: string[] = [];
+      if (mode === 'avatar') {
+        if (markerColor) {
+          styleParts.push(`--marker-bg:${markerColor}`);
+        }
+        if (borderColor) {
+          styleParts.push(`--marker-border:${borderColor}`);
+        }
+      }
+      const styleAttr = styleParts.length ? ` style="${styleParts.join(';')}"` : '';
+
+      let innerHtml: string;
+      if (mode === 'avatar') {
+        innerHtml = iconUrl
+          ? `<img src="${iconUrl}" alt="" class="task-marker__avatar" />`
+          : '<span class="task-marker__avatar-fallback" aria-hidden="true"></span>';
+      } else {
+        const pinUrl = iconUrl || DEFAULT_PIN_ICON;
+        innerHtml = `<img src="${pinUrl}" alt="" class="task-marker__pin-image" />`;
+      }
+
+      const iconSize: [number, number] = mode === 'pin' ? [40, 52] : [36, 48];
+      const iconAnchor: [number, number] = mode === 'pin' ? [20, 48] : [18, 44];
 
       return L.divIcon({
-        html: `<div class="${markerClass}">${inner}<span class="task-marker__pointer" aria-hidden="true"></span></div>`,
+        html: `<div class="${markerClasses.join(' ')}"${styleAttr}>${innerHtml}</div>`,
         className: '',
-        iconSize: [36, 48],
-        iconAnchor: [18, 44],
+        iconSize,
+        iconAnchor,
       });
     };
 
@@ -398,7 +431,7 @@ const Map = forwardRef<MapRef, MapProps>(
 
       list.forEach((marker) => {
         const latLng: [number, number] = [marker.lat, marker.lng];
-        const icon = createMarkerIcon(marker.iconUrl, marker.isActive);
+        const icon = createMarkerIcon(marker);
         const existing = activeMarkers[marker.id];
 
         if (existing) {

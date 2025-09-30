@@ -64,7 +64,7 @@ const dueFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const DEFAULT_LOCATION = { lat: 37.0902, lng: -95.7129 }; // Geographic centre of contiguous US
-const SNAP_POINTS = [0.2, 0.5, 1] as const;
+const SNAP_POINTS = [0.1, 0.45, 0.9] as const;
 type SnapIndex = 0 | 1 | 2;
 
 function getViewportHeight(): number {
@@ -292,6 +292,9 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const [viewportHeight, setViewportHeight] = useState(() => getViewportHeight());
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState<number | null>(null);
+  const [currentDragY, setCurrentDragY] = useState(0);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const taskListRef = useRef<HTMLUListElement | null>(null);
   const initialScrollDoneRef = useRef(false);
@@ -526,8 +529,8 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   }, [activeTaskId, drawerOpen]);
 
   const sheetHeights = useMemo(() => SNAP_POINTS.map((point) => viewportHeight * point), [viewportHeight]);
-  const targetY = viewportHeight ? viewportHeight - sheetHeights[snapIndex] : 0;
-  const maxDragOffset = Math.max(0, viewportHeight - sheetHeights[0]);
+  const baseTargetY = viewportHeight ? viewportHeight - sheetHeights[snapIndex] : 0;
+  const targetY = isDragging ? baseTargetY + currentDragY : baseTargetY;
   const hasMapMarkers = mapMarkers.length > 0;
   const selectedTask = useMemo(
     () => drawerTasks.find((task) => task.id === activeTaskId) ?? null,
@@ -568,33 +571,43 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     });
   }, []);
 
-  const handleSnapToNearest = useCallback(() => {
-    if (!sheetRef.current || !viewportHeight) return;
-    const rect = sheetRef.current.getBoundingClientRect();
-    const visibleHeight = viewportHeight - rect.top;
-    if (visibleHeight < viewportHeight * 0.16) {
-      handleCloseDrawer();
-      return;
+  const handleTouchStart = useCallback((event: React.TouchEvent) => {
+    if (event.touches.length === 1) {
+      setIsDragging(true);
+      setDragStartY(event.touches[0].clientY);
+      setCurrentDragY(0);
     }
+  }, []);
 
-    const ratio = visibleHeight / viewportHeight;
-    let closestIndex: SnapIndex = 0;
-    let smallestDistance = Number.POSITIVE_INFINITY;
+  const handleTouchMove = useCallback((event: React.TouchEvent) => {
+    if (isDragging && dragStartY !== null && event.touches.length === 1) {
+      const deltaY = event.touches[0].clientY - dragStartY;
+      setCurrentDragY(deltaY);
+      // Prevent scrolling while dragging
+      event.preventDefault();
+    }
+  }, [isDragging, dragStartY]);
 
-    SNAP_POINTS.forEach((point, index) => {
-      const diff = Math.abs(point - ratio);
-      if (diff < smallestDistance) {
-        smallestDistance = diff;
-        closestIndex = index as SnapIndex;
+  const handleTouchEnd = useCallback(() => {
+    if (isDragging) {
+      setIsDragging(false);
+      setDragStartY(null);
+      
+      // Snap to nearest position based on drag distance
+      const threshold = viewportHeight * 0.15; // 15% of viewport
+      if (Math.abs(currentDragY) > threshold) {
+        if (currentDragY > 0) {
+          // Dragged down - go to lower snap point
+          setSnapIndex((current) => Math.max(0, current - 1) as SnapIndex);
+        } else {
+          // Dragged up - go to higher snap point
+          setSnapIndex((current) => Math.min(2, current + 1) as SnapIndex);
+        }
       }
-    });
-
-    setSnapIndex(closestIndex);
-  }, [viewportHeight, handleCloseDrawer]);
-
-  const handleDragEnd = useCallback(() => {
-    handleSnapToNearest();
-  }, [handleSnapToNearest]);
+      
+      setCurrentDragY(0);
+    }
+  }, [isDragging, currentDragY, viewportHeight]);
 
   const statusMessage = useMemo(() => {
     if (error) return "We couldn’t load tasks right now.";
@@ -743,11 +756,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
           role="dialog"
           aria-modal="true"
           aria-label="Project tasks quick view"
-          drag="y"
-          dragElastic={{ top: 0.2, bottom: 0.3 }}
-          dragConstraints={{ top: 0, bottom: maxDragOffset }}
-          dragMomentum={false}
-          onDragEnd={handleDragEnd}
+          drag={false}
           initial={{ y: viewportHeight }}
           animate={{ y: targetY }}
           transition={{ type: "spring", stiffness: 360, damping: 42, mass: 0.9 }}
@@ -758,6 +767,9 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
             tabIndex={0}
             aria-label="Toggle tasks drawer size"
             onClick={handleHandleClick}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();

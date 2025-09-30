@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus, MapPin, Calendar, ChevronDown, User } from "lucide-react";
+import { MapPin, Calendar, ChevronDown, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
@@ -787,7 +787,20 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
                 {successMessage ? <div className={styles.successMessage}>{successMessage}</div> : null}
                 <div className={styles.formActions}>
                   <button type="submit" className={styles.submitButton} disabled={submitting}>
-                    <Plus size={18} strokeWidth={2.5} />
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ display: 'block', flexShrink: 0 }}
+                    >
+                      <path d="M12 5v14" />
+                      <path d="M5 12h14" />
+                    </svg>
                     Create task
                   </button>
                 </div>
@@ -814,20 +827,33 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         <div className={styles.actions}>
           <button
             type="button"
-            className={styles.iconButton}
-            onClick={handleOpenQuickCreate}
-            aria-label="Quick create a task"
-            disabled={loading || !hasQuickCreateProject}
-          >
-            <Plus size={18} strokeWidth={2.25} />
-          </button>
-          <button
-            type="button"
             className={styles.primaryButton}
             onClick={handleOpenDrawer}
             disabled={loading}
           >
             Open tasks
+          </button>
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={handleOpenQuickCreate}
+            aria-label="Quick create a task"
+            disabled={loading || !hasQuickCreateProject}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ display: 'block', flexShrink: 0 }}
+            >
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
           </button>
         </div>
       </header>

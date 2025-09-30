@@ -66,14 +66,33 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.14);
   color: rgba(255, 255, 255, 0.95);
   cursor: pointer;
   transition: background 160ms ease, transform 160ms ease;
+  /* iOS-specific optimizations */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  /* Ensure crisp rendering on high-DPI displays */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure SVG icons render crisply on all devices */
+.iconButton svg {
+  display: block !important;
+  flex-shrink: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  /* Optimize SVG rendering for crisp display */
+  shape-rendering: geometricPrecision;
+  /* Ensure the icon is visible with maximum contrast */
+  color: inherit;
+  opacity: 1;
 }
 
 .iconButton:disabled {
@@ -602,6 +621,17 @@
   cursor: not-allowed;
 }
 
+/* Ensure submit button SVG is also properly sized */
+.submitButton svg {
+  display: block !important;
+  flex-shrink: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  shape-rendering: geometricPrecision;
+  color: inherit;
+  opacity: 1;
+}
+
 .successMessage {
   color: #4ade80;
   font-size: 0.8rem;
@@ -638,6 +668,34 @@
 /* Ensure map canvas allows interaction when drawer is open but prevent interference */
 .mapCanvas :global(.leaflet-container) {
   z-index: inherit;
+}
+
+/* iPhone-specific optimizations for better icon visibility */
+@media screen and (max-width: 430px) and (-webkit-min-device-pixel-ratio: 2) {
+  .iconButton {
+    width: 34px;
+    height: 34px;
+    /* Enhanced contrast for retina displays */
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+  }
+  
+  .iconButton:not(:disabled):hover,
+  .iconButton:not(:disabled):focus-visible {
+    background: rgba(255, 255, 255, 0.28);
+  }
+}
+
+/* Specific adjustments for very small iPhone screens */
+@media screen and (max-width: 375px) {
+  .actions {
+    gap: 8px;
+  }
+  
+  .iconButton {
+    width: 30px;
+    height: 30px;
+  }
 }
 
 .mapCanvas :global(.leaflet-map-pane) {

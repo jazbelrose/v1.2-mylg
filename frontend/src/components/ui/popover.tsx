@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { cn } from "./utils";
 import "./popover.css";
 
@@ -143,9 +144,32 @@ interface PopoverContentProps
 
 export const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(
   ({ className, style, align = "end", children, ...props }, forwardedRef) => {
-    const { open, contentRef } = usePopoverContext();
+    const { open, contentRef, triggerRef } = usePopoverContext();
 
-    if (!open) return null;
+    const [positionStyle, setPositionStyle] = React.useState<React.CSSProperties>({});
+
+    const updatePosition = React.useCallback(() => {
+      const trigger = triggerRef.current;
+
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const baseStyle: React.CSSProperties = {
+        top: rect.bottom + 8,
+        left: rect.left,
+        transform: "translateX(0)",
+      };
+
+      if (align === "center") {
+        baseStyle.left = rect.left + rect.width / 2;
+        baseStyle.transform = "translateX(-50%)";
+      } else if (align === "end") {
+        baseStyle.left = rect.right;
+        baseStyle.transform = "translateX(-100%)";
+      }
+
+      setPositionStyle(baseStyle);
+    }, [align, triggerRef]);
 
     const refCallback = (node: HTMLDivElement | null) => {
       contentRef.current = node;
@@ -157,23 +181,44 @@ export const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentPro
       }
     };
 
-    const alignStyle: React.CSSProperties =
-      align === "start"
-        ? { left: 0, right: "auto" }
-        : align === "center"
-        ? { left: "50%", transform: "translateX(-50%)" }
-        : { right: 0 };
+    React.useLayoutEffect(() => {
+      if (!open) return;
 
-    return (
+      updatePosition();
+    }, [open, updatePosition]);
+
+    React.useEffect(() => {
+      if (!open) return;
+
+      const handleReposition = () => {
+        updatePosition();
+      };
+
+      window.addEventListener("resize", handleReposition);
+      window.addEventListener("scroll", handleReposition, true);
+
+      return () => {
+        window.removeEventListener("resize", handleReposition);
+        window.removeEventListener("scroll", handleReposition, true);
+      };
+    }, [open, updatePosition]);
+
+    const portalTarget =
+      typeof document !== "undefined" ? document.body : undefined;
+
+    if (!open || !portalTarget) return null;
+
+    return createPortal(
       <div
         ref={refCallback}
         className={cn("ui-popover-content", className)}
-        style={{ ...alignStyle, ...style }}
+        style={{ position: "fixed", ...positionStyle, ...style }}
         role="menu"
         {...props}
       >
         {children}
-      </div>
+      </div>,
+      portalTarget
     );
   }
 );

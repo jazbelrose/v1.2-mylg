@@ -52,7 +52,9 @@ export default function App(): React.ReactElement {
         "link[rel~='icon']"
       ) as HTMLLinkElement;
       if (!link) return;
-      link.href = darkMode ? "/favicon-light.png" : "/favicon-light.png";
+      // Use .ico files that exist in /public; default + light variant
+      link.href = darkMode ? "/favicon-light.ico" : "/favicon.ico";
+      link.type = "image/x-icon";
     };
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -113,7 +115,6 @@ function MainContent({ isLoading }: MainContentProps): React.ReactElement {
         </>
     );
 }
-
 
 
 

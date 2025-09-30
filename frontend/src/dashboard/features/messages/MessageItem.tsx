@@ -15,7 +15,7 @@ export type { ChatMessage };
 // Move this component outside to prevent recreation on every render
 const RenderLinkContent: React.FC<{ url: string }> = React.memo(({ url }) => {
   const isVideoUrl = /youtu\.be|youtube\.com|vimeo\.com/.test(url);
-  
+
   const domain = useMemo(() => {
     try {
       return new URL(url).hostname;
@@ -23,13 +23,25 @@ const RenderLinkContent: React.FC<{ url: string }> = React.memo(({ url }) => {
       return "";
     }
   }, [url]);
-  
-  // Use Google's favicon service directly - it handles CORS properly
-  const faviconUrl = useMemo(() => {
-    return domain 
-      ? `https://www.google.com/s2/favicons?sz=16&domain=${domain}`
-      : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%234ea1f3'/%3E%3Cpath d='M5.75 10.25l4.5-4.5M6.5 5.75h3.75V9.5' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
-  }, [domain]);
+
+  // Placeholder to prevent layout shift if both favicon sources fail
+  const placeholder =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%234ea1f3'/%3E%3Cpath d='M5.75 10.25l4.5-4.5M6.5 5.75h3.75V9.5' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
+
+  const primarySrc = useMemo(() => (domain ? `https://icons.duckduckgo.com/ip3/${domain}.ico` : placeholder), [domain]);
+  const fallbackSrc = useMemo(
+    () => (domain ? `https://www.google.com/s2/favicons?sz=16&domain=${domain}` : placeholder),
+    [domain]
+  );
+
+  const [iconSrc, setIconSrc] = React.useState<string>(primarySrc);
+  const triedFallbackRef = React.useRef(false);
+
+  React.useEffect(() => {
+    // Reset when URL/domain changes
+    setIconSrc(primarySrc);
+    triedFallbackRef.current = false;
+  }, [primarySrc]);
 
   if (isVideoUrl) {
     return (
@@ -38,7 +50,7 @@ const RenderLinkContent: React.FC<{ url: string }> = React.memo(({ url }) => {
       </div>
     );
   }
-  
+
   return (
     <div style={{ maxWidth: "300px" }}>
       <a
@@ -48,10 +60,22 @@ const RenderLinkContent: React.FC<{ url: string }> = React.memo(({ url }) => {
         style={{ color: "#4ea1f3", display: "flex", alignItems: "center" }}
       >
         <img
-          src={faviconUrl}
+          src={iconSrc}
           alt=""
-          style={{ width: 16, height: 16, marginRight: 4 }}
+          width={16}
+          height={16}
+          loading="lazy"
+          decoding="async"
+          style={{ width: 16, height: 16, marginRight: 4, flex: "0 0 16px" }}
           referrerPolicy="no-referrer"
+          onError={() => {
+            if (!triedFallbackRef.current) {
+              triedFallbackRef.current = true;
+              setIconSrc(fallbackSrc);
+            } else if (iconSrc !== placeholder) {
+              setIconSrc(placeholder);
+            }
+          }}
         />
         {url}
       </a>
@@ -312,7 +336,6 @@ const MessageItem: React.FC<MessageItemProps> = ({
 };
 
 export default MessageItem;
-
 
 
 

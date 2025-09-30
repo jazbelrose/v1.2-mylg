@@ -11,11 +11,11 @@
   min-height: var(--row-h);
   transition: transform 0.2s ease;
   flex-wrap: nowrap;
-  gap: 12px;
-  padding: 20px;
+  gap: 18px;
+  padding: clamp(20px, 3vw, 28px);
   box-sizing: border-box;
-  background-color: rgba(12, 12, 12, 0.75);
-  border-radius: 16px;
+  background: transparent;
+  border-radius: 28px;
 }
 
 /* Two columns inside the trigger */
@@ -72,18 +72,30 @@
   gap: 10px;
   width: 100%;
   position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: 20px;
+  padding: 12px 18px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.carouselViewport {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 8%, rgba(0, 0, 0, 1) 92%, rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 8%, rgba(0, 0, 0, 1) 92%, rgba(0, 0, 0, 0) 100%);
 }
 
 .thumbnailCarousel {
   --thumb-column: calc(var(--row-h) * 0.78);
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: max-content;
-  gap: 12px;
+  display: inline-flex;
+  gap: 16px;
   width: 100%;
   justify-content: flex-end;
   align-items: center;
   padding: 4px 0;
+  transition: transform 0.35s ease;
 }
 
 
@@ -96,9 +108,9 @@
   border: none;
   padding: 6px;
   margin: 0;
-  border-radius: 14px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.65);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -108,6 +120,8 @@
   max-width: calc(var(--thumb-column) * 1.6);
   isolation: isolate;
   background-clip: padding-box;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px);
   cursor: pointer;
 }
 
@@ -129,8 +143,9 @@
 
 .thumbnailButton:hover {
   transform: translateY(-2px);
-  background: rgba(250, 51, 86, 0.12);
+  background: rgba(250, 51, 86, 0.16);
   color: #FA3356;
+  box-shadow: inset 0 0 0 1px rgba(250, 51, 86, 0.35);
 }
 
 .thumbnailPlaceholder {
@@ -139,13 +154,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(12, 12, 12, 0.65);
+  background: rgba(255, 255, 255, 0.04);
   color: rgba(255, 255, 255, 0.65);
 }
 
 .moreTile {
-  background: rgba(250, 51, 86, 0.15);
+  background: rgba(250, 51, 86, 0.2);
   color: #FA3356;
+  box-shadow: inset 0 0 0 1px rgba(250, 51, 86, 0.35);
 }
 
 .moreTile:hover {
@@ -154,22 +170,22 @@
 
 .carouselEdge {
   position: absolute;
-  inset-block: 4px;
-  width: 32px;
+  inset-block: 12px;
+  width: 42px;
   pointer-events: none;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.2s ease;
-  display: none;
+  display: block;
 }
 
 .carouselEdgeLeft {
   left: 0;
-  background: linear-gradient(90deg, rgba(12, 12, 12, 0.95) 0%, rgba(12, 12, 12, 0) 100%);
+  background: linear-gradient(90deg, rgba(17, 18, 19, 0.95) 0%, rgba(17, 18, 19, 0) 100%);
 }
 
 .carouselEdgeRight {
   right: 0;
-  background: linear-gradient(270deg, rgba(12, 12, 12, 0.95) 0%, rgba(12, 12, 12, 0) 100%);
+  background: linear-gradient(270deg, rgba(17, 18, 19, 0.95) 0%, rgba(17, 18, 19, 0) 100%);
 }
 
 .viewAllButton {
@@ -222,11 +238,17 @@
   .carouselSection {
     align-items: center;
     gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .carouselViewport {
+    mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 1) 88%, rgba(0, 0, 0, 0) 100%);
+    -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 12%, rgba(0, 0, 0, 1) 88%, rgba(0, 0, 0, 0) 100%);
   }
 
   .thumbnailCarousel {
     justify-content: flex-start;
-    gap: 10px;
+    gap: 12px;
   }
 
   .thumbnailButton {
@@ -262,30 +284,36 @@
     flex: 0 1 42%;
   }
 
+  .carouselSection {
+    padding: 8px 12px;
+  }
+
   .thumbnailCarousel {
     gap: 8px;
   }
 }
 
 @media (max-width: 480px) {
-  .thumbnailCarousel {
+  .carouselViewport {
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
     padding: 6px 12px;
     margin: 0 -12px;
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 
-  .thumbnailCarousel::-webkit-scrollbar {
+  .carouselViewport::-webkit-scrollbar {
     height: 6px;
   }
 
-  .thumbnailCarousel::-webkit-scrollbar-thumb {
+  .carouselViewport::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.18);
     border-radius: 999px;
   }
 
-  .thumbnailCarousel::-webkit-scrollbar-track {
+  .carouselViewport::-webkit-scrollbar-track {
     background: transparent;
   }
 
@@ -294,8 +322,7 @@
   }
 
   .carouselEdge {
-    display: block;
-    opacity: 1;
+    display: none;
   }
 }
 

@@ -89,10 +89,11 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
       <div className={styles.thumbsColumn}>
         {hasGalleries ? (
           <div className={styles.carouselSection}>
-            <div
-              className={styles.thumbnailCarousel}
-              aria-label="Gallery preview thumbnails"
-            >
+            <div className={styles.carouselViewport}>
+              <div
+                className={styles.thumbnailCarousel}
+                aria-label="Gallery preview thumbnails"
+              >
               {visibleGalleries.map((galleryItem, idx) => {
                 const previewUrl = getPreviewUrl(galleryItem);
                 const galleryName = galleryItem.name?.trim() || `Gallery ${idx + 1}`;
@@ -135,6 +136,7 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
                   +{hiddenCount}
                 </button>
               )}
+              </div>
             </div>
             <span className={`${styles.carouselEdge} ${styles.carouselEdgeLeft}`} aria-hidden="true" />
             <span className={`${styles.carouselEdge} ${styles.carouselEdgeRight}`} aria-hidden="true" />

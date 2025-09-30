@@ -472,10 +472,6 @@ const BudgetPageContent = () => {
     }
   };
 
-  const handleTableChange = () => {
-    // Table change logic handled by table components
-  };
-
   if (!isAdmin) {
     return <div>Access Denied</div>;
   }
@@ -650,12 +646,37 @@ const BudgetPageContent = () => {
                                     openCreateModal={eventHandlers.openCreateModal}
                                   />
                                   <BudgetItemsTable
-                                    dataSource={budgetItems.length > 0 ? (tableConfig.tableData as (Record<string, unknown> & { budgetItemId: string; key: string })[]) : []}
+                                    dataSource={
+                                      budgetItems.length > 0
+                                        ? (tableConfig.groupedTableData as (Record<string, unknown> & {
+                                            budgetItemId: string;
+                                            key: string;
+                                          })[])
+                                        : []
+                                    }
                                     columns={tableConfig.tableColumns}
                                     groupBy={stateManager.groupBy}
                                     selectedRowKeys={stateManager.selectedRowKeys}
                                     lockedLines={stateManager.lockedLines}
-                                    handleTableChange={handleTableChange}
+                                    handleTableChange={(_pagination, _filters, sorter) => {
+                                      const sortConfig = Array.isArray(sorter) ? sorter[0] : sorter;
+
+                                      if (sortConfig && typeof sortConfig === "object") {
+                                        const columnKey = (sortConfig.columnKey ?? sortConfig.field) as
+                                          | string
+                                          | undefined;
+                                        const order = sortConfig.order ?? null;
+
+                                        if (columnKey && order) {
+                                          stateManager.setSortField(columnKey);
+                                          stateManager.setSortOrder(order);
+                                          return;
+                                        }
+                                      }
+
+                                      stateManager.setSortField(null);
+                                      stateManager.setSortOrder(null);
+                                    }}
                                     openEditModal={eventHandlers.openEditModal}
                                     openDeleteModal={eventHandlers.openDeleteModal}
                                     expandedRowRender={tableConfig.expandedRowRender}

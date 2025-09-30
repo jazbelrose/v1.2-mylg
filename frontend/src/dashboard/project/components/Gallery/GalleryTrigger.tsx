@@ -53,10 +53,58 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
 }) => {
   const isCompact = useCompactGalleryLayout();
   const hasGalleries = galleries.length > 0;
-  const maxVisibleThumbs = isCompact ? 6 : 3;
-  const visibleCount = Math.min(maxVisibleThumbs, galleries.length);
-  const visibleGalleries = galleries.slice(0, visibleCount);
-  const hiddenCount = galleries.length - visibleCount;
+  const carouselRef = React.useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = React.useState(false);
+  const [canScrollRight, setCanScrollRight] = React.useState(false);
+
+  const updateScrollState = React.useCallback(() => {
+    const node = carouselRef.current;
+
+    if (!node) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+
+    const { scrollLeft, scrollWidth, clientWidth } = node;
+    const maxScrollLeft = scrollWidth - clientWidth;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft < maxScrollLeft - 2);
+  }, []);
+
+  React.useEffect(() => {
+    const node = carouselRef.current;
+
+    if (!node) {
+      return undefined;
+    }
+
+    updateScrollState();
+
+    const handleScroll = () => updateScrollState();
+    const handleResize = () => updateScrollState();
+
+    node.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      node.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [galleries.length, updateScrollState]);
+
+  React.useEffect(() => {
+    updateScrollState();
+  }, [galleries.length, updateScrollState]);
+
+  const viewportClassName = [
+    styles.carouselViewport,
+    canScrollLeft ? styles.carouselViewportRevealLeft : "",
+    canScrollRight ? styles.carouselViewportRevealRight : "",
+    isCompact ? styles.carouselViewportCompact : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div
@@ -75,7 +123,7 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
       <div className={styles.titleColumn}>
         <div className={styles.topRow}>
           <span>Galleries</span>
-         
+
         </div>
         {hasGalleries ? (
           <p className={styles.galleryHelperText}>
@@ -89,55 +137,43 @@ const GalleryTrigger: React.FC<GalleryTriggerProps> = ({
       <div className={styles.thumbsColumn}>
         {hasGalleries ? (
           <div className={styles.carouselSection}>
-            <div
-              className={styles.thumbnailCarousel}
-              aria-label="Gallery preview thumbnails"
-            >
-              {visibleGalleries.map((galleryItem, idx) => {
-                const previewUrl = getPreviewUrl(galleryItem);
-                const galleryName = galleryItem.name?.trim() || `Gallery ${idx + 1}`;
+            <div className={viewportClassName}>
+              <div
+                ref={carouselRef}
+                className={styles.thumbnailCarousel}
+                aria-label="Gallery preview thumbnails"
+              >
+                {galleries.map((galleryItem, idx) => {
+                  const previewUrl = getPreviewUrl(galleryItem);
+                  const galleryName = galleryItem.name?.trim() || `Gallery ${idx + 1}`;
 
-                return (
-                  <button
-                    key={galleryItem.slug || idx}
-                    type="button"
-                    className={styles.thumbnailButton}
-                    aria-label={`Open ${galleryName}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onOpenModal();
-                    }}
-                  >
-                    {previewUrl ? (
-                      <img
-                        src={getFileUrl(previewUrl)}
-                        alt={galleryName}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className={styles.thumbnailPlaceholder}>
-                        <GalleryVerticalEnd size={24} aria-hidden="true" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-              {hiddenCount > 0 && (
-                <button
-                  type="button"
-                  className={`${styles.thumbnailButton} ${styles.moreTile}`}
-                  aria-label={`View ${hiddenCount} more galleries`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onOpenModal();
-                  }}
-                >
-                  +{hiddenCount}
-                </button>
-              )}
+                  return (
+                    <button
+                      key={galleryItem.slug || idx}
+                      type="button"
+                      className={styles.thumbnailButton}
+                      aria-label={`Open ${galleryName}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onOpenModal();
+                      }}
+                    >
+                      {previewUrl ? (
+                        <img
+                          src={getFileUrl(previewUrl)}
+                          alt={galleryName}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className={styles.thumbnailPlaceholder}>
+                          <GalleryVerticalEnd size={24} aria-hidden="true" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <span className={`${styles.carouselEdge} ${styles.carouselEdgeLeft}`} aria-hidden="true" />
-            <span className={`${styles.carouselEdge} ${styles.carouselEdgeRight}`} aria-hidden="true" />
           </div>
         ) : (
           <div className={styles.emptyState}>No galleries yet</div>

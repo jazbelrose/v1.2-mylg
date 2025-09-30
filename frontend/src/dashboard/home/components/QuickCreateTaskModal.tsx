@@ -412,10 +412,6 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (submitting) return;
     if (event.touches.length !== 1) return;
-    const target = event.target as HTMLElement | null;
-    if (target && target.closest("input, textarea, select, button, a")) {
-      return;
-    }
 
     touchStartYRef.current = event.touches[0].clientY;
     isDraggingRef.current = true;
@@ -431,8 +427,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     const offset = delta > 0 ? delta : 0;
     lastOffsetRef.current = offset;
     setSwipeOffset(offset);
+    
+    // Always prevent default to avoid scrolling interference when dragging
     if (offset > 0) {
       event.preventDefault();
+      event.stopPropagation();
     }
   };
 
@@ -588,13 +587,18 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
         aria-labelledby="quick-task-title"
         aria-describedby={descriptionId}
         tabIndex={-1}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
         onMouseDown={(event) => event.stopPropagation()}
         style={swipeOffset ? { transform: `translateY(${swipeOffset}px)` } : undefined}
       >
+        <div 
+          className={styles.grabZone}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+        >
+          <div className={styles.grabHandle} />
+        </div>
         <form
           ref={formRef}
           className={styles.createForm}

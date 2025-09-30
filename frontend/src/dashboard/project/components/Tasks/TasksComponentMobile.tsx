@@ -10,8 +10,8 @@ import QuickCreateTaskModal, {
 } from "@/dashboard/home/components/QuickCreateTaskModal";
 
 import styles from "./TasksComponentMobile.module.css";
-
-type Status = "todo" | "in_progress" | "done" | string;
+import type { Status } from "./types";
+import { formatAssigneeDisplay, parseDueDate, parseLocation } from "./utils";
 
 type RawTask = {
   taskId?: string;
@@ -65,80 +65,6 @@ function getViewportHeight(): number {
   return window.visualViewport?.height ?? window.innerHeight;
 }
 
-function parseDueDate(value?: unknown): Date | null {
-  if (value == null || value === "") return null;
-
-  if (value instanceof Date) {
-    const copy = new Date(value.getTime());
-    return Number.isNaN(copy.getTime()) ? null : copy;
-  }
-
-  if (typeof value === "number") {
-    const byNumber = new Date(value);
-    return Number.isNaN(byNumber.getTime()) ? null : byNumber;
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-
-    const direct = new Date(trimmed);
-    if (!Number.isNaN(direct.getTime())) {
-      return direct;
-    }
-
-    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      const iso = new Date(`${trimmed}T00:00:00`);
-      return Number.isNaN(iso.getTime()) ? null : iso;
-    }
-  }
-
-  return null;
-}
-
-function parseLocation(value: unknown): { lat: number; lng: number } | null {
-  if (!value) return null;
-  if (Array.isArray(value) && value.length >= 2) {
-    const [latRaw, lngRaw] = value;
-    const lat = Number(latRaw);
-    const lng = Number(lngRaw);
-    if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-      return { lat, lng };
-    }
-  }
-
-  if (typeof value === "object") {
-    const latCandidate = (value as Record<string, unknown>).lat ??
-      (value as Record<string, unknown>).latitude ??
-      (value as Record<string, unknown>).y;
-    const lngCandidate = (value as Record<string, unknown>).lng ??
-      (value as Record<string, unknown>).lon ??
-      (value as Record<string, unknown>).longitude ??
-      (value as Record<string, unknown>).x;
-    const lat = Number(latCandidate);
-    const lng = Number(lngCandidate);
-    if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-      return { lat, lng };
-    }
-  }
-
-  if (typeof value === "string") {
-    try {
-      const parsed = JSON.parse(value);
-      return parseLocation(parsed);
-    } catch {
-      const [latPart, lngPart] = value.split(/[,\s]+/);
-      const lat = Number(latPart);
-      const lng = Number(lngPart);
-      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-        return { lat, lng };
-      }
-    }
-  }
-
-  return null;
-}
-
 function normalizeTask(raw: RawTask): QuickTask | null {
   const id = raw.taskId || raw.id;
   const title = (raw.title || raw.name || "").toString().trim();
@@ -166,20 +92,6 @@ function normalizeTask(raw: RawTask): QuickTask | null {
 function formatDueLabel(task: QuickTask): string {
   if (!task.dueDate) return "No due date";
   return dueFormatter.format(task.dueDate);
-}
-
-function formatAssigneeDisplay(value?: string): string | undefined {
-  if (!value) return undefined;
-
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-
-  const doubleUnderscoreIndex = trimmed.indexOf("__");
-  const base =
-    doubleUnderscoreIndex >= 0 ? trimmed.slice(0, doubleUnderscoreIndex) : trimmed;
-
-  const formatted = base.replace(/([a-z])([A-Z])/g, "$1 $2").trim();
-  return formatted || undefined;
 }
 
 function computeStats(tasks: QuickTask[]) {

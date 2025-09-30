@@ -43,8 +43,6 @@ interface BudgetStateManagerState extends Record<string, unknown> {
   sortOrder: string | null;
   setSortField: (field: string | null) => void;
   setSortOrder: (order: string | null) => void;
-  expandedRowKeys: string[];
-  setExpandedRowKeys: (keys: string[]) => void;
   selectedRowKeys: string[];
   setSelectedRowKeys: (keys: string[]) => void;
   
@@ -105,7 +103,6 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
   const [groupBy, setGroupBy] = useState("none");
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<string | null>(null);
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   
   // Edit/Create state
@@ -286,8 +283,6 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
     sortOrder,
     setSortField,
     setSortOrder,
-    expandedRowKeys,
-    setExpandedRowKeys,
     selectedRowKeys,
     setSelectedRowKeys,
     
@@ -328,7 +323,7 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
   }), [
     undoStack, redoStack, pushHistory, handleUndo, handleRedo,
     isBudgetModalOpen, isRevisionModalOpen, isCreateModalOpen, isEventModalOpen, isConfirmingDelete,
-    groupBy, sortField, sortOrder, expandedRowKeys, selectedRowKeys,
+    groupBy, sortField, sortOrder, selectedRowKeys,
     editItem, prefillItem, nextElementKey,
     deleteTargets,
     eventItem, eventList,

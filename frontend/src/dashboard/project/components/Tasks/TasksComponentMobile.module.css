@@ -236,6 +236,19 @@
     padding: 9px 10px;
     border-radius: 15px;
   }
+
+  /* Mobile-specific scroll area improvements */
+  .sheetScrollArea {
+    padding: 0 1.25rem calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .taskList .taskItem:last-child {
+    margin-bottom: 1.5rem;
+  }
+
+  .sheetSection:last-child {
+    margin-bottom: 2rem;
+  }
 }
 
 .empty,
@@ -537,20 +550,23 @@
   display: flex;
   flex-direction: column;
   gap: 1.35rem;
-  padding: 0 1.5rem 1.75rem;
+  padding: 0 1.5rem calc(3.5rem + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* Ensure smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 .sheetSection {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  
   border-radius: 20px;
   background: rgba(10, 11, 14, 0.88);
- 
-  
+}
+
+.sheetSection:last-child {
+  margin-bottom: 1.5rem;
 }
 
 .sectionHeading {
@@ -569,6 +585,11 @@
   /* Prevent touch events from interfering with drawer dragging */
   touch-action: pan-y;
   overflow-y: auto;
+}
+
+/* Ensure last task has enough bottom space */
+.taskList .taskItem:last-child {
+  margin-bottom: 1rem;
 }
 
 .taskItem {

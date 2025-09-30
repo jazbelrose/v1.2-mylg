@@ -578,12 +578,6 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     }
   };
 
-  const handleCancel = () => {
-    if (!submitting) {
-      onClose();
-    }
-  };
-
   return createPortal(
     <div className={styles.createOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
       <div
@@ -601,12 +595,6 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
         onMouseDown={(event) => event.stopPropagation()}
         style={swipeOffset ? { transform: `translateY(${swipeOffset}px)` } : undefined}
       >
-        <div className={styles.createHeader}>
-          <h2 id="quick-task-title">Create a task</h2>
-          <p id={descriptionId} className={styles.createDescription}>
-            {descriptionCopy}
-          </p>
-        </div>
         <form
           ref={formRef}
           className={styles.createForm}
@@ -615,6 +603,12 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
           noValidate
         >
           <div className={styles.formBody}>
+            <div className={styles.createHeader}>
+              <h2 id="quick-task-title">Create a task</h2>
+              <p id={descriptionId} className={styles.createDescription}>
+                {descriptionCopy}
+              </p>
+            </div>
             {showProjectSelect ? (
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor={projectFieldId}>
@@ -807,32 +801,24 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 ref={notesRef}
               />
             </div>
-          </div>
-          <div id={feedbackRegionId} className={styles.feedbackRegion} aria-live="polite">
-            {errorMessage ? (
-              <div className={`${styles.feedback} ${styles.feedbackError}`}>{errorMessage}</div>
-            ) : null}
-            {successMessage ? (
-              <div className={`${styles.feedback} ${styles.feedbackSuccess}`}>{successMessage}</div>
-            ) : null}
-          </div>
-          <div className={styles.actionBar}>
-            <button
-              type="submit"
-              className={styles.submitButton}
-              disabled={isSubmitDisabled}
-            >
-              {submitting ? <span className={styles.spinner} aria-hidden="true" /> : null}
-              <span>Save task</span>
-            </button>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={handleCancel}
-              disabled={submitting}
-            >
-              Cancel
-            </button>
+            <div id={feedbackRegionId} className={styles.feedbackRegion} aria-live="polite">
+              {errorMessage ? (
+                <div className={`${styles.feedback} ${styles.feedbackError}`}>{errorMessage}</div>
+              ) : null}
+              {successMessage ? (
+                <div className={`${styles.feedback} ${styles.feedbackSuccess}`}>{successMessage}</div>
+              ) : null}
+            </div>
+            <div className={styles.actionBar}>
+              <button
+                type="submit"
+                className={styles.submitButton}
+                disabled={isSubmitDisabled}
+              >
+                {submitting ? <span className={styles.spinner} aria-hidden="true" /> : null}
+                <span>Save task</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>

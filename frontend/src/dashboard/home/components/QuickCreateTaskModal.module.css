@@ -3,7 +3,9 @@
   inset: 0;
   z-index: 1500;
   display: flex;
- 
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
   
   background: rgba(5, 6, 7, 0.72);
   backdrop-filter: blur(6px);

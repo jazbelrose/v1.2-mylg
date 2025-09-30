@@ -5,6 +5,9 @@ import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
+import QuickCreateTaskModal, {
+  QuickCreateTaskModalProject,
+} from "@/dashboard/home/components/QuickCreateTaskModal";
 
 import styles from "./TasksComponentMobile.module.css";
 
@@ -216,9 +219,23 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const [viewportHeight, setViewportHeight] = useState(() => getViewportHeight());
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const taskListRef = useRef<HTMLUListElement | null>(null);
   const initialScrollDoneRef = useRef(false);
+
+  const quickCreateProjects = useMemo<QuickCreateTaskModalProject[]>(() => {
+    if (!projectId) {
+      return [];
+    }
+
+    return [
+      {
+        id: projectId,
+        name: projectName?.trim() || "This project",
+      },
+    ];
+  }, [projectId, projectName]);
 
   const handleOpenDrawer = useCallback(() => {
     setDrawerOpen(true);
@@ -237,6 +254,15 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     setActiveTaskId(null);
     setMapFocus(null);
     initialScrollDoneRef.current = false;
+  }, []);
+
+  const openQuickCreateModal = useCallback(() => {
+    if (!quickCreateProjects.length) return;
+    setIsCreateModalOpen(true);
+  }, [quickCreateProjects]);
+
+  const closeQuickCreateModal = useCallback(() => {
+    setIsCreateModalOpen(false);
   }, []);
 
   const refreshTasks = useCallback(async () => {
@@ -730,46 +756,65 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   };
 
   return (
-    <section className={styles.card} aria-label="Project tasks overview">
-      <header className={styles.header}>
-        <div className={styles.headingGroup}>
-          <h3 className={styles.title}>Tasks</h3>
-          <p className={styles.subtitle}>
-            {projectName
-              ? `Keep ${projectName} moving forward.`
-              : "Keep this project moving forward."}
-          </p>
-        </div>
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={handleOpenDrawer}
-          disabled={loading}
-        >
-          <Plus size={16} strokeWidth={2.25} />
-          Open tasks
-        </button>
-      </header>
+    <>
+      <section className={styles.card} aria-label="Project tasks overview">
+        <header className={styles.header}>
+          <div className={styles.headingGroup}>
+            <h3 className={styles.title}>Tasks</h3>
+            <p className={styles.subtitle}>
+              {projectName
+                ? `Keep ${projectName} moving forward.`
+                : "Keep this project moving forward."}
+            </p>
+          </div>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={`${styles.iconButton} ${styles.iconButtonPrimary}`}
+              onClick={openQuickCreateModal}
+              aria-label="Create a quick task"
+              disabled={!quickCreateProjects.length || loading}
+            >
+              <Plus size={16} strokeWidth={2.25} />
+            </button>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={handleOpenDrawer}
+              disabled={loading}
+            >
+              <ChevronDown size={16} strokeWidth={2.25} />
+              Open tasks
+            </button>
+          </div>
+        </header>
 
-      <div className={styles.statRow} aria-label="Task summary">
-        <div className={`${styles.statCard} ${styles.statOk}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.completed)}</span>
-          <span className={styles.statLabel}>Done</span>
+        <div className={styles.statRow} aria-label="Task summary">
+          <div className={`${styles.statCard} ${styles.statOk}`}>
+            <span className={styles.statValue}>{formatStatValue(stats.completed)}</span>
+            <span className={styles.statLabel}>Done</span>
+          </div>
+          <div className={`${styles.statCard} ${styles.statDanger}`}>
+            <span className={styles.statValue}>{formatStatValue(stats.overdue)}</span>
+            <span className={styles.statLabel}>Overdue</span>
+          </div>
+          <div className={`${styles.statCard} ${styles.statWarn}`}>
+            <span className={styles.statValue}>{formatStatValue(stats.dueSoon)}</span>
+            <span className={styles.statLabel}>Due soon</span>
+          </div>
         </div>
-        <div className={`${styles.statCard} ${styles.statDanger}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.overdue)}</span>
-          <span className={styles.statLabel}>Overdue</span>
-        </div>
-        <div className={`${styles.statCard} ${styles.statWarn}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.dueSoon)}</span>
-          <span className={styles.statLabel}>Due soon</span>
-        </div>
-      </div>
 
-      <p className={styles.status}>{statusMessage}</p>
+        <p className={styles.status}>{statusMessage}</p>
 
-      {renderDrawer()}
-    </section>
+        {renderDrawer()}
+      </section>
+      <QuickCreateTaskModal
+        open={isCreateModalOpen}
+        onClose={closeQuickCreateModal}
+        projects={quickCreateProjects}
+        onCreated={refreshTasks}
+      />
+    </>
   );
 };
 

@@ -26,6 +26,12 @@
   gap: 4px;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .title {
   margin: 0;
   font-size: 16px;
@@ -70,6 +76,47 @@
 .primaryButton:focus-visible {
   outline: 2px solid var(--color-focus, var(--brand, #fa3356));
   outline-offset: 2px;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.iconButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.iconButton:not(:disabled):hover,
+.iconButton:not(:disabled):focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--color-focus, var(--brand, #fa3356));
+  outline-offset: 2px;
+}
+
+.iconButtonPrimary {
+  border-color: color-mix(in srgb, var(--brand, #fa3356) 42%, transparent);
+  background: color-mix(in srgb, var(--brand, #fa3356) 18%, transparent);
+  color: color-mix(in srgb, var(--brand, #fa3356) 82%, white 18%);
+}
+
+.iconButtonPrimary:not(:disabled):hover,
+.iconButtonPrimary:not(:disabled):focus-visible {
+  background: color-mix(in srgb, var(--brand, #fa3356) 26%, transparent);
 }
 
 .statRow {

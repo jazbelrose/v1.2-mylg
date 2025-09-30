@@ -882,6 +882,9 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         onClose={handleCloseQuickCreate}
         projects={quickCreateProjects}
         onCreated={refreshTasks}
+        activeProjectId={projectId}
+        activeProjectName={projectName}
+        scopedProjectId={projectId ?? null}
       />
     </section>
   );

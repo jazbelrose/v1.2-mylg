@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { NOMINATIM_SEARCH_URL, apiFetch, createTask } from "@/shared/utils/api";
@@ -18,6 +18,20 @@ type Coordinates = {
   lng: number;
 };
 
+function toInputDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getOffsetDate(days: number): string {
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
+  base.setDate(base.getDate() + days);
+  return toInputDate(base);
+}
+
 export type QuickCreateTaskModalProject = {
   id: string;
   name: string;
@@ -28,6 +42,9 @@ export type QuickCreateTaskModalProps = {
   onClose: () => void;
   projects: QuickCreateTaskModalProject[];
   onCreated: () => void;
+  activeProjectId?: string | null;
+  activeProjectName?: string | null;
+  scopedProjectId?: string | null;
 };
 
 const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
@@ -35,6 +52,9 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   onClose,
   projects,
   onCreated,
+  activeProjectId,
+  activeProjectName,
+  scopedProjectId,
 }) => {
   const { userData, allUsers } = useUser();
   const [projectId, setProjectId] = useState<string>("");
@@ -49,21 +69,43 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [projectError, setProjectError] = useState<string | null>(null);
   const suggestionsListId = "quick-create-task-location-suggestions";
   const touchStartYRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
   const lastOffsetRef = useRef(0);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const notesRef = useRef<HTMLTextAreaElement | null>(null);
+  const descriptionId = useId();
+  const projectFieldId = useId();
+  const assigneeFieldId = useId();
+  const taskNameFieldId = useId();
+  const titleCounterId = useId();
+  const titleErrorId = useId();
+  const projectErrorId = useId();
+  const locationFieldId = useId();
+  const dueDateFieldId = useId();
+  const notesFieldId = useId();
+  const feedbackRegionId = useId();
+  const locationHintId = useId();
 
   const projectOptions = useMemo(() => projects ?? [], [projects]);
-  const isSingleProject = projectOptions.length === 1;
-  const activeProjectName = useMemo(() => {
-    if (!projectOptions.length) return "";
-    const selected = projectOptions.find((project) => project.id === projectId);
-    if (selected) return selected.name;
-    return projectOptions[0]?.name ?? "";
-  }, [projectId, projectOptions]);
+  const hasProjects = projectOptions.length > 0;
+  const resolvedActiveProjectName = useMemo(() => {
+    if (activeProjectName && activeProjectName.trim()) {
+      return activeProjectName.trim();
+    }
+
+    const targetId = activeProjectId || scopedProjectId || projectId;
+    if (!targetId) return "";
+    const found = projectOptions.find((project) => project.id === targetId);
+    return found?.name ?? "";
+  }, [activeProjectId, activeProjectName, projectId, projectOptions, scopedProjectId]);
   const collaboratorIds = useMemo(
     () =>
       Array.isArray(userData?.collaborators)
@@ -90,6 +132,21 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   }, [allUsers, collaboratorIds]);
 
   const hasCollaborators = collaboratorOptions.length > 0;
+  const effectiveProjectId = useMemo(() => {
+    if (scopedProjectId) {
+      return scopedProjectId;
+    }
+
+    if (projectId && projectOptions.some((project) => project.id === projectId)) {
+      return projectId;
+    }
+
+    return projectOptions[0]?.id ?? "";
+  }, [projectId, projectOptions, scopedProjectId]);
+  const trimmedTitle = title.trim();
+  const titleRemaining = 120 - title.length;
+  const showTitleCounter = titleRemaining <= 20;
+  const canSubmit = Boolean(effectiveProjectId && trimmedTitle);
 
   const sortSuggestionsByProximity = useCallback(
     (suggestions: NominatimSuggestion[], origin: Coordinates | null) => {
@@ -134,6 +191,8 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setSubmitting(false);
     setErrorMessage(null);
     setSuccessMessage(null);
+    setTitleError(null);
+    setProjectError(null);
   }, []);
 
   useEffect(() => {
@@ -149,6 +208,13 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
 
     setErrorMessage(null);
     setSuccessMessage(null);
+    setTitleError(null);
+    setProjectError(null);
+
+    if (scopedProjectId) {
+      setProjectId(scopedProjectId);
+      return;
+    }
 
     if (!projectOptions.length) {
       setProjectId("");
@@ -161,12 +227,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       }
       return projectOptions[0].id;
     });
-  }, [open, projectOptions, resetForm]);
-
-  useEffect(() => {
-    if (!isSingleProject || !projectOptions[0]) return;
-    setProjectId(projectOptions[0].id);
-  }, [isSingleProject, projectOptions]);
+  }, [open, projectOptions, resetForm, scopedProjectId]);
 
   useEffect(() => {
     if (!open) return;
@@ -216,14 +277,137 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setAddressSuggestions((prev) => sortSuggestionsByProximity(prev, userLocation));
   }, [sortSuggestionsByProximity, userLocation]);
 
+  useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+
+    const { style } = document.body;
+    const previousOverflow = style.overflow;
+    style.overflow = "hidden";
+
+    return () => {
+      style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  const resizeNotes = useCallback(() => {
+    const textarea = notesRef.current;
+    if (!textarea) return;
+
+    const lineHeight = 24;
+    const minHeight = lineHeight * 4;
+    const maxHeight = lineHeight * 6;
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight);
+    textarea.style.height = `${nextHeight}px`;
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => {
+      titleInputRef.current?.focus({ preventScroll: true });
+      resizeNotes();
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [open, resizeNotes]);
+
+  useEffect(() => {
+    resizeNotes();
+  }, [description, resizeNotes]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleMetaEnter = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
+        if (!submitting && canSubmit) {
+          formRef.current?.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleMetaEnter);
+    return () => window.removeEventListener("keydown", handleMetaEnter);
+  }, [canSubmit, open, submitting]);
+
+  useEffect(() => {
+    if (!open) return;
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const selectors = [
+      "a[href]",
+      "button:not([disabled])",
+      "textarea:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])",
+    ].join(",");
+
+    const handleTabKey = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(modal.querySelectorAll<HTMLElement>(selectors)).filter(
+        (element) =>
+          (element.offsetParent !== null || element.getClientRects().length > 0) &&
+          !element.hasAttribute("data-focus-guard")
+      );
+
+      if (!focusable.length) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === first || !modal.contains(document.activeElement)) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    modal.addEventListener("keydown", handleTabKey);
+    return () => modal.removeEventListener("keydown", handleTabKey);
+  }, [open]);
+
+  useEffect(() => {
+    if (trimmedTitle) {
+      setTitleError(null);
+    }
+  }, [trimmedTitle]);
+
+  useEffect(() => {
+    if (effectiveProjectId) {
+      setProjectError(null);
+    }
+  }, [effectiveProjectId]);
+
   if (!open || typeof document === "undefined") {
     return null;
   }
 
-  const hasProjects = projectOptions.length > 0;
-  const descriptionCopy = isSingleProject && activeProjectName
-    ? `Launch work for ${activeProjectName} `
+  const descriptionCopy = activeProjectId
+    ? `Launch work for ${resolvedActiveProjectName || "this project"}.`
     : "Launch work for any project without leaving this view.";
+  const showProjectSelect = !scopedProjectId && hasProjects;
+  const todayValue = getOffsetDate(0);
+  const tomorrowValue = getOffsetDate(1);
+  const nextWeekValue = getOffsetDate(7);
+  const isSubmitDisabled = submitting || !canSubmit;
+  const taskNameDescribedBy = [
+    showTitleCounter ? titleCounterId : null,
+    titleError ? titleErrorId : null,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim() || undefined;
+  const projectDescribedBy = projectError ? projectErrorId : undefined;
+  const locationDescribedBy = selectedLocation ? locationHintId : undefined;
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (submitting) return;
@@ -281,6 +465,8 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     const value = event.target.value;
     setAddressSearch(value);
     setSelectedLocation(null);
+    setSuccessMessage(null);
+    setErrorMessage(null);
     void fetchAddressSuggestions(value);
   };
 
@@ -289,25 +475,64 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setSelectedLocation(coords);
     setAddressSearch(suggestion.display_name);
     setAddressSuggestions([]);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  };
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(event.target.value);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  };
+
+  const handleProjectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setProjectId(event.target.value);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  };
+
+  const handleAssigneeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setAssigneeId(event.target.value);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  };
+
+  const handleDueDateInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDueDate(event.target.value);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  };
+
+  const handleDueDateQuickSelect = (value: string) => {
+    setDueDate(value);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  };
+
+  const handleDescriptionChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(event.target.value);
+    setSuccessMessage(null);
+    setErrorMessage(null);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const targetProjectId = (isSingleProject ? projectOptions[0]?.id : projectId) || projectOptions[0]?.id || "";
-    if (!targetProjectId) {
-      setErrorMessage("Add a project before creating tasks.");
+    if (!effectiveProjectId) {
+      setProjectError("Add a project before creating tasks.");
+      setErrorMessage(null);
       return;
     }
 
-    const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setErrorMessage("Give the task a name before saving.");
+      setTitleError("Give the task a name before saving.");
+      setErrorMessage(null);
       return;
     }
 
     setSubmitting(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     let dueDateIso: string | undefined;
     if (dueDate) {
@@ -322,7 +547,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
         : undefined;
 
       await createTask({
-        projectId: targetProjectId,
+        projectId: effectiveProjectId,
         title: trimmedTitle,
         description: description.trim() || undefined,
         dueDate: dueDateIso,
@@ -339,7 +564,12 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       setAddressSuggestions([]);
       setSelectedLocation(null);
       setAssigneeId("");
+      setTitleError(null);
+      setProjectError(null);
       onCreated();
+      requestAnimationFrame(() => {
+        titleInputRef.current?.focus({ preventScroll: true });
+      });
     } catch (error) {
       console.error("Failed to create task", error);
       setErrorMessage("We couldn't create that task. Please try again.");
@@ -348,13 +578,22 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     }
   };
 
+  const handleCancel = () => {
+    if (!submitting) {
+      onClose();
+    }
+  };
+
   return createPortal(
     <div className={styles.createOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
       <div
+        ref={modalRef}
         className={`${styles.createModal} ${isDragging ? styles.createModalDragging : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="quick-task-title"
+        aria-describedby={descriptionId}
+        tabIndex={-1}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -364,147 +603,235 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       >
         <div className={styles.createHeader}>
           <h2 id="quick-task-title">Create a task</h2>
-          <p className={styles.createDescription}>{descriptionCopy}</p>
+          <p id={descriptionId} className={styles.createDescription}>
+            {descriptionCopy}
+          </p>
         </div>
-        <form className={styles.createForm} onSubmit={handleSubmit}>
-          {!isSingleProject ? (
-            <label className={styles.fieldLabel}>
-              Project
+        <form
+          ref={formRef}
+          className={styles.createForm}
+          onSubmit={handleSubmit}
+          aria-describedby={feedbackRegionId}
+          noValidate
+        >
+          <div className={styles.formBody}>
+            {showProjectSelect ? (
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel} htmlFor={projectFieldId}>
+                  <span className={styles.fieldLabelText}>Project</span>
+                </label>
+                <select
+                  id={projectFieldId}
+                  aria-label="Project"
+                  className={styles.selectInput}
+                  value={projectId}
+                  onChange={handleProjectChange}
+                  disabled={!hasProjects || submitting}
+                  aria-describedby={projectDescribedBy}
+                >
+                  {projectOptions.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+                {projectError ? (
+                  <p id={projectErrorId} className={styles.fieldError} aria-live="polite">
+                    {projectError}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+            {!hasProjects && !scopedProjectId ? (
+              <p className={styles.helperText}>Add a project to start creating tasks.</p>
+            ) : null}
+            <div className={styles.fieldGroup}>
+              <div className={styles.fieldHeader}>
+                <label className={styles.fieldLabel} htmlFor={assigneeFieldId}>
+                  <span className={styles.fieldLabelText}>Assign to</span>
+                </label>
+                <span className={styles.fieldOptional}>Optional</span>
+              </div>
               <select
+                id={assigneeFieldId}
+                aria-label="Assign task"
                 className={styles.selectInput}
-                value={projectId}
-                onChange={(event) => setProjectId(event.target.value)}
-                disabled={!hasProjects || submitting}
+                value={assigneeId}
+                onChange={handleAssigneeChange}
+                disabled={submitting}
               >
-                {projectOptions.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
+                <option value="">Unassigned</option>
+                {collaboratorOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>
-            </label>
-          ) : (
-            <div className={styles.projectSummary} aria-live="polite">
-              <span className={styles.projectSummaryLabel}>Project</span>
-              <span className={styles.projectSummaryName}>{activeProjectName}</span>
             </div>
-          )}
-          {!hasProjects && !isSingleProject ? (
-            <p className={styles.emptyProjects}>Add a project to start creating tasks.</p>
-          ) : null}
-          <label className={styles.fieldLabel}>
-            Assign to <span className={styles.fieldOptional}></span>
-            <select
-              className={styles.selectInput}
-              value={assigneeId}
-              onChange={(event) => setAssigneeId(event.target.value)}
-              disabled={submitting}
-            >
-              <option value="">Unassigned</option>
-              {collaboratorOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {!hasCollaborators ? (
-            <p className={styles.emptyProjects}>Invite collaborators to assign tasks.</p>
-          ) : null}
-          <label className={styles.fieldLabel}>
-            Task name
-            <input
-              type="text"
-              className={styles.textInput}
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="What needs to get done?"
-              disabled={submitting}
-            />
-          </label>
-          <label className={styles.fieldLabel}>
-            Location <span className={styles.fieldOptional}></span>
-            <div className={styles.locationInputWrapper}>
+            {!hasCollaborators ? (
+              <p className={styles.helperText}>Invite collaborators to assign tasks.</p>
+            ) : null}
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel} htmlFor={taskNameFieldId}>
+                <span className={styles.fieldLabelText}>Task name</span>
+              </label>
               <input
+                id={taskNameFieldId}
+                aria-label="Task name"
                 type="text"
                 className={styles.textInput}
-                value={addressSearch}
-                onChange={handleAddressChange}
-                placeholder="Search for an address or venue"
+                value={title}
+                onChange={handleTitleChange}
+                placeholder="What needs to get done?"
                 disabled={submitting}
-                aria-autocomplete="list"
-                aria-expanded={addressSuggestions.length > 0}
-                aria-controls={addressSuggestions.length > 0 ? suggestionsListId : undefined}
+                ref={titleInputRef}
+                aria-describedby={taskNameDescribedBy}
               />
-              {addressSuggestions.length > 0 ? (
-                <div
-                  className={styles.locationSuggestions}
-                  role="listbox"
-                  id={suggestionsListId}
-                >
-                  {addressSuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion.place_id}
-                      type="button"
-                      className={styles.locationSuggestionButton}
-                      role="option"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => handleAddressSuggestionSelect(suggestion)}
-                    >
-                      {suggestion.display_name}
-                    </button>
-                  ))}
-                </div>
+              {showTitleCounter ? (
+                <span id={titleCounterId} className={styles.fieldMeta}>
+                  {titleRemaining >= 0
+                    ? `${titleRemaining} characters remaining`
+                    : `${Math.abs(titleRemaining)} characters over recommended length`}
+                </span>
+              ) : null}
+              {titleError ? (
+                <p id={titleErrorId} className={styles.fieldError} aria-live="polite">
+                  {titleError}
+                </p>
               ) : null}
             </div>
-            {selectedLocation ? (
-              <span className={styles.locationSelectedHint}>
-                Saved coordinates: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
-              </span>
+            <div className={styles.fieldGroup}>
+              <div className={styles.fieldHeader}>
+                <label className={styles.fieldLabel} htmlFor={locationFieldId}>
+                  <span className={styles.fieldLabelText}>Location</span>
+                </label>
+                <span className={styles.fieldOptional}>Optional</span>
+              </div>
+              <div className={styles.locationInputWrapper}>
+                <input
+                  id={locationFieldId}
+                  aria-label="Task location"
+                  type="text"
+                  className={styles.textInput}
+                  value={addressSearch}
+                  onChange={handleAddressChange}
+                  placeholder="Search for an address or venue"
+                  disabled={submitting}
+                  aria-autocomplete="list"
+                  aria-expanded={addressSuggestions.length > 0}
+                  aria-controls={addressSuggestions.length > 0 ? suggestionsListId : undefined}
+                  aria-describedby={locationDescribedBy}
+                />
+                {addressSuggestions.length > 0 ? (
+                  <div className={styles.locationSuggestions} role="listbox" id={suggestionsListId}>
+                    {addressSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.place_id}
+                        type="button"
+                        className={styles.locationSuggestionButton}
+                        role="option"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => handleAddressSuggestionSelect(suggestion)}
+                      >
+                        {suggestion.display_name}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              {selectedLocation ? (
+                <span id={locationHintId} className={styles.fieldMeta}>
+                  Saved coordinates: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
+                </span>
+              ) : null}
+            </div>
+            <div className={styles.fieldGroup}>
+              <div className={styles.fieldHeader}>
+                <label className={styles.fieldLabel} htmlFor={dueDateFieldId}>
+                  <span className={styles.fieldLabelText}>Due date</span>
+                </label>
+                <span className={styles.fieldOptional}>Optional</span>
+              </div>
+              <input
+                id={dueDateFieldId}
+                aria-label="Task due date"
+                type="date"
+                className={styles.textInput}
+                value={dueDate}
+                onChange={handleDueDateInputChange}
+                disabled={submitting}
+              />
+              <div className={styles.quickChips} role="group" aria-label="Quick due date shortcuts">
+                <button
+                  type="button"
+                  className={`${styles.quickChip} ${dueDate === todayValue ? styles.quickChipActive : ""}`}
+                  onClick={() => handleDueDateQuickSelect(todayValue)}
+                  disabled={submitting}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.quickChip} ${dueDate === tomorrowValue ? styles.quickChipActive : ""}`}
+                  onClick={() => handleDueDateQuickSelect(tomorrowValue)}
+                  disabled={submitting}
+                >
+                  +1
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.quickChip} ${dueDate === nextWeekValue ? styles.quickChipActive : ""}`}
+                  onClick={() => handleDueDateQuickSelect(nextWeekValue)}
+                  disabled={submitting}
+                >
+                  +7
+                </button>
+              </div>
+            </div>
+            <div className={styles.fieldGroup}>
+              <div className={styles.fieldHeader}>
+                <label className={styles.fieldLabel} htmlFor={notesFieldId}>
+                  <span className={styles.fieldLabelText}>Notes</span>
+                </label>
+                <span className={styles.fieldOptional}>Optional</span>
+              </div>
+              <textarea
+                id={notesFieldId}
+                aria-label="Task notes"
+                className={styles.textarea}
+                value={description}
+                onChange={handleDescriptionChange}
+                placeholder="Add context or links."
+                disabled={submitting}
+                rows={4}
+                ref={notesRef}
+              />
+            </div>
+          </div>
+          <div id={feedbackRegionId} className={styles.feedbackRegion} aria-live="polite">
+            {errorMessage ? (
+              <div className={`${styles.feedback} ${styles.feedbackError}`}>{errorMessage}</div>
             ) : null}
-          </label>
-          <label className={styles.fieldLabel}>
-            Due date <span className={styles.fieldOptional}></span>
-            <input
-              type="date"
-              className={styles.textInput}
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-              disabled={submitting}
-            />
-          </label>
-          <label className={styles.fieldLabel}>
-            Notes <span className={styles.fieldOptional}></span>
-            <textarea
-              className={styles.textarea}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              rows={3}
-              placeholder="Add context or links."
-              disabled={submitting}
-            />
-          </label>
-          {errorMessage ? (
-            <div className={`${styles.feedback} ${styles.feedbackError}`}>{errorMessage}</div>
-          ) : null}
-          {successMessage ? (
-            <div className={`${styles.feedback} ${styles.feedbackSuccess}`}>{successMessage}</div>
-          ) : null}
-          <div className={styles.formActions}>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={onClose}
-              disabled={submitting}
-            >
-              Cancel
-            </button>
+            {successMessage ? (
+              <div className={`${styles.feedback} ${styles.feedbackSuccess}`}>{successMessage}</div>
+            ) : null}
+          </div>
+          <div className={styles.actionBar}>
             <button
               type="submit"
               className={styles.submitButton}
-              disabled={!hasProjects || submitting}
+              disabled={isSubmitDisabled}
             >
-              Save task
+              {submitting ? <span className={styles.spinner} aria-hidden="true" /> : null}
+              <span>Save task</span>
+            </button>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={handleCancel}
+              disabled={submitting}
+            >
+              Cancel
             </button>
           </div>
         </form>

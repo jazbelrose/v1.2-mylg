@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus, MapPin, Calendar, ChevronDown } from "lucide-react";
+import { Plus, MapPin, Calendar, ChevronDown, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
@@ -23,6 +23,8 @@ type RawTask = {
   dueDate?: string | number | Date;
   due_date?: string | number | Date;
   due?: string | number | Date;
+  assigneeId?: string;
+  assignedTo?: string;
   location?: unknown;
   address?: string;
   [key: string]: unknown;
@@ -36,6 +38,7 @@ type QuickTask = {
   dueDate: Date | null;
   address?: string;
   location?: { lat: number; lng: number } | null;
+  assignedTo?: string;
 };
 
 type TasksComponentMobileProps = {
@@ -148,6 +151,12 @@ function normalizeTask(raw: RawTask): QuickTask | null {
     ),
     address: typeof raw.address === "string" ? raw.address : undefined,
     location: parseLocation(raw.location),
+    assignedTo:
+      typeof raw.assigneeId === "string"
+        ? raw.assigneeId
+        : typeof raw.assignedTo === "string"
+          ? raw.assignedTo
+          : undefined,
   };
 }
 
@@ -674,6 +683,15 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
                             ) : (
                               <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
                                 <MapPin size={14} aria-hidden="true" /> No location
+                              </span>
+                            )}
+                            {task.assignedTo ? (
+                              <span className={styles.metaLine}>
+                                <User size={14} aria-hidden="true" /> Assignee / Assigned to: {task.assignedTo}
+                              </span>
+                            ) : (
+                              <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
+                                <User size={14} aria-hidden="true" /> No assignee
                               </span>
                             )}
                           </div>

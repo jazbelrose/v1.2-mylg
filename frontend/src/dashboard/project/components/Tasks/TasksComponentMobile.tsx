@@ -682,7 +682,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
           onClick={handleCloseDrawer}
           aria-label="Close tasks drawer"
         >
-          <ChevronDown size={22} strokeWidth={2.5} />
+          <ChevronDown size={20} strokeWidth={2.5} />
         </button>
         <button
           type="button"
@@ -691,7 +691,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
           aria-label="Quick create a task"
           disabled={loading || !hasQuickCreateProject}
         >
-          <Plus size={18} strokeWidth={2.5} />
+          <Plus size={20} strokeWidth={2.5} />
         </button>
         <motion.div
           ref={sheetRef}

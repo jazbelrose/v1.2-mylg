@@ -605,6 +605,11 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
                     <MapPin size={14} aria-hidden="true" /> {selectedTask.address}
                   </span>
                 ) : null}
+                {selectedTask.assignedTo ? (
+                  <span className={styles.metaLine}>
+                    <User size={14} aria-hidden="true" /> Assigned to : {selectedTask.assignedTo}
+                  </span>
+                ) : null}
               </div>
             </div>
           ) : null}

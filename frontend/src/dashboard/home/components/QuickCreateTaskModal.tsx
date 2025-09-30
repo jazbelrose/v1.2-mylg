@@ -1,7 +1,15 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { NOMINATIM_SEARCH_URL, apiFetch, createTask } from "@/shared/utils/api";
+import {
+  NOMINATIM_SEARCH_URL,
+  apiFetch,
+  createTask,
+  fetchTasks,
+  updateTask,
+  deleteTask,
+} from "@/shared/utils/api";
+import type { Task } from "@/shared/utils/api";
 import { useUser } from "@/app/contexts/useUser";
 
 import styles from "./QuickCreateTaskModal.module.css";
@@ -18,11 +26,139 @@ type Coordinates = {
   lng: number;
 };
 
+type ModalTask = Task & {
+  id?: string;
+  name?: string;
+  comments?: string;
+  address?: string;
+  location?: Coordinates | null;
+};
+
+const taskDueDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+});
+
+const allowedStatuses: Task["status"][] = ["todo", "in_progress", "done"];
+
 function toInputDate(date: Date): string {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function toDateInputValue(value: string | undefined): string {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return toInputDate(parsed);
+}
+
+function parseLocation(raw: unknown): Coordinates | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const latValue = (raw as { lat?: unknown }).lat;
+  const lngValue = (raw as { lng?: unknown }).lng;
+  const lat = typeof latValue === "number" || typeof latValue === "string" ? Number(latValue) : NaN;
+  const lng = typeof lngValue === "number" || typeof lngValue === "string" ? Number(lngValue) : NaN;
+  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    return undefined;
+  }
+  return { lat, lng };
+}
+
+function normalizeTask(task: Partial<ModalTask>, fallbackProjectId: string): ModalTask {
+  const projectId =
+    typeof task.projectId === "string" && task.projectId.trim()
+      ? task.projectId.trim()
+      : fallbackProjectId;
+
+  const rawTitle =
+    typeof task.title === "string" && task.title.trim()
+      ? task.title.trim()
+      : typeof task.name === "string" && task.name.trim()
+      ? task.name.trim()
+      : "Untitled task";
+
+  const description =
+    typeof task.description === "string"
+      ? task.description
+      : typeof task.comments === "string"
+      ? task.comments
+      : undefined;
+
+  const rawStatus = typeof task.status === "string" ? task.status : undefined;
+  const normalizedStatus =
+    rawStatus && allowedStatuses.includes(rawStatus as Task["status"])
+      ? (rawStatus as Task["status"])
+      : task.status || "todo";
+
+  const dueDate = typeof task.dueDate === "string" && task.dueDate.trim() ? task.dueDate : undefined;
+
+  const assigneeId =
+    typeof task.assigneeId === "string" && task.assigneeId.trim() ? task.assigneeId.trim() : undefined;
+
+  const address =
+    typeof task.address === "string" && task.address.trim() ? task.address.trim() : undefined;
+
+  const location = parseLocation((task as { location?: unknown }).location);
+
+  const identifier =
+    typeof task.taskId === "string" && task.taskId.trim()
+      ? task.taskId.trim()
+      : typeof task.id === "string" && task.id.trim()
+      ? task.id.trim()
+      : undefined;
+
+  return {
+    projectId,
+    title: rawTitle,
+    description,
+    dueDate,
+    status: normalizedStatus,
+    assigneeId,
+    taskId: identifier,
+    id: identifier || `${projectId || "task"}-${rawTitle}`,
+    address,
+    location,
+  };
+}
+
+function getTaskIdentifier(task: ModalTask | null | undefined): string | undefined {
+  if (!task) return undefined;
+  if (typeof task.taskId === "string" && task.taskId.trim()) {
+    return task.taskId.trim();
+  }
+  if (typeof task.id === "string" && task.id.trim()) {
+    return task.id.trim();
+  }
+  return undefined;
+}
+
+function formatTaskMeta(task: ModalTask): string {
+  const statusLabelMap: Record<string, string> = {
+    todo: "To do",
+    in_progress: "In progress",
+    done: "Done",
+  };
+
+  const parts: string[] = [];
+
+  if (task.status && statusLabelMap[task.status]) {
+    parts.push(statusLabelMap[task.status] ?? task.status);
+  }
+
+  if (task.dueDate) {
+    const parsed = new Date(task.dueDate);
+    if (!Number.isNaN(parsed.getTime())) {
+      parts.push(`Due ${taskDueDateFormatter.format(parsed)}`);
+    }
+  } else {
+    parts.push("No due date");
+  }
+
+  return parts.join(" · ");
 }
 
 function getOffsetDate(days: number): string {
@@ -71,6 +207,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
+  const [taskList, setTaskList] = useState<ModalTask[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [tasksError, setTasksError] = useState<string | null>(null);
+  const [editingTask, setEditingTask] = useState<ModalTask | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const suggestionsListId = "quick-create-task-location-suggestions";
   const touchStartYRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
@@ -199,7 +340,22 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const trimmedTitle = title.trim();
   const titleRemaining = 120 - title.length;
   const showTitleCounter = titleRemaining <= 20;
-  const canSubmit = Boolean(effectiveProjectId && trimmedTitle);
+  const targetProjectIdForSubmit = editingTask?.projectId || effectiveProjectId;
+  const canSubmit = Boolean(targetProjectIdForSubmit && trimmedTitle);
+  const isEditing = Boolean(editingTask);
+
+  const sortedTasks = useMemo(() => {
+    return [...taskList].sort((a, b) => {
+      const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Number.POSITIVE_INFINITY;
+      const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Number.POSITIVE_INFINITY;
+      const safeDateA = Number.isNaN(dateA) ? Number.POSITIVE_INFINITY : dateA;
+      const safeDateB = Number.isNaN(dateB) ? Number.POSITIVE_INFINITY : dateB;
+      if (safeDateA === safeDateB) {
+        return (a.title || "").localeCompare(b.title || "");
+      }
+      return safeDateA - safeDateB;
+    });
+  }, [taskList]);
 
   const sortSuggestionsByProximity = useCallback(
     (suggestions: NominatimSuggestion[], origin: Coordinates | null) => {
@@ -232,8 +388,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     [sortSuggestionsByProximity, userLocation]
   );
 
-  const resetForm = useCallback(() => {
-    setProjectId("");
+  const clearFormFields = useCallback(() => {
     setTitle("");
     setDescription("");
     setDueDate("");
@@ -241,12 +396,24 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setAddressSuggestions([]);
     setSelectedLocation(null);
     setAssigneeId("");
+    setTitleError(null);
+    setProjectError(null);
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setProjectId("");
+    clearFormFields();
     setSubmitting(false);
     setErrorMessage(null);
     setSuccessMessage(null);
     setTitleError(null);
     setProjectError(null);
-  }, []);
+    setTaskList([]);
+    setTasksLoading(false);
+    setTasksError(null);
+    setEditingTask(null);
+    setDeletingTaskId(null);
+  }, [clearFormFields]);
 
   useEffect(() => {
     if (!open) {
@@ -435,14 +602,60 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   }, [trimmedTitle]);
 
   useEffect(() => {
-    if (effectiveProjectId) {
+    if (effectiveProjectId || editingTask?.projectId) {
       setProjectError(null);
     }
-  }, [effectiveProjectId]);
+  }, [effectiveProjectId, editingTask?.projectId]);
 
-  if (!open || typeof document === "undefined") {
-    return null;
-  }
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (!effectiveProjectId) {
+      setTaskList([]);
+      setEditingTask(null);
+      clearFormFields();
+      setSuccessMessage(null);
+      setErrorMessage(null);
+      setTasksLoading(false);
+      setTasksError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setTasksLoading(true);
+    setTasksError(null);
+    setEditingTask(null);
+    clearFormFields();
+    setSuccessMessage(null);
+    setErrorMessage(null);
+
+    (async () => {
+      try {
+        const tasks = await fetchTasks(effectiveProjectId);
+        if (cancelled) return;
+        const normalized = Array.isArray(tasks)
+          ? tasks.map((task) => normalizeTask(task as ModalTask, effectiveProjectId))
+          : [];
+        setTaskList(normalized);
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Failed to load tasks", error);
+          setTasksError("We couldn't load the task list. Try again in a moment.");
+          setTaskList([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setTasksLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clearFormFields, effectiveProjectId, open]);
 
   const descriptionCopy = activeProjectId
     ? `Launch work for ${resolvedActiveProjectName || "this project"}.`
@@ -461,6 +674,77 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     .trim() || undefined;
   const projectDescribedBy = projectError ? projectErrorId : undefined;
   const locationDescribedBy = selectedLocation ? locationHintId : undefined;
+
+  const populateFormFromTask = useCallback(
+    (task: ModalTask) => {
+      setTitle(task.title || "");
+      setDescription(task.description || "");
+      setDueDate(toDateInputValue(task.dueDate));
+      setAssigneeId(task.assigneeId || "");
+      setAddressSearch(task.address || "");
+      setAddressSuggestions([]);
+      setSelectedLocation(task.location ? { lat: task.location.lat, lng: task.location.lng } : null);
+    },
+    []
+  );
+
+  const handleEditTask = useCallback(
+    (task: ModalTask) => {
+      const normalized = normalizeTask(task, task.projectId || effectiveProjectId || "");
+      setEditingTask(normalized);
+      if (!scopedProjectId) {
+        setProjectId(normalized.projectId);
+      }
+      populateFormFromTask(normalized);
+      setSuccessMessage(null);
+      setErrorMessage(null);
+    },
+    [effectiveProjectId, populateFormFromTask, scopedProjectId]
+  );
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingTask(null);
+    clearFormFields();
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  }, [clearFormFields]);
+
+  const handleDeleteTask = useCallback(
+    async (task: ModalTask) => {
+      const identifier = getTaskIdentifier(task);
+      if (!identifier || deletingTaskId) {
+        return;
+      }
+
+      setDeletingTaskId(identifier);
+      setErrorMessage(null);
+      setSuccessMessage(null);
+
+      try {
+        await deleteTask({
+          projectId: task.projectId,
+          taskId: identifier,
+        });
+        setTaskList((prev) => prev.filter((item) => getTaskIdentifier(item) !== identifier));
+        if (getTaskIdentifier(editingTask) === identifier) {
+          setEditingTask(null);
+          clearFormFields();
+        }
+        setSuccessMessage("Task deleted.");
+        onCreated();
+      } catch (error) {
+        console.error("Failed to delete task", error);
+        setErrorMessage("We couldn't delete that task. Please try again.");
+      } finally {
+        setDeletingTaskId(null);
+      }
+    },
+    [clearFormFields, deletingTaskId, editingTask, onCreated]
+  );
+
+  if (!open || typeof document === "undefined") {
+    return null;
+  }
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (submitting) return;
@@ -581,7 +865,9 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!effectiveProjectId) {
+    const targetProjectId = editingTask?.projectId || effectiveProjectId;
+
+    if (!targetProjectId) {
       setProjectError("Add a project before creating tasks.");
       setErrorMessage(null);
       return;
@@ -609,33 +895,104 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
         ? { lat: selectedLocation.lat, lng: selectedLocation.lng }
         : undefined;
 
-      await createTask({
-        projectId: effectiveProjectId,
-        title: trimmedTitle,
-        description: description.trim() || undefined,
-        dueDate: dueDateIso,
-        status: "todo",
-        ...(assigneeId ? { assigneeId } : {}),
-        ...(trimmedAddress ? { address: trimmedAddress } : {}),
-        ...(locationPayload ? { location: locationPayload } : {}),
-      });
-      setSuccessMessage("Task created. You'll see it in your lists shortly.");
-      setTitle("");
-      setDescription("");
-      setDueDate("");
-      setAddressSearch("");
-      setAddressSuggestions([]);
-      setSelectedLocation(null);
-      setAssigneeId("");
-      setTitleError(null);
-      setProjectError(null);
-      onCreated();
-      requestAnimationFrame(() => {
-        titleInputRef.current?.focus({ preventScroll: true });
-      });
+      if (isEditing && editingTask) {
+        const identifier = getTaskIdentifier(editingTask);
+        if (!identifier) {
+          throw new Error("Missing task identifier for update");
+        }
+
+        const shouldClearAddress = !trimmedAddress && Boolean(editingTask.address);
+        const shouldClearLocation = !locationPayload && Boolean(editingTask.location);
+        const shouldClearAssignee = !assigneeId && Boolean(editingTask.assigneeId);
+
+        const updated = await updateTask({
+          projectId: targetProjectId,
+          taskId: identifier,
+          title: trimmedTitle,
+          description: description.trim() || undefined,
+          dueDate: dueDateIso,
+          status: editingTask.status || "todo",
+          ...(assigneeId ? { assigneeId } : shouldClearAssignee ? { assigneeId: "" } : {}),
+          ...(trimmedAddress ? { address: trimmedAddress } : shouldClearAddress ? { address: "" } : {}),
+          ...(locationPayload
+            ? { location: locationPayload }
+            : shouldClearLocation
+            ? { location: null }
+            : {}),
+        });
+
+        const normalized = normalizeTask(
+          {
+            ...editingTask,
+            ...updated,
+            projectId: targetProjectId,
+            title: trimmedTitle,
+            description: description.trim() || undefined,
+            dueDate: dueDateIso,
+            assigneeId: assigneeId || undefined,
+            address: trimmedAddress || (shouldClearAddress ? undefined : editingTask.address),
+            location: locationPayload || (shouldClearLocation ? undefined : editingTask.location),
+          },
+          targetProjectId
+        );
+
+        setTaskList((prev) =>
+          prev.map((task) => (getTaskIdentifier(task) === identifier ? normalized : task))
+        );
+        setEditingTask(null);
+        clearFormFields();
+        setSuccessMessage("Task updated. Your changes are saved.");
+        onCreated();
+      } else {
+        const created = await createTask({
+          projectId: targetProjectId,
+          title: trimmedTitle,
+          description: description.trim() || undefined,
+          dueDate: dueDateIso,
+          status: "todo",
+          ...(assigneeId ? { assigneeId } : {}),
+          ...(trimmedAddress ? { address: trimmedAddress } : {}),
+          ...(locationPayload ? { location: locationPayload } : {}),
+        });
+
+        const normalized = normalizeTask(
+          {
+            ...created,
+            projectId: targetProjectId,
+            title: trimmedTitle,
+            description: description.trim() || undefined,
+            dueDate: dueDateIso,
+            assigneeId: assigneeId || undefined,
+            address: trimmedAddress || undefined,
+            location: locationPayload,
+          },
+          targetProjectId
+        );
+
+        setTaskList((prev) => {
+          const identifier = getTaskIdentifier(normalized);
+          if (!identifier) {
+            return [normalized, ...prev];
+          }
+          const existingIndex = prev.findIndex((task) => getTaskIdentifier(task) === identifier);
+          if (existingIndex === -1) {
+            return [normalized, ...prev];
+          }
+          const next = [...prev];
+          next.splice(existingIndex, 1, normalized);
+          return next;
+        });
+
+        setSuccessMessage("Task created. You'll see it in your lists shortly.");
+        clearFormFields();
+        onCreated();
+        requestAnimationFrame(() => {
+          titleInputRef.current?.focus({ preventScroll: true });
+        });
+      }
     } catch (error) {
-      console.error("Failed to create task", error);
-      setErrorMessage("We couldn't create that task. Please try again.");
+      console.error("Failed to save task", error);
+      setErrorMessage("We couldn't save that task. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -677,6 +1034,58 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 {descriptionCopy}
               </p>
             </div>
+            {tasksLoading ? (
+              <div className={styles.taskListState}>Loading tasks…</div>
+            ) : tasksError ? (
+              <div className={`${styles.feedback} ${styles.feedbackError}`}>{tasksError}</div>
+            ) : sortedTasks.length ? (
+              <div className={styles.existingTasksSection}>
+                <div className={styles.existingTasksHeader}>
+                  <h3 className={styles.existingTasksTitle}>Task list</h3>
+                  <p className={styles.existingTasksHint}>Edit or delete items you've already created.</p>
+                </div>
+                <ul className={styles.existingTasksList}>
+                  {sortedTasks.map((task) => {
+                    const identifier = getTaskIdentifier(task);
+                    const isActive = getTaskIdentifier(editingTask) === identifier;
+                    const isEditable = Boolean(identifier);
+                    return (
+                      <li
+                        key={identifier || `${task.projectId}-${task.title}`}
+                        className={`${styles.existingTaskItem} ${
+                          isActive ? styles.existingTaskItemActive : ""
+                        }`}
+                      >
+                        <div className={styles.existingTaskInfo}>
+                          <span className={styles.existingTaskTitle}>{task.title}</span>
+                          <span className={styles.existingTaskMeta}>{formatTaskMeta(task)}</span>
+                        </div>
+                        <div className={styles.existingTaskActions}>
+                          <button
+                            type="button"
+                            className={styles.taskActionButton}
+                            onClick={() => handleEditTask(task)}
+                            disabled={!isEditable || submitting || deletingTaskId === identifier}
+                          >
+                            {isActive ? "Editing" : "Edit"}
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.taskActionButton} ${styles.taskDeleteButton}`}
+                            onClick={() => handleDeleteTask(task)}
+                            disabled={!isEditable || submitting || deletingTaskId === identifier}
+                          >
+                            {deletingTaskId === identifier ? "Deleting…" : "Delete"}
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : !tasksLoading ? (
+              <div className={styles.taskListEmpty}>No tasks yet. Create your first task below.</div>
+            ) : null}
             {showProjectSelect ? (
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor={projectFieldId}>
@@ -884,8 +1293,18 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 disabled={isSubmitDisabled}
               >
                 {submitting ? <span className={styles.spinner} aria-hidden="true" /> : null}
-                <span>Save task</span>
+                <span>{isEditing ? "Save changes" : "Save task"}</span>
               </button>
+              {isEditing ? (
+                <button
+                  type="button"
+                  className={styles.taskActionButton}
+                  onClick={handleCancelEdit}
+                  disabled={submitting}
+                >
+                  Cancel edit
+                </button>
+              ) : null}
             </div>
           </div>
         </form>

@@ -12,8 +12,8 @@ import QuickCreateTaskModal, {
 import type { Project } from "@/app/contexts/DataProvider";
 
 import styles from "./TasksComponentMobile.module.css";
-
-type Status = "todo" | "in_progress" | "done" | string;
+import type { Status } from "./types";
+import { formatAssigneeDisplay, parseDueDate, parseLocation } from "./utils";
 
 type RawTask = {
   taskId?: string;
@@ -214,20 +214,6 @@ function normalizeTask(raw: RawTask): QuickTask | null {
 function formatDueLabel(task: QuickTask): string {
   if (!task.dueDate) return "No due date";
   return dueFormatter.format(task.dueDate);
-}
-
-function formatAssigneeDisplay(value?: string): string | undefined {
-  if (!value) return undefined;
-
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-
-  const doubleUnderscoreIndex = trimmed.indexOf("__");
-  const base =
-    doubleUnderscoreIndex >= 0 ? trimmed.slice(0, doubleUnderscoreIndex) : trimmed;
-
-  const formatted = base.replace(/([a-z])([A-Z])/g, "$1 $2").trim();
-  return formatted || undefined;
 }
 
 function computeStats(tasks: QuickTask[]) {

@@ -4,7 +4,7 @@ import { MapPin, Calendar, ChevronDown, User, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
-import { createTask, fetchTasks } from "@/shared/utils/api";
+import { fetchTasks } from "@/shared/utils/api";
 import QuickCreateTaskModal, {
   type QuickCreateTaskModalProject,
   type QuickCreateTaskModalTask,
@@ -282,12 +282,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<QuickCreateTaskModalTask | null>(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
   const [snapIndex, setSnapIndex] = useState<SnapIndex>(1);
   const [viewportHeight, setViewportHeight] = useState(() => getViewportHeight());
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
@@ -320,8 +314,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
 
   const handleOpenDrawer = useCallback(() => {
     setDrawerOpen(true);
-    setFormError(null);
-    setSuccessMessage(null);
     // Start the sheet in the mid snap-point so tasks are visible immediately.
     setSnapIndex(1);
     initialScrollDoneRef.current = false;
@@ -330,7 +322,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
 
   const handleCloseDrawer = useCallback(() => {
     setDrawerOpen(false);
-    setFormError(null);
     setSnapIndex(1);
     setActiveTaskId(null);
     setMapFocus(null);
@@ -632,54 +623,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     return `${sameDayCount} ${noun} due ${dueFormatter.format(nextDue.dueDate)}.`;
   }, [error, loading, tasks]);
 
-  const resetForm = () => {
-    setTitle("");
-    setDescription("");
-    setDueDate("");
-  };
-
-  const handleCreateTask = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!projectId) return;
-
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
-      setSuccessMessage(null);
-      setFormError("Give the task a name before saving.");
-      return;
-    }
-
-    setSubmitting(true);
-    setFormError(null);
-    setSuccessMessage(null);
-
-    let dueIso: string | undefined;
-    if (dueDate) {
-      const parsed = new Date(`${dueDate}T00:00:00`);
-      if (!Number.isNaN(parsed.getTime())) {
-        dueIso = parsed.toISOString();
-      }
-    }
-
-    try {
-      await createTask({
-        projectId,
-        title: trimmedTitle,
-        description: description.trim() || undefined,
-        dueDate: dueIso,
-        status: "todo",
-      });
-      setSuccessMessage("Task created. It'll appear here shortly.");
-      resetForm();
-      void refreshTasks();
-    } catch (err) {
-      console.error("Failed to create project task", err);
-      setFormError("We couldn't create that task. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const renderDrawer = () => {
     if (!drawerOpen || typeof document === "undefined") {
       return null;
@@ -868,55 +811,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
               ) : (
                 <div className={styles.empty}>No tasks yet. Create one to get started.</div>
               )}
-            </section>
-
-            <section className={styles.sheetSection} aria-label="Create a quick task">
-              <h3 className={styles.sectionHeading}>Create quick task</h3>
-              <form className={styles.createForm} onSubmit={handleCreateTask}>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="Task name"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  disabled={submitting}
-                />
-                <textarea
-                  className={styles.textarea}
-                  placeholder="Description (optional)"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  disabled={submitting}
-                />
-                <input
-                  type="date"
-                  className={styles.dateInput}
-                  value={dueDate}
-                  onChange={(event) => setDueDate(event.target.value)}
-                  disabled={submitting}
-                />
-                {formError ? <div className={styles.formError}>{formError}</div> : null}
-                {successMessage ? <div className={styles.successMessage}>{successMessage}</div> : null}
-                <div className={styles.formActions}>
-                  <button type="submit" className={styles.submitButton} disabled={submitting}>
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.75"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ display: 'block', flexShrink: 0 }}
-                    >
-                      <path d="M12 5v14" />
-                      <path d="M5 12h14" />
-                    </svg>
-                    Create task
-                  </button>
-                </div>
-              </form>
             </section>
           </div>
         </motion.div>

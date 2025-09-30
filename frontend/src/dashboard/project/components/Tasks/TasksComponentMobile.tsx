@@ -762,7 +762,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
           transition={{ type: "spring", stiffness: 360, damping: 42, mass: 0.9 }}
         >
           <div
-            className={styles.sheetHandle}
+            className={styles.sheetDragArea}
             role="button"
             tabIndex={0}
             aria-label="Toggle tasks drawer size"
@@ -777,16 +777,18 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
               }
             }}
           >
-            <span className={styles.sheetHandleBar} aria-hidden="true" />
-          </div>
-          <header className={styles.sheetHeader}>
-            <div className={styles.sheetTitleGroup}>
-              <span className={styles.sheetTitle}>Project tasks</span>
-              <span className={styles.sheetSubtitle}>
-                {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
-              </span>
+            <div className={styles.sheetHandle}>
+              <span className={styles.sheetHandleBar} aria-hidden="true" />
             </div>
-          </header>
+            <header className={styles.sheetHeader}>
+              <div className={styles.sheetTitleGroup}>
+                <span className={styles.sheetTitle}>Project tasks</span>
+                <span className={styles.sheetSubtitle}>
+                  {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
+                </span>
+              </div>
+            </header>
+          </div>
           <div className={styles.sheetSummary}>
             <div className={styles.statRow} aria-label="Task summary">
               <div className={`${styles.statCard} ${styles.statOk}`}>

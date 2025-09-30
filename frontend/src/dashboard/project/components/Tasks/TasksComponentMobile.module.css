@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 18px 20px;
   color: rgba(255, 255, 255, 0.92);
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
@@ -17,19 +17,26 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
+  min-height: 44px;
 }
 
 .actions {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .headingGroup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  max-width: calc(100% - 140px);
+  overflow: hidden;
 }
 
 .title {
@@ -37,13 +44,20 @@
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .subtitle {
   margin: 0;
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.4;
   color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .primaryButton {
@@ -185,8 +199,28 @@
 
 @media (max-width: 480px) {
   .card {
-    padding: 12px 14px;
-    gap: 10px;
+    padding: 16px 18px;
+    gap: 14px;
+  }
+
+  .header {
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .headingGroup {
+    gap: 8px;
+    max-width: calc(100vw - 140px);
+  }
+
+  .title {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    line-height: 1.5;
   }
 
   .primaryButton {
@@ -387,46 +421,96 @@
   overflow: hidden;
 }
 
+.sheetDragArea {
+  /* Expanded drag zone that includes handle and header */
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Increase tap target size for better iPhone usability */
+  min-height: 64px;
+  padding-bottom: 8px;
+  /* Prevent scrolling interference on drag */
+  overscroll-behavior: none;
+}
+
+.sheetDragArea:focus-visible {
+  outline: 2px solid var(--brand, #fa3356);
+  outline-offset: 2px;
+  border-radius: 28px 28px 0 0;
+}
+
 .sheetHandle {
   align-self: center;
-  margin: 10px 0 4px;
-  width: 76px;
-  height: 32px;
-  border-radius: 999px;
+  margin: 8px 0 2px;
+  width: 100%;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  cursor: pointer;
-  /* Enable touch manipulation for dragging */
-  touch-action: manipulation;
-  user-select: none;
-}
-
-.sheetHandle:focus-visible {
-  outline: 2px solid var(--brand, #fa3356);
-  outline-offset: 2px;
+  /* Remove individual handle interaction since parent handles it */
+  pointer-events: none;
 }
 
 .sheetHandleBar {
-  width: 44px;
-  height: 5px;
+  width: 36px;
+  height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.24);
+  /* Subtle animation for visual feedback */
+  transition: background-color 0.2s ease, width 0.2s ease;
+}
+
+/* Visual feedback when drag area is active */
+.sheetDragArea:active .sheetHandleBar {
+  background: rgba(255, 255, 255, 0.4);
+  width: 44px;
+}
+
+/* Mobile-specific optimizations for better iPhone experience */
+@media (max-width: 768px) and (pointer: coarse) {
+  .sheetDragArea {
+    /* Increase minimum touch target for iPhone */
+    min-height: 72px;
+    padding-bottom: 12px;
+  }
+  
+  .sheetHandleBar {
+    /* Make handle slightly more prominent on mobile */
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.28);
+  }
+  
+  .sheetDragArea:active .sheetHandleBar {
+    width: 48px;
+    background: rgba(255, 255, 255, 0.45);
+  }
+  
+  .sheetTitle {
+    /* Slightly larger title on mobile for better readability */
+    font-size: 1.1rem;
+  }
 }
 
 .sheetHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0 1.75rem 0.5rem;
+  gap: 0.5rem;
+  padding: 0px 2rem 1.25rem;
+  /* Remove pointer events since parent drag area handles interaction */
+  pointer-events: none;
 }
 
 .sheetTitleGroup {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  /* Prevent text selection when dragging */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .sheetTitle {
@@ -443,7 +527,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  padding: 0 1.75rem 1.25rem;
+  padding: 1rem 1.75rem 1.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 18px;
 }

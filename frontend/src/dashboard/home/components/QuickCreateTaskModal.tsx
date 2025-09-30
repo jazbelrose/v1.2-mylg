@@ -118,17 +118,70 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
 
   const collaboratorOptions = useMemo(() => {
     if (!collaboratorIds.length) return [] as { value: string; label: string }[];
-    return collaboratorIds
-      .map((id) => {
-        const collaborator = allUsers.find((user) => user.userId === id);
-        const first = collaborator?.firstName?.trim() ?? "";
-        const last = collaborator?.lastName?.trim() ?? "";
-        const fullName = `${first} ${last}`.trim();
-        const label =
-          fullName || collaborator?.username || collaborator?.email || collaborator?.userId || id;
-        return { value: id, label };
-      })
-      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+
+    const findCollaborator = (rawId: string) => {
+      const trimmedId = rawId.trim();
+      if (!trimmedId) return undefined;
+      const [, extractedId] = trimmedId.includes("__") ? trimmedId.split("__") : [null, null];
+      const normalizedId = extractedId?.trim() || trimmedId;
+      return allUsers.find((user) => {
+        const userId = user.userId?.trim();
+        const username = user.username?.trim();
+        const compactName = `${user.firstName?.trim() ?? ""}${user.lastName?.trim() ?? ""}`;
+        return (
+          (userId && userId === normalizedId) ||
+          (userId && userId === trimmedId) ||
+          (username && username === trimmedId) ||
+          (compactName && compactName === trimmedId)
+        );
+      });
+    };
+
+    const formatLabel = (collaborator: (typeof allUsers)[number] | undefined, fallbackId: string) => {
+      const first = collaborator?.firstName?.trim() ?? "";
+      const last = collaborator?.lastName?.trim() ?? "";
+      const fullName = `${first} ${last}`.trim();
+      return (
+        fullName ||
+        collaborator?.username?.trim() ||
+        collaborator?.email?.trim() ||
+        collaborator?.userId?.trim() ||
+        fallbackId
+      );
+    };
+
+    const formatValue = (collaborator: (typeof allUsers)[number] | undefined, fallbackId: string) => {
+      if (!collaborator) return fallbackId;
+      const existingParts = fallbackId.includes("__") ? fallbackId.split("__") : [];
+      const fallbackUserId = existingParts[1]?.trim();
+      const userId = collaborator.userId?.trim() || fallbackUserId;
+      if (!userId) return fallbackId;
+      const compactFirst = collaborator.firstName?.trim() ?? "";
+      const compactLast = collaborator.lastName?.trim() ?? "";
+      const compactName = `${compactFirst}${compactLast}`.replace(/\s+/g, "");
+      const fallbackName =
+        compactName ||
+        collaborator.username?.replace(/\s+/g, "") ||
+        existingParts[0]?.replace(/\s+/g, "") ||
+        fallbackId.replace(/\s+/g, "");
+      const safeName = fallbackName || "User";
+      return `${safeName}__${userId}`;
+    };
+
+    const dedupeMap = new Map<string, { value: string; label: string }>();
+
+    collaboratorIds.forEach((rawId) => {
+      const collaborator = findCollaborator(rawId);
+      const value = formatValue(collaborator, rawId);
+      const label = formatLabel(collaborator, rawId);
+      if (!dedupeMap.has(value)) {
+        dedupeMap.set(value, { value, label });
+      }
+    });
+
+    return Array.from(dedupeMap.values()).sort((a, b) =>
+      a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+    );
   }, [allUsers, collaboratorIds]);
 
   const hasCollaborators = collaboratorOptions.length > 0;

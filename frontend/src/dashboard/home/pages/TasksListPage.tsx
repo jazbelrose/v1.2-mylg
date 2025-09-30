@@ -7,7 +7,9 @@ import {
   useTasksOverview,
   type TasksOverviewListItem,
 } from "../hooks/useTasksOverview";
-import QuickCreateTaskModal from "../components/QuickCreateTaskModal";
+import QuickCreateTaskModal, {
+  type QuickCreateTaskModalTask,
+} from "../components/QuickCreateTaskModal";
 import { endOfWeek } from "@/dashboard/home/utils/dateUtils";
 import styles from "./TasksListPage.module.css";
 
@@ -34,9 +36,10 @@ type TaskListProps = {
   emptyLabel: string;
   onStart?: (task: TasksOverviewListItem) => void;
   showCompleted?: boolean;
+  onSelect?: (task: TasksOverviewListItem) => void;
 };
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, emptyLabel, onStart, showCompleted }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, emptyLabel, onStart, showCompleted, onSelect }) => {
   if (!tasks.length) {
     return <div className={styles.sectionEmpty}>{emptyLabel}</div>;
   }
@@ -45,7 +48,12 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, emptyLabel, onStart, showCom
     <ul className={styles.taskList}>
       {tasks.map((task) => (
         <li key={task.id} className={styles.taskItem}>
-          <div className={styles.taskMain}>
+          <button
+            type="button"
+            className={`${styles.taskMain} ${styles.taskButton}`}
+            onClick={onSelect ? () => onSelect(task) : undefined}
+            disabled={!onSelect}
+          >
             <span
               className={styles.projectDot}
               style={{ backgroundColor: task.projectColor || "var(--brand, #fa3356)" }}
@@ -61,7 +69,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, emptyLabel, onStart, showCom
                 {formatDueDate(task.dueDate, task.timeLabel)}
               </span>
             </div>
-          </div>
+          </button>
           <div className={styles.taskActions}>
             {showCompleted ? (
               <span className={styles.completedTag}>Completed</span>
@@ -83,6 +91,7 @@ const TasksListPage: React.FC = () => {
   const location = useLocation();
   const locationState = (location.state as { from?: string } | undefined) ?? undefined;
   const returnTo = locationState?.from;
+  const [taskToEdit, setTaskToEdit] = useState<QuickCreateTaskModalTask | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -147,11 +156,38 @@ const TasksListPage: React.FC = () => {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const toModalTask = useCallback(
+    (task: TasksOverviewListItem): QuickCreateTaskModalTask => ({
+      id: task.id,
+      taskId: task.taskId ?? task.id,
+      projectId: task.projectId,
+      projectName: task.projectName,
+      title: task.title,
+      description: task.description ?? undefined,
+      dueDate: task.dueDateInput ?? (task.dueDate ? task.dueDate.toISOString() : null),
+      status: task.status,
+      assigneeId: task.assigneeId ?? undefined,
+      address: task.address ?? undefined,
+      location: task.location as QuickCreateTaskModalTask["location"],
+    }),
+    [],
+  );
+
+  const handleTaskEdit = useCallback(
+    (task: TasksOverviewListItem) => {
+      setTaskToEdit(toModalTask(task));
+      setIsCreateModalOpen(true);
+    },
+    [toModalTask],
+  );
+
   const openCreateModal = useCallback(() => {
+    setTaskToEdit(null);
     setIsCreateModalOpen(true);
   }, []);
 
   const closeCreateModal = useCallback(() => {
+    setTaskToEdit(null);
     setIsCreateModalOpen(false);
   }, []);
 
@@ -290,6 +326,7 @@ const TasksListPage: React.FC = () => {
                     tasks={overdueTasks}
                     emptyLabel="No overdue tasks. Nice work keeping things on track!"
                     onStart={(task) => navigateToProject(task.projectId)}
+                    onSelect={handleTaskEdit}
                   />
                 </section>
 
@@ -309,6 +346,7 @@ const TasksListPage: React.FC = () => {
                           tasks={group.tasks}
                           emptyLabel="All set for this day."
                           onStart={(task) => navigateToProject(task.projectId)}
+                          onSelect={handleTaskEdit}
                         />
                       </div>
                     ))
@@ -329,6 +367,7 @@ const TasksListPage: React.FC = () => {
                     tasks={upcomingTasks}
                     emptyLabel="No future tasks yet. When you plan ahead they'll show up here."
                     onStart={(task) => navigateToProject(task.projectId)}
+                    onSelect={handleTaskEdit}
                   />
                 </section>
 
@@ -344,6 +383,7 @@ const TasksListPage: React.FC = () => {
                     tasks={undatedTasks}
                     emptyLabel="Nothing in your backlog without a due date."
                     onStart={(task) => navigateToProject(task.projectId)}
+                    onSelect={handleTaskEdit}
                   />
                 </section>
 
@@ -359,6 +399,7 @@ const TasksListPage: React.FC = () => {
                     tasks={completedThisWeek}
                     emptyLabel="No completed tasks this week yet."
                     showCompleted
+                    onSelect={handleTaskEdit}
                   />
                 </section>
               </div>
@@ -377,6 +418,9 @@ const TasksListPage: React.FC = () => {
         onClose={closeCreateModal}
         projects={projectOptions}
         onCreated={refreshTasks}
+        onUpdated={refreshTasks}
+        onDeleted={refreshTasks}
+        task={taskToEdit}
       />
     </>
   );

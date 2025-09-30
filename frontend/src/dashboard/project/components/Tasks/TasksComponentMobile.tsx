@@ -7,7 +7,9 @@ import Map from "@/shared/ui/Map";
 import { createTask, fetchTasks } from "@/shared/utils/api";
 import QuickCreateTaskModal, {
   type QuickCreateTaskModalProject,
+  type QuickCreateTaskModalTask,
 } from "@/dashboard/home/components/QuickCreateTaskModal";
+import type { Project } from "@/app/contexts/DataProvider";
 
 import styles from "./TasksComponentMobile.module.css";
 
@@ -42,12 +44,17 @@ type QuickTask = {
   address?: string;
   location?: { lat: number; lng: number } | null;
   assignedTo?: string;
+  projectId?: string;
+  dueDateInput?: string | null;
+  raw: RawTask;
 };
 
 type TasksComponentMobileProps = {
   projectId?: string;
   projectName?: string;
   projectColor?: string;
+  activeProject?: Project;
+  onActiveProjectChange?: (updatedProject: Project) => void;
 };
 
 const dueFormatter = new Intl.DateTimeFormat(undefined, {
@@ -90,6 +97,43 @@ function parseDueDate(value?: unknown): Date | null {
     if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
       const iso = new Date(`${trimmed}T00:00:00`);
       return Number.isNaN(iso.getTime()) ? null : iso;
+    }
+  }
+
+  return null;
+}
+
+function toDateInputString(value: unknown): string | null {
+  if (value == null || value === "") return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime())
+      ? null
+      : `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(
+          value.getDate(),
+        ).padStart(2, "0")}`;
+  }
+
+  if (typeof value === "number") {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate(),
+    ).padStart(2, "0")}`;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(
+        parsed.getDate(),
+      ).padStart(2, "0")}`;
     }
   }
 
@@ -144,14 +188,16 @@ function normalizeTask(raw: RawTask): QuickTask | null {
   const title = (raw.title || raw.name || "").toString().trim();
   if (!id) return null;
 
+  const dueSource = raw.dueAt ?? raw.due_at ?? raw.dueDate ?? raw.due_date ?? raw.due;
+  const dueDate = parseDueDate(dueSource);
+
   return {
     id,
     title: title || "Untitled task",
     description: typeof raw.description === "string" ? raw.description : undefined,
     status: (raw.status as Status) || "todo",
-    dueDate: parseDueDate(
-      raw.dueAt ?? raw.due_at ?? raw.dueDate ?? raw.due_date ?? raw.due,
-    ),
+    dueDate,
+    dueDateInput: toDateInputString(dueSource),
     address: typeof raw.address === "string" ? raw.address : undefined,
     location: parseLocation(raw.location),
     assignedTo:
@@ -160,6 +206,8 @@ function normalizeTask(raw: RawTask): QuickTask | null {
         : typeof raw.assignedTo === "string"
           ? raw.assignedTo
           : undefined,
+    projectId: typeof raw.projectId === "string" ? raw.projectId : undefined,
+    raw,
   };
 }
 
@@ -233,6 +281,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<QuickCreateTaskModalTask | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -277,12 +326,34 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
 
   const handleOpenQuickCreate = useCallback(() => {
     if (!hasQuickCreateProject) return;
+    setTaskToEdit(null);
     setQuickCreateOpen(true);
   }, [hasQuickCreateProject]);
 
   const handleCloseQuickCreate = useCallback(() => {
+    setTaskToEdit(null);
     setQuickCreateOpen(false);
   }, []);
+
+  const toModalTask = useCallback(
+    (task: QuickTask): QuickCreateTaskModalTask => {
+      const resolvedProjectId = task.projectId || projectId || "";
+      return {
+        id: task.id,
+        taskId: task.id,
+        projectId: resolvedProjectId,
+        projectName,
+        title: task.title,
+        description: task.description ?? undefined,
+        dueDate: task.dueDateInput ?? (task.dueDate ? task.dueDate.toISOString() : null),
+        status: task.status,
+        assigneeId: task.assignedTo ?? undefined,
+        address: task.address ?? undefined,
+        location: (task.location ?? task.raw?.location) as QuickCreateTaskModalTask["location"],
+      };
+    },
+    [projectId, projectName],
+  );
 
   const refreshTasks = useCallback(async () => {
     if (!projectId) {
@@ -454,15 +525,30 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   );
   const selectedAssigneeName = formatAssigneeDisplay(selectedTask?.assignedTo);
 
-  const handleMarkerClick = useCallback((markerId: string) => {
-    setActiveTaskId(markerId);
-    setSnapIndex((current) => (current === 0 ? 1 : current));
-  }, []);
+  const handleTaskSelect = useCallback(
+    (taskId: string) => {
+      setActiveTaskId(taskId);
+      setSnapIndex((current) => (current === 0 ? 1 : current));
 
-  const handleTaskSelect = useCallback((taskId: string) => {
-    setActiveTaskId(taskId);
-    setSnapIndex((current) => (current === 0 ? 1 : current));
-  }, []);
+      if (!hasQuickCreateProject) {
+        return;
+      }
+
+      const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
+      if (!match) return;
+
+      setTaskToEdit(toModalTask(match));
+      setQuickCreateOpen(true);
+    },
+    [drawerTasks, hasQuickCreateProject, tasks, toModalTask],
+  );
+
+  const handleMarkerClick = useCallback(
+    (markerId: string) => {
+      handleTaskSelect(markerId);
+    },
+    [handleTaskSelect],
+  );
 
   const handleHandleClick = useCallback(() => {
     setSnapIndex((current) => {
@@ -883,6 +969,9 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         onClose={handleCloseQuickCreate}
         projects={quickCreateProjects}
         onCreated={refreshTasks}
+        onUpdated={refreshTasks}
+        onDeleted={refreshTasks}
+        task={taskToEdit}
         activeProjectId={projectId}
         activeProjectName={projectName}
         scopedProjectId={projectId ?? null}

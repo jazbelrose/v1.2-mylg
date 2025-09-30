@@ -7,7 +7,6 @@ import {
   Cell,
   Tooltip,
   Sector,
-  type TooltipProps,
 } from "recharts";
 
 interface SectorProps {
@@ -37,9 +36,10 @@ interface InternalSlice extends BudgetDonutSlice {
 
 export type BudgetDonutDatum = InternalSlice;
 
-type TooltipValueType = number | string | Array<number | string>;
-
-type TooltipNameType = number | string;
+interface BudgetDonutTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload?: BudgetDonutDatum } | undefined>;
+}
 
 export interface BudgetDonutProps {
   data: BudgetDonutSlice[];
@@ -280,8 +280,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     [explodeOnClick]
   );
 
-  const tooltipRenderer = useCallback(
-    ({ active, payload }: TooltipProps<TooltipValueType, TooltipNameType>) => {
+  const tooltipRenderer = useCallback(({ active, payload }: BudgetDonutTooltipProps) => {
       if (!active || !payload || payload.length === 0) return null;
       const datum = payload[0]?.payload as BudgetDonutDatum | undefined;
       if (!datum) return null;
@@ -293,9 +292,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
           {text}
         </div>
       );
-    },
-    [formatTooltip]
-  );
+    }, [formatTooltip]);
 
   const formattedTotal = useMemo(() => totalFormatter(total), [total, totalFormatter]);
 

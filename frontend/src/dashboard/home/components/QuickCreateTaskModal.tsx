@@ -1,10 +1,14 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { NOMINATIM_SEARCH_URL, apiFetch, createTask } from "@/shared/utils/api";
+import type { Task } from "@/shared/utils/api";
+import { NOMINATIM_SEARCH_URL, apiFetch, createTask, deleteTask, updateTask } from "@/shared/utils/api";
 import { useUser } from "@/app/contexts/useUser";
 
 import styles from "./QuickCreateTaskModal.module.css";
+import type { QuickCreateTaskModalTask, QuickCreateTaskLocation } from "./QuickCreateTaskModal.types";
+
+export type { QuickCreateTaskModalTask } from "./QuickCreateTaskModal.types";
 
 type NominatimSuggestion = {
   place_id: string | number;
@@ -18,11 +22,104 @@ type Coordinates = {
   lng: number;
 };
 
+type TaskStatus = "todo" | "in_progress" | "done";
+
 function toInputDate(date: Date): string {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function toDateInputString(value?: string | number | Date | null): string {
+  if (value == null || value === "") {
+    return "";
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? "" : toInputDate(value);
+  }
+
+  if (typeof value === "number") {
+    const asDate = new Date(value);
+    return Number.isNaN(asDate.getTime()) ? "" : toInputDate(asDate);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      return toInputDate(parsed);
+    }
+  }
+
+  return "";
+}
+
+function parseCoordinate(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  return null;
+}
+
+function normalizeStatus(value?: string | null): TaskStatus {
+  if (!value) return "todo";
+  const trimmed = value.toString().trim();
+  if (!trimmed) return "todo";
+  const normalized = trimmed.toLowerCase().replace(/\s+/g, "_");
+  if (normalized === "done") return "done";
+  if (normalized === "in_progress" || normalized === "in-progress") return "in_progress";
+  return "todo";
+}
+
+function normalizeLocation(location: QuickCreateTaskLocation): Coordinates | null {
+  if (!location) return null;
+
+  if (typeof location === "string") {
+    try {
+      const parsed = JSON.parse(location);
+      return normalizeLocation(parsed as QuickCreateTaskLocation);
+    } catch {
+      const [latPart, lngPart] = location.split(/[,\s]+/);
+      const lat = parseCoordinate(latPart);
+      const lng = parseCoordinate(lngPart);
+      return lat != null && lng != null ? { lat, lng } : null;
+    }
+  }
+
+  if (typeof location === "object") {
+    const record = location as Record<string, unknown>;
+    const lat =
+      parseCoordinate(record.lat) ??
+      parseCoordinate(record.latitude) ??
+      parseCoordinate(record.Lat) ??
+      parseCoordinate(record.Latitude);
+    const lng =
+      parseCoordinate(record.lng) ??
+      parseCoordinate(record.longitude) ??
+      parseCoordinate(record.Lng) ??
+      parseCoordinate(record.Longitude);
+
+    if (lat != null && lng != null) {
+      return { lat, lng };
+    }
+  }
+
+  return null;
 }
 
 function getOffsetDate(days: number): string {
@@ -45,6 +142,9 @@ export type QuickCreateTaskModalProps = {
   activeProjectId?: string | null;
   activeProjectName?: string | null;
   scopedProjectId?: string | null;
+  task?: QuickCreateTaskModalTask | null;
+  onUpdated?: () => void;
+  onDeleted?: () => void;
 };
 
 const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
@@ -55,6 +155,9 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   activeProjectId,
   activeProjectName,
   scopedProjectId,
+  task,
+  onUpdated,
+  onDeleted,
 }) => {
   const { userData, allUsers } = useUser();
   const [projectId, setProjectId] = useState<string>("");
@@ -67,10 +170,13 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [assigneeId, setAssigneeId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [projectError, setProjectError] = useState<string | null>(null);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [status, setStatus] = useState<TaskStatus>("todo");
   const suggestionsListId = "quick-create-task-location-suggestions";
   const touchStartYRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
@@ -93,9 +199,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const notesFieldId = useId();
   const feedbackRegionId = useId();
   const locationHintId = useId();
+  const statusFieldId = useId();
 
   const projectOptions = useMemo(() => projects ?? [], [projects]);
   const hasProjects = projectOptions.length > 0;
+  const isEditing = Boolean(taskId);
   const resolvedActiveProjectName = useMemo(() => {
     if (activeProjectName && activeProjectName.trim()) {
       return activeProjectName.trim();
@@ -200,6 +308,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const titleRemaining = 120 - title.length;
   const showTitleCounter = titleRemaining <= 20;
   const canSubmit = Boolean(effectiveProjectId && trimmedTitle);
+  const isBusy = submitting || deleting;
 
   const sortSuggestionsByProximity = useCallback(
     (suggestions: NominatimSuggestion[], origin: Coordinates | null) => {
@@ -242,11 +351,39 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setSelectedLocation(null);
     setAssigneeId("");
     setSubmitting(false);
+    setDeleting(false);
     setErrorMessage(null);
     setSuccessMessage(null);
     setTitleError(null);
     setProjectError(null);
+    setTaskId(null);
+    setStatus("todo");
   }, []);
+
+  const applyTaskToForm = useCallback(
+    (taskData: QuickCreateTaskModalTask) => {
+      const nextProjectId = typeof taskData.projectId === "string" ? taskData.projectId.trim() : "";
+      setProjectId(nextProjectId);
+      const nextTaskId =
+        (typeof taskData.taskId === "string" && taskData.taskId.trim()) ||
+        (typeof taskData.id === "string" && taskData.id.trim()) ||
+        null;
+      setTaskId(nextTaskId);
+      setTitle(typeof taskData.title === "string" ? taskData.title : "");
+      setDescription(typeof taskData.description === "string" ? taskData.description : "");
+      setDueDate(toDateInputString(taskData.dueDate));
+      setStatus(normalizeStatus(taskData.status));
+      setAssigneeId(typeof taskData.assigneeId === "string" ? taskData.assigneeId : "");
+      setAddressSearch(typeof taskData.address === "string" ? taskData.address : "");
+      setAddressSuggestions([]);
+      setSelectedLocation(normalizeLocation(taskData.location));
+      setSuccessMessage(null);
+      setErrorMessage(null);
+      setTitleError(null);
+      setProjectError(null);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -264,6 +401,13 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setTitleError(null);
     setProjectError(null);
 
+    if (task) {
+      applyTaskToForm(task);
+      return;
+    }
+
+    resetForm();
+
     if (scopedProjectId) {
       setProjectId(scopedProjectId);
       return;
@@ -274,13 +418,13 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       return;
     }
 
-    setProjectId((current) => {
-      if (current && projectOptions.some((project) => project.id === current)) {
-        return current;
-      }
-      return projectOptions[0].id;
-    });
-  }, [open, projectOptions, resetForm, scopedProjectId]);
+    setProjectId(projectOptions[0].id);
+  }, [open, projectOptions, resetForm, scopedProjectId, task, applyTaskToForm]);
+
+  useEffect(() => {
+    if (!open || !task) return;
+    applyTaskToForm(task);
+  }, [open, task, applyTaskToForm]);
 
   useEffect(() => {
     if (!open) return;
@@ -288,7 +432,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        if (!submitting) {
+        if (!isBusy) {
           onClose();
         }
       }
@@ -373,7 +517,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     const handleMetaEnter = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
         event.preventDefault();
-        if (!submitting && canSubmit) {
+        if (!isBusy && canSubmit) {
           formRef.current?.requestSubmit();
         }
       }
@@ -451,7 +595,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const todayValue = getOffsetDate(0);
   const tomorrowValue = getOffsetDate(1);
   const nextWeekValue = getOffsetDate(7);
-  const isSubmitDisabled = submitting || !canSubmit;
+  const isSubmitDisabled = isBusy || !canSubmit;
+  const modalTitle = isEditing ? "Edit task" : "Create a task";
+  const modalDescription = isEditing
+    ? "Update details, change the status, or mark this task as done."
+    : descriptionCopy;
   const taskNameDescribedBy = [
     showTitleCounter ? titleCounterId : null,
     titleError ? titleErrorId : null,
@@ -463,7 +611,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const locationDescribedBy = selectedLocation ? locationHintId : undefined;
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (submitting) return;
+    if (isBusy) return;
     if (event.touches.length !== 1) return;
 
     touchStartYRef.current = event.touches[0].clientY;
@@ -492,7 +640,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     if (!isDraggingRef.current) return;
 
     const threshold = 140;
-    const shouldClose = lastOffsetRef.current > threshold && !submitting;
+    const shouldClose = lastOffsetRef.current > threshold && !isBusy;
 
     if (shouldClose) {
       setSwipeOffset(0);
@@ -508,7 +656,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   };
 
   const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget && !submitting) {
+    if (event.target === event.currentTarget && !isBusy) {
       onClose();
     }
   };
@@ -578,6 +726,12 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setErrorMessage(null);
   };
 
+  const handleStatusChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatus(event.target.value as TaskStatus);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -609,35 +763,76 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
         ? { lat: selectedLocation.lat, lng: selectedLocation.lng }
         : undefined;
 
-      await createTask({
+      const payload: Task = {
         projectId: effectiveProjectId,
         title: trimmedTitle,
         description: description.trim() || undefined,
         dueDate: dueDateIso,
-        status: "todo",
-        ...(assigneeId ? { assigneeId } : {}),
+        status,
         ...(trimmedAddress ? { address: trimmedAddress } : {}),
         ...(locationPayload ? { location: locationPayload } : {}),
-      });
-      setSuccessMessage("Task created. You'll see it in your lists shortly.");
-      setTitle("");
-      setDescription("");
-      setDueDate("");
-      setAddressSearch("");
-      setAddressSuggestions([]);
-      setSelectedLocation(null);
-      setAssigneeId("");
-      setTitleError(null);
-      setProjectError(null);
+      };
+
+      if (assigneeId) {
+        payload.assigneeId = assigneeId;
+      } else if (isEditing) {
+        payload.assigneeId = "";
+      }
+
+      if (isEditing && taskId) {
+        await updateTask({ ...payload, taskId });
+        setSuccessMessage("Task updated.");
+        onUpdated?.();
+      } else {
+        await createTask(payload);
+        setSuccessMessage("Task created. You'll see it in your lists shortly.");
+        setTitle("");
+        setDescription("");
+        setDueDate("");
+        setAddressSearch("");
+        setAddressSuggestions([]);
+        setSelectedLocation(null);
+        setAssigneeId("");
+        setStatus("todo");
+        setTitleError(null);
+        setProjectError(null);
+        requestAnimationFrame(() => {
+          titleInputRef.current?.focus({ preventScroll: true });
+        });
+      }
+
       onCreated();
-      requestAnimationFrame(() => {
-        titleInputRef.current?.focus({ preventScroll: true });
-      });
     } catch (error) {
-      console.error("Failed to create task", error);
-      setErrorMessage("We couldn't create that task. Please try again.");
+      console.error("Failed to save task", error);
+      setErrorMessage(
+        isEditing
+          ? "We couldn't update that task. Please try again."
+          : "We couldn't create that task. Please try again.",
+      );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!taskId || !effectiveProjectId) {
+      return;
+    }
+
+    setDeleting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      await deleteTask({ projectId: effectiveProjectId, taskId });
+      onDeleted?.();
+      onCreated();
+      onClose();
+    } catch (error) {
+      console.error("Failed to delete task", error);
+      setErrorMessage("We couldn't delete that task. Please try again.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -672,9 +867,9 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
         >
           <div className={styles.formBody} onClick={handleFormBodyClick}>
             <div className={styles.createHeader}>
-              <h2 id="quick-task-title">Create a task</h2>
+              <h2 id="quick-task-title">{modalTitle}</h2>
               <p id={descriptionId} className={styles.createDescription}>
-                {descriptionCopy}
+                {modalDescription}
               </p>
             </div>
             {showProjectSelect ? (
@@ -688,7 +883,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                   className={styles.selectInput}
                   value={projectId}
                   onChange={handleProjectChange}
-                  disabled={!hasProjects || submitting}
+                  disabled={!hasProjects || isBusy}
                   aria-describedby={projectDescribedBy}
                 >
                   {projectOptions.map((project) => (
@@ -709,6 +904,25 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
             ) : null}
             <div className={styles.fieldGroup}>
               <div className={styles.fieldHeader}>
+                <label className={styles.fieldLabel} htmlFor={statusFieldId}>
+                  <span className={styles.fieldLabelText}>Status</span>
+                </label>
+              </div>
+              <select
+                id={statusFieldId}
+                aria-label="Task status"
+                className={styles.selectInput}
+                value={status}
+                onChange={handleStatusChange}
+                disabled={isBusy}
+              >
+                <option value="todo">To do</option>
+                <option value="in_progress">In progress</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <div className={styles.fieldGroup}>
+              <div className={styles.fieldHeader}>
                 <label className={styles.fieldLabel} htmlFor={assigneeFieldId}>
                   <span className={styles.fieldLabelText}>Assign to</span>
                 </label>
@@ -720,7 +934,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 className={styles.selectInput}
                 value={assigneeId}
                 onChange={handleAssigneeChange}
-                disabled={submitting}
+                disabled={isBusy}
               >
                 <option value="">Unassigned</option>
                 {collaboratorOptions.map((option) => (
@@ -745,7 +959,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 value={title}
                 onChange={handleTitleChange}
                 placeholder="What needs to get done?"
-                disabled={submitting}
+                disabled={isBusy}
                 ref={titleInputRef}
                 aria-describedby={taskNameDescribedBy}
               />
@@ -778,7 +992,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                   value={addressSearch}
                   onChange={handleAddressChange}
                   placeholder="Search for an address or venue"
-                  disabled={submitting}
+                  disabled={isBusy}
                   aria-autocomplete="list"
                   aria-expanded={addressSuggestions.length > 0}
                   aria-controls={addressSuggestions.length > 0 ? suggestionsListId : undefined}
@@ -821,14 +1035,14 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 className={styles.textInput}
                 value={dueDate}
                 onChange={handleDueDateInputChange}
-                disabled={submitting}
+                disabled={isBusy}
               />
               <div className={styles.quickChips} role="group" aria-label="Quick due date shortcuts">
                 <button
                   type="button"
                   className={`${styles.quickChip} ${dueDate === todayValue ? styles.quickChipActive : ""}`}
                   onClick={() => handleDueDateQuickSelect(todayValue)}
-                  disabled={submitting}
+                  disabled={isBusy}
                 >
                   Today
                 </button>
@@ -836,7 +1050,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                   type="button"
                   className={`${styles.quickChip} ${dueDate === tomorrowValue ? styles.quickChipActive : ""}`}
                   onClick={() => handleDueDateQuickSelect(tomorrowValue)}
-                  disabled={submitting}
+                  disabled={isBusy}
                 >
                   +1
                 </button>
@@ -844,7 +1058,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                   type="button"
                   className={`${styles.quickChip} ${dueDate === nextWeekValue ? styles.quickChipActive : ""}`}
                   onClick={() => handleDueDateQuickSelect(nextWeekValue)}
-                  disabled={submitting}
+                  disabled={isBusy}
                 >
                   +7
                 </button>
@@ -864,7 +1078,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="Add context or links."
-                disabled={submitting}
+                disabled={isBusy}
                 rows={4}
                 ref={notesRef}
               />
@@ -878,13 +1092,23 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
               ) : null}
             </div>
             <div className={styles.actionBar}>
+              {isEditing ? (
+                <button
+                  type="button"
+                  className={styles.deleteButton}
+                  onClick={handleDelete}
+                  disabled={isBusy}
+                >
+                  {deleting ? "Deleting…" : "Delete task"}
+                </button>
+              ) : null}
               <button
                 type="submit"
                 className={styles.submitButton}
                 disabled={isSubmitDisabled}
               >
                 {submitting ? <span className={styles.spinner} aria-hidden="true" /> : null}
-                <span>Save task</span>
+                <span>{isEditing ? "Save changes" : "Save task"}</span>
               </button>
             </div>
           </div>

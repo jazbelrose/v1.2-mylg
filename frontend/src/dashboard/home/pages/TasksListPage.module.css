@@ -436,6 +436,25 @@
   min-width: 0;
 }
 
+.taskButton {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  flex: 1 1 auto;
+}
+
+.taskButton:disabled {
+  cursor: default;
+}
+
+.taskButton:focus-visible {
+  outline: 2px solid rgba(250, 51, 86, 0.5);
+  outline-offset: 2px;
+}
+
 .projectDot {
   width: 12px;
   height: 12px;

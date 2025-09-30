@@ -3,24 +3,62 @@ import { Link, useLocation } from "react-router-dom";
 import { Plus, MoreHorizontal } from "lucide-react";
 
 import { useTasksOverview } from "../hooks/useTasksOverview";
-import QuickCreateTaskModal from "./QuickCreateTaskModal";
+import QuickCreateTaskModal, {
+  type QuickCreateTaskModalTask,
+} from "./QuickCreateTaskModal";
 import styles from "./TasksOverviewCard.module.css";
 
 type TasksOverviewCardProps = {
   className?: string;
 };
 const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
-  const { loading, error, stats, groups, refreshTasks, projectOptions } = useTasksOverview();
+  const { loading, error, stats, groups, refreshTasks, projectOptions, getTaskById } =
+    useTasksOverview();
   const location = useLocation();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<QuickCreateTaskModalTask | null>(null);
 
   const openCreateModal = useCallback(() => {
+    setTaskToEdit(null);
     setIsCreateModalOpen(true);
   }, []);
 
   const closeCreateModal = useCallback(() => {
+    setTaskToEdit(null);
     setIsCreateModalOpen(false);
   }, []);
+
+  const toModalTask = useCallback(
+    (itemId: string) => {
+      const source = getTaskById(itemId);
+      if (!source) return null;
+      const dueDate = source.dueDateInput ?? (source.dueDate ? source.dueDate.toISOString() : null);
+      return {
+        id: source.id,
+        taskId: source.taskId ?? source.id,
+        projectId: source.projectId,
+        projectName: source.projectName,
+        title: source.title,
+        description: source.description ?? undefined,
+        dueDate,
+        status: source.status,
+        assigneeId: source.assigneeId ?? undefined,
+        address: source.address ?? undefined,
+        location: source.location as QuickCreateTaskModalTask["location"],
+      } satisfies QuickCreateTaskModalTask;
+    },
+    [getTaskById],
+  );
+
+  const handleChipSelect = useCallback(
+    (taskId: string) => {
+      const modalTask = toModalTask(taskId);
+      if (!modalTask) return;
+      setTaskToEdit(modalTask);
+      setIsCreateModalOpen(true);
+    },
+    [toModalTask],
+  );
 
   const formatStatValue = (value: number): string | number => {
     if (error) return "—";
@@ -84,7 +122,12 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
                 <div className={styles.groupLabel}>{group.dayLabel}</div>
                 <div className={styles.chips}>
                   {group.items.map((item) => (
-                    <div key={item.id} className={styles.chip}>
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`${styles.chip} ${styles.chipButton}`}
+                      onClick={() => handleChipSelect(item.id)}
+                    >
                       <span
                         className={styles.chipDot}
                         style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
@@ -98,7 +141,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
                           {item.project}
                         </span>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -115,6 +158,9 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
         onClose={closeCreateModal}
         projects={projectOptions}
         onCreated={refreshTasks}
+        onUpdated={refreshTasks}
+        onDeleted={refreshTasks}
+        task={taskToEdit}
       />
     </>
   );

@@ -304,6 +304,32 @@
   margin-top: 20px;
 }
 
+.deleteButton {
+  width: 100%;
+  border-radius: 14px;
+  min-height: 48px;
+  padding: 0 18px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: 1px solid rgba(255, 90, 120, 0.45);
+  background: rgba(255, 90, 120, 0.15);
+  color: #ff9db5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.deleteButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.deleteButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .submitButton {
   width: 100%;
   border-radius: 14px;

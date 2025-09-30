@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faClone, faClock } from "@fortawesome/free-solid-svg-icons";
-import { Tooltip as AntTooltip, Table } from "antd";
+import { Tooltip as AntTooltip } from "antd";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { formatUSD } from "@/shared/utils/budgetUtils";
 import styles from "@/dashboard/project/features/budget/pages/budget-page.module.css";
@@ -14,19 +14,19 @@ interface BudgetTableLogicProps {
   sortField: string | null;
   sortOrder: string | null;
   selectedRowKeys: string[];
-  expandedRowKeys: string[];
-  eventsByLineItem: Record<string, Record<string, unknown>[]>;  
+  eventsByLineItem: Record<string, Record<string, unknown>[]>;
   setSelectedRowKeys: (keys: string[]) => void;
   openDeleteModal: (ids: string[]) => void;
   openDuplicateModal: (item: Record<string, unknown>) => void;
   openEventModal: (item: Record<string, unknown>) => void;
   children: (tableConfig: BudgetTableConfig) => React.ReactNode;
-}interface BudgetTableConfig {
+}
+
+interface BudgetTableConfig {
   tableColumns: TableColumn[];
   tableData: TableData[];
   sortedTableData: TableData[];
   groupedTableData: TableData[];
-  expandedRowRender: (record: TableData) => React.ReactNode;
   mainColumnsOrder: string[];
 }
 
@@ -35,7 +35,6 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
   sortField,
   sortOrder,
   selectedRowKeys,
-  expandedRowKeys,
   eventsByLineItem,
   setSelectedRowKeys,
   openDeleteModal,
@@ -47,21 +46,6 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
   
   // Use context selectors for data
   const budgetItems = getRows();
-
-  const beautifyLabel = useCallback((key: string) => {
-    if (!key) return "";
-    const abbreviations = { po: "PO", id: "ID", url: "URL" };
-    return key
-      .replace(/_/g, " ")
-      .replace(/([A-Z])/g, " $1")
-      .trim()
-      .split(/\s+/)
-      .map((w) => {
-        const lower = w.toLowerCase();
-        return abbreviations[lower] || w.charAt(0).toUpperCase() + w.slice(1);
-      })
-      .join(" ");
-  }, []);
 
   const isDefined = useCallback((val: unknown) => {
     if (val === undefined || val === null) return false;
@@ -330,7 +314,6 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
       ),
       width: 60,
     });
-    cols.push(Table.EXPAND_COLUMN);
     return cols;
   }, [
     budgetItems,
@@ -411,8 +394,7 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
       }
 
       const groupRows = sortedTableData.slice(i, j);
-      const expandedCount = groupRows.filter((r) => expandedRowKeys.includes(String(r.key))).length;
-      const span = groupRows.length + expandedCount;
+      const span = groupRows.length;
 
       for (let k = i; k < j; k++) {
         const row = { ...sortedTableData[k] };
@@ -424,90 +406,15 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
     }
 
     return result;
-  }, [sortedTableData, groupBy, expandedRowKeys]);
-
-  const detailOrder = useMemo(() => [
-    "paymentTerms",
-    "paymentType",
-    null,
-    "vendor",
-    "vendorInvoiceNumber",
-    "poNumber",
-    null,
-    "client",
-    "amountPaid",
-    "balanceDue",
-    null,
-    "areaGroup",
-    "invoiceGroup",
-    "category",
-  ], []);
-
-  const expandedRowRender = useCallback(
-    (record: TableData) => {
-      const notes = record.notes;
-      return (
-        <table>
-          <tbody>
-            {(record.startDate || record.endDate) && (
-              <tr key="dates">
-                <td style={{ fontWeight: "bold", paddingRight: "8px" }}>Dates</td>
-                <td style={{ textAlign: "right" }}>
-                  {`${String(record.startDate || "")}${
-                    record.endDate ? ` - ${String(record.endDate)}` : ""
-                  }`}
-                </td>
-              </tr>
-            )}
-            {detailOrder.map((key, idx) =>
-              key === null ? (
-                <tr key={`hr-${idx}`}>
-                  <td colSpan={2}>
-                    <hr style={{ margin: "8px 0", borderColor: "#444" }} />
-                  </td>
-                </tr>
-              ) : (
-                <tr key={key}>
-                  <td style={{ fontWeight: "bold", paddingRight: "8px" }}>
-                    {beautifyLabel(key)}
-                  </td>
-                  <td style={{ textAlign: "right" }}>{String(record[key] ?? "")}</td>
-                </tr>
-              )
-            )}
-            <tr key="notes-divider">
-              <td colSpan={2}>
-                <hr style={{ margin: "8px 0", borderColor: "#444" }} />
-              </td>
-            </tr>
-            <tr key="notes">
-              <td style={{ fontWeight: "bold", paddingRight: "8px" }}>Notes</td>
-              <td
-                style={{
-                  whiteSpace: "pre-wrap",
-                  lineHeight: 3,
-                  color: notes ? "inherit" : "#888",
-                  textAlign: "right",
-                }}
-              >
-                {String(notes || "No notes available")}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      );
-    },
-    [beautifyLabel, detailOrder]
-  );
+  }, [sortedTableData, groupBy]);
 
   const tableConfig: BudgetTableConfig = useMemo(() => ({
     tableColumns,
     tableData,
     sortedTableData,
     groupedTableData,
-    expandedRowRender,
     mainColumnsOrder,
-  }), [tableColumns, tableData, sortedTableData, groupedTableData, expandedRowRender, mainColumnsOrder]);
+  }), [tableColumns, tableData, sortedTableData, groupedTableData, mainColumnsOrder]);
 
   return <>{children(tableConfig)}</>;
 };

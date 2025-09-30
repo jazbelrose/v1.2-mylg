@@ -539,7 +539,6 @@ const BudgetPageContent = () => {
                         sortField={stateManager.sortField}
                         sortOrder={stateManager.sortOrder}
                         selectedRowKeys={stateManager.selectedRowKeys}
-                        expandedRowKeys={stateManager.expandedRowKeys}
                         eventsByLineItem={eventsByLineItem}
                         setSelectedRowKeys={stateManager.setSelectedRowKeys}
                         openEventModal={eventHandlers.openEventModal}
@@ -652,15 +651,11 @@ const BudgetPageContent = () => {
                                   <BudgetItemsTable
                                     dataSource={budgetItems.length > 0 ? (tableConfig.tableData as (Record<string, unknown> & { budgetItemId: string; key: string })[]) : []}
                                     columns={tableConfig.tableColumns}
-                                    groupBy={stateManager.groupBy}
                                     selectedRowKeys={stateManager.selectedRowKeys}
                                     lockedLines={stateManager.lockedLines}
                                     handleTableChange={handleTableChange}
                                     openEditModal={eventHandlers.openEditModal}
                                     openDeleteModal={eventHandlers.openDeleteModal}
-                                    expandedRowRender={tableConfig.expandedRowRender}
-                                    expandedRowKeys={stateManager.expandedRowKeys}
-                                    setExpandedRowKeys={stateManager.setExpandedRowKeys}
                                     tableRef={tableRef}
                                     tableHeight={tableHeight}
                                     pageSize={stateManager.pageSize}

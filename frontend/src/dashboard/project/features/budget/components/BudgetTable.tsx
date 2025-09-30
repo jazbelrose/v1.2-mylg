@@ -13,15 +13,11 @@ type BudgetItem = Record<string, unknown> & {
 interface BudgetItemsTableProps {
   dataSource: BudgetItem[];
   columns: ColumnsType<BudgetItem>;
-  groupBy: string;
   selectedRowKeys: string[];
   lockedLines: string[];
   handleTableChange: TableProps<BudgetItem>['onChange'];
   openEditModal: (record: BudgetItem) => void;
   openDeleteModal: (ids: string[]) => void;
-  expandedRowRender: (record: BudgetItem) => React.ReactNode;
-  expandedRowKeys: string[];
-  setExpandedRowKeys: React.Dispatch<React.SetStateAction<string[]>>;
   tableRef: React.RefObject<HTMLDivElement>;
   tableHeight: number;
   pageSize: number;
@@ -34,15 +30,11 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
   ({
     dataSource,
     columns,
-    groupBy,
     selectedRowKeys,
     lockedLines,
     handleTableChange,
     openEditModal,
     openDeleteModal,
-    expandedRowRender,
-    expandedRowKeys,
-    setExpandedRowKeys,
     tableRef,
     tableHeight,
     pageSize,
@@ -88,22 +80,6 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
               }
             },
           })}
-          expandable={
-            dataSource.length > 0
-              ? {
-                  expandedRowRender,
-                  expandedRowOffset: groupBy === "none" ? 1 : 2,
-                  expandedRowKeys,
-                  onExpand: (expanded, record) => {
-                    setExpandedRowKeys((prev) =>
-                      expanded
-                        ? [...prev, record.key]
-                        : prev.filter((k) => k !== record.key)
-                    );
-                  },
-                }
-              : undefined
-          }
           pagination={{
             pageSize,
             current: currentPage,

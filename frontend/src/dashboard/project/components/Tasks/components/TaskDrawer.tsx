@@ -1,0 +1,204 @@
+import React from "react";
+import { createPortal } from "react-dom";
+import { Calendar, ChevronDown, MapPin, Plus, User } from "lucide-react";
+import { motion } from "framer-motion";
+
+import Map from "@/shared/ui/Map";
+
+import styles from "../TasksComponentMobile.module.css";
+import TaskList from "./TaskList";
+import TaskSummary from "./TaskSummary";
+import type { QuickTask, TaskMapMarker, TaskStats } from "./taskTypes";
+
+type TaskDrawerProps = {
+  open: boolean;
+  viewportHeight: number;
+  targetY: number;
+  projectName?: string;
+  mapLocation: { lat: number; lng: number };
+  mapAddress: string;
+  mapMarkers: TaskMapMarker[];
+  mapFocus: { lat: number; lng: number } | null;
+  mapStatusMessage: string;
+  hasQuickCreateProject: boolean;
+  loading: boolean;
+  error: string | null;
+  stats: TaskStats;
+  formatValue: (value: number) => string | number;
+  statusMessage: string;
+  tasks: QuickTask[];
+  activeTaskId: string | null;
+  onTaskSelect: (taskId: string) => void;
+  formatDueLabel: (task: QuickTask) => string;
+  selectedTask: QuickTask | null;
+  selectedAssigneeName: string | undefined;
+  onMarkerClick: (markerId: string) => void;
+  onClose: () => void;
+  onOpenQuickCreate: () => void;
+  onHandleClick: () => void;
+  onTouchStart: (event: React.TouchEvent<HTMLDivElement>) => void;
+  onTouchMove: (event: React.TouchEvent<HTMLDivElement>) => void;
+  onTouchEnd: () => void;
+  sheetRef: React.RefObject<HTMLDivElement>;
+  taskListRef: React.RefObject<HTMLUListElement>;
+};
+
+const TaskDrawer: React.FC<TaskDrawerProps> = ({
+  open,
+  viewportHeight,
+  targetY,
+  projectName,
+  mapLocation,
+  mapAddress,
+  mapMarkers,
+  mapFocus,
+  mapStatusMessage,
+  hasQuickCreateProject,
+  loading,
+  error,
+  stats,
+  formatValue,
+  statusMessage,
+  tasks,
+  activeTaskId,
+  onTaskSelect,
+  formatDueLabel,
+  selectedTask,
+  selectedAssigneeName,
+  onMarkerClick,
+  onClose,
+  onOpenQuickCreate,
+  onHandleClick,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  sheetRef,
+  taskListRef,
+}) => {
+  if (!open || typeof document === "undefined") {
+    return null;
+  }
+
+  const hasMapMarkers = mapMarkers.length > 0;
+
+  return createPortal(
+    <div className={styles.sheetOverlay} role="presentation">
+      <div className={styles.mapLayer}>
+        <div className={styles.mapCanvas}>
+          <Map
+            location={mapLocation}
+            address={mapAddress}
+            scrollWheelZoom={true}
+            dragging={true}
+            touchZoom={true}
+            showUserLocation={false}
+            markers={mapMarkers}
+            onMarkerClick={onMarkerClick}
+            focusLocation={mapFocus}
+            focusZoom={15}
+          />
+        </div>
+        <div className={styles.mapGradient} aria-hidden="true" />
+        {!hasMapMarkers ? <div className={styles.mapEmptyBanner}>{mapStatusMessage}</div> : null}
+        {selectedTask ? (
+          <div className={styles.mapActiveCard}>
+            <span className={styles.mapActiveTitle}>{selectedTask.title}</span>
+            <div className={styles.mapActiveMeta}>
+              <span className={styles.metaLine}>
+                <Calendar size={14} aria-hidden="true" /> {formatDueLabel(selectedTask)}
+              </span>
+              {selectedTask.address ? (
+                <span className={styles.metaLine}>
+                  <MapPin size={14} aria-hidden="true" /> {selectedTask.address}
+                </span>
+              ) : null}
+              {selectedAssigneeName ? (
+                <span className={styles.metaLine}>
+                  <User size={14} aria-hidden="true" /> Assigned to : {selectedAssigneeName}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+      </div>
+      <button type="button" className={styles.sheetDismiss} onClick={onClose} aria-label="Close tasks drawer">
+        <ChevronDown size={20} strokeWidth={2.5} />
+      </button>
+      <button
+        type="button"
+        className={styles.sheetCreate}
+        onClick={onOpenQuickCreate}
+        aria-label="Quick create a task"
+        disabled={loading || !hasQuickCreateProject}
+      >
+        <Plus size={20} strokeWidth={2.5} />
+      </button>
+      <motion.div
+        ref={sheetRef}
+        className={styles.sheet}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Project tasks quick view"
+        drag={false}
+        initial={{ y: viewportHeight }}
+        animate={{ y: targetY }}
+        transition={{ type: "spring", stiffness: 360, damping: 42, mass: 0.9 }}
+      >
+        <div
+          className={styles.sheetDragArea}
+          role="button"
+          tabIndex={0}
+          aria-label="Toggle tasks drawer size"
+          onClick={onHandleClick}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onHandleClick();
+            }
+          }}
+        >
+          <div className={styles.sheetHandle}>
+            <span className={styles.sheetHandleBar} aria-hidden="true" />
+          </div>
+          <header className={styles.sheetHeader}>
+            <div className={styles.sheetTitleGroup}>
+              <span className={styles.sheetTitle}>Project tasks</span>
+              <span className={styles.sheetSubtitle}>
+                {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
+              </span>
+            </div>
+          </header>
+        </div>
+        <div className={styles.sheetSummary}>
+          <TaskSummary stats={stats} formatValue={formatValue} statusMessage={statusMessage} />
+        </div>
+        <div className={styles.sheetScrollArea}>
+          <section className={styles.sheetSection} aria-label="All project tasks">
+            <h3 className={styles.sectionHeading}>Task list</h3>
+            {error ? (
+              <div className={styles.error}>{error}</div>
+            ) : loading ? (
+              <div className={styles.loading}>Loading tasks…</div>
+            ) : tasks.length ? (
+              <TaskList
+                tasks={tasks}
+                activeTaskId={activeTaskId}
+                onTaskSelect={onTaskSelect}
+                formatDueLabel={formatDueLabel}
+                taskListRef={taskListRef}
+              />
+            ) : (
+              <div className={styles.empty}>No tasks yet. Create one to get started.</div>
+            )}
+          </section>
+        </div>
+      </motion.div>
+    </div>,
+    document.body,
+  );
+};
+
+export default TaskDrawer;

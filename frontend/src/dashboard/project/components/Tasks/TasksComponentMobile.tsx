@@ -1,9 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { MapPin, Calendar, ChevronDown, User, Plus } from "lucide-react";
-import { motion } from "framer-motion";
 
-import Map from "@/shared/ui/Map";
 import { fetchTasks } from "@/shared/utils/api";
 import QuickCreateTaskModal, {
   type QuickCreateTaskModalProject,
@@ -13,41 +9,15 @@ import type { Project } from "@/app/contexts/DataProvider";
 
 import styles from "./TasksComponentMobile.module.css";
 import type { Status } from "./types";
+import TaskDrawer from "./components/TaskDrawer";
+import TaskSummary from "./components/TaskSummary";
+import {
+  type QuickTask,
+  type RawTask,
+  type TaskMapMarker,
+  type TaskStats,
+} from "./components/taskTypes";
 import { formatAssigneeDisplay, parseDueDate, parseLocation } from "./utils";
-
-type RawTask = {
-  taskId?: string;
-  id?: string;
-  projectId?: string;
-  title?: string;
-  name?: string;
-  description?: string;
-  status?: Status;
-  dueAt?: string | number | Date;
-  due_at?: string | number | Date;
-  dueDate?: string | number | Date;
-  due_date?: string | number | Date;
-  due?: string | number | Date;
-  assigneeId?: string;
-  assignedTo?: string;
-  location?: unknown;
-  address?: string;
-  [key: string]: unknown;
-};
-
-type QuickTask = {
-  id: string;
-  title: string;
-  description?: string;
-  status: Status;
-  dueDate: Date | null;
-  address?: string;
-  location?: { lat: number; lng: number } | null;
-  assignedTo?: string;
-  projectId?: string;
-  dueDateInput?: string | null;
-  raw: RawTask;
-};
 
 type TasksComponentMobileProps = {
   projectId?: string;
@@ -142,7 +112,7 @@ function formatDueLabel(task: QuickTask): string {
   return dueFormatter.format(task.dueDate);
 }
 
-function computeStats(tasks: QuickTask[]) {
+function computeStats(tasks: QuickTask[]): TaskStats {
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const inSevenDays = new Date(startOfToday.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -368,7 +338,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
 
   const markerThumbnail = useMemo(() => buildMarkerThumbnail(projectColor), [projectColor]);
 
-  const mapMarkers = useMemo(
+  const mapMarkers = useMemo<TaskMapMarker[]>(
     () =>
       mapTasks.map((task) => ({
         id: task.id,
@@ -377,7 +347,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         iconUrl: markerThumbnail,
         title: task.title,
         isActive: task.id === activeTaskId,
-        variant: "pin" as const,
+        variant: "pin",
       })),
     [mapTasks, markerThumbnail, activeTaskId],
   );
@@ -434,7 +404,6 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   const sheetHeights = useMemo(() => SNAP_POINTS.map((point) => viewportHeight * point), [viewportHeight]);
   const baseTargetY = viewportHeight ? viewportHeight - sheetHeights[snapIndex] : 0;
   const targetY = isDragging ? baseTargetY + currentDragY : baseTargetY;
-  const hasMapMarkers = mapMarkers.length > 0;
   const selectedTask = useMemo(
     () => drawerTasks.find((task) => task.id === activeTaskId) ?? null,
     [drawerTasks, activeTaskId],
@@ -535,201 +504,11 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
     return `${sameDayCount} ${noun} due ${dueFormatter.format(nextDue.dueDate)}.`;
   }, [error, loading, tasks]);
 
-  const renderDrawer = () => {
-    if (!drawerOpen || typeof document === "undefined") {
-      return null;
-    }
-
-    const mapStatusMessage = error
-      ? "We couldn’t load task locations."
-      : loading
-        ? "Loading task locations…"
-        : "Add locations to your tasks to see them appear here.";
-
-    return createPortal(
-      <div className={styles.sheetOverlay} role="presentation">
-        <div className={styles.mapLayer}>
-          <div className={styles.mapCanvas}>
-            <Map
-              location={mapLocation}
-              address={mapAddress}
-              scrollWheelZoom={true}
-              dragging={true}
-              touchZoom={true}
-              showUserLocation={false}
-              markers={mapMarkers}
-              onMarkerClick={handleMarkerClick}
-              focusLocation={mapFocus}
-              focusZoom={15}
-            />
-          </div>
-          <div className={styles.mapGradient} aria-hidden="true" />
-          {!hasMapMarkers ? <div className={styles.mapEmptyBanner}>{mapStatusMessage}</div> : null}
-          {selectedTask ? (
-            <div className={styles.mapActiveCard}>
-              <span className={styles.mapActiveTitle}>{selectedTask.title}</span>
-              <div className={styles.mapActiveMeta}>
-                <span className={styles.metaLine}>
-                  <Calendar size={14} aria-hidden="true" /> {formatDueLabel(selectedTask)}
-                </span>
-                {selectedTask.address ? (
-                  <span className={styles.metaLine}>
-                    <MapPin size={14} aria-hidden="true" /> {selectedTask.address}
-                  </span>
-                ) : null}
-                {selectedAssigneeName ? (
-                  <span className={styles.metaLine}>
-                    <User size={14} aria-hidden="true" /> Assigned to :
-                    {" "}
-                    {selectedAssigneeName}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          className={styles.sheetDismiss}
-          onClick={handleCloseDrawer}
-          aria-label="Close tasks drawer"
-        >
-          <ChevronDown size={20} strokeWidth={2.5} />
-        </button>
-        <button
-          type="button"
-          className={styles.sheetCreate}
-          onClick={handleOpenQuickCreate}
-          aria-label="Quick create a task"
-          disabled={loading || !hasQuickCreateProject}
-        >
-          <Plus size={20} strokeWidth={2.5} />
-        </button>
-        <motion.div
-          ref={sheetRef}
-          className={styles.sheet}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Project tasks quick view"
-          drag={false}
-          initial={{ y: viewportHeight }}
-          animate={{ y: targetY }}
-          transition={{ type: "spring", stiffness: 360, damping: 42, mass: 0.9 }}
-        >
-          <div
-            className={styles.sheetDragArea}
-            role="button"
-            tabIndex={0}
-            aria-label="Toggle tasks drawer size"
-            onClick={handleHandleClick}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                handleHandleClick();
-              }
-            }}
-          >
-            <div className={styles.sheetHandle}>
-              <span className={styles.sheetHandleBar} aria-hidden="true" />
-            </div>
-            <header className={styles.sheetHeader}>
-              <div className={styles.sheetTitleGroup}>
-                <span className={styles.sheetTitle}>Project tasks</span>
-                <span className={styles.sheetSubtitle}>
-                  {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
-                </span>
-              </div>
-            </header>
-          </div>
-          <div className={styles.sheetSummary}>
-            <div className={styles.statRow} aria-label="Task summary">
-              <div className={`${styles.statCard} ${styles.statOk}`}>
-                <span className={styles.statValue}>{formatStatValue(stats.completed)}</span>
-                <span className={styles.statLabel}>Done</span>
-              </div>
-              <div className={`${styles.statCard} ${styles.statDanger}`}>
-                <span className={styles.statValue}>{formatStatValue(stats.overdue)}</span>
-                <span className={styles.statLabel}>Overdue</span>
-              </div>
-              <div className={`${styles.statCard} ${styles.statWarn}`}>
-                <span className={styles.statValue}>{formatStatValue(stats.dueSoon)}</span>
-                <span className={styles.statLabel}>Due soon</span>
-              </div>
-            </div>
-            <p className={styles.status}>{statusMessage}</p>
-          </div>
-          <div className={styles.sheetScrollArea}>
-            <section className={styles.sheetSection} aria-label="All project tasks">
-              <h3 className={styles.sectionHeading}>Task list</h3>
-              {error ? (
-                <div className={styles.error}>{error}</div>
-              ) : loading ? (
-                <div className={styles.loading}>Loading tasks…</div>
-              ) : drawerTasks.length ? (
-                <ul className={styles.taskList} ref={taskListRef}>
-                  {drawerTasks.map((task) => {
-                    const isActive = task.id === activeTaskId;
-                    const assigneeLabel = formatAssigneeDisplay(task.assignedTo);
-                    return (
-                      <li
-                        key={task.id}
-                        data-task-id={task.id}
-                        className={`${styles.taskItem}${isActive ? ` ${styles.taskItemActive}` : ""}`}
-                      >
-                        <button
-                          type="button"
-                          className={styles.taskButton}
-                          onClick={() => handleTaskSelect(task.id)}
-                        >
-                          <div className={styles.taskTitleRow}>
-                            <span className={styles.taskTitle}>{task.title}</span>
-                            <span className={styles.statusBadge}>
-                              {task.status === "done" ? "Completed" : task.status.replace(/_/g, " ")}
-                            </span>
-                          </div>
-                          <div className={styles.taskMeta}>
-                            <span className={styles.metaLine}>
-                              <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
-                            </span>
-                            {task.address ? (
-                              <span className={styles.metaLine}>
-                                <MapPin size={14} aria-hidden="true" /> {task.address}
-                              </span>
-                            ) : (
-                              <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
-                                <MapPin size={14} aria-hidden="true" /> No location
-                              </span>
-                            )}
-                            {assigneeLabel ? (
-                              <span className={styles.metaLine}>
-                                <User size={14} aria-hidden="true" /> Assigned to :
-                                {" "}
-                                {assigneeLabel}
-                              </span>
-                            ) : (
-                              <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
-                                <User size={14} aria-hidden="true" /> No assignee
-                              </span>
-                            )}
-                          </div>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <div className={styles.empty}>No tasks yet. Create one to get started.</div>
-              )}
-            </section>
-          </div>
-        </motion.div>
-      </div>,
-      document.body,
-    );
-  };
+  const mapStatusMessage = useMemo(() => {
+    if (error) return "We couldn’t load task locations.";
+    if (loading) return "Loading task locations…";
+    return "Add locations to your tasks to see them appear here.";
+  }, [error, loading]);
 
   return (
     <section className={styles.card} aria-label="Project tasks overview">
@@ -776,24 +555,40 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         </div>
       </header>
 
-      <div className={styles.statRow} aria-label="Task summary">
-        <div className={`${styles.statCard} ${styles.statOk}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.completed)}</span>
-          <span className={styles.statLabel}>Done</span>
-        </div>
-        <div className={`${styles.statCard} ${styles.statDanger}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.overdue)}</span>
-          <span className={styles.statLabel}>Overdue</span>
-        </div>
-        <div className={`${styles.statCard} ${styles.statWarn}`}>
-          <span className={styles.statValue}>{formatStatValue(stats.dueSoon)}</span>
-          <span className={styles.statLabel}>Due soon</span>
-        </div>
-      </div>
+      <TaskSummary stats={stats} formatValue={formatStatValue} statusMessage={statusMessage} />
 
-      <p className={styles.status}>{statusMessage}</p>
-
-      {renderDrawer()}
+      <TaskDrawer
+        open={drawerOpen}
+        viewportHeight={viewportHeight}
+        targetY={targetY}
+        projectName={projectName}
+        mapLocation={mapLocation}
+        mapAddress={mapAddress}
+        mapMarkers={mapMarkers}
+        mapFocus={mapFocus}
+        mapStatusMessage={mapStatusMessage}
+        hasQuickCreateProject={hasQuickCreateProject}
+        loading={loading}
+        error={error}
+        stats={stats}
+        formatValue={formatStatValue}
+        statusMessage={statusMessage}
+        tasks={drawerTasks}
+        activeTaskId={activeTaskId}
+        onTaskSelect={handleTaskSelect}
+        formatDueLabel={formatDueLabel}
+        selectedTask={selectedTask}
+        selectedAssigneeName={selectedAssigneeName}
+        onMarkerClick={handleMarkerClick}
+        onClose={handleCloseDrawer}
+        onOpenQuickCreate={handleOpenQuickCreate}
+        onHandleClick={handleHandleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        sheetRef={sheetRef}
+        taskListRef={taskListRef}
+      />
       <QuickCreateTaskModal
         open={quickCreateOpen}
         onClose={handleCloseQuickCreate}

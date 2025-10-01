@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { updateBudgetItem } from "@/shared/utils/api";
+import { parseBudget } from "@/shared/utils/budgetUtils";
 import type { BudgetItem, Project } from "@/shared/utils/api";
 
 type BudgetSnapshot = {
@@ -137,16 +138,22 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
     setRedoStack([]);
   }, [budgetItems, budgetHeader]);
 
+  const toMoney = useCallback((value: unknown): number => {
+    if (typeof value === "number" || typeof value === "string") {
+      return parseBudget(value);
+    }
+    return 0;
+  }, []);
+
   const calculateHeaderTotals = useCallback((items: Record<string, unknown>[]) => {
     let budgeted = 0;
     let final = 0;
     let actual = 0;
     items.forEach((it) => {
       const qty = parseFloat(String(it.quantity)) || 0;
-      const budget = parseFloat(String(it.itemBudgetedCost)) || 0;
+      const budget = toMoney(it.itemBudgetedCost);
       const markup = parseFloat(String(it.itemMarkUp)) || 0;
-      const actualUnit =
-        parseFloat(String(it.itemReconciledCost ?? it.itemActualCost)) || 0;
+      const actualUnit = toMoney(it.itemReconciledCost ?? it.itemActualCost);
 
       const hasFinal =
         it.itemFinalCost !== undefined &&
@@ -157,22 +164,17 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
       actual += qty * actualUnit;
 
       if (hasFinal) {
-        final += parseFloat(String(it.itemFinalCost)) || 0;
+        final += toMoney(it.itemFinalCost);
       } else {
-        const baseForFinal =
-          parseFloat(
-            String(
-              it.itemReconciledCost ??
-                it.itemActualCost ??
-                it.itemBudgetedCost
-            )
-          ) || 0;
+        const baseForFinal = toMoney(
+          it.itemReconciledCost ?? it.itemActualCost ?? it.itemBudgetedCost
+        );
         final += qty * baseForFinal * (1 + markup);
       }
     });
     const effectiveMarkup = budgeted ? (final - budgeted) / budgeted : 0;
     return { budgeted, final, actual, effectiveMarkup };
-  }, []);
+  }, [toMoney]);
 
   const syncHeaderTotals = useCallback(
     async (items: Record<string, unknown>[]) => {

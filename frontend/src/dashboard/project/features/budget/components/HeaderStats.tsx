@@ -20,7 +20,7 @@ import BudgetDonut, {
 import { useSocket } from "@/app/contexts/useSocket";
 
 import { updateBudgetItem } from "@/shared/utils/api";
-import { formatUSD } from "@/shared/utils/budgetUtils";
+import { formatUSD, parseBudget } from "@/shared/utils/budgetUtils";
 import {
   CHART_COLORS,
   generateSequentialPalette,
@@ -52,7 +52,7 @@ export interface BudgetItem {
   invoiceGroup?: string;
   category?: string;
 
-  // numeric fields (string or number in data; we coerce with parseFloat)
+  // numeric fields (string or number in data; we coerce with parseBudget)
   itemBudgetedCost?: string | number;
   itemActualCost?: string | number;
   itemReconciledCost?: string | number;
@@ -127,11 +127,8 @@ type ChartState = {
    Helpers
    ========================= */
 
-const toNumber = (v: number | string | undefined | null): number => {
-  if (v === undefined || v === null) return 0;
-  const n = typeof v === "number" ? v : parseFloat(String(v));
-  return Number.isNaN(n) ? 0 : n;
-};
+const toNumber = (v: number | string | undefined | null): number =>
+  parseBudget(v);
 
 /* =========================
    Components
@@ -242,11 +239,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   }, []);
 
   const reconciledTotal = useMemo(
-    () =>
-      budgetItems.reduce(
-        (sum, it) => sum + (parseFloat(String(it.itemReconciledCost ?? 0)) || 0),
-        0
-      ),
+    () => budgetItems.reduce((sum, it) => sum + toNumber(it.itemReconciledCost), 0),
     [budgetItems]
   );
 

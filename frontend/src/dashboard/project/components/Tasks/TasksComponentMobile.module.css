@@ -1,8 +1,13 @@
 .card {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 0;
   gap: 12px;
-  padding: 18px 20px;
+  padding: 16px 18px;
+  box-sizing: border-box;
   color: rgba(255, 255, 255, 0.92);
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
@@ -15,27 +20,30 @@
 
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  min-height: 44px;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 0;
 }
 
 .actions {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   flex-shrink: 0;
   white-space: nowrap;
+  row-gap: 6px;
 }
 
 .headingGroup {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
+  flex: 1 1 160px;
   min-width: 0;
-  max-width: calc(100% - 140px);
+  max-width: 100%;
   overflow: hidden;
 }
 
@@ -64,12 +72,12 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 8px 13px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.14);
   color: rgba(255, 255, 255, 0.95);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -143,7 +151,11 @@
 
 .statRow {
   display: flex;
-  gap: 9px;
+  gap: 8px;
+}
+
+.statRowCompact {
+  gap: 7px;
 }
 
 .statCard {
@@ -152,7 +164,7 @@
   flex-direction: column;
   justify-content: center;
   gap: 4px;
-  padding: 10px 12px;
+  padding: 9px 11px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -193,24 +205,30 @@
   line-height: 1.35;
 }
 
+.statusCompact {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.32;
+}
+
 .status strong {
   color: rgba(255, 255, 255, 0.9);
 }
 
 @media (max-width: 480px) {
   .card {
-    padding: 16px 18px;
-    gap: 14px;
+    padding: 14px 16px;
+    gap: 12px;
   }
 
   .header {
-    gap: 16px;
+    gap: 10px;
     align-items: flex-start;
   }
 
   .headingGroup {
     gap: 8px;
-    max-width: calc(100vw - 140px);
+    max-width: 100%;
   }
 
   .title {
@@ -229,12 +247,20 @@
   }
 
   .statRow {
-    gap: 7px;
+    gap: 6px;
+  }
+
+  .statRowCompact {
+    gap: 5px;
   }
 
   .statCard {
     padding: 9px 10px;
     border-radius: 15px;
+  }
+
+  .statusCompact {
+    font-size: 12px;
   }
 
   /* Mobile-specific scroll area improvements */

@@ -1,8 +1,8 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px 20px;
+  gap: 10px;
+  padding: 16px 18px;
   color: rgba(255, 255, 255, 0.92);
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
@@ -143,20 +143,22 @@
 
 .statRow {
   display: flex;
-  gap: 9px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .statCard {
-  flex: 1 1 0;
+  flex: 1 1 110px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 4px;
-  padding: 10px 12px;
-  border-radius: 16px;
+  padding: 9px 11px;
+  border-radius: 15px;
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 60px;
+  min-height: 54px;
+  min-width: 0;
 }
 
 .statOk {
@@ -175,7 +177,7 @@
 }
 
 .statValue {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
 }
 
@@ -188,19 +190,35 @@
 
 .status {
   margin: 0;
-  font-size: 13px;
+  font-size: 12.5px;
   color: rgba(255, 255, 255, 0.72);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .status strong {
   color: rgba(255, 255, 255, 0.9);
 }
 
+.cardStatRow {
+  gap: 6px;
+}
+
+.cardStatRow .statCard {
+  padding: 8px 10px;
+  min-height: 48px;
+  border-radius: 14px;
+}
+
+.cardStatus {
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 @media (max-width: 480px) {
   .card {
-    padding: 16px 18px;
-    gap: 14px;
+    padding: 14px 16px;
+    gap: 12px;
   }
 
   .header {
@@ -229,12 +247,12 @@
   }
 
   .statRow {
-    gap: 7px;
+    gap: 6px;
   }
 
   .statCard {
-    padding: 9px 10px;
-    border-radius: 15px;
+    padding: 8px 9px;
+    border-radius: 14px;
   }
 
   /* Mobile-specific scroll area improvements */
@@ -248,6 +266,16 @@
 
   .sheetSection:last-child {
     margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .statCard {
+    flex-basis: calc(50% - 6px);
+  }
+
+  .cardStatRow {
+    gap: 6px 4px;
   }
 }
 

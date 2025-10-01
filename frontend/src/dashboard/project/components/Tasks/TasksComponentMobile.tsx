@@ -555,7 +555,13 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         </div>
       </header>
 
-      <TaskSummary stats={stats} formatValue={formatStatValue} statusMessage={statusMessage} />
+      <TaskSummary
+        stats={stats}
+        formatValue={formatStatValue}
+        statusMessage={statusMessage}
+        statRowClassName={styles.cardStatRow}
+        statusClassName={styles.cardStatus}
+      />
 
       <TaskDrawer
         open={drawerOpen}

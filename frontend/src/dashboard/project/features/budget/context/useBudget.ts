@@ -36,13 +36,25 @@ interface BudgetData {
 
 // In-memory cache and in-flight trackers keyed by projectId
 const budgetCache = new Map<string, BudgetData>();
+const cacheTimestamps = new Map<string, number>();
 const inflight = new Map<string, Promise<BudgetData>>();
+
+const CACHE_TTL = 30_000; // 30 seconds
+
+function isCacheFresh(projectId: string): boolean {
+  const cachedAt = cacheTimestamps.get(projectId);
+  if (!cachedAt) return false;
+  return Date.now() - cachedAt < CACHE_TTL;
+}
 
 async function fetchData(projectId: string, force = false): Promise<BudgetData> {
   if (!projectId) return { header: null, items: [] };
 
-  if (!force && budgetCache.has(projectId)) {
-    return budgetCache.get(projectId)!;
+  const cached = budgetCache.get(projectId) || null;
+  const fresh = cached && !force && isCacheFresh(projectId);
+
+  if (fresh) {
+    return cached;
   }
 
   if (inflight.has(projectId)) {
@@ -63,6 +75,7 @@ async function fetchData(projectId: string, force = false): Promise<BudgetData> 
         }
         const result: BudgetData = { header, items };
         budgetCache.set(projectId, result);
+        cacheTimestamps.set(projectId, Date.now());
         return result;
       } catch (err: unknown) {
         const msg = String((err as { message?: string })?.message || "");
@@ -91,7 +104,8 @@ async function fetchData(projectId: string, force = false): Promise<BudgetData> 
  * immediately with cached data.
  */
 export async function prefetchBudgetData(projectId: string): Promise<void> {
-  if (!projectId || budgetCache.has(projectId)) return;
+  if (!projectId) return;
+  if (budgetCache.has(projectId) && isCacheFresh(projectId)) return;
   try {
     await fetchData(projectId);
   } catch (err) {
@@ -119,7 +133,11 @@ export default function useBudgetData(projectId: string | undefined) {
         return;
       }
 
-      setLoading(true);
+      const hasCached = budgetCache.has(projectId);
+      const cacheFresh = hasCached && isCacheFresh(projectId);
+      setLoading(!cacheFresh);
+
+      let shouldForceRefresh = false;
       try {
         const { header, items } = await fetchData(projectId);
         if (!ignore) {
@@ -130,16 +148,39 @@ export default function useBudgetData(projectId: string | undefined) {
             shallowEqualArrays(prev, items) ? prev : items,
           );
         }
+        shouldForceRefresh = hasCached && cacheFresh;
       } catch (err) {
         console.error("Error fetching budget data", err);
         if (!ignore) {
           setBudgetHeader(null);
           setBudgetItemsState([]);
+          setLoading(false);
         }
-      } finally {
-        if (!ignore) setLoading(false);
+        return;
+      }
+
+      if (shouldForceRefresh) {
+        try {
+          if (!ignore) setLoading(true);
+          const { header, items } = await fetchData(projectId, true);
+          if (!ignore) {
+            setBudgetHeader((prev) =>
+              shallowEqualObjects(prev, header) ? prev : header,
+            );
+            setBudgetItemsState((prev) =>
+              shallowEqualArrays(prev, items) ? prev : items,
+            );
+          }
+        } catch (err) {
+          console.error("Error refreshing budget data", err);
+        } finally {
+          if (!ignore) setLoading(false);
+        }
+      } else if (!ignore) {
+        setLoading(false);
       }
     };
+
     load();
     return () => {
       ignore = true;
@@ -177,6 +218,7 @@ export default function useBudgetData(projectId: string | undefined) {
         items: [] as BudgetItem[],
       };
       budgetCache.set(projectId, { header: cached.header, items });
+      cacheTimestamps.set(projectId, Date.now());
     },
     [projectId],
   );
@@ -195,6 +237,7 @@ export default function useBudgetData(projectId: string | undefined) {
           items: [] as BudgetItem[],
         };
         budgetCache.set(projectId, { header: next, items: cached.items });
+        cacheTimestamps.set(projectId, Date.now());
         return next;
       });
     },

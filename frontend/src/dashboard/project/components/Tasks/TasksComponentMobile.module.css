@@ -200,7 +200,7 @@
 @media (max-width: 480px) {
   .card {
     padding: 16px 18px;
-    gap: 14px;
+    gap: 3px;
   }
 
   .header {
@@ -209,7 +209,7 @@
   }
 
   .headingGroup {
-    gap: 8px;
+    gap: px;
     max-width: calc(100vw - 140px);
   }
 

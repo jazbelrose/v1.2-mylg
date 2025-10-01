@@ -616,7 +616,7 @@ const BudgetPageContent = () => {
                                 beforeClose: styles.modalOverlayBeforeClose,
                               }}
                             />
-                            <div style={{ padding: "0 20px" }}>
+                            <div style={{ padding: "0" }}>
                               <div>
                                 {error && (
                                   <div style={{ marginTop: "10px", color: "#ff6b6b" }}>

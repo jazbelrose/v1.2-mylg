@@ -30,7 +30,7 @@
 /* Budget + Calendar two-column layout */
 .budget-calendar-layout {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2.5fr);
   gap: 12px;
   min-height: 0;
 }

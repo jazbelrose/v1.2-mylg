@@ -178,7 +178,7 @@ const renderActiveShape = (props: SectorProps) => {
 const slicesAreEqual = (a: BudgetDonutSlice[], b: BudgetDonutSlice[]) => {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i += 1) {
-    if (a[i].id !== b[i].id || a[i].value !== b[i].value) {
+    if (a[i].id !== b[i].id || a[i].value !== b[i].value || a[i].label !== b[i].label) {
       return false;
     }
   }

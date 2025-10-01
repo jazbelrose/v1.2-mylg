@@ -652,7 +652,7 @@ export async function updateTask(task: Task): Promise<Task> {
   return apiFetch<Task>(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, projectId }),
+    body: JSON.stringify(payload),
   });
 }
 

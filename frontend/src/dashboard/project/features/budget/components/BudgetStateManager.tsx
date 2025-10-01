@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { updateBudgetItem } from "@/shared/utils/api";
+import { parseBudget } from "@/shared/utils/budgetUtils";
 import type { BudgetItem, Project } from "@/shared/utils/api";
 
 type BudgetSnapshot = {
@@ -143,10 +144,11 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
     let actual = 0;
     items.forEach((it) => {
       const qty = parseFloat(String(it.quantity)) || 0;
-      const budget = parseFloat(String(it.itemBudgetedCost)) || 0;
+      const budget = parseBudget(it.itemBudgetedCost as string | number | undefined);
       const markup = parseFloat(String(it.itemMarkUp)) || 0;
-      const actualUnit =
-        parseFloat(String(it.itemReconciledCost ?? it.itemActualCost)) || 0;
+      const actualUnit = parseBudget(
+        (it.itemReconciledCost ?? it.itemActualCost) as string | number | undefined
+      );
 
       const hasFinal =
         it.itemFinalCost !== undefined &&
@@ -157,16 +159,14 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
       actual += qty * actualUnit;
 
       if (hasFinal) {
-        final += parseFloat(String(it.itemFinalCost)) || 0;
+        final += parseBudget(it.itemFinalCost as string | number | undefined);
       } else {
-        const baseForFinal =
-          parseFloat(
-            String(
-              it.itemReconciledCost ??
-                it.itemActualCost ??
-                it.itemBudgetedCost
-            )
-          ) || 0;
+        const baseForFinal = parseBudget(
+          (it.itemReconciledCost ?? it.itemActualCost ?? it.itemBudgetedCost) as
+            | string
+            | number
+            | undefined
+        );
         final += qty * baseForFinal * (1 + markup);
       }
     });

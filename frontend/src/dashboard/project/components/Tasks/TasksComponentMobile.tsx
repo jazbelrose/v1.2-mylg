@@ -511,7 +511,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   }, [error, loading]);
 
   return (
-    <section className={styles.card} aria-label="Project tasks overview">
+    <section className={`${styles.card} tasks-component`} aria-label="Project tasks overview">
       <header className={styles.header}>
         <div className={styles.headingGroup}>
           <h3 className={styles.title}>Tasks</h3>
@@ -555,7 +555,15 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         </div>
       </header>
 
-      <TaskSummary stats={stats} formatValue={formatStatValue} statusMessage={statusMessage} />
+      <div className={styles.cardSummary}>
+        <TaskSummary
+          stats={stats}
+          formatValue={formatStatValue}
+          statusMessage={statusMessage}
+          statRowClassName={styles.cardStatRow}
+          statusClassName={`${styles.status} ${styles.cardStatus}`}
+        />
+      </div>
 
       <TaskDrawer
         open={drawerOpen}

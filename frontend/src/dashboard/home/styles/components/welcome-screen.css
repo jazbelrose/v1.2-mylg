@@ -81,8 +81,8 @@
   max-width: 100vw;
   overflow: visible; /* allow children (CTA) to be fully visible */
   align-items: stretch;
- 
-
+  gap: clamp(12px, 3vw, 18px);
+  padding-bottom: clamp(16px, 6vw, 32px);
 }
 
 .mobile-projects-tasks {
@@ -91,7 +91,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  
+  gap: clamp(12px, 3vw, 18px);
 }
 
 .mobile-projects-section {
@@ -126,6 +126,7 @@
   max-width: 100vw;
   overflow: visible;
   margin-top: auto;
+  padding-bottom: env(safe-area-inset-bottom, 12px);
 }
 
 .dashboard-footer {

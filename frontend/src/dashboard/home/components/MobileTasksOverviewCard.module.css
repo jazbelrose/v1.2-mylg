@@ -2,10 +2,10 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100%;
+  height: auto;
   min-height: 0;
-  padding: 13px 15px;
-  gap: 11px;
+  padding: 11px 13px;
+  gap: 9px;
   color: rgba(255, 255, 255, 0.92);
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
@@ -25,7 +25,7 @@
 
 .title {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -52,7 +52,8 @@
 
 .statRow {
   display: flex;
-  gap: 7px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .stat {
@@ -60,21 +61,21 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 3px;
-  padding: 9px 11px;
-  border-radius: 16px;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  min-height: 58px;
+  min-height: 52px;
 }
 
 .statValue {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
 }
 
 .statLabel {
-  font-size: 11px;
+  font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.6);
@@ -97,15 +98,15 @@
 
 .status {
   margin: 0;
-  font-size: 12px;
+  font-size: 11.5px;
   color: rgba(255, 255, 255, 0.65);
   line-height: 1.28;
 }
 
 @media (max-width: 480px) {
   .card {
-    padding: 11px 13px;
-    gap: 9px;
+    padding: 10px 12px;
+    gap: 8px;
   }
 
   .statRow {
@@ -113,8 +114,9 @@
   }
 
   .stat {
-    padding: 9px;
-    border-radius: 15px;
+    padding: 8px 9px;
+    border-radius: 13px;
+    min-height: 48px;
   }
 }
 

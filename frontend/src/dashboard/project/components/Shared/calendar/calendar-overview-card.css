@@ -517,11 +517,11 @@
 }
 
 .calendar-overview-card-wrapper .tile-date-number {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #fff;
   line-height: 1.1;
-  margin-top: 2px;
+  
 }
 
 .calendar-overview-card-wrapper .day-dots {

@@ -21,7 +21,7 @@ describe("BudgetStateManager header totals", () => {
     vi.clearAllMocks();
   });
 
-  test("syncHeaderTotals sums stored actual totals without quantity or reconciled influence", async () => {
+  test("syncHeaderTotals multiplies costs by quantity when calculating totals", async () => {
     type Header = {
       budgetItemId: string;
       revision: number;
@@ -76,14 +76,16 @@ describe("BudgetStateManager header totals", () => {
     const items = [
       {
         quantity: 5,
-        itemBudgetedCost: 20,
-        itemActualCost: 100,
-        itemReconciledCost: 999,
+        itemBudgetedCost: "20",
+        itemActualCost: "$18.50",
+        itemReconciledCost: "19",
+        itemMarkUp: "0.1",
       },
       {
         quantity: 3,
         itemBudgetedCost: 40,
         itemActualCost: 50,
+        itemFinalCost: "225",
       },
       {
         quantity: 2,
@@ -93,21 +95,28 @@ describe("BudgetStateManager header totals", () => {
     ];
 
     const totals = capturedState.calculateHeaderTotals(items);
-    expect(totals.actual).toBeCloseTo(150);
+    expect(totals.budgeted).toBeCloseTo(280);
+    expect(totals.actual).toBeCloseTo(242.5);
+    expect(totals.final).toBeCloseTo(479.5);
+    expect(totals.effectiveMarkup).toBeCloseTo(0.7125, 5);
 
     await act(async () => {
       await capturedState.syncHeaderTotals(items);
     });
 
-    expect(mockedUpdateBudgetItem).toHaveBeenCalledWith(
-      "proj-1",
-      "header-1",
-      expect.objectContaining({
-        headerActualTotalCost: 150,
-      })
-    );
+    expect(mockedUpdateBudgetItem).toHaveBeenCalledTimes(1);
+    const [projectId, headerId, payload] = mockedUpdateBudgetItem.mock.calls[0];
+    expect(projectId).toBe("proj-1");
+    expect(headerId).toBe("header-1");
+    expect(payload.headerBudgetedTotalCost).toBeCloseTo(280);
+    expect(payload.headerActualTotalCost).toBeCloseTo(242.5);
+    expect(payload.headerFinalTotalCost).toBeCloseTo(479.5);
+    expect(payload.headerEffectiveMarkup).toBeCloseTo(0.7125, 5);
 
-    expect(header.headerActualTotalCost).toBe(150);
+    expect(header.headerBudgetedTotalCost).toBeCloseTo(280);
+    expect(header.headerActualTotalCost).toBeCloseTo(242.5);
+    expect(header.headerFinalTotalCost).toBeCloseTo(479.5);
+    expect(header.headerEffectiveMarkup).toBeCloseTo(0.7125, 5);
     expect(setBudgetHeader).toHaveBeenCalled();
   });
 });

@@ -51,6 +51,7 @@ export interface BudgetItem {
   areaGroup?: string;
   invoiceGroup?: string;
   category?: string;
+  quantity?: string | number;
 
   // numeric fields (string or number in data; we coerce with parseBudget)
   itemBudgetedCost?: string | number;
@@ -129,6 +130,12 @@ type ChartState = {
 
 const toNumber = (v: number | string | undefined | null): number =>
   parseBudget(v);
+
+const toQuantity = (value: unknown): number => {
+  if (value === undefined || value === null || value === "") return 0;
+  const parsed = Number.parseFloat(String(value));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 /* =========================
    Components
@@ -239,7 +246,11 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   }, []);
 
   const reconciledTotal = useMemo(
-    () => budgetItems.reduce((sum, it) => sum + toNumber(it.itemReconciledCost), 0),
+    () =>
+      budgetItems.reduce(
+        (sum, it) => sum + toQuantity(it.quantity) * toNumber(it.itemReconciledCost),
+        0
+      ),
     [budgetItems]
   );
 
@@ -477,12 +488,13 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       const rawKey = (item[groupBy] as string) || "Unspecified";
       const key = rawKey && rawKey.trim() !== "" ? rawKey : "Unspecified";
       let val: number;
+      const quantity = toQuantity(item.quantity);
 
       if (field === "markupAmount") {
         const finalCost = toNumber(item.itemFinalCost);
         const budgeted = toNumber(item.itemBudgetedCost);
         const actual = toNumber(item.itemActualCost);
-        const reconciled = toNumber(item.itemReconciledCost);
+        const reconciled = toNumber(item.itemReconciledCost) * quantity;
         const base =
           markupBasis === "Budgeted"
             ? budgeted
@@ -493,7 +505,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       } else if (field === "itemMarkUp") {
         val = toNumber(item[field] as number | string | undefined | null) * 100;
       } else {
-        val = toNumber(item[field] as number | string | undefined | null);
+        const numericValue = toNumber(item[field] as number | string | undefined | null);
+        val = field === "itemReconciledCost" ? numericValue * quantity : numericValue;
       }
 
       const safeValue = Number.isNaN(val) ? 0 : val;

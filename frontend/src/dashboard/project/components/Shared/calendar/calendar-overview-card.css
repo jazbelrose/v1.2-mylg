@@ -152,19 +152,7 @@
   margin-bottom: 1px;
 }
 
-@media (min-height: 900px) {
-  .calendar-overview-card-wrapper {
-    min-height: 40px;
-    
-  }
-}
 
-@media (min-height: 1100px) {
-  .calendar-overview-card-wrapper {
-    min-height: 40px;
-   
-  }
-}
 
 .calendar-overview-card-wrapper .event-dot {
   display: inline-flex;
@@ -379,19 +367,7 @@
   color: #ccc !important;
 }
 
-@media (max-height: 750px) {
-  .calendar-overview-card-wrapper .calendar-day {
-    min-height: clamp(30px, 7vh, 50px);
-    padding-bottom: clamp(2px, 0.5vh, 3px);
-  }
-  .calendar-overview-card-wrapper .tile-date-number {
-    font-size: clamp(0.5rem, 1vh, 0.7rem);
-  }
-  .calendar-overview-card-wrapper .events-log {
-    font-size: 0.75rem;
-    padding: clamp(2px, 0.5vh, 4px);
-  }
-}
+
 
 .tile-highlight {
   animation: calendar-flash 0.8s ease-out;
@@ -504,7 +480,7 @@
   flex: 1;
   text-align: center;
   padding: 6px 0 14px;
-  min-height: 54px;
+  min-height: clamp(20px, 4vh, 48px);
   cursor: pointer;
   border-radius: 10px;
   background: transparent;

@@ -186,6 +186,7 @@ const BudgetPageContent = () => {
         headerBallPark: val,
         revision,
       });
+      emitBudgetUpdate();
       // Note: setBudgetHeader will be handled by the BudgetDataProvider
     } catch (err) {
       console.error('Error updating ballpark', err);

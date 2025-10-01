@@ -15,7 +15,7 @@ interface BudgetTableLogicProps {
   sortOrder: string | null;
   selectedRowKeys: string[];
   eventsByLineItem: Record<string, Record<string, unknown>[]>;
-  setSelectedRowKeys: (keys: string[]) => void;
+  setSelectedRowKeys: (keys: string[] | ((prev: string[]) => string[])) => void;
   openDeleteModal: (ids: string[]) => void;
   openDuplicateModal: (item: Record<string, unknown>) => void;
   openEventModal: (item: Record<string, unknown>) => void;

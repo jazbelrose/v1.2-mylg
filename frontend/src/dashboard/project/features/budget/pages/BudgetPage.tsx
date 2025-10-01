@@ -656,6 +656,7 @@ const BudgetPageContent = () => {
                                     }
                                     columns={tableConfig.tableColumns}
                                     selectedRowKeys={stateManager.selectedRowKeys}
+                                    setSelectedRowKeys={stateManager.setSelectedRowKeys}
                                     lockedLines={stateManager.lockedLines}
                                     handleTableChange={(_pagination, _filters, sorter) => {
                                       const sortConfig = Array.isArray(sorter) ? sorter[0] : sorter;
@@ -677,7 +678,10 @@ const BudgetPageContent = () => {
                                       stateManager.setSortOrder(null);
                                     }}
                                     openEditModal={eventHandlers.openEditModal}
+                                    openDuplicateModal={eventHandlers.openDuplicateModal}
                                     openDeleteModal={eventHandlers.openDeleteModal}
+                                    openEventModal={eventHandlers.openEventModal}
+                                    eventsByLineItem={eventsByLineItem}
                                     tableRef={tableRef}
                                     tableHeight={tableHeight}
                                     pageSize={stateManager.pageSize}

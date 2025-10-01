@@ -45,7 +45,7 @@ interface BudgetStateManagerState extends Record<string, unknown> {
   setSortField: (field: string | null) => void;
   setSortOrder: (order: string | null) => void;
   selectedRowKeys: string[];
-  setSelectedRowKeys: (keys: string[]) => void;
+  setSelectedRowKeys: React.Dispatch<React.SetStateAction<string[]>>;
   
   // Edit/Create state
   editItem: BudgetItem | null;

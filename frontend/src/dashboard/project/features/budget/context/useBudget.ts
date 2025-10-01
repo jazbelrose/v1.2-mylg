@@ -39,7 +39,7 @@ const budgetCache = new Map<string, BudgetData>();
 const cacheTimestamps = new Map<string, number>();
 const inflight = new Map<string, Promise<BudgetData>>();
 
-const CACHE_TTL = 30_000; // 30 seconds
+const CACHE_TTL = 10_000; // 10 seconds
 
 function isCacheFresh(projectId: string): boolean {
   const cachedAt = cacheTimestamps.get(projectId);
@@ -54,6 +54,11 @@ async function fetchData(projectId: string, force = false): Promise<BudgetData> 
   const fresh = cached && !force && isCacheFresh(projectId);
 
   if (fresh) {
+    if (!inflight.has(projectId)) {
+      void fetchData(projectId, true).catch((err) => {
+        console.error("Background budget refresh failed", err);
+      });
+    }
     return cached;
   }
 

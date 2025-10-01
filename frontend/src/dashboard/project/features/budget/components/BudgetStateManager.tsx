@@ -145,8 +145,7 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
       const qty = parseFloat(String(it.quantity)) || 0;
       const budget = parseFloat(String(it.itemBudgetedCost)) || 0;
       const markup = parseFloat(String(it.itemMarkUp)) || 0;
-      const actualUnit =
-        parseFloat(String(it.itemReconciledCost ?? it.itemActualCost)) || 0;
+      const actualTotal = parseFloat(String(it.itemActualCost)) || 0;
 
       const hasFinal =
         it.itemFinalCost !== undefined &&
@@ -154,7 +153,7 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
         String(it.itemFinalCost).trim() !== "";
 
       budgeted += qty * budget;
-      actual += qty * actualUnit;
+      actual += actualTotal;
 
       if (hasFinal) {
         final += parseFloat(String(it.itemFinalCost)) || 0;

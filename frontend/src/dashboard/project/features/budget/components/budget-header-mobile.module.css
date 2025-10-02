@@ -156,15 +156,6 @@
   color: rgba(249, 250, 251, 0.8);
 }
 
-.switchRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: rgba(249, 250, 251, 0.8);
-}
-
 .chartRow {
   display: flex;
   gap: 12px;
@@ -218,6 +209,29 @@
   display: grid;
   min-width: 0;
   gap: 8px;
+}
+
+.metricChipWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.metricChipHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.metricChipWithSwitch {
+  padding-right: 42px;
+}
+
+.metricChipSwitch {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 1;
 }
 
 .metricRowTop {

@@ -768,6 +768,49 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     </div>
   );
 
+  const topMetrics = metrics.slice(0, 3);
+  const bottomMetrics = metrics.slice(3);
+
+  const renderMetricChip = (metric: (typeof metrics)[number]) => {
+    const isReconciledToggleMetric =
+      hasReconciled &&
+      metric.field === (showReconciled ? "itemReconciledCost" : "itemActualCost");
+
+    const chipClassName = [
+      mobileStyles.metricChip,
+      selectedMetric === metric.title ? mobileStyles.metricChipActive : "",
+      isReconciledToggleMetric ? mobileStyles.metricChipWithSwitch : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return (
+      <div key={metric.title} className={mobileStyles.metricChipWrapper}>
+        <button
+          type="button"
+          className={chipClassName}
+          onClick={metric.field ? () => setSelectedMetric(metric.title) : undefined}
+          disabled={!metric.field}
+        >
+          <div className={mobileStyles.metricChipHeader}>
+            <span className={mobileStyles.metricTag}>{metric.tag}</span>
+          </div>
+          <span className={mobileStyles.metricValue}>{metric.value}</span>
+          <span className={mobileStyles.metricDescription}>{metric.description}</span>
+        </button>
+        {isReconciledToggleMetric && (
+          <Switch
+            size="small"
+            checked={showReconciled}
+            onChange={(val) => setShowReconciled(val)}
+            className={mobileStyles.metricChipSwitch}
+            aria-label="Toggle reconciled totals"
+          />
+        )}
+      </div>
+    );
+  };
+
   const mobileContent = (
     <div className={mobileStyles.card}>
       <div className={mobileStyles.headerRow}>
@@ -841,52 +884,14 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             />
           </div>
         </div>
-        {hasReconciled && (
-          <div className={mobileStyles.switchRow}>
-            <span>Show reconciled totals</span>
-            <Switch
-              size="small"
-              checked={showReconciled}
-              onChange={(val) => setShowReconciled(val)}
-            />
-          </div>
-        )}
       </div>
 
       <div className={mobileStyles.metricGrid}>
         <div className={`${mobileStyles.metricRow} ${mobileStyles.metricRowTop}`}>
-          {metrics.slice(0, 3).map((metric) => (
-            <button
-              key={metric.title}
-              type="button"
-              className={`${mobileStyles.metricChip} ${
-                selectedMetric === metric.title ? mobileStyles.metricChipActive : ""
-              }`}
-              onClick={metric.field ? () => setSelectedMetric(metric.title) : undefined}
-              disabled={!metric.field}
-            >
-              <span className={mobileStyles.metricTag}>{metric.tag}</span>
-              <span className={mobileStyles.metricValue}>{metric.value}</span>
-              <span className={mobileStyles.metricDescription}>{metric.description}</span>
-            </button>
-          ))}
+          {topMetrics.map((metric) => renderMetricChip(metric))}
         </div>
         <div className={`${mobileStyles.metricRow} ${mobileStyles.metricRowBottom}`}>
-          {metrics.slice(3).map((metric) => (
-            <button
-              key={metric.title}
-              type="button"
-              className={`${mobileStyles.metricChip} ${
-                selectedMetric === metric.title ? mobileStyles.metricChipActive : ""
-              }`}
-              onClick={metric.field ? () => setSelectedMetric(metric.title) : undefined}
-              disabled={!metric.field}
-            >
-              <span className={mobileStyles.metricTag}>{metric.tag}</span>
-              <span className={mobileStyles.metricValue}>{metric.value}</span>
-              <span className={mobileStyles.metricDescription}>{metric.description}</span>
-            </button>
-          ))}
+          {bottomMetrics.map((metric) => renderMetricChip(metric))}
         </div>
       </div>
     </div>

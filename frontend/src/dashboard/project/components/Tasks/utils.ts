@@ -66,6 +66,22 @@ export function buildTaskNameOptions(
   return Array.from(dedupedMap.values());
 }
 
+export function buildDirectionsLinks(
+  address?: string | null,
+): { appleMaps: string; googleMaps: string } | null {
+  if (!address) return null;
+
+  const trimmed = address.trim();
+  if (!trimmed) return null;
+
+  const encoded = encodeURIComponent(trimmed);
+
+  return {
+    appleMaps: `https://maps.apple.com/?q=${encoded}`,
+    googleMaps: `https://www.google.com/maps/search/?api=1&query=${encoded}`,
+  };
+}
+
 export function sortByProximity(
   suggestions: NominatimSuggestion[],
   userLocation: { lat: number; lng: number } | null

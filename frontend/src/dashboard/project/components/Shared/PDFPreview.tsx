@@ -1,10 +1,11 @@
-// PDFPreview.tsx
+﻿// PDFPreview.tsx
 import React, { useEffect, useRef } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+import pdfWorkerSrc from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+import { normalizeFileUrl } from '@/shared/utils/api';
 
 // Set the worker (required by pdf.js)
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://d2qb21tb4meex0.cloudfront.net/pdfWorker/pdf.worker.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 type PDFPreviewProps = {
   url: string;
@@ -14,6 +15,12 @@ type PDFPreviewProps = {
   page?: number;
   /** Render scale for the canvas. Defaults to 1.5. */
   scale?: number;
+};
+
+const resolvePdfUrl = (input: string): string => {
+  if (!input) return '';
+  if (input.startsWith('blob:') || input.startsWith('data:')) return input;
+  return normalizeFileUrl(input);
 };
 
 const PDFPreview: React.FC<PDFPreviewProps> = ({
@@ -29,11 +36,18 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({
     if (!url) return;
 
     let cancelled = false;
-    const loadingTask = pdfjsLib.getDocument(url);
+    let loadingTask: ReturnType<typeof pdfjsLib.getDocument> | null = null;
+
+    const resolvedUrl = resolvePdfUrl(url);
+    if (!resolvedUrl) return;
+
+    loadingTask = pdfjsLib.getDocument(resolvedUrl);
 
     (async () => {
       try {
-        const pdf = await loadingTask.promise;
+        const task = loadingTask;
+        if (!task) return;
+        const pdf = await task.promise;
         if (cancelled) return;
 
         const pg = await pdf.getPage(page);
@@ -51,17 +65,18 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({
 
         await pg.render({ canvasContext: context, viewport }).promise;
       } catch {
-        // Silently fail; you can surface a toast/log here if desired
-        // console.warn('Failed to render PDF preview:', err);
+        // Silently fail; surface a toast/log here if desired
       }
     })();
 
     return () => {
       cancelled = true;
-      try {
-        loadingTask.destroy();
-      } catch {
-        /* noop */
+      if (loadingTask) {
+        try {
+          loadingTask.destroy();
+        } catch {
+          /* noop */
+        }
       }
     };
   }, [url, page, scale]);
@@ -77,12 +92,5 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({
 };
 
 export default PDFPreview;
-
-
-
-
-
-
-
 
 

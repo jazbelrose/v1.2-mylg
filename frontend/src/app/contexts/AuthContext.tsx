@@ -15,19 +15,36 @@ import {
 import { secureWebSocketAuth } from "../../shared/utils/secureWebSocketAuth";
 import { csrfProtection, logSecurityEvent } from "../../shared/utils/securityUtils";
 import { AuthContext, AuthContextValue, AuthStatus, Role, CognitoUser } from "./AuthContextValue";
+import { getDevPreviewData, isPreviewModeEnabled, subscribeToPreviewMode } from "@/shared/utils/devPreview";
 
 export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authStatus, setAuthStatus] = useState<AuthStatus>("signedOut");
   const [cognitoUser, setCognitoUser] = useState<CognitoUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [previewMode, setPreviewMode] = useState<boolean>(() => isPreviewModeEnabled());
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    return subscribeToPreviewMode(() => {
+      setPreviewMode(isPreviewModeEnabled());
+    });
+  }, []);
 
   // Debug (keep while migrating; remove later)
   useEffect(() => {
-    console.log("[AuthContext]", { isAuthenticated, authStatus, cognitoUser, loading });
-  }, [isAuthenticated, authStatus, cognitoUser, loading]);
+    console.log("[AuthContext]", { isAuthenticated, authStatus, cognitoUser, loading, previewMode });
+  }, [isAuthenticated, authStatus, cognitoUser, loading, previewMode]);
 
   const validateAndSetUserSession = useCallback(async (label = "default") => {
+    if (previewMode) {
+      const previewUser = getDevPreviewData().user;
+      setIsAuthenticated(true);
+      setAuthStatus("signedIn");
+      setCognitoUser({ userId: previewUser.userId, role: previewUser.role as Role | undefined });
+      return;
+    }
+
     try {
       const session = await fetchAuthSession();
       const { accessToken, idToken } = session.tokens ?? {};
@@ -65,7 +82,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       setIsAuthenticated(false);
       setCognitoUser(null);
     }
-  }, []);
+  }, [previewMode]);
 
   const getAuthTokens = useCallback(async () => {
     try {
@@ -94,10 +111,14 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
   // periodic check
   useEffect(() => {
+    if (previewMode) {
+      validateAndSetUserSession();
+      return;
+    }
     validateAndSetUserSession();
     const id = setInterval(validateAndSetUserSession, 1000 * 60 * 45);
     return () => clearInterval(id);
-  }, [validateAndSetUserSession]);
+  }, [validateAndSetUserSession, previewMode]);
 
   // initial
   useEffect(() => {

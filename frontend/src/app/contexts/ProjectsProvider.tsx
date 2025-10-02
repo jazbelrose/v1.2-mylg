@@ -23,6 +23,89 @@ import { getWithTTL, setWithTTL, DEFAULT_TTL } from "../../shared/utils/storageW
 import { ProjectsContext } from "./ProjectsContext";
 import type { ProjectsValue, DMReadStatusMap } from "./ProjectsContextValue";
 import type { Project, TimelineEvent, Message } from "./DataProvider";
+import { getDevPreviewData, isPreviewModeEnabled, subscribeToPreviewMode } from "@/shared/utils/devPreview";
+
+const PreviewProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const preview = getDevPreviewData();
+  const [projects, setProjects] = useState<Project[]>(preview.projects);
+  const [userProjects, setUserProjects] = useState<Project[]>(preview.projects);
+  const [activeProject, setActiveProject] = useState<Project | null>(preview.projects[0] ?? null);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [opacity, setOpacity] = useState(1);
+  const [settingsUpdated, setSettingsUpdated] = useState(false);
+  const [dmReadStatus, setDmReadStatus] = useState<DMReadStatusMap>({});
+  const [projectsError] = useState(false);
+  const toggleSettingsUpdated = () => setSettingsUpdated((prev) => !prev);
+
+  const fetchProjectDetails = async (projectId: string): Promise<boolean> => {
+    const project = preview.projects.find((p) => p.projectId === projectId) ?? null;
+    setActiveProject(project);
+    return Boolean(project);
+  };
+
+  const fetchProjects = async () => {
+    setProjects(preview.projects);
+    setUserProjects(preview.projects);
+  };
+
+  const fetchUserProfile = async () => undefined;
+
+  const fetchRecentActivity = async () => preview.recentActivity;
+
+  const updateTimelineEvents = async (projectId: string, events: TimelineEvent[]): Promise<void> => {
+    setProjects((prevState) =>
+      prevState.map((project) =>
+        project.projectId === projectId ? { ...project, timelineEvents: events } : project
+      )
+    );
+    setUserProjects((prevState) =>
+      prevState.map((project) =>
+        project.projectId === projectId ? { ...project, timelineEvents: events } : project
+      )
+    );
+  };
+
+  const updateProjectFields = async (projectId: string, fields: Partial<Project>): Promise<void> => {
+    setProjects((prevState) =>
+      prevState.map((project) =>
+        project.projectId === projectId ? { ...project, ...fields } : project
+      )
+    );
+    setUserProjects((prevState) =>
+      prevState.map((project) =>
+        project.projectId === projectId ? { ...project, ...fields } : project
+      )
+    );
+  };
+
+  const value: ProjectsValue = {
+    projects,
+    setProjects,
+    setUserProjects,
+    isLoading: false,
+    setIsLoading: () => undefined,
+    loadingProfile: false,
+    activeProject,
+    setActiveProject,
+    selectedProjects,
+    setSelectedProjects,
+    fetchProjectDetails,
+    fetchProjects,
+    fetchUserProfile,
+    fetchRecentActivity,
+    opacity,
+    setOpacity,
+    settingsUpdated,
+    toggleSettingsUpdated,
+    dmReadStatus,
+    setDmReadStatus,
+    projectsError,
+    updateTimelineEvents,
+    updateProjectFields,
+  };
+
+  return <ProjectsContext.Provider value={value}>{children}</ProjectsContext.Provider>;
+};
 
 const mergeProjectWithFallback = (
   primary: Project,
@@ -59,7 +142,7 @@ const mergeProjectWithFallback = (
 const projectNeedsDetailHydration = (project: Project | null | undefined): project is Project =>
   Boolean(project) && (project.description === undefined || project.customFolders === undefined);
 
-export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
+const RegularProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
 
   const [userProjects, setUserProjects] = useState<Project[]>([]);
@@ -587,4 +670,21 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
       {children}
     </ProjectsContext.Provider>
   );
+};
+
+export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const [previewMode, setPreviewMode] = useState<boolean>(() => isPreviewModeEnabled());
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    return subscribeToPreviewMode(() => {
+      setPreviewMode(isPreviewModeEnabled());
+    });
+  }, []);
+
+  if (previewMode) {
+    return <PreviewProjectsProvider>{children}</PreviewProjectsProvider>;
+  }
+
+  return <RegularProjectsProvider>{children}</RegularProjectsProvider>;
 };

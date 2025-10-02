@@ -65,7 +65,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
           type="button"
           className={styles.addButton}
           onClick={openCreateModal}
-          aria-label="Add budget line item"
+          aria-label="Add item"
         >
           <span className={styles.addIcon} aria-hidden="true">
             +

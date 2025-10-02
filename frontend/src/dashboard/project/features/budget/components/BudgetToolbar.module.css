@@ -18,39 +18,35 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 3px 12px;
-  border: none;
-  border-radius: 999px;
-  background: var(--brand);
-  color: var(--color-active);
-  font-size: 0.95rem;
-  font-weight: 600;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  background-color: transparent;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 6px 18px var(--brand-20);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .addButton:hover {
-  background: var(--color-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px var(--brand-20);
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .addButton:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 3px;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 0 0 4px rgba(0, 0, 0, 0.45);
 }
 
 .addIcon {
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 999px;
-  background: var(--brand-12);
-  color: var(--color-active);
-  font-size: 1.1rem;
+  width: 16px;
+  height: 16px;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1;
 }
@@ -59,9 +55,13 @@
   white-space: nowrap;
 }
 
+.addButton:active {
+  transform: scale(0.98);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .addButton {
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
   }
 
   .addButton:hover {

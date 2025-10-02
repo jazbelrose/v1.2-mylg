@@ -406,7 +406,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   }, [error, loading, tasks.length]);
 
   return (
-    <section className={`${styles.card} ${styles.desktopCard}`} aria-label="Project tasks overview">
+    <section className={`${styles.card} ${styles.desktopCard} tasks-component`} aria-label="Project tasks overview">
       <header className={styles.header}>
         <div className={styles.headingGroup}>
           <h3 className={styles.title}>Tasks</h3>

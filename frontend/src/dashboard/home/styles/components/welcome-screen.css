@@ -81,21 +81,18 @@
   max-width: 100vw;
   overflow: visible; /* allow children (CTA) to be fully visible */
   align-items: stretch;
- 
-
 }
 
 .mobile-projects-tasks {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
-  
 }
 
 .mobile-projects-section {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   max-height: none;
   overflow: hidden;
   padding: 0; /* remove outer grey wrapper */
@@ -126,6 +123,7 @@
   max-width: 100vw;
   overflow: visible;
   margin-top: auto;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
 }
 
 .dashboard-footer {
@@ -133,9 +131,9 @@
 }
 
 .mobile-calendar-section {
-  flex: 0 0 auto;
+  flex: 1 1 0;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
 
   border-radius: 8px;
   padding: 0px;
@@ -151,6 +149,17 @@
 .mobile-calendar-section > * {
   width: 100%;
   max-width: 100vw;
+}
+
+.mobile-calendar-section > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.mobile-projects-panel > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 /* Ensure projects header is more compact on mobile */

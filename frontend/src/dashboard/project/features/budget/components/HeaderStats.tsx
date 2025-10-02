@@ -689,16 +689,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     []
   );
 
-  const legendPreview = useMemo(
-    () => chartState.slices.slice(0, 4),
-    [chartState.slices]
-  );
-
-  const hiddenLegendCount = Math.max(
-    0,
-    chartState.slices.length - legendPreview.length
-  );
-
   const markupSelectId = "budget-mobile-markup-select";
 
   const desktopContent = (
@@ -823,28 +813,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             </div>
           </div>
           <div className={mobileStyles.dateRow}>{createdDateLabel}</div>
-          <div className={mobileStyles.legend}>
-            {legendPreview.map((slice, index) => {
-              const palette = chartState.palette;
-              const paletteLength = palette.length;
-              const background =
-                paletteLength > 0
-                  ? palette[index % paletteLength]
-                  : getColor(`${slice.id}-${index}`);
-              return (
-                <div className={mobileStyles.legendItem} key={slice.id}>
-                  <span
-                    className={mobileStyles.legendDot}
-                    style={{ background }}
-                  />
-                  {slice.label}
-                </div>
-              );
-            })}
-            {hiddenLegendCount > 0 && (
-              <span className={mobileStyles.legendMore}>{`+${hiddenLegendCount} more`}</span>
-            )}
-          </div>
         </div>
         <div className={mobileStyles.chartContainer}>
           <BudgetDonut

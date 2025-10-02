@@ -229,8 +229,8 @@
   flex-wrap: wrap;
   padding: 0;
   margin-left: auto;
-  column-gap: clamp(6px, 1vw, 12px);
-  row-gap: clamp(4px, 0.6vw, 8px);
+  column-gap: 6px;
+  row-gap: 6px;
   align-items: flex-start;
   align-content: flex-end;
   background: transparent;

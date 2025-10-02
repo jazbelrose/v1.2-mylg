@@ -924,7 +924,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
               <div
                 className={styles.contentRow}
-                style={showSidebar ? undefined : { minWidth: "850px" }}
+                data-has-sidebar={showSidebar ? "true" : "false"}
               >
                 {showSidebar && (
                   <div className={styles.sidebar}>

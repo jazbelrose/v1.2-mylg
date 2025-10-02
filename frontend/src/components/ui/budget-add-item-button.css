@@ -1,0 +1,50 @@
+.budget-add-item-button {
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 500;
+  gap: 8px;
+  line-height: 1;
+  padding: 8px 16px;
+  position: relative;
+  transition: background-color 120ms ease, border-color 120ms ease, transform 80ms ease,
+    box-shadow 120ms ease;
+  user-select: none;
+}
+
+.budget-add-item-button:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.budget-add-item-button:focus {
+  outline: none;
+}
+
+.budget-add-item-button:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.budget-add-item-button:active {
+  transform: scale(0.98);
+}
+
+.budget-add-item-button__icon {
+  flex-shrink: 0;
+  height: 16px;
+  width: 16px;
+}
+
+.budget-add-item-button__label {
+  white-space: nowrap;
+}
+
+.budget-add-item-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

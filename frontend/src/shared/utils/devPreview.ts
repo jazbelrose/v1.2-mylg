@@ -1,0 +1,279 @@
+import type { Project, Message, Thread, UserLite } from "@/app/contexts/DataProvider";
+import type { ProjectMessagesMap } from "@/app/contexts/MessagesContextValue";
+
+const PREVIEW_STORAGE_KEY = "dashboardPreviewMode";
+const PREVIEW_EVENT = "dashboard-preview-mode-change";
+
+export interface PreviewActivityItem {
+  id: string;
+  type: "project" | "message";
+  projectId: string;
+  projectTitle: string;
+  text: string;
+  timestamp: string;
+}
+
+export interface DevPreviewData {
+  user: UserLite;
+  allUsers: UserLite[];
+  projects: Project[];
+  inbox: Thread[];
+  projectMessages: ProjectMessagesMap;
+  recentActivity: PreviewActivityItem[];
+}
+
+const PREVIEW_USER_ID = "preview-user";
+
+const DEV_PREVIEW_DATA: DevPreviewData = {
+  user: {
+    userId: PREVIEW_USER_ID,
+    firstName: "Preview",
+    lastName: "User",
+    email: "preview.user@example.com",
+    role: "admin",
+    occupation: "Design Lead",
+    phoneNumber: "+1 (555) 010-0101",
+    company: "MYLG Labs",
+    collaborators: ["avery-harper", "max-ramirez"],
+    projects: ["preview-riverside", "preview-harbor"],
+    thumbnailUrl: "https://avatars.githubusercontent.com/u/000?v=4",
+    messages: [],
+  },
+  allUsers: [
+    {
+      userId: PREVIEW_USER_ID,
+      firstName: "Preview",
+      lastName: "User",
+      email: "preview.user@example.com",
+      role: "admin",
+      occupation: "Design Lead",
+      phoneNumber: "+1 (555) 010-0101",
+    },
+    {
+      userId: "avery-harper",
+      firstName: "Avery",
+      lastName: "Harper",
+      email: "avery@mylg.dev",
+      role: "designer",
+      occupation: "UX Designer",
+      phoneNumber: "+1 (555) 010-0102",
+    },
+    {
+      userId: "max-ramirez",
+      firstName: "Max",
+      lastName: "Ramirez",
+      email: "max@mylg.dev",
+      role: "builder",
+      occupation: "Site Lead",
+      phoneNumber: "+1 (555) 010-0103",
+    },
+    {
+      userId: "devon-wells",
+      firstName: "Devon",
+      lastName: "Wells",
+      email: "devon@mylg.dev",
+      role: "vendor",
+      occupation: "Lighting Vendor",
+      phoneNumber: "+1 (555) 010-0104",
+    },
+  ],
+  projects: [
+    {
+      projectId: "preview-riverside",
+      title: "Riverside Park Redesign",
+      status: "In Progress",
+      description:
+        "A public space refresh with new wayfinding, lighting, and modular seating zones.",
+      color: "#0F62FE",
+      clientName: "City of Westbridge",
+      clientEmail: "parks@westbridge.gov",
+      previewUrl: "project-thumbnails/riverside/main.jpg",
+      quickLinks: [
+        { id: "brief", title: "Project Brief", url: "https://example.com/brief" },
+        { id: "site-plan", title: "Site Plan", url: "https://example.com/site-plan" },
+      ],
+      timelineEvents: [
+        {
+          id: "event-kickoff",
+          title: "Kickoff workshop",
+          date: "2024-04-04",
+          description: "Stakeholder alignment session with Parks & Rec.",
+        },
+        {
+          id: "event-fabrication",
+          title: "Fabrication lock",
+          date: "2024-06-12",
+          description: "Sign-off on lighting fixture order and bench fabrication.",
+        },
+        {
+          id: "event-install",
+          title: "Install week",
+          date: "2024-07-22",
+          description: "Nightly install for new lighting grid and furniture.",
+        },
+      ],
+      team: [
+        { userId: PREVIEW_USER_ID, role: "admin" },
+        { userId: "avery-harper", role: "designer" },
+        { userId: "max-ramirez", role: "builder" },
+      ],
+    },
+    {
+      projectId: "preview-harbor",
+      title: "Harbor Pavilion Pop-up",
+      status: "Planning",
+      description:
+        "Seasonal retail pavilion with interactive lighting and vendor stalls.",
+      color: "#FF7A45",
+      clientName: "Port Authority",
+      clientEmail: "events@harborport.io",
+      previewUrl: "project-thumbnails/harbor/main.jpg",
+      quickLinks: [
+        { id: "budget", title: "Budget Snapshot", url: "https://example.com/budget" },
+        { id: "deck", title: "Concept Deck", url: "https://example.com/deck" },
+      ],
+      timelineEvents: [
+        {
+          id: "event-scoping",
+          title: "Scoping walk",
+          date: "2024-05-10",
+          description: "Harbor site walk + vendor orientation.",
+        },
+        {
+          id: "event-permits",
+          title: "Permits submitted",
+          date: "2024-05-24",
+          description: "Permitting packet delivered to Port Authority.",
+        },
+      ],
+      team: [
+        { userId: PREVIEW_USER_ID, role: "admin" },
+        { userId: "devon-wells", role: "vendor" },
+      ],
+    },
+  ],
+  inbox: [
+    {
+      conversationId: "thread-avery",
+      otherUserId: "avery-harper",
+      lastMsgTs: "2024-05-21T15:30:00.000Z",
+      snippet: "Moodboard feedback looks great — I dropped comments.",
+      read: false,
+    },
+    {
+      conversationId: "thread-max",
+      otherUserId: "max-ramirez",
+      lastMsgTs: "2024-05-20T20:45:00.000Z",
+      snippet: "Confirmed overnight install crew for July 22 start.",
+      read: true,
+    },
+  ],
+  projectMessages: {
+    "preview-riverside": [
+      {
+        messageId: "riverside-1",
+        body: "Uploaded revised site plan with adjusted lighting grid.",
+        timestamp: "2024-05-21T14:10:00.000Z",
+        reactions: { "👍": [PREVIEW_USER_ID, "avery-harper"] },
+      },
+      {
+        messageId: "riverside-2",
+        body: "Reminder: fabrication lock is June 12 — review fixtures.",
+        timestamp: "2024-05-20T09:00:00.000Z",
+      },
+    ],
+    "preview-harbor": [
+      {
+        messageId: "harbor-1",
+        body: "Permitting packet submitted to Port Authority today.",
+        timestamp: "2024-05-19T18:25:00.000Z",
+      },
+    ],
+  },
+  recentActivity: [
+    {
+      id: "activity-1",
+      type: "project",
+      projectId: "preview-riverside",
+      projectTitle: "Riverside Park Redesign",
+      text: "Avery Harper uploaded a new lighting concept.",
+      timestamp: "2024-05-21T16:10:00.000Z",
+    },
+    {
+      id: "activity-2",
+      type: "message",
+      projectId: "preview-harbor",
+      projectTitle: "Harbor Pavilion Pop-up",
+      text: "Max Ramirez added install notes in Messages.",
+      timestamp: "2024-05-20T22:45:00.000Z",
+    },
+  ],
+};
+
+const noop = () => undefined;
+
+export const isPreviewModeSupported = (): boolean => Boolean(import.meta.env.DEV);
+
+export const isPreviewModeEnabled = (): boolean => {
+  if (!isPreviewModeSupported() || typeof window === "undefined") return false;
+  try {
+    return (
+      window.sessionStorage.getItem(PREVIEW_STORAGE_KEY) === "on" ||
+      window.localStorage.getItem(PREVIEW_STORAGE_KEY) === "on"
+    );
+  } catch {
+    return false;
+  }
+};
+
+export const setPreviewModeEnabled = (enabled: boolean): void => {
+  if (!isPreviewModeSupported() || typeof window === "undefined") return;
+  try {
+    if (enabled) {
+      window.sessionStorage.setItem(PREVIEW_STORAGE_KEY, "on");
+    } else {
+      window.sessionStorage.removeItem(PREVIEW_STORAGE_KEY);
+      window.localStorage.removeItem(PREVIEW_STORAGE_KEY);
+    }
+  } catch {
+    /* ignore storage errors in dev */
+  }
+  try {
+    window.dispatchEvent(new CustomEvent(PREVIEW_EVENT));
+  } catch {
+    noop();
+  }
+};
+
+export const syncPreviewModeFromSearch = (search: string): boolean => {
+  if (!isPreviewModeSupported() || typeof window === "undefined") return false;
+  let handled = false;
+  try {
+    const params = new URLSearchParams(search);
+    const value = params.get("preview");
+    if (value !== null) {
+      const enable = !["0", "false", "off"].includes(value.toLowerCase());
+      setPreviewModeEnabled(enable);
+      handled = true;
+    }
+  } catch {
+    noop();
+  }
+  return handled;
+};
+
+export const subscribeToPreviewMode = (callback: () => void): (() => void) => {
+  if (!isPreviewModeSupported() || typeof window === "undefined") {
+    return () => undefined;
+  }
+  const handler = () => callback();
+  window.addEventListener(PREVIEW_EVENT, handler);
+  window.addEventListener("storage", handler);
+  return () => {
+    window.removeEventListener(PREVIEW_EVENT, handler);
+    window.removeEventListener("storage", handler);
+  };
+};
+
+export const getDevPreviewData = (): DevPreviewData => DEV_PREVIEW_DATA;
+

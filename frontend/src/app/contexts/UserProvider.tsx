@@ -16,6 +16,7 @@ import { resolveStoredFileUrl } from "@/shared/utils/media";
 import { UserContext } from "./UserContext";
 import type { UserContextValue } from "./UserContextValue";
 import type { UserLite } from "./DataProvider";
+import { getDevPreviewData, isPreviewModeEnabled, subscribeToPreviewMode } from "@/shared/utils/devPreview";
 
 const mapUserLite = (user: UserLite): UserLite => {
   const thumbnailUrl = resolveStoredFileUrl(user.thumbnail as string | undefined);
@@ -29,8 +30,32 @@ const mapUserLite = (user: UserLite): UserLite => {
 export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
 
-  const [user, setUser] = useState<UserLite | null>(null);
-  const [allUsers, setAllUsers] = useState<UserLite[]>([]);
+  const [previewMode, setPreviewMode] = useState<boolean>(() => isPreviewModeEnabled());
+  const [user, setUser] = useState<UserLite | null>(() =>
+    previewMode ? getDevPreviewData().user : null
+  );
+  const [allUsers, setAllUsers] = useState<UserLite[]>(() =>
+    previewMode ? getDevPreviewData().allUsers : []
+  );
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    return subscribeToPreviewMode(() => {
+      const enabled = isPreviewModeEnabled();
+      setPreviewMode(enabled);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (previewMode) {
+      const preview = getDevPreviewData();
+      setUser(preview.user);
+      setAllUsers(preview.allUsers);
+    } else {
+      setUser(null);
+      setAllUsers([]);
+    }
+  }, [previewMode]);
 
   // Load all users
   useEffect(() => {
@@ -45,12 +70,20 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
         console.error("Error fetching users:", error);
       }
     };
+    if (previewMode || !userId) {
+      return;
+    }
     if (userId) {
       loadUsers();
     }
-  }, [userId]);
+  }, [userId, previewMode]);
 
   const refreshUsers = async () => {
+    if (previewMode) {
+      const preview = getDevPreviewData();
+      setAllUsers(preview.allUsers);
+      return;
+    }
     try {
       const users = await fetchAllUsers();
       const mapped = Array.isArray(users)
@@ -64,6 +97,11 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
   // Load user profile
   const fetchUserProfile = useCallback(async () => {
+    if (previewMode) {
+      const preview = getDevPreviewData();
+      setUser({ ...preview.user });
+      return;
+    }
     if (!userId) {
       setUser(null);
       return;
@@ -82,13 +120,18 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
-  }, [userId]);
+  }, [userId, previewMode]);
 
   useEffect(() => {
+    if (previewMode) {
+      const preview = getDevPreviewData();
+      setUser({ ...preview.user });
+      return;
+    }
     if (userId) {
       fetchUserProfile();
     }
-  }, [userId, fetchUserProfile]);
+  }, [userId, fetchUserProfile, previewMode]);
 
   // Derived role checks based on user profile
   const userData = useMemo<UserLite | null>(() => {
@@ -115,6 +158,22 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const setUserData = setUser; // alias for backward compatibility
   const refreshUser = fetchUserProfile; // alias for backward compatibility
 
+  const handleUpdateUserProfile = useCallback(
+    async (profile: Parameters<typeof updateUserProfile>[0]) => {
+      if (previewMode) {
+        const preview = getDevPreviewData();
+        const updated = { ...preview.user, ...profile } as UserLite;
+        setUser(updated);
+        setAllUsers((prev) =>
+          prev.map((u) => (u.userId === updated.userId ? updated : u))
+        );
+        return updated as Awaited<ReturnType<typeof updateUserProfile>>;
+      }
+      return updateUserProfile(profile);
+    },
+    [previewMode]
+  );
+
   const value = useMemo<UserContextValue>(
     () => ({
       user,
@@ -126,7 +185,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
       setUser,
       refreshUsers,
       refreshUser,
-      updateUserProfile,
+      updateUserProfile: handleUpdateUserProfile,
       fetchUserProfile,
       isAdmin,
       isDesigner,
@@ -148,6 +207,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
       isBuilder,
       isVendor,
       isClient,
+      handleUpdateUserProfile,
     ]
   );
 

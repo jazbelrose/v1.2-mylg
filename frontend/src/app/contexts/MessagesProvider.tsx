@@ -12,9 +12,81 @@ import { getWithTTL, setWithTTL, DEFAULT_TTL } from "../../shared/utils/storageW
 import { MessagesContext } from "./MessagesContext";
 import type { MessagesValue, ProjectMessagesMap } from "./MessagesContextValue";
 import type { Thread, Message } from "./DataProvider";
+import { getDevPreviewData, isPreviewModeEnabled, subscribeToPreviewMode } from "@/shared/utils/devPreview";
+
+const PreviewMessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const preview = getDevPreviewData();
+  const [projectMessages, setProjectMessages] = useState<ProjectMessagesMap>(preview.projectMessages);
+  const [inbox, setInbox] = useState<Thread[]>(preview.inbox);
+  const deletedMessageIds = useRef<Set<string>>(new Set());
+
+  const markMessageDeleted = (id?: string) => {
+    if (id) deletedMessageIds.current.add(id);
+  };
+
+  const clearDeletedMessageId = (id?: string) => {
+    if (id) deletedMessageIds.current.delete(id);
+  };
+
+  const toggleReaction = (
+    msgId: string,
+    emoji: string,
+    reactorId: string,
+    _conversationId: string,
+    _conversationType: "dm" | "project",
+    _ws?: WebSocket,
+  ) => {
+    if (!msgId || !emoji || !reactorId) return;
+
+    setProjectMessages((prev) => {
+      const updated: ProjectMessagesMap = {};
+      Object.entries(prev).forEach(([projectId, messages]) => {
+        updated[projectId] = messages.map((message) => {
+          if ((message.messageId || message.optimisticId) !== msgId) return message;
+          const reactions = { ...(message.reactions || {}) };
+          const users = new Set(reactions[emoji] || []);
+          if (users.has(reactorId)) {
+            users.delete(reactorId);
+          } else {
+            users.add(reactorId);
+          }
+          reactions[emoji] = Array.from(users);
+          return { ...message, reactions };
+        });
+      });
+      return updated;
+    });
+  };
+
+  const value: MessagesValue = {
+    inbox,
+    setInbox,
+    projectMessages,
+    setProjectMessages,
+    deletedMessageIds: deletedMessageIds.current,
+    markMessageDeleted,
+    clearDeletedMessageId,
+    toggleReaction,
+  };
+
+  return <MessagesContext.Provider value={value}>{children}</MessagesContext.Provider>;
+};
 
 export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
+
+  const [previewMode, setPreviewMode] = useState<boolean>(() => isPreviewModeEnabled());
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    return subscribeToPreviewMode(() => {
+      setPreviewMode(isPreviewModeEnabled());
+    });
+  }, []);
+
+  if (previewMode) {
+    return <PreviewMessagesProvider>{children}</PreviewMessagesProvider>;
+  }
 
   const [projectMessages, setProjectMessages] = useState<ProjectMessagesMap>({});
   const [inbox, setInbox] = useState<Thread[]>(() => {

@@ -43,11 +43,13 @@ type NormalizedTask = {
   title: string;
   status: TaskStatus;
   dueDate: Date | null;
+  completedAt: Date | null;
   projectId: string;
   projectName: string;
   projectColor: string;
   dueKey?: string;
   timeLabel?: string;
+  completedTimeLabel?: string;
   raw: RawTask & { projectId: string };
 };
 
@@ -57,10 +59,12 @@ export type TasksOverviewListItem = {
   title: string;
   status: TaskStatus;
   dueDate: Date | null;
+  completedAt: Date | null;
   projectId: string;
   projectName: string;
   projectColor: string;
   timeLabel?: string;
+  completedTimeLabel?: string;
   description?: string;
   assigneeId?: string;
   address?: string;
@@ -198,6 +202,18 @@ function pickDue(raw: RawTask): { value: Date | null; key?: string; timeLabel?: 
   return { value: dueDate, key, timeLabel };
 }
 
+function pickCompletion(value: unknown): { value: Date | null; timeLabel?: string } {
+  const date = parseDueDate(value);
+  if (!date) {
+    return { value: null, timeLabel: undefined };
+  }
+
+  const timeLabel =
+    typeof value === "string" && value.includes("T") ? timeFormatter.format(date) : undefined;
+
+  return { value: date, timeLabel };
+}
+
 export function useTasksOverview() {
   const { projects = [] } = useData() as { projects: Project[] };
   const navigate = useNavigate();
@@ -241,33 +257,45 @@ export function useTasksOverview() {
                 try {
                   const raw = await fetchTasks(project.projectId);
                   return (raw || []).map((task: RawTask, idx) => {
-                  const { value: dueDate, key: dueKey, timeLabel } = pickDue(task);
-                  const projectName = project.title || project.projectId;
-                  const projectColor = project.color || getColor(project.projectId);
-                  const id =
-                    (task.taskId as string | undefined) ||
-                    (task.id as string | undefined) ||
-                    `${project.projectId}-${idx}`;
+                    const { value: dueDate, key: dueKey, timeLabel } = pickDue(task);
+                    const projectName = project.title || project.projectId;
+                    const projectColor = project.color || getColor(project.projectId);
+                    const id =
+                      (task.taskId as string | undefined) ||
+                      (task.id as string | undefined) ||
+                      `${project.projectId}-${idx}`;
 
-                  const status = typeof task.status === "string" ? task.status.toLowerCase() : "todo";
-                  const title = normalizeTitle(task.title ?? task.name);
-                  const rawWithProject = { ...task, projectId: project.projectId } as RawTask & {
-                    projectId: string;
-                  };
+                    const status = typeof task.status === "string" ? task.status.toLowerCase() : "todo";
+                    const title = normalizeTitle(task.title ?? task.name);
+                    const completionCandidate =
+                      (task as { completedAt?: unknown }).completedAt ??
+                      (task as { completed_at?: unknown }).completed_at ??
+                      (task as { updatedAt?: unknown }).updatedAt ??
+                      (task as { updated_at?: unknown }).updated_at ??
+                      null;
+                    const { value: completedAt, timeLabel: completedTimeLabel } =
+                      status === "done"
+                        ? pickCompletion(completionCandidate)
+                        : { value: null, timeLabel: undefined };
+                    const rawWithProject = { ...task, projectId: project.projectId } as RawTask & {
+                      projectId: string;
+                    };
 
-                  return {
-                    id,
-                    title,
-                    status,
-                    dueDate,
-                    dueKey,
-                    timeLabel,
-                    projectId: project.projectId,
-                    projectName,
-                    projectColor,
-                    raw: rawWithProject,
-                  } satisfies NormalizedTask;
-                });
+                    return {
+                      id,
+                      title,
+                      status,
+                      dueDate,
+                      completedAt,
+                      dueKey,
+                      timeLabel,
+                      completedTimeLabel,
+                      projectId: project.projectId,
+                      projectName,
+                      projectColor,
+                      raw: rawWithProject,
+                    } satisfies NormalizedTask;
+                  });
                 } catch (err) {
                   console.error("Failed to fetch tasks for project", project.projectId, err);
                   return [] as NormalizedTask[];
@@ -327,10 +355,12 @@ export function useTasksOverview() {
         title: task.title,
         status: task.status,
         dueDate: task.dueDate,
+        completedAt: task.completedAt,
         projectId: task.projectId,
         projectName: task.projectName,
         projectColor: task.projectColor,
         timeLabel: task.timeLabel,
+        completedTimeLabel: task.completedTimeLabel,
         description,
         assigneeId: assignee,
         address,
@@ -372,15 +402,21 @@ export function useTasksOverview() {
     >();
 
     tasks.forEach((task) => {
-      if (!task.dueDate) {
-        return;
-      }
-
       const due = task.dueDate;
       const isDone = task.status === "done";
+      const completionReference = task.completedAt ?? due;
 
-      if (isDone && due >= weekStart && due <= weekEnd) {
+      if (
+        isDone &&
+        completionReference &&
+        completionReference >= weekStart &&
+        completionReference <= weekEnd
+      ) {
         completedCount += 1;
+      }
+
+      if (!due) {
+        return;
       }
 
       if (!isDone) {
@@ -447,11 +483,22 @@ export function useTasksOverview() {
       .map(toListItem);
 
     const completedThisWeek = tasks
-      .filter(
-        (task) =>
-          task.status === "done" && task.dueDate && task.dueDate >= weekStart && task.dueDate <= weekEnd
-      )
-      .sort((a, b) => (a.dueDate && b.dueDate ? b.dueDate.getTime() - a.dueDate.getTime() : 0))
+      .filter((task) => {
+        if (task.status !== "done") {
+          return false;
+        }
+
+        const completedOn = task.completedAt ?? task.dueDate;
+        return Boolean(completedOn && completedOn >= weekStart && completedOn <= weekEnd);
+      })
+      .sort((a, b) => {
+        const aCompleted = a.completedAt ?? a.dueDate;
+        const bCompleted = b.completedAt ?? b.dueDate;
+        if (!aCompleted || !bCompleted) {
+          return 0;
+        }
+        return bCompleted.getTime() - aCompleted.getTime();
+      })
       .map(toListItem);
 
     return {

@@ -25,7 +25,7 @@ const dueFormatter = new Intl.DateTimeFormat(undefined, {
   weekday: "short",
 });
 
-function formatDueDate(date: Date | null | undefined, timeLabel?: string): string {
+function formatDateLabel(date: Date | null | undefined, timeLabel?: string): string {
   if (!date) return "No due date";
   const formatted = dueFormatter.format(date);
   return timeLabel ? `${formatted} · ${timeLabel}` : formatted;
@@ -46,41 +46,48 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, emptyLabel, onStart, showCom
 
   return (
     <ul className={styles.taskList}>
-      {tasks.map((task) => (
-        <li key={task.id} className={styles.taskItem}>
-          <button
-            type="button"
-            className={`${styles.taskMain} ${styles.taskButton}`}
-            onClick={onSelect ? () => onSelect(task) : undefined}
-            disabled={!onSelect}
-          >
-            <span
-              className={styles.projectDot}
-              style={{ backgroundColor: task.projectColor || "var(--brand, #fa3356)" }}
-              aria-hidden="true"
-            />
-            <div className={styles.taskMeta}>
-              <span className={styles.taskTitle} title={task.title}>
-                {task.title}
-              </span>
-              <span className={styles.taskDetails}>
-                {task.projectName}
-                {task.projectName && (task.dueDate || task.timeLabel) ? " · " : ""}
-                {formatDueDate(task.dueDate, task.timeLabel)}
-              </span>
+      {tasks.map((task) => {
+        const displayDate = showCompleted ? task.completedAt ?? task.dueDate : task.dueDate;
+        const displayTimeLabel = showCompleted
+          ? task.completedTimeLabel ?? task.timeLabel
+          : task.timeLabel;
+
+        return (
+          <li key={task.id} className={styles.taskItem}>
+            <button
+              type="button"
+              className={`${styles.taskMain} ${styles.taskButton}`}
+              onClick={onSelect ? () => onSelect(task) : undefined}
+              disabled={!onSelect}
+            >
+              <span
+                className={styles.projectDot}
+                style={{ backgroundColor: task.projectColor || "var(--brand, #fa3356)" }}
+                aria-hidden="true"
+              />
+              <div className={styles.taskMeta}>
+                <span className={styles.taskTitle} title={task.title}>
+                  {task.title}
+                </span>
+                <span className={styles.taskDetails}>
+                  {task.projectName}
+                  {task.projectName && (displayDate || displayTimeLabel) ? " · " : ""}
+                  {formatDateLabel(displayDate, displayTimeLabel)}
+                </span>
+              </div>
+            </button>
+            <div className={styles.taskActions}>
+              {showCompleted ? (
+                <span className={styles.completedTag}>Completed</span>
+              ) : onStart ? (
+                <button type="button" className={styles.startButton} onClick={() => onStart(task)}>
+                  Open project
+                </button>
+              ) : null}
             </div>
-          </button>
-          <div className={styles.taskActions}>
-            {showCompleted ? (
-              <span className={styles.completedTag}>Completed</span>
-            ) : onStart ? (
-              <button type="button" className={styles.startButton} onClick={() => onStart(task)}>
-                Open project
-              </button>
-            ) : null}
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 };

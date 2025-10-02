@@ -9,7 +9,7 @@ import {
   faCalculator,
   faPen,
 } from "@fortawesome/free-solid-svg-icons";
-import { Segmented, Switch } from "antd";
+import { Segmented, Switch, Select } from "antd";
 
 import EditBallparkModal from "@/dashboard/project/features/budget/components/EditBallparkModal";
 import ClientInvoicePreviewModal from "@/dashboard/project/features/budget/ClientInvoicePreviewModal";
@@ -29,6 +29,7 @@ import {
 
 import summaryStyles from "./budget-header-summary.module.css";
 import headerStyles from "./header-stats.module.css";
+import mobileStyles from "./budget-header-mobile.module.css";
 
 /* =========================
    Types
@@ -68,6 +69,8 @@ export interface BudgetHeaderData {
   headerBudgetedTotalCost?: number | string;
   headerActualTotalCost?: number | string;
   headerFinalTotalCost?: number | string;
+  clientRevisionId?: number | string | null;
+  createdAt?: string | number | Date | null;
 }
 
 export interface ProjectLike {
@@ -123,6 +126,8 @@ type ChartState = {
   palette: string[];
   signature: string;
 };
+
+const MOBILE_BREAKPOINT = 768;
 
 /* =========================
    Helpers
@@ -195,6 +200,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   onOpenRevisionModal,
 }) => {
   const [selectedMetric, setSelectedMetric] = useState<MetricTitle>("Final Cost");
+  const [isMobile, setIsMobile] = useState(false);
 
   const hasReconciled = useMemo(
     () =>
@@ -211,6 +217,27 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   const [invoiceRevision, setInvoiceRevision] = useState<BudgetHeaderData | null>(null);
 
   const { ws } = useSocket();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+    const handleChange = (event: MediaQueryList | MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+    };
+
+    handleChange(mediaQuery);
+
+    const listener = (event: MediaQueryListEvent) => handleChange(event);
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", listener);
+      return () => mediaQuery.removeEventListener("change", listener);
+    }
+
+    mediaQuery.addListener(listener);
+    return () => mediaQuery.removeListener(listener);
+  }, []);
 
   useEffect(() => {
     if (!hasReconciled) setShowReconciled(false);
@@ -429,6 +456,55 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     ]
   );
 
+  const metricOptions = useMemo(
+    () =>
+      metrics
+        .filter((metric) => metric.field)
+        .map((metric) => ({
+          label: metric.title,
+          value: metric.title,
+        })),
+    [metrics]
+  );
+
+  const markupOptions = useMemo(
+    () =>
+      (showReconciled
+        ? (["Budgeted", "Actual", "Reconciled"] as MarkupBasis[])
+        : (["Budgeted", "Actual"] as MarkupBasis[])
+      ).map((value) => ({
+        label: value,
+        value,
+      })),
+    [showReconciled]
+  );
+
+  const groupByOptions = useMemo(
+    () =>
+      ([
+        { label: "None", value: "none" },
+        { label: "Area Group", value: "areaGroup" },
+        { label: "Invoice Group", value: "invoiceGroup" },
+        { label: "Category", value: "category" },
+      ] as { label: string; value: GroupBy }[]),
+    []
+  );
+
+  const createdDateLabel = useMemo(() => {
+    if (!budgetHeader?.createdAt) return "No date";
+    const date = new Date(budgetHeader.createdAt);
+    if (Number.isNaN(date.getTime())) return "No date";
+    return date.toLocaleDateString();
+  }, [budgetHeader?.createdAt]);
+
+  const ballparkDisplay = useMemo(
+    () =>
+      budgetHeader
+        ? formatUSD(toNumber(budgetHeader.headerBallPark))
+        : "Not available",
+    [budgetHeader]
+  );
+
   const handleBallparkSave = async (val: number) => {
     if (!activeProject?.projectId || !budgetHeader) {
       setBallparkModalOpen(false);
@@ -636,99 +712,265 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     []
   );
 
-  return (
-    <div>
-      <div className={summaryStyles.container}>
-        <div className={summaryStyles.cardsColumn}>
-          <div className={summaryStyles.cardsRow}>
-            {metrics.slice(0, 3).map((m) => (
-              <SummaryCard
-                key={m.title}
-                icon={m.icon}
-                color={m.color}
-                title={m.title}
-                tag={m.tag}
-                value={m.value}
-                description={m.description}
-                className={m.sticky ? summaryStyles.stickyCard : ""}
-                onClick={m.field ? () => setSelectedMetric(m.title) : undefined}
-                active={selectedMetric === m.title}
-              >
-                {m.extra}
-              </SummaryCard>
-            ))}
-          </div>
+  const legendPreview = useMemo(
+    () => chartState.slices.slice(0, 4),
+    [chartState.slices]
+  );
 
-          <div className={summaryStyles.cardsRow}>
-            {metrics.slice(3).map((m) => (
-              <SummaryCard
-                key={m.title}
-                icon={m.icon}
-                color={m.color}
-                title={m.title}
-                tag={m.tag}
-                value={m.value}
-                description={m.description}
-                className={m.sticky ? summaryStyles.stickyCard : ""}
-                onClick={m.field ? () => setSelectedMetric(m.title) : undefined}
-                active={selectedMetric === m.title}
-              >
-                {m.extra}
-              </SummaryCard>
-            ))}
-          </div>
+  const hiddenLegendCount = Math.max(
+    0,
+    chartState.slices.length - legendPreview.length
+  );
+
+  const metricSelectId = "budget-mobile-metric-select";
+  const groupSelectId = "budget-mobile-group-select";
+  const markupSelectId = "budget-mobile-markup-select";
+
+  const desktopContent = (
+    <div className={summaryStyles.container}>
+      <div className={summaryStyles.cardsColumn}>
+        <div className={summaryStyles.cardsRow}>
+          {metrics.slice(0, 3).map((m) => (
+            <SummaryCard
+              key={m.title}
+              icon={m.icon}
+              color={m.color}
+              title={m.title}
+              tag={m.tag}
+              value={m.value}
+              description={m.description}
+              className={m.sticky ? summaryStyles.stickyCard : ""}
+              onClick={m.field ? () => setSelectedMetric(m.title) : undefined}
+              active={selectedMetric === m.title}
+            >
+              {m.extra}
+            </SummaryCard>
+          ))}
         </div>
 
-        <div className={summaryStyles.chartColumn}>
-          <div className={summaryStyles.overviewHeader}>
-            <Segmented
-              size="small"
-              options={
-                [
-                  { label: "None", value: "none" },
-                  { label: "Area Group", value: "areaGroup" },
-                  { label: "Invoice Group", value: "invoiceGroup" },
-                  { label: "Category", value: "category" },
-                ] as { label: string; value: GroupBy }[]
-              }
-              value={groupBy}
-              onChange={(val: SegmentedValue) => setGroupBy(val as GroupBy)}
-              style={{ background: "#1a1a1a" }}
-            />
-          </div>
-
-          <div className={summaryStyles.chartAndLegend}>
-            <div className={summaryStyles.chartContainer}>
-              <BudgetDonut
-                data={chartState.slices}
-                total={chartState.total}
-                palette={chartState.palette}
-                formatTooltip={formatTooltip}
-                totalFormatter={totalFormatter}
-              />
-            </div>
-            <ul className={summaryStyles.legend}>
-              {chartState.slices.map((slice, index) => {
-                const palette = chartState.palette;
-                const paletteLength = palette.length;
-                const background =
-                  paletteLength > 0
-                    ? palette[index % paletteLength]
-                    : getColor(`${slice.id}-${index}`);
-                return (
-                  <li className={summaryStyles.legendItem} key={slice.id}>
-                    <span
-                      className={summaryStyles.legendDot}
-                      style={{ background }}
-                    />
-                    {slice.label}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+        <div className={summaryStyles.cardsRow}>
+          {metrics.slice(3).map((m) => (
+            <SummaryCard
+              key={m.title}
+              icon={m.icon}
+              color={m.color}
+              title={m.title}
+              tag={m.tag}
+              value={m.value}
+              description={m.description}
+              className={m.sticky ? summaryStyles.stickyCard : ""}
+              onClick={m.field ? () => setSelectedMetric(m.title) : undefined}
+              active={selectedMetric === m.title}
+            >
+              {m.extra}
+            </SummaryCard>
+          ))}
         </div>
       </div>
+
+      <div className={summaryStyles.chartColumn}>
+        <div className={summaryStyles.overviewHeader}>
+          <Segmented
+            size="small"
+            options={groupByOptions}
+            value={groupBy}
+            onChange={(val: SegmentedValue) => setGroupBy(val as GroupBy)}
+            style={{ background: "#1a1a1a" }}
+          />
+        </div>
+
+        <div className={summaryStyles.chartAndLegend}>
+          <div className={summaryStyles.chartContainer}>
+            <BudgetDonut
+              data={chartState.slices}
+              total={chartState.total}
+              palette={chartState.palette}
+              formatTooltip={formatTooltip}
+              totalFormatter={totalFormatter}
+            />
+          </div>
+          <ul className={summaryStyles.legend}>
+            {chartState.slices.map((slice, index) => {
+              const palette = chartState.palette;
+              const paletteLength = palette.length;
+              const background =
+                paletteLength > 0
+                  ? palette[index % paletteLength]
+                  : getColor(`${slice.id}-${index}`);
+              return (
+                <li className={summaryStyles.legendItem} key={slice.id}>
+                  <span
+                    className={summaryStyles.legendDot}
+                    style={{ background }}
+                  />
+                  {slice.label}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+
+  const mobileContent = (
+    <div className={mobileStyles.card}>
+      <div className={mobileStyles.headerRow}>
+        <div className={mobileStyles.titleGroup}>
+          <span>Budget</span>
+          {budgetHeader?.clientRevisionId != null && budgetHeader.clientRevisionId !== "" && (
+            <span className={mobileStyles.clientRevision}>{`Rev.${budgetHeader.clientRevisionId}`}</span>
+          )}
+        </div>
+        <button
+          type="button"
+          className={mobileStyles.revisionButton}
+          onClick={onOpenRevisionModal}
+          disabled={!budgetHeader}
+        >
+          {`Rev.${budgetHeader?.revision ?? 1}`}
+        </button>
+      </div>
+
+      <div className={mobileStyles.amountRow}>
+        <span className={mobileStyles.amountValue}>{ballparkDisplay}</span>
+        <div className={mobileStyles.amountActions}>
+          <button
+            type="button"
+            className={mobileStyles.iconButton}
+            onClick={() => setBallparkModalOpen(true)}
+            aria-label="Edit Ballpark"
+            disabled={!budgetHeader}
+          >
+            <FontAwesomeIcon icon={faPen} />
+          </button>
+          <button
+            type="button"
+            className={mobileStyles.iconButton}
+            onClick={openInvoicePreview}
+            aria-label="Invoice preview"
+            disabled={!budgetHeader}
+          >
+            <FontAwesomeIcon icon={faFileInvoiceDollar} />
+          </button>
+        </div>
+      </div>
+
+      <div className={mobileStyles.dateRow}>{createdDateLabel}</div>
+
+      <div className={mobileStyles.controls}>
+        <div className={mobileStyles.controlRow}>
+          <div className={mobileStyles.controlSelect}>
+            <label className={mobileStyles.srOnly} htmlFor={metricSelectId}>
+              Select metric
+            </label>
+            <Select<MetricTitle>
+              id={metricSelectId}
+              size="small"
+              value={selectedMetric}
+              onChange={(value: MetricTitle) => setSelectedMetric(value)}
+              options={metricOptions}
+              dropdownMatchSelectWidth={false}
+            />
+          </div>
+        </div>
+        <div className={mobileStyles.controlRow}>
+          <div className={mobileStyles.controlSelect}>
+            <label className={mobileStyles.srOnly} htmlFor={groupSelectId}>
+              Group by
+            </label>
+            <Select<GroupBy>
+              id={groupSelectId}
+              size="small"
+              value={groupBy}
+              onChange={(value: GroupBy) => setGroupBy(value)}
+              options={groupByOptions}
+              dropdownMatchSelectWidth={false}
+            />
+          </div>
+          <div className={mobileStyles.controlSelect}>
+            <label className={mobileStyles.srOnly} htmlFor={markupSelectId}>
+              Markup basis
+            </label>
+            <Select<MarkupBasis>
+              id={markupSelectId}
+              size="small"
+              value={markupBasis}
+              onChange={(value: MarkupBasis) => setMarkupBasis(value)}
+              options={markupOptions}
+              dropdownMatchSelectWidth={false}
+            />
+          </div>
+        </div>
+        {hasReconciled && (
+          <div className={mobileStyles.switchRow}>
+            <span>Show reconciled totals</span>
+            <Switch
+              size="small"
+              checked={showReconciled}
+              onChange={(val) => setShowReconciled(val)}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className={mobileStyles.chartRow}>
+        <div className={mobileStyles.chartContainer}>
+          <BudgetDonut
+            data={chartState.slices}
+            total={chartState.total}
+            palette={chartState.palette}
+            formatTooltip={formatTooltip}
+            totalFormatter={totalFormatter}
+          />
+        </div>
+        <div className={mobileStyles.legend}>
+          {legendPreview.map((slice, index) => {
+            const palette = chartState.palette;
+            const paletteLength = palette.length;
+            const background =
+              paletteLength > 0
+                ? palette[index % paletteLength]
+                : getColor(`${slice.id}-${index}`);
+            return (
+              <div className={mobileStyles.legendItem} key={slice.id}>
+                <span
+                  className={mobileStyles.legendDot}
+                  style={{ background }}
+                />
+                {slice.label}
+              </div>
+            );
+          })}
+          {hiddenLegendCount > 0 && (
+            <span className={mobileStyles.legendMore}>{`+${hiddenLegendCount} more`}</span>
+          )}
+        </div>
+      </div>
+
+      <div className={mobileStyles.metricScroll}>
+        {metrics.map((metric) => (
+          <button
+            key={metric.title}
+            type="button"
+            className={`${mobileStyles.metricChip} ${
+              selectedMetric === metric.title ? mobileStyles.metricChipActive : ""
+            }`}
+            onClick={metric.field ? () => setSelectedMetric(metric.title) : undefined}
+            disabled={!metric.field}
+          >
+            <span className={mobileStyles.metricTag}>{metric.tag}</span>
+            <span className={mobileStyles.metricValue}>{metric.value}</span>
+            <span className={mobileStyles.metricDescription}>{metric.description}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      {isMobile ? mobileContent : desktopContent}
 
       <EditBallparkModal
         isOpen={isBallparkModalOpen}

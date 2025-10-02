@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 
 import type { Task } from "@/shared/utils/api";
 import { NOMINATIM_SEARCH_URL, apiFetch, createTask, deleteTask, updateTask } from "@/shared/utils/api";
@@ -866,14 +867,25 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
           noValidate
         >
           <div className={styles.formBody} onClick={handleFormBodyClick}>
-            <div className={styles.createHeader}>
-              <h2 id="quick-task-title">{modalTitle}</h2>
-              <p id={descriptionId} className={styles.createDescription}>
-                {modalDescription}
-              </p>
+            <div className={styles.desktopHeaderRow}>
+              <div className={styles.createHeader}>
+                <h2 id="quick-task-title">{modalTitle}</h2>
+                <p id={descriptionId} className={styles.createDescription}>
+                  {modalDescription}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.desktopCloseButton}
+                onClick={onClose}
+                aria-label="Close quick create task"
+                disabled={isBusy}
+              >
+                <X size={20} strokeWidth={2.5} aria-hidden="true" />
+              </button>
             </div>
             {showProjectSelect ? (
-              <div className={styles.fieldGroup}>
+              <div className={`${styles.fieldGroup} ${styles.fieldGroupFull}`}>
                 <label className={styles.fieldLabel} htmlFor={projectFieldId}>
                   <span className={styles.fieldLabelText}>Project</span>
                 </label>
@@ -900,9 +912,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
               </div>
             ) : null}
             {!hasProjects && !scopedProjectId ? (
-              <p className={styles.helperText}>Add a project to start creating tasks.</p>
+              <p className={`${styles.helperText} ${styles.helperTextFull}`}>
+                Add a project to start creating tasks.
+              </p>
             ) : null}
-            <div className={styles.fieldGroup}>
+            <div className={`${styles.fieldGroup} ${styles.fieldGroupHalf}`}>
               <div className={styles.fieldHeader}>
                 <label className={styles.fieldLabel} htmlFor={statusFieldId}>
                   <span className={styles.fieldLabelText}>Status</span>
@@ -921,7 +935,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 <option value="done">Done</option>
               </select>
             </div>
-            <div className={styles.fieldGroup}>
+            <div className={`${styles.fieldGroup} ${styles.fieldGroupHalf}`}>
               <div className={styles.fieldHeader}>
                 <label className={styles.fieldLabel} htmlFor={assigneeFieldId}>
                   <span className={styles.fieldLabelText}>Assign to</span>
@@ -945,9 +959,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
               </select>
             </div>
             {!hasCollaborators ? (
-              <p className={styles.helperText}>Invite collaborators to assign tasks.</p>
+              <p className={`${styles.helperText} ${styles.helperTextFull}`}>
+                Invite collaborators to assign tasks.
+              </p>
             ) : null}
-            <div className={styles.fieldGroup}>
+            <div className={`${styles.fieldGroup} ${styles.fieldGroupFull}`}>
               <label className={styles.fieldLabel} htmlFor={taskNameFieldId}>
                 <span className={styles.fieldLabelText}>Task name</span>
               </label>
@@ -976,7 +992,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 </p>
               ) : null}
             </div>
-            <div className={styles.fieldGroup}>
+            <div className={`${styles.fieldGroup} ${styles.fieldGroupFull}`}>
               <div className={styles.fieldHeader}>
                 <label className={styles.fieldLabel} htmlFor={locationFieldId}>
                   <span className={styles.fieldLabelText}>Location</span>
@@ -1021,7 +1037,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 </span>
               ) : null}
             </div>
-            <div className={styles.fieldGroup}>
+            <div className={`${styles.fieldGroup} ${styles.fieldGroupHalf}`}>
               <div className={styles.fieldHeader}>
                 <label className={styles.fieldLabel} htmlFor={dueDateFieldId}>
                   <span className={styles.fieldLabelText}>Due date</span>
@@ -1064,7 +1080,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 </button>
               </div>
             </div>
-            <div className={styles.fieldGroup}>
+            <div className={`${styles.fieldGroup} ${styles.fieldGroupFull}`}>
               <div className={styles.fieldHeader}>
                 <label className={styles.fieldLabel} htmlFor={notesFieldId}>
                   <span className={styles.fieldLabelText}>Notes</span>
@@ -1083,7 +1099,11 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 ref={notesRef}
               />
             </div>
-            <div id={feedbackRegionId} className={styles.feedbackRegion} aria-live="polite">
+            <div
+              id={feedbackRegionId}
+              className={`${styles.feedbackRegion} ${styles.fieldGroupFull}`}
+              aria-live="polite"
+            >
               {errorMessage ? (
                 <div className={`${styles.feedback} ${styles.feedbackError}`}>{errorMessage}</div>
               ) : null}
@@ -1091,7 +1111,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
                 <div className={`${styles.feedback} ${styles.feedbackSuccess}`}>{successMessage}</div>
               ) : null}
             </div>
-            <div className={styles.actionBar}>
+            <div className={`${styles.actionBar} ${styles.fieldGroupFull}`}>
               {isEditing ? (
                 <button
                   type="button"

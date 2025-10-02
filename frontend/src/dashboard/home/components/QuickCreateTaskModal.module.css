@@ -122,11 +122,62 @@
   line-height: 1.5;
 }
 
+.desktopHeaderRow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.desktopCloseButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, rgba(246, 247, 251, 0.72));
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.desktopCloseButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.desktopCloseButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.desktopCloseButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .desktopCloseButton:not(:disabled):hover {
+    transform: translateY(-1px);
+    color: var(--text-primary, #f6f7fb);
+  }
+}
+
 .fieldGroup {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-bottom: 16px;
+}
+
+.fieldGroupHalf {
+  /* Intentionally empty - used for responsive grid placement */
+}
+
+.fieldGroupFull {
+  /* Intentionally empty - used for responsive grid placement */
 }
 
 .fieldHeader {
@@ -155,6 +206,10 @@
   font-size: 0.85rem;
   color: var(--text-tertiary, rgba(246, 247, 251, 0.65));
   margin-top: -8px;
+}
+
+.helperTextFull {
+  /* Intentionally empty - used for responsive grid placement */
 }
 
 .selectInput,
@@ -295,6 +350,97 @@
   background: rgba(250, 51, 86, 0.18);
   color: var(--text-primary, #f6f7fb);
   border-color: rgba(250, 51, 86, 0.65);
+}
+
+@media (min-width: 1024px) {
+  .createOverlay {
+    align-items: center;
+    padding: 32px;
+  }
+
+  .createModal {
+    width: min(1040px, calc(100% - 64px));
+    margin: 0;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--dashboard-bg, var(--bg1, #050607));
+    box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.45);
+    max-height: calc(100vh - 64px);
+  }
+
+  .grabZone {
+    display: none;
+  }
+
+  .createForm {
+    padding: 8px 24px 24px;
+  }
+
+  .formBody {
+    padding: 32px;
+    background: rgba(17, 18, 19, 0.92);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 48px rgba(0, 0, 0, 0.35);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 32px;
+  }
+
+  .createHeader {
+    margin-bottom: 0;
+  }
+
+  .desktopHeaderRow {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .desktopCloseButton {
+    display: inline-flex;
+  }
+
+  .fieldGroup {
+    margin-bottom: 0;
+  }
+
+  .fieldGroupHalf {
+    grid-column: span 1;
+  }
+
+  .fieldGroupFull {
+    grid-column: 1 / -1;
+  }
+
+  .helperTextFull {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  .feedbackRegion {
+    grid-column: 1 / -1;
+  }
+
+  .actionBar {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 8px;
+  }
+
+  .deleteButton,
+  .submitButton {
+    width: auto;
+  }
+
+  .quickChips {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
 }
 
 .actionBar {

@@ -2,6 +2,7 @@ import React from "react";
 import { Segmented, Tooltip as AntTooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClone, faTrash, faUndo, faRedo, faPlus } from "@fortawesome/free-solid-svg-icons";
+import styles from "./budget-toolbar.module.css";
 
 interface BudgetToolbarProps {
   groupBy: string;
@@ -28,34 +29,28 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   handleRedo,
   openCreateModal,
 }) => (
-  <div
-    style={{
-      color: "white",
-      width: "100%",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    }}
-  >
-    <Segmented
-      size="small"
-      options={[
-        { label: "None", value: "none" },
-        { label: "Area Group", value: "areaGroup" },
-        { label: "Invoice Group", value: "invoiceGroup" },
-        { label: "Category", value: "category" },
-      ]}
-      value={groupBy}
-      onChange={(val) => onGroupChange(val as string)}
-    />
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+  <div className={styles.toolbar}>
+    <div className={styles.groupControl}>
+      <Segmented
+        size="small"
+        options={[
+          { label: "None", value: "none" },
+          { label: "Area Group", value: "areaGroup" },
+          { label: "Invoice Group", value: "invoiceGroup" },
+          { label: "Category", value: "category" },
+        ]}
+        value={groupBy}
+        onChange={(val) => onGroupChange(val as string)}
+        className={styles.segmentedControl}
+      />
+    </div>
+    <div className={styles.actions}>
       {selectedRowKeys.length > 0 && (
-        <>
+        <div className={styles.selectionActions}>
           <AntTooltip title="Duplicate Selected">
             <button
               type="button"
-              className="modal-button secondary"
-              style={{ borderRadius: "10px" }}
+              className={`modal-button secondary ${styles.actionButton}`}
               onClick={handleDuplicateSelected}
               aria-label="Duplicate selected"
             >
@@ -65,21 +60,19 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
           <AntTooltip title="Delete Selected">
             <button
               type="button"
-              className="modal-button secondary"
-              style={{ borderRadius: "10px" }}
+              className={`modal-button secondary ${styles.actionButton}`}
               onClick={() => openDeleteModal(selectedRowKeys)}
               aria-label="Delete selected"
             >
               <FontAwesomeIcon icon={faTrash} />
             </button>
           </AntTooltip>
-        </>
+        </div>
       )}
       <AntTooltip title="Undo">
         <button
           type="button"
-          className="modal-button secondary"
-          style={{ borderRadius: "10px" }}
+          className={`modal-button secondary ${styles.actionButton}`}
           onClick={handleUndo}
           disabled={undoStackLength === 0}
           aria-label="Undo"
@@ -90,8 +83,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
       <AntTooltip title="Redo">
         <button
           type="button"
-          className="modal-button secondary"
-          style={{ borderRadius: "10px" }}
+          className={`modal-button secondary ${styles.actionButton}`}
           onClick={handleRedo}
           disabled={redoStackLength === 0}
           aria-label="Redo"
@@ -102,8 +94,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
       <AntTooltip title="Create Line Item">
         <button
           type="button"
-          className="modal-button primary"
-          style={{ borderRadius: "10px" }}
+          className={`modal-button primary ${styles.primaryActionButton}`}
           onClick={openCreateModal}
           aria-label="Create line item"
         >

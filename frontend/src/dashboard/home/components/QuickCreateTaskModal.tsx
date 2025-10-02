@@ -187,6 +187,8 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const formRef = useRef<HTMLFormElement | null>(null);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
+  const lastAppliedTaskRef = useRef<string | null>(null);
+  const successMessageRef = useRef<string | null>(null);
   const descriptionId = useId();
   const projectFieldId = useId();
   const assigneeFieldId = useId();
@@ -323,6 +325,10 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   const canSubmit = Boolean(effectiveProjectId && trimmedTitle);
   const isBusy = submitting || deleting;
 
+  useEffect(() => {
+    successMessageRef.current = successMessage;
+  }, [successMessage]);
+
   const sortSuggestionsByProximity = useCallback(
     (suggestions: NominatimSuggestion[], origin: Coordinates | null) => {
       if (!origin) return suggestions;
@@ -374,7 +380,13 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
   }, []);
 
   const applyTaskToForm = useCallback(
-    (taskData: QuickCreateTaskModalTask) => {
+    (
+      taskData: QuickCreateTaskModalTask,
+      options?: {
+        preserveFeedback?: boolean;
+      },
+    ) => {
+      const preserveFeedback = Boolean(options?.preserveFeedback);
       const nextProjectId = typeof taskData.projectId === "string" ? taskData.projectId.trim() : "";
       setProjectId(nextProjectId);
       const nextTaskId =
@@ -390,8 +402,10 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       setAddressSearch(typeof taskData.address === "string" ? taskData.address : "");
       setAddressSuggestions([]);
       setSelectedLocation(normalizeLocation(taskData.location));
-      setSuccessMessage(null);
-      setErrorMessage(null);
+      if (!preserveFeedback) {
+        setSuccessMessage(null);
+        setErrorMessage(null);
+      }
       setTitleError(null);
       setProjectError(null);
     },
@@ -406,6 +420,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
       isDraggingRef.current = false;
       touchStartYRef.current = null;
       lastOffsetRef.current = 0;
+      lastAppliedTaskRef.current = null;
       return;
     }
 
@@ -413,13 +428,12 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     setSuccessMessage(null);
     setTitleError(null);
     setProjectError(null);
+  }, [open, resetForm]);
 
-    if (task) {
-      applyTaskToForm(task);
+  useEffect(() => {
+    if (!open || task) {
       return;
     }
-
-    resetForm();
 
     if (scopedProjectId) {
       setProjectId(scopedProjectId);
@@ -432,11 +446,18 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     }
 
     setProjectId(projectOptions[0].id);
-  }, [open, projectOptions, resetForm, scopedProjectId, task, applyTaskToForm]);
+  }, [open, projectOptions, scopedProjectId, task]);
 
   useEffect(() => {
     if (!open || !task) return;
-    applyTaskToForm(task);
+    const taskKey =
+      (typeof task.taskId === "string" && task.taskId.trim()) ||
+      (typeof task.id === "string" && task.id.trim()) ||
+      null;
+    const shouldPreserveFeedback =
+      Boolean(successMessageRef.current) && taskKey !== null && taskKey === lastAppliedTaskRef.current;
+    applyTaskToForm(task, { preserveFeedback: shouldPreserveFeedback });
+    lastAppliedTaskRef.current = taskKey;
   }, [open, task, applyTaskToForm]);
 
   useEffect(() => {
@@ -794,7 +815,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
 
       if (isEditing && taskId) {
         await updateTask({ ...payload, taskId });
-        setSuccessMessage("Task updated.");
+        setSuccessMessage("Task updated. Changes saved.");
         onUpdated?.();
       } else {
         await createTask(payload);

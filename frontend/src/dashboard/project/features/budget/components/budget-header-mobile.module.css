@@ -1,0 +1,261 @@
+.card {
+  background: rgba(17, 24, 39, 0.85);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #f9fafb;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 28px rgba(15, 23, 42, 0.4);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.clientRevision {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.revisionButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.revisionButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.revisionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.amountRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.amountValue {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.amountActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconButton {
+  background: transparent;
+  border: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.iconButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.05);
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dateRow {
+  font-size: 0.75rem;
+  color: rgba(249, 250, 251, 0.7);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controlRow {
+  display: flex;
+  gap: 8px;
+}
+
+.controlSelect {
+  flex: 1;
+  min-width: 0;
+}
+
+.controlSelect :global(.ant-select) {
+  width: 100%;
+}
+
+.controlSelect :global(.ant-select-selector) {
+  background: rgba(30, 41, 59, 0.9) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f9fafb !important;
+}
+
+.controlSelect :global(.ant-select-selection-item) {
+  color: inherit !important;
+}
+
+.controlSelect :global(.ant-select-arrow) {
+  color: rgba(249, 250, 251, 0.8);
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: rgba(249, 250, 251, 0.8);
+}
+
+.chartRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.chartContainer {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: rgba(249, 250, 251, 0.85);
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legendMore {
+  font-size: 0.7rem;
+  color: rgba(249, 250, 251, 0.65);
+}
+
+.metricScroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin: 0 -4px;
+  padding-left: 4px;
+}
+
+.metricChip {
+  min-width: 120px;
+  background: rgba(30, 41, 59, 0.85);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid transparent;
+  color: inherit;
+  text-align: left;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.metricChip:active:not(.metricChipActive) {
+  transform: scale(0.98);
+}
+
+.metricChip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.metricChipActive {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(17, 24, 39, 0.9);
+}
+
+.metricTag {
+  font-size: 0.65rem;
+  color: rgba(249, 250, 251, 0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.metricValue {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.metricDescription {
+  font-size: 0.65rem;
+  color: rgba(249, 250, 251, 0.55);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 480px) {
+  .chartContainer {
+    width: 100px;
+    height: 100px;
+  }
+
+  .metricChip {
+    min-width: 110px;
+  }
+}

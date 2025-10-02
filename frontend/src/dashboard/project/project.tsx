@@ -425,8 +425,8 @@ const SingleProject: React.FC = () => {
             ) : (
               <TasksComponent
                 projectId={resolvedActiveProject.projectId}
-                userId={userId}
-                team={resolvedActiveProject.team}
+                projectName={resolvedActiveProject.title}
+                projectColor={resolvedActiveProject.color as string | undefined}
               />
             )}
           </div>

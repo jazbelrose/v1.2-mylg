@@ -1,493 +1,511 @@
-import React, { useEffect, useState } from "react";
-import { Button, ConfigProvider, Dropdown, Form, Select, Tooltip, message, theme } from "antd";
-import type { ColumnsType } from "antd/es/table";
-import type { MenuProps } from "antd";
-import type { Dayjs } from "dayjs";
-import { DeleteOutlined, DownOutlined, EditOutlined, MessageOutlined } from "@ant-design/icons";
-import { v4 as uuidv4 } from "uuid";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  NOMINATIM_SEARCH_URL,
-  apiFetch,
-  fetchTasks,
-  createTask,
-  updateTask,
-  deleteTask,
-  fetchUserProfilesBatch,
-} from "@/shared/utils/api";
-import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
-import AssignTaskForm from "./components/AssignTaskForm";
-import CommentModal from "./components/CommentModal";
-import TaskEditModal from "./components/TaskEditModal";
-import TaskTable from "./components/TaskTable";
-import type {
-  ApiTask,
-  NominatimSuggestion,
-  Status,
-  Task,
-  TaskLocation,
-  TeamMember,
-} from "./types";
-import {
-  STATUS_OPTIONS,
-  buildAssigneeOptions,
-  buildBudgetOptions,
-  buildTaskNameOptions,
-  formatAssigneeDisplay,
-  mapApiTaskToTask,
-  sortByProximity,
-} from "./utils";
-import "./task-table.css";
+import { fetchTasks } from "@/shared/utils/api";
+import QuickCreateTaskModal, {
+  type QuickCreateTaskModalProject,
+  type QuickCreateTaskModalTask,
+} from "@/dashboard/home/components/QuickCreateTaskModal";
 
-type TasksComponentProps = {
+import styles from "./TasksComponentMobile.module.css";
+import TaskDrawer from "./components/TaskDrawer";
+import TaskList from "./components/TaskList";
+import TaskSummary from "./components/TaskSummary";
+import {
+  DEFAULT_LOCATION,
+  DRAWER_SNAP_POINTS,
+  buildMapMarkers,
+  buildMarkerThumbnail,
+  computeStats,
+  formatDueDate,
+  formatDueLabel,
+  getViewportHeight,
+  isSameDay,
+  normalizeTask,
+  sortTasksForDrawer,
+  type QuickTask,
+  type RawTask,
+  type TaskMapMarker,
+  type TaskStats,
+  type SnapIndex,
+} from "./components/quickTaskUtils";
+import { formatAssigneeDisplay } from "./utils";
+
+export type TasksComponentProps = {
   projectId?: string;
-  userId?: string;
-  team?: TeamMember[];
+  projectName?: string;
+  projectColor?: string;
 };
 
-const TasksComponent: React.FC<TasksComponentProps> = ({ projectId = "", team = [] }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+const TasksComponent: React.FC<TasksComponentProps> = ({
+  projectId = "",
+  projectName,
+  projectColor,
+}) => {
+  const [tasks, setTasks] = useState<QuickTask[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<QuickCreateTaskModalTask | null>(null);
+  const [snapIndex, setSnapIndex] = useState<SnapIndex>(2);
+  const [viewportHeight, setViewportHeight] = useState(() => getViewportHeight());
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState<number | null>(null);
+  const [currentDragY, setCurrentDragY] = useState(0);
+  const inlineTaskListRef = useRef<HTMLUListElement | null>(null);
+  const drawerTaskListRef = useRef<HTMLUListElement | null>(null);
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  const initialScrollDoneRef = useRef(false);
 
-  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-  const [commentTask, setCommentTask] = useState<Task | null>(null);
-  const [commentText, setCommentText] = useState("");
+  const quickCreateProjects = useMemo<QuickCreateTaskModalProject[]>(() => {
+    if (projectId && projectName) {
+      return [{ id: projectId, name: projectName }];
+    }
 
-  const [assignForm] = Form.useForm();
-  const [assignLocationSearch, setAssignLocationSearch] = useState("");
-  const [assignLocationSuggestions, setAssignLocationSuggestions] = useState<NominatimSuggestion[]>([]);
-  const [assignTaskLocation, setAssignTaskLocation] = useState<TaskLocation>({ lat: "", lng: "" });
-  const [assignTaskAddress, setAssignTaskAddress] = useState("");
+    if (tasks.length > 0) {
+      const firstTask = tasks[0];
+      if (firstTask.projectId) {
+        return [{ id: firstTask.projectId, name: firstTask.projectId }];
+      }
+    }
 
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+    return [];
+  }, [projectId, projectName, tasks]);
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        setUserLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        }),
-      () => setUserLocation(null)
-    );
+  const hasQuickCreateProject = quickCreateProjects.length > 0;
+
+  const handleOpenQuickCreate = useCallback(() => {
+    if (!hasQuickCreateProject) return;
+    setTaskToEdit(null);
+    setQuickCreateOpen(true);
+  }, [hasQuickCreateProject]);
+
+  const handleCloseQuickCreate = useCallback(() => {
+    setTaskToEdit(null);
+    setQuickCreateOpen(false);
   }, []);
 
-  const fetchAssignLocationSuggestions = async (query: string) => {
-    if (!query || query.length < 3) {
-      setAssignLocationSuggestions([]);
+  const toModalTask = useCallback(
+    (task: QuickTask): QuickCreateTaskModalTask => {
+      const resolvedProjectId = task.projectId || projectId || "";
+      return {
+        id: task.id,
+        taskId: task.id,
+        projectId: resolvedProjectId,
+        projectName,
+        title: task.title,
+        description: task.description ?? undefined,
+        dueDate: task.dueDateInput ?? (task.dueDate ? task.dueDate.toISOString() : null),
+        status: task.status,
+        assigneeId: task.assignedTo ?? undefined,
+        address: task.address ?? undefined,
+        location: (task.location ?? task.raw?.location) as QuickCreateTaskModalTask["location"],
+      };
+    },
+    [projectId, projectName],
+  );
+
+  const refreshTasks = useCallback(async () => {
+    if (!projectId) {
+      setTasks([]);
       return;
     }
 
+    setLoading(true);
+    setError(null);
     try {
-      const url = `${NOMINATIM_SEARCH_URL}${encodeURIComponent(query)}&addressdetails=1&limit=5`;
-      const response = await apiFetch(url);
-      const results = sortByProximity((response as NominatimSuggestion[]) || [], userLocation);
-      setAssignLocationSuggestions(results);
-    } catch {
-      setAssignLocationSuggestions([]);
+      const response = await fetchTasks(projectId);
+      const normalized = (response || [])
+        .map((raw: RawTask) => normalizeTask(raw))
+        .filter((task): task is QuickTask => Boolean(task));
+      setTasks(normalized);
+    } catch (err) {
+      console.error("Failed to load project tasks", err);
+      setError("We couldn't load tasks for this project. Please try again.");
+      setTasks([]);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleAssignLocationSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setAssignLocationSearch(value);
-    fetchAssignLocationSuggestions(value);
-  };
-
-  const handleAssignLocationSuggestionSelect = (suggestion: NominatimSuggestion) => {
-    const location = { lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) };
-    setAssignTaskLocation(location);
-    setAssignTaskAddress(suggestion.display_name);
-    setAssignLocationSearch(suggestion.display_name);
-    setAssignLocationSuggestions([]);
-    assignForm.setFieldsValue({ location, address: suggestion.display_name });
-  };
-
-  const [editForm] = Form.useForm();
-  const [locationSearch, setLocationSearch] = useState("");
-  const [locationSuggestions, setLocationSuggestions] = useState<NominatimSuggestion[]>([]);
-  const [taskLocation, setTaskLocation] = useState<TaskLocation>({ lat: "", lng: "" });
-  const [taskAddress, setTaskAddress] = useState("");
-
-  const fetchLocationSuggestions = async (query: string) => {
-    if (!query || query.length < 3) {
-      setLocationSuggestions([]);
-      return;
-    }
-
-    try {
-      const url = `${NOMINATIM_SEARCH_URL}${encodeURIComponent(query)}&addressdetails=1&limit=5`;
-      const response = await apiFetch(url);
-      setLocationSuggestions((response as NominatimSuggestion[]) || []);
-    } catch {
-      setLocationSuggestions([]);
-    }
-  };
-
-  const handleLocationSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setLocationSearch(value);
-    fetchLocationSuggestions(value);
-  };
-
-  const handleLocationSuggestionSelect = (suggestion: NominatimSuggestion) => {
-    const location = { lat: parseFloat(suggestion.lat), lng: parseFloat(suggestion.lon) };
-    setTaskLocation(location);
-    setTaskAddress(suggestion.display_name);
-    setLocationSearch(suggestion.display_name);
-    setLocationSuggestions([]);
-    editForm.setFieldsValue({ location, address: suggestion.display_name });
-  };
-
-  const { budgetItems } = useBudget();
-  const [teamProfiles, setTeamProfiles] = useState<TeamMember[]>([]);
-
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      if (!Array.isArray(team) || team.length === 0) {
-        setTeamProfiles([]);
-        return;
-      }
-
-      const userIds = team.map((member) => member.userId).filter(Boolean);
-      const profiles = await fetchUserProfilesBatch(userIds);
-      setTeamProfiles(profiles || []);
-    };
-
-    fetchProfiles();
-  }, [team]);
-
-  useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        const data = await fetchTasks(projectId);
-        const mapped: Task[] = (data || []).map((task: ApiTask) => mapApiTaskToTask(task));
-        setTasks(mapped);
-      } catch (error) {
-        console.error("Failed to fetch tasks", error);
-        setTasks([]);
-      }
-    };
-
-    loadTasks();
   }, [projectId]);
 
-  const assigneeOptions = buildAssigneeOptions(teamProfiles);
-  const budgetArray = Array.isArray(budgetItems)
-    ? (budgetItems as Record<string, unknown>[])
-    : ([] as Record<string, unknown>[]);
-  const budgetOptions = buildBudgetOptions(budgetArray);
-  const taskNameOptions = buildTaskNameOptions(budgetArray);
+  useEffect(() => {
+    void refreshTasks();
+  }, [refreshTasks]);
 
-  const handleAssignTask = async () => {
-    try {
-      const values = await assignForm.validateFields();
-      const id = uuidv4();
-      const normalizedName = (values.name || "").toUpperCase();
-      const due: Dayjs | string | undefined = values.dueDate;
-
-      const payload: ApiTask = {
-        projectId,
-        taskId: id,
-        assigneeId: values.assignedTo || "",
-        budgetItemId: values.budgetCode || "",
-        description: "",
-        dueDate:
-          due && typeof due !== "string"
-            ? due.format("YYYY-MM-DD")
-            : (due as string) || "",
-        title: normalizedName,
-        priority: values.priority || "",
-        status: "todo",
-        location: values.location || assignTaskLocation,
-        address: values.address || assignTaskAddress,
-      };
-
-      const saved = await createTask(payload);
-      const combined = mapApiTaskToTask({ ...payload, ...saved }, id);
-      const savedAssignee =
-        (saved.assigneeId || (saved as ApiTask).assignedTo || combined.assigneeId || "") as string;
-      const mappedTask: Task = { ...combined, assigneeId: savedAssignee, assignedTo: savedAssignee };
-
-      setTasks((previous) => [...previous, mappedTask]);
-
-      assignForm.resetFields();
-      setAssignTaskLocation({ lat: "", lng: "" });
-      setAssignTaskAddress("");
-      setAssignLocationSearch("");
-      setAssignLocationSuggestions([]);
-    } catch (error) {
-      console.error("Failed to assign task", error);
-      message.error("Failed to assign task");
+  useEffect(() => {
+    if (!hasQuickCreateProject) {
+      setQuickCreateOpen(false);
     }
+  }, [hasQuickCreateProject]);
+
+  useEffect(() => {
+    if (!tasks.length) {
+      setActiveTaskId(null);
+      return;
+    }
+
+    if (!activeTaskId || !tasks.some((task) => task.id === activeTaskId)) {
+      setActiveTaskId(tasks[0].id);
+    }
+  }, [tasks, activeTaskId]);
+
+  const stats = useMemo<TaskStats>(() => computeStats(tasks), [tasks]);
+
+  const formatStatValue = (value: number): string | number => {
+    if (error) return "—";
+    if (loading) return "…";
+    return value;
   };
 
-  const openTaskModal = (task?: Task) => {
-    const targetTask = task || null;
-    setEditingTask(targetTask);
-    setIsTaskModalOpen(true);
+  const drawerTasks = useMemo(() => sortTasksForDrawer(tasks), [tasks]);
 
-    if (targetTask) {
-      editForm.setFieldsValue({ ...targetTask, assignedTo: targetTask.assignedTo || targetTask.assigneeId || "" });
-      setTaskLocation(targetTask.location || { lat: "", lng: "" });
-      setTaskAddress(targetTask.address || "");
-      setLocationSearch(targetTask.address || "");
+  const mapTasks = useMemo(
+    () => tasks.filter((task) => task.location && !Number.isNaN(task.location.lat) && !Number.isNaN(task.location.lng)),
+    [tasks],
+  );
+
+  const mapLocation = mapTasks[0]?.location ?? DEFAULT_LOCATION;
+  const mapAddress = mapTasks[0]?.address ?? projectName ?? "Project";
+
+  const markerThumbnail = useMemo(() => buildMarkerThumbnail(projectColor), [projectColor]);
+
+  const mapMarkers = useMemo<TaskMapMarker[]>(
+    () => buildMapMarkers(mapTasks, markerThumbnail, activeTaskId),
+    [mapTasks, markerThumbnail, activeTaskId],
+  );
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const update = () => setViewportHeight(getViewportHeight());
+    update();
+    window.addEventListener("resize", update);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      viewport?.removeEventListener("resize", update);
+    };
+  }, [drawerOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const existingIds = new Set(drawerTasks.map((task) => task.id));
+    if (activeTaskId && existingIds.has(activeTaskId)) {
+      return;
+    }
+
+    initialScrollDoneRef.current = false;
+
+    if (mapTasks.length) {
+      setActiveTaskId(mapTasks[0].id);
+    } else if (drawerTasks.length) {
+      setActiveTaskId(drawerTasks[0].id);
     } else {
-      editForm.setFieldsValue({
-        name: "",
-        assignedTo: "",
-        dueDate: "",
-        priority: "",
-        budgetItemId: "",
-        eventId: "",
-        location: { lat: "", lng: "" },
-        address: "",
-      });
-      setTaskLocation({ lat: "", lng: "" });
-      setTaskAddress("");
-      setLocationSearch("");
+      setActiveTaskId(null);
+    }
+  }, [drawerOpen, drawerTasks, mapTasks, activeTaskId]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    if (!activeTaskId) {
+      setMapFocus(null);
+      return;
     }
 
-    setLocationSuggestions([]);
-  };
-
-  const saveTask = async () => {
-    try {
-      const values = await editForm.validateFields();
-      const id = editingTask?.taskId || editingTask?.id || uuidv4();
-      const normalizedName = (values.name || "").toUpperCase();
-      const due: Dayjs | string | undefined = values.dueDate;
-
-      const payload: ApiTask = {
-        projectId,
-        taskId: id,
-        assigneeId: values.assignedTo || editingTask?.assigneeId || "",
-        budgetItemId: values.budgetItemId || editingTask?.budgetItemId || "",
-        description: editingTask?.description || "",
-        dueDate:
-          due && typeof due !== "string"
-            ? due.format("YYYY-MM-DD")
-            : (due as string) || editingTask?.dueDate || "",
-        title: normalizedName,
-        priority: values.priority || editingTask?.priority || "",
-        status: (editingTask?.status || "todo") as Status,
-        location: values.location || taskLocation,
-        address: values.address || taskAddress,
-        eventId: values.eventId || editingTask?.eventId,
-      };
-
-      const saved = editingTask ? await updateTask(payload) : await createTask(payload);
-      const merged = mapApiTaskToTask({ ...editingTask, ...payload, ...saved }, id);
-      const savedAssignee =
-        (saved.assigneeId || (saved as ApiTask).assignedTo || merged.assigneeId || "") as string;
-      const mappedTask: Task = { ...merged, assigneeId: savedAssignee, assignedTo: savedAssignee };
-
-      setTasks((previous) => {
-        const exists = previous.some((taskItem) => taskItem.id === mappedTask.id);
-        return exists
-          ? previous.map((taskItem) => (taskItem.id === mappedTask.id ? mappedTask : taskItem))
-          : [...previous, mappedTask];
-      });
-
-      setIsTaskModalOpen(false);
-      setEditingTask(null);
-      editForm.resetFields();
-      setTaskLocation({ lat: "", lng: "" });
-      setTaskAddress("");
-      setLocationSearch("");
-      setLocationSuggestions([]);
-    } catch (error) {
-      console.error("Failed to save task", error);
-      message.error("Failed to save task");
+    const locatedTask = mapTasks.find((task) => task.id === activeTaskId);
+    if (!locatedTask?.location) {
+      setMapFocus(null);
+      return;
     }
-  };
 
-  const handleStatusChange = (id: string, status: string) => {
-    const normalized = (status || "todo").toLowerCase().replace(/\s+/g, "_") as Status;
-    setTasks((previous) => previous.map((task) => (task.id === id ? { ...task, status: normalized } : task)));
-  };
+    setMapFocus(locatedTask.location);
 
-  const openCommentModal = (task: Task) => {
-    setCommentTask(task);
-    setCommentText(task.description || "");
-    setIsCommentModalOpen(true);
-  };
+    if (typeof window === "undefined") return;
+    const timeout = window.setTimeout(() => setMapFocus(null), 420);
+    return () => window.clearTimeout(timeout);
+  }, [activeTaskId, mapTasks, drawerOpen]);
 
-  const saveComment = () => {
-    if (!commentTask) return;
-    setTasks((previous) =>
-      previous.map((task) => (task.id === commentTask.id ? { ...task, description: commentText } : task))
-    );
-    setIsCommentModalOpen(false);
-    setCommentTask(null);
-  };
+  useEffect(() => {
+    if (!drawerOpen || !activeTaskId || !drawerTaskListRef.current) return;
+    const container = drawerTaskListRef.current;
+    const target = container.querySelector<HTMLLIElement>(`[data-task-id="${activeTaskId}"]`);
+    if (!target) return;
 
-  const handleMenuClick = (task: Task): MenuProps["onClick"] =>
-    async ({ key }) => {
-      if (key === "edit") {
-        openTaskModal(task);
-        return;
-      }
+    const behavior: ScrollBehavior = initialScrollDoneRef.current ? "smooth" : "auto";
+    target.scrollIntoView({ block: "center", behavior });
+    initialScrollDoneRef.current = true;
+  }, [activeTaskId, drawerOpen]);
 
-      if (key === "delete") {
-        const previousTasks = tasks;
-        setTasks((current) => current.filter((item) => item.id !== task.id));
-        try {
-          await deleteTask({ projectId: task.projectId, taskId: task.taskId || task.id });
-        } catch (error) {
-          console.error("Failed to delete task", error);
-          setTasks(previousTasks);
-          message.error("Failed to delete task");
+  useEffect(() => {
+    if (!drawerOpen || typeof document === "undefined") return;
+    const { body } = document;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.overflow = previousOverflow;
+    };
+  }, [drawerOpen]);
+
+  const sheetHeights = useMemo(() => DRAWER_SNAP_POINTS.map((point) => viewportHeight * point), [viewportHeight]);
+  const baseTargetY = viewportHeight ? viewportHeight - sheetHeights[snapIndex] : 0;
+  const targetY = isDragging ? baseTargetY + currentDragY : baseTargetY;
+
+  const selectedTask = useMemo(
+    () => drawerTasks.find((task) => task.id === activeTaskId) ?? null,
+    [drawerTasks, activeTaskId],
+  );
+  const selectedAssigneeName = formatAssigneeDisplay(selectedTask?.assignedTo);
+
+  const handleTaskSelect = useCallback(
+    (taskId: string) => {
+      if (activeTaskId === taskId) {
+        const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
+        if (match) {
+          setTaskToEdit(toModalTask(match));
+          setQuickCreateOpen(true);
         }
+      } else {
+        setActiveTaskId(taskId);
+        setSnapIndex((current) => (current === 0 ? 1 : current));
+      }
+    },
+    [activeTaskId, drawerTasks, tasks, toModalTask],
+  );
+
+  const handleMarkerClick = useCallback(
+    (markerId: string) => {
+      handleTaskSelect(markerId);
+    },
+    [handleTaskSelect],
+  );
+
+  const handleOpenDrawer = useCallback(() => {
+    setDrawerOpen(true);
+    setSnapIndex(2);
+    initialScrollDoneRef.current = false;
+    setViewportHeight(getViewportHeight());
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    setSnapIndex(2);
+    setMapFocus(null);
+    initialScrollDoneRef.current = false;
+  }, []);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        handleCloseDrawer();
       }
     };
 
-  const columns: ColumnsType<Task> = [
-    {
-      title: "Task",
-      dataIndex: "name",
-      key: "name",
-      width: 150,
-      ellipsis: true,
-      render: (text: string) => (text || "").toUpperCase(),
-    },
-    {
-      title: "Assignee",
-      dataIndex: "assignedTo",
-      key: "assignedTo",
-      width: 120,
-      ellipsis: true,
-      render: (text?: string) => formatAssigneeDisplay(text) || text,
-    },
-    {
-      title: "Due Date",
-      dataIndex: "dueDate",
-      key: "dueDate",
-      width: 110,
-      ellipsis: true,
-    },
-    {
-      title: "Priority",
-      dataIndex: "priority",
-      key: "priority",
-      width: 90,
-      ellipsis: true,
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      width: 150,
-      className: "status-column",
-      onHeaderCell: () => ({ colSpan: 3 }),
-      render: (text: Status, record) => (
-        <Select
-          aria-label="status-select"
-          value={text}
-          size="small"
-          style={{ width: "100%", minWidth: 120 }}
-          onChange={(value) => handleStatusChange(record.id, value)}
-          options={STATUS_OPTIONS}
-        />
-      ),
-    },
-    {
-      title: "",
-      dataIndex: "comments",
-      key: "comments",
-      width: 32,
-      align: "center",
-      className: "comment-column",
-      onHeaderCell: () => ({ colSpan: 0 }),
-      render: (text: string | undefined, record) => (
-        <Tooltip title={text || "Add comment"}>
-          <Button
-            type="text"
-            size="small"
-            aria-label="comment-button"
-            icon={<MessageOutlined />}
-            onClick={() => openCommentModal(record)}
-          />
-        </Tooltip>
-      ),
-    },
-    {
-      title: "",
-      key: "actions",
-      width: 40,
-      align: "center",
-      className: "actions-column",
-      onHeaderCell: () => ({ colSpan: 0 }),
-      render: (_: unknown, record) => {
-        const items: MenuProps["items"] = [
-          { key: "edit", label: "Edit", icon: <EditOutlined /> },
-          { key: "delete", label: "Delete", icon: <DeleteOutlined /> },
-        ];
-        return (
-          <Dropdown menu={{ items, onClick: handleMenuClick(record) }} trigger={["click"]}>
-            <Button
-              type="text"
-              size="small"
-              aria-label="actions-dropdown"
-              icon={<DownOutlined />}
-            />
-          </Dropdown>
-        );
-      },
-    },
-  ];
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawerOpen, handleCloseDrawer]);
 
-  const locationDisplay =
-    taskLocation.lat && taskLocation.lng ? `${taskLocation.lat}, ${taskLocation.lng}` : "";
+  const handleHandleClick = useCallback(() => {
+    setSnapIndex((current) => {
+      if (current === 2) return 1;
+      if (current === 1) return 2;
+      return 1;
+    });
+  }, []);
+
+  const handleTouchStart = useCallback((event: React.TouchEvent) => {
+    if (event.touches.length === 1) {
+      setIsDragging(true);
+      setDragStartY(event.touches[0].clientY);
+      setCurrentDragY(0);
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((event: React.TouchEvent) => {
+    if (isDragging && dragStartY !== null && event.touches.length === 1) {
+      const deltaY = event.touches[0].clientY - dragStartY;
+      setCurrentDragY(deltaY);
+      event.preventDefault();
+    }
+  }, [isDragging, dragStartY]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (isDragging) {
+      setIsDragging(false);
+      setDragStartY(null);
+
+      const threshold = viewportHeight * 0.15;
+      if (Math.abs(currentDragY) > threshold) {
+        if (currentDragY > 0) {
+          setSnapIndex((current) => Math.max(0, current - 1) as SnapIndex);
+        } else {
+          setSnapIndex((current) => Math.min(2, current + 1) as SnapIndex);
+        }
+      }
+
+      setCurrentDragY(0);
+    }
+  }, [isDragging, currentDragY, viewportHeight]);
+
+  const statusMessage = useMemo(() => {
+    if (error) return "We couldn’t load tasks right now.";
+    if (loading) return "Loading tasks…";
+    if (!tasks.length) return "No tasks for this project yet.";
+
+    const openTasks = tasks.filter((task) => task.status !== "done");
+    if (!openTasks.length) return "You're all caught up.";
+
+    const datedTasks = openTasks.filter((task): task is QuickTask & { dueDate: Date } => Boolean(task.dueDate));
+    if (!datedTasks.length) {
+      const noun = openTasks.length === 1 ? "task" : "tasks";
+      return `${openTasks.length} open ${noun} with no due date yet.`;
+    }
+
+    const sorted = datedTasks.slice().sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+    const nextDue = sorted[0];
+    const sameDayCount = sorted.filter((task) => isSameDay(task.dueDate, nextDue.dueDate)).length;
+    const noun = sameDayCount === 1 ? "task" : "tasks";
+    return `${sameDayCount} ${noun} due ${formatDueDate(nextDue.dueDate)}.`;
+  }, [error, loading, tasks]);
+
+  const mapStatusMessage = useMemo(() => {
+    if (error) return "We couldn’t load task locations.";
+    if (loading) return "Loading task locations…";
+    if (!mapTasks.length) return "Add locations to your tasks to see them appear here.";
+    return `${mapTasks.length === 1 ? "One" : mapTasks.length} task${mapTasks.length === 1 ? "" : "s"} showing on the map.`;
+  }, [error, loading, mapTasks.length]);
+
+  const listMetaLabel = useMemo(() => {
+    if (error) return "Error";
+    if (loading) return "Loading…";
+    if (!tasks.length) return "No tasks yet";
+    const noun = tasks.length === 1 ? "task" : "tasks";
+    return `${tasks.length} ${noun}`;
+  }, [error, loading, tasks.length]);
 
   return (
-    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
-      <div className="tasks-component">
-        <div className="tasks-card">
-          <AssignTaskForm
-            form={assignForm}
-            taskNameOptions={taskNameOptions}
-            assigneeOptions={assigneeOptions}
-            budgetOptions={budgetOptions}
-            locationSearch={assignLocationSearch}
-            locationSuggestions={assignLocationSuggestions}
-            selectedAddress={assignTaskAddress}
-            onLocationSearchChange={handleAssignLocationSearchChange}
-            onLocationSuggestionSelect={handleAssignLocationSuggestionSelect}
-            onSubmit={handleAssignTask}
-          />
+    <section className={`${styles.card} ${styles.desktopCard}`} aria-label="Project tasks overview">
+      <header className={styles.header}>
+        <div className={styles.headingGroup}>
+          <h3 className={styles.title}>Tasks</h3>
+          <p className={styles.subtitle}>
+            {projectName ? `Keep ${projectName} moving forward.` : "Keep this project moving forward."}
+          </p>
+        </div>
+        <div className={styles.desktopActions}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={handleOpenQuickCreate}
+            disabled={loading || !hasQuickCreateProject}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
+            New task
+          </button>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            onClick={handleOpenDrawer}
+            disabled={loading}
+          >
+            Open map view
+          </button>
+        </div>
+      </header>
 
-          <TaskTable columns={columns} data={tasks} />
-
-          <TaskEditModal
-            open={isTaskModalOpen}
-            isEditing={Boolean(editingTask)}
-            form={editForm}
-            taskNameOptions={taskNameOptions}
-            assigneeOptions={assigneeOptions}
-            budgetOptions={budgetOptions}
-            locationSearch={locationSearch}
-            locationSuggestions={locationSuggestions}
-            locationDisplay={locationDisplay}
-            selectedAddress={taskAddress}
-            onLocationSearchChange={handleLocationSearchChange}
-            onLocationSuggestionSelect={handleLocationSuggestionSelect}
-            onOk={saveTask}
-            onCancel={() => setIsTaskModalOpen(false)}
-          />
-
-          <CommentModal
-            open={isCommentModalOpen}
-            value={commentText}
-            onChange={(event) => setCommentText(event.target.value)}
-            onSave={saveComment}
-            onCancel={() => setIsCommentModalOpen(false)}
-          />
+      <div className={styles.desktopSummaryRow}>
+        <TaskSummary stats={stats} formatValue={formatStatValue} statusMessage={statusMessage} />
+        <div className={styles.statusCard}>
+          <span className={styles.statusEyebrow}>What to know</span>
+          <p className={styles.statusMessage}>{statusMessage}</p>
+          <p className={styles.statusSupport}>{mapStatusMessage}</p>
         </div>
       </div>
-    </ConfigProvider>
+
+      <section className={styles.listSection} aria-label="All project tasks">
+        <div className={styles.listHeader}>
+          <h4 className={styles.sectionHeading}>Task list</h4>
+          <span className={styles.listMeta}>{listMetaLabel}</span>
+        </div>
+        <div className={styles.listSurface}>
+          {error ? (
+            <div className={styles.error}>{error}</div>
+          ) : loading ? (
+            <div className={styles.loading}>Loading tasks…</div>
+          ) : tasks.length ? (
+            <TaskList
+              tasks={drawerTasks}
+              activeTaskId={activeTaskId}
+              onTaskSelect={handleTaskSelect}
+              formatDueLabel={formatDueLabel}
+              taskListRef={inlineTaskListRef}
+            />
+          ) : (
+            <div className={styles.empty}>No tasks yet. Create one to get started.</div>
+          )}
+        </div>
+      </section>
+
+      <TaskDrawer
+        open={drawerOpen}
+        viewportHeight={viewportHeight}
+        targetY={targetY}
+        projectName={projectName}
+        mapLocation={mapLocation}
+        mapAddress={mapAddress}
+        mapMarkers={mapMarkers}
+        mapFocus={mapFocus}
+        mapStatusMessage={mapStatusMessage}
+        hasQuickCreateProject={hasQuickCreateProject}
+        loading={loading}
+        error={error}
+        stats={stats}
+        formatValue={formatStatValue}
+        statusMessage={statusMessage}
+        tasks={drawerTasks}
+        activeTaskId={activeTaskId}
+        onTaskSelect={handleTaskSelect}
+        formatDueLabel={formatDueLabel}
+        selectedTask={selectedTask}
+        selectedAssigneeName={selectedAssigneeName}
+        onMarkerClick={handleMarkerClick}
+        onClose={handleCloseDrawer}
+        onOpenQuickCreate={handleOpenQuickCreate}
+        onHandleClick={handleHandleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        sheetRef={sheetRef}
+        taskListRef={drawerTaskListRef}
+      />
+      <QuickCreateTaskModal
+        open={quickCreateOpen}
+        onClose={handleCloseQuickCreate}
+        projects={quickCreateProjects}
+        onCreated={refreshTasks}
+        onUpdated={refreshTasks}
+        onDeleted={refreshTasks}
+        task={taskToEdit}
+        activeProjectId={projectId}
+        activeProjectName={projectName}
+        scopedProjectId={projectId ?? null}
+      />
+    </section>
   );
 };
 

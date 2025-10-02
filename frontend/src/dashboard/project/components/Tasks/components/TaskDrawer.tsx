@@ -9,6 +9,7 @@ import styles from "../TasksComponentMobile.module.css";
 import TaskList from "./TaskList";
 import TaskSummary from "./TaskSummary";
 import type { QuickTask, TaskMapMarker, TaskStats } from "./taskTypes";
+import { buildDirectionsLinks } from "../utils";
 
 type TaskDrawerProps = {
   open: boolean;
@@ -91,6 +92,7 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({
   const drawerTransition = isDesktop
     ? { type: "spring", stiffness: 380, damping: 38, mass: 0.9 }
     : { type: "spring", stiffness: 360, damping: 42, mass: 0.9 };
+  const selectedTaskDirections = selectedTask?.address ? buildDirectionsLinks(selectedTask.address) : null;
 
   return createPortal(
     <div className={overlayClassName} role="presentation">
@@ -119,8 +121,34 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({
                 <Calendar size={14} aria-hidden="true" /> {formatDueLabel(selectedTask)}
               </span>
               {selectedTask.address ? (
-                <span className={styles.metaLine}>
-                  <MapPin size={14} aria-hidden="true" /> {selectedTask.address}
+                <span className={`${styles.metaLine} ${styles.metaLineAddress}`}>
+                  <MapPin size={14} aria-hidden="true" />
+                  <span className={styles.addressDetails}>
+                    <span className={styles.addressText}>{selectedTask.address}</span>
+                    {selectedTaskDirections ? (
+                      <span className={styles.addressActions}>
+                        <a
+                          href={selectedTaskDirections.appleMaps}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.addressLink}
+                        >
+                          Open in Maps
+                        </a>
+                        <span className={styles.addressLinkSeparator} aria-hidden="true">
+                          •
+                        </span>
+                        <a
+                          href={selectedTaskDirections.googleMaps}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.addressLink}
+                        >
+                          Open in Google Maps
+                        </a>
+                      </span>
+                    ) : null}
+                  </span>
                 </span>
               ) : null}
               {selectedAssigneeName ? (

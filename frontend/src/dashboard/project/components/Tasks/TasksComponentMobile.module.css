@@ -833,6 +833,50 @@
   gap: 0.35rem;
 }
 
+.metaLineAddress {
+  align-items: flex-start;
+}
+
+.addressDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.addressText {
+  color: inherit;
+  word-break: break-word;
+}
+
+.addressActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  color: rgba(246, 247, 251, 0.8);
+}
+
+.addressLink {
+  color: var(--brand, #fa3356);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.addressLink:hover,
+.addressLink:focus-visible {
+  text-decoration: underline;
+}
+
+.addressLink:focus-visible {
+  outline: 2px solid var(--brand, #fa3356);
+  outline-offset: 2px;
+}
+
+.addressLinkSeparator {
+  color: rgba(246, 247, 251, 0.55);
+}
+
 .statusBadge {
   display: inline-flex;
   align-items: center;

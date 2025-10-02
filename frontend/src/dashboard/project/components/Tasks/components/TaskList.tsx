@@ -2,7 +2,7 @@ import React from "react";
 import { Calendar, MapPin, User } from "lucide-react";
 
 import styles from "../TasksComponentMobile.module.css";
-import { formatAssigneeDisplay } from "../utils";
+import { buildDirectionsLinks, formatAssigneeDisplay } from "../utils";
 import type { QuickTask } from "./taskTypes";
 
 type TaskListProps = {
@@ -26,9 +26,22 @@ const TaskList: React.FC<TaskListProps> = ({
       const assigneeLabel = formatAssigneeDisplay(task.assignedTo);
       const listItemClassName = `${styles.taskItem}${isActive ? ` ${styles.taskItemActive}` : ""}`;
 
+      const directionsLinks = buildDirectionsLinks(task.address);
+
       return (
         <li key={task.id} data-task-id={task.id} className={listItemClassName}>
-          <button type="button" className={styles.taskButton} onClick={() => onTaskSelect(task.id)}>
+          <div
+            role="button"
+            tabIndex={0}
+            className={styles.taskButton}
+            onClick={() => onTaskSelect(task.id)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onTaskSelect(task.id);
+              }
+            }}
+          >
             <div className={styles.taskTitleRow}>
               <span className={styles.taskTitle}>{task.title}</span>
               <span className={styles.statusBadge}>
@@ -40,8 +53,36 @@ const TaskList: React.FC<TaskListProps> = ({
                 <Calendar size={14} aria-hidden="true" /> {formatDueLabel(task)}
               </span>
               {task.address ? (
-                <span className={styles.metaLine}>
-                  <MapPin size={14} aria-hidden="true" /> {task.address}
+                <span className={`${styles.metaLine} ${styles.metaLineAddress}`}>
+                  <MapPin size={14} aria-hidden="true" />
+                  <span className={styles.addressDetails}>
+                    <span className={styles.addressText}>{task.address}</span>
+                    {directionsLinks ? (
+                      <span className={styles.addressActions}>
+                        <a
+                          href={directionsLinks.appleMaps}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.addressLink}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          Open in Maps
+                        </a>
+                        <span className={styles.addressLinkSeparator} aria-hidden="true">
+                          •
+                        </span>
+                        <a
+                          href={directionsLinks.googleMaps}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.addressLink}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          Open in Google Maps
+                        </a>
+                      </span>
+                    ) : null}
+                  </span>
                 </span>
               ) : (
                 <span className={`${styles.metaLine} ${styles.metaLineMuted}`}>
@@ -58,7 +99,7 @@ const TaskList: React.FC<TaskListProps> = ({
                 </span>
               )}
             </div>
-          </button>
+          </div>
         </li>
       );
     })}

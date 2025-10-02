@@ -48,6 +48,11 @@ export interface Task {
   status: Status;
   location?: TaskLocation;
   address?: string;
+  createdBy?: string;
+  createdById?: string;
+  createdByName?: string;
+  createdByUsername?: string;
+  createdByEmail?: string;
 }
 
 export interface NominatimSuggestion {

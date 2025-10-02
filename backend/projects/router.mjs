@@ -57,6 +57,39 @@ const epochNow = () => Math.floor(Date.now() / 1000);
 
 const makeEventId = (ts = Date.now()) => `E#${String(ts).padStart(13, "0")}#${uuidv4()}`;
 
+function getUserFromEvent(e) {
+  const claims = e?.requestContext?.authorizer?.jwt?.claims || {};
+  const rawUserId = claims["custom:userId"] || claims.sub;
+  const userId = typeof rawUserId === "string" && rawUserId.trim() ? rawUserId.trim() : null;
+
+  const usernameCandidates = [
+    claims["cognito:username"],
+    claims.preferred_username,
+    claims.username,
+  ];
+  const username = usernameCandidates.find((value) => typeof value === "string" && value.trim()) || null;
+
+  const givenName = typeof claims.given_name === "string" ? claims.given_name.trim() : "";
+  const familyName = typeof claims.family_name === "string" ? claims.family_name.trim() : "";
+  const fullNameFromParts = [givenName, familyName].filter(Boolean).join(" ");
+  const displayNameCandidates = [
+    typeof claims.name === "string" ? claims.name.trim() : "",
+    fullNameFromParts.trim(),
+    username || "",
+    typeof claims.email === "string" ? claims.email.trim() : "",
+  ];
+  const displayName = displayNameCandidates.find((value) => typeof value === "string" && value.length) || null;
+
+  const email = typeof claims.email === "string" && claims.email.trim() ? claims.email.trim() : null;
+
+  return {
+    userId,
+    username,
+    displayName,
+    email,
+  };
+}
+
 function buildUpdate(obj) {
   const Names = {}, Values = {}, sets = [];
   let i = 0;
@@ -577,19 +610,36 @@ const listTasks = async (_e, C, { projectId }) => {
 
 const createTask = async (e, C, { projectId }) => {
   const b = B(e);
+  const { userId, username, displayName, email } = getUserFromEvent(e);
+  const body = { ...(b || {}) };
+  delete body.createdAt;
+  delete body.updatedAt;
+  delete body.statusDueDateTaskId;
+  delete body.createdBy;
+  delete body.createdById;
+  delete body.createdByName;
+  delete body.createdByUsername;
+  delete body.createdByEmail;
   const taskId = b.taskId || `T-${uuidv4()}`;
   const ts = nowISO();
   const item = {
+    ...body,
     projectId,
     taskId,
-    title: b.title || "",
-    status: b.status || "todo",
-    assigneeId: b.assigneeId,
-    dueAt: b.dueAt,
     createdAt: ts,
     updatedAt: ts,
-    ...b,
   };
+  item.title = typeof item.title === "string" ? item.title : "";
+  item.status = typeof item.status === "string" && item.status ? item.status : "todo";
+  item.projectId = projectId;
+  item.taskId = taskId;
+  if (userId) {
+    item.createdBy = userId;
+    item.createdById = userId;
+  }
+  if (displayName) item.createdByName = displayName;
+  if (username) item.createdByUsername = username;
+  if (email) item.createdByEmail = email;
   const dueDate = item.dueAt ? String(item.dueAt).slice(0, 10) : "";
   item.statusDueDateTaskId = `${item.status}#${dueDate}#${taskId}`;
   await ddb.put({
@@ -607,6 +657,16 @@ const getTask = async (_e, C, { projectId, taskId }) => {
 
 const patchTask = async (e, C, { projectId, taskId }) => {
   const b = B(e);
+  if (b && typeof b === "object") {
+    delete b.createdAt;
+    delete b.createdBy;
+    delete b.createdById;
+    delete b.createdByName;
+    delete b.createdByUsername;
+    delete b.createdByEmail;
+    delete b.statusDueDateTaskId;
+    delete b.updatedAt;
+  }
   if (b.status !== undefined || b.dueAt !== undefined) {
     const curr = await ddb.get({
       TableName: TASKS_TABLE,

@@ -17,6 +17,11 @@ export type RawTask = {
   assignedTo?: string;
   location?: unknown;
   address?: string;
+  createdBy?: string;
+  createdById?: string;
+  createdByName?: string;
+  createdByUsername?: string;
+  createdByEmail?: string;
   [key: string]: unknown;
 };
 

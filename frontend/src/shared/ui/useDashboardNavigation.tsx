@@ -1,11 +1,23 @@
 import { useCallback, useMemo, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
-import { Home, Folder, Bell, MessageSquare, Settings, LogOut, Shield, Users, Plus } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  Home,
+  Folder,
+  Bell,
+  MessageSquare,
+  Settings,
+  LogOut,
+  Shield,
+  Users,
+  Plus,
+  Banknote,
+} from "lucide-react";
 import { signOut } from "aws-amplify/auth";
 import Cookies from "js-cookie";
 import { useAuth } from "@/app/contexts/useAuth";
 import { useData } from "@/app/contexts/useData";
 import { useNotifications } from "@/app/contexts/useNotifications";
+import { parseDashboardPath } from "@/dashboard/home/pages/DashboardHome";
 
 export type DashboardNavItem = {
   key: string;
@@ -17,6 +29,7 @@ export type DashboardNavItem = {
   isAction?: boolean;
   badgeCount?: number;
   badgeLabel?: string;
+  isActive?: boolean;
 };
 
 export type UseDashboardNavigationArgs = {
@@ -29,6 +42,14 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   const { inbox } = useData();
   const { notifications } = useNotifications() as { notifications: Array<{ read?: boolean }> };
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isDashboardPath = location.pathname.startsWith("/dashboard");
+  const activeDashboardView = useMemo(() => {
+    if (!isDashboardPath) return null;
+    return parseDashboardPath(location.pathname).view;
+  }, [isDashboardPath, location.pathname]);
+  const isHQActive = location.pathname.startsWith("/hq");
 
   const unreadNotifications = useMemo(
     () => notifications.filter((n) => !n.read).length,
@@ -59,6 +80,11 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     close();
   }, [navigate, close]);
 
+  const handleHQNavigation = useCallback(() => {
+    navigate("/hq");
+    close();
+  }, [navigate, close]);
+
   const handleSignOut = useCallback(async () => {
     try {
       await signOut();
@@ -86,12 +112,23 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         icon: <Home size={24} color="white" />,
         label: "Home",
         onClick: () => handleNavigation("welcome"),
+        isActive:
+          (isDashboardPath && (!activeDashboardView || activeDashboardView === "welcome")) ||
+          location.pathname === "/dashboard",
       },
       {
         key: "projects",
         icon: <Folder size={24} color="white" />,
         label: "Projects",
         onClick: () => handleNavigation("projects"),
+        isActive: isDashboardPath && activeDashboardView === "projects",
+      },
+      {
+        key: "hq",
+        icon: <Banknote size={24} color="white" />,
+        label: "HQ",
+        onClick: handleHQNavigation,
+        isActive: isHQActive,
       },
       {
         key: "notifications",
@@ -100,6 +137,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         onClick: () => handleNavigation("notifications"),
         badgeCount: unreadNotifications,
         badgeLabel: "notification",
+        isActive: isDashboardPath && activeDashboardView === "notifications",
       },
       {
         key: "messages",
@@ -108,15 +146,27 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         onClick: () => handleNavigation("messages"),
         badgeCount: unreadMessages,
         badgeLabel: "message",
+        isActive: isDashboardPath && activeDashboardView === "messages",
       },
       {
         key: "collaborators",
         icon: <Users size={24} color="white" />,
         label: "Collaborators",
         onClick: () => handleNavigation("collaborators"),
+        isActive: isDashboardPath && activeDashboardView === "collaborators",
       },
     ],
-    [handleCreateProject, handleNavigation, unreadNotifications, unreadMessages]
+    [
+      handleCreateProject,
+      handleNavigation,
+      unreadNotifications,
+      unreadMessages,
+      isDashboardPath,
+      activeDashboardView,
+      location.pathname,
+      handleHQNavigation,
+      isHQActive,
+    ]
   );
 
   const bottomItems: DashboardNavItem[] = useMemo(
@@ -134,6 +184,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         icon: <Settings size={24} color="white" />,
         label: "Settings",
         onClick: () => handleNavigation("settings"),
+        isActive: isDashboardPath && activeDashboardView === "settings",
       },
       {
         key: "sign-out",
@@ -142,7 +193,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         onClick: handleSignOut,
       },
     ],
-    [close, handleNavigation, handleSignOut]
+    [close, handleNavigation, handleSignOut, isDashboardPath, activeDashboardView]
   );
 
   return {

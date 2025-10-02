@@ -769,16 +769,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       </div>
 
       <div className={summaryStyles.chartColumn}>
-        <div className={summaryStyles.overviewHeader}>
-          <Segmented
-            size="small"
-            options={groupByOptions}
-            value={groupBy}
-            onChange={(val: SegmentedValue) => setGroupBy(val as GroupBy)}
-            style={{ background: "#1a1a1a" }}
-          />
-        </div>
-
         <div className={summaryStyles.chartAndLegend}>
           <div className={summaryStyles.chartContainer}>
             <BudgetDonut

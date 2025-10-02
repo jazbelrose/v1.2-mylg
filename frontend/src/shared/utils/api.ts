@@ -73,6 +73,11 @@ export interface Task extends JsonRecord {
   status?: 'todo' | 'in_progress' | 'done';
   assigneeId?: string;
   dueDate?: string; // ISO
+  createdBy?: string;
+  createdById?: string;
+  createdByName?: string;
+  createdByUsername?: string;
+  createdByEmail?: string;
 }
 
 export interface TimelineEvent extends JsonRecord {

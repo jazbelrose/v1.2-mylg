@@ -822,31 +822,65 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         </button>
       </div>
 
-      <div className={mobileStyles.amountRow}>
-        <span className={mobileStyles.amountValue}>{ballparkDisplay}</span>
-        <div className={mobileStyles.amountActions}>
-          <button
-            type="button"
-            className={mobileStyles.iconButton}
-            onClick={() => setBallparkModalOpen(true)}
-            aria-label="Edit Ballpark"
-            disabled={!budgetHeader}
-          >
-            <FontAwesomeIcon icon={faPen} />
-          </button>
-          <button
-            type="button"
-            className={mobileStyles.iconButton}
-            onClick={openInvoicePreview}
-            aria-label="Invoice preview"
-            disabled={!budgetHeader}
-          >
-            <FontAwesomeIcon icon={faFileInvoiceDollar} />
-          </button>
+      <div className={mobileStyles.summaryLayout}>
+        <div className={mobileStyles.summaryColumn}>
+          <div className={mobileStyles.amountRow}>
+            <span className={mobileStyles.amountValue}>{ballparkDisplay}</span>
+            <div className={mobileStyles.amountActions}>
+              <button
+                type="button"
+                className={mobileStyles.iconButton}
+                onClick={() => setBallparkModalOpen(true)}
+                aria-label="Edit Ballpark"
+                disabled={!budgetHeader}
+              >
+                <FontAwesomeIcon icon={faPen} />
+              </button>
+              <button
+                type="button"
+                className={mobileStyles.iconButton}
+                onClick={openInvoicePreview}
+                aria-label="Invoice preview"
+                disabled={!budgetHeader}
+              >
+                <FontAwesomeIcon icon={faFileInvoiceDollar} />
+              </button>
+            </div>
+          </div>
+          <div className={mobileStyles.dateRow}>{createdDateLabel}</div>
+          <div className={mobileStyles.legend}>
+            {legendPreview.map((slice, index) => {
+              const palette = chartState.palette;
+              const paletteLength = palette.length;
+              const background =
+                paletteLength > 0
+                  ? palette[index % paletteLength]
+                  : getColor(`${slice.id}-${index}`);
+              return (
+                <div className={mobileStyles.legendItem} key={slice.id}>
+                  <span
+                    className={mobileStyles.legendDot}
+                    style={{ background }}
+                  />
+                  {slice.label}
+                </div>
+              );
+            })}
+            {hiddenLegendCount > 0 && (
+              <span className={mobileStyles.legendMore}>{`+${hiddenLegendCount} more`}</span>
+            )}
+          </div>
+        </div>
+        <div className={mobileStyles.chartContainer}>
+          <BudgetDonut
+            data={chartState.slices}
+            total={chartState.total}
+            palette={chartState.palette}
+            formatTooltip={formatTooltip}
+            totalFormatter={totalFormatter}
+          />
         </div>
       </div>
-
-      <div className={mobileStyles.dateRow}>{createdDateLabel}</div>
 
       <div className={mobileStyles.controls}>
         <div className={mobileStyles.controlRow}>
@@ -902,40 +936,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             />
           </div>
         )}
-      </div>
-
-      <div className={mobileStyles.chartRow}>
-        <div className={mobileStyles.chartContainer}>
-          <BudgetDonut
-            data={chartState.slices}
-            total={chartState.total}
-            palette={chartState.palette}
-            formatTooltip={formatTooltip}
-            totalFormatter={totalFormatter}
-          />
-        </div>
-        <div className={mobileStyles.legend}>
-          {legendPreview.map((slice, index) => {
-            const palette = chartState.palette;
-            const paletteLength = palette.length;
-            const background =
-              paletteLength > 0
-                ? palette[index % paletteLength]
-                : getColor(`${slice.id}-${index}`);
-            return (
-              <div className={mobileStyles.legendItem} key={slice.id}>
-                <span
-                  className={mobileStyles.legendDot}
-                  style={{ background }}
-                />
-                {slice.label}
-              </div>
-            );
-          })}
-          {hiddenLegendCount > 0 && (
-            <span className={mobileStyles.legendMore}>{`+${hiddenLegendCount} more`}</span>
-          )}
-        </div>
       </div>
 
       <div className={mobileStyles.metricScroll}>

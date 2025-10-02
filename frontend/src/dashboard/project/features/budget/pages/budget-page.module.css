@@ -42,12 +42,12 @@
 :global(.ant-table-pagination) {
   background-color: transparent !important;
   color: #ffffff;
- margin: 20px 0 0 !important;
+ margin: 20px 0 12px !important;
   flex-wrap: wrap;
 }
 
 :global(.ant-pagination-item-active) {
-  border-color: #FA3356;
+  border-color: transparent !important;
 }
 
 :global(.ant-pagination-item-active a) {

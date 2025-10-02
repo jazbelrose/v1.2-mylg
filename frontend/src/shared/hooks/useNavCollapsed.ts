@@ -1,17 +1,19 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useState } from "react";
 
-type NavPage = "dashboard" | "project";
+type NavPage = "dashboard" | "project" | "finance";
 
 type UseNavCollapsedReturn = [boolean, Dispatch<SetStateAction<boolean>>];
 
 const STORAGE_KEYS: Record<NavPage, string> = {
   dashboard: "nav-collapsed-dashboard",
   project: "nav-collapsed-project",
+  finance: "nav-collapsed-finance",
 };
 
 const DEFAULTS: Record<NavPage, boolean> = {
   dashboard: false,
   project: true,
+  finance: false,
 };
 
 export function useNavCollapsed(page: NavPage): UseNavCollapsedReturn {

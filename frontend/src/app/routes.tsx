@@ -17,6 +17,7 @@ import { Home } from "../pages/home/home";
 import { Works } from "../pages/works/showcase";
 
 import Spinner from "../shared/ui/Spinner";
+import { financeRoutes } from "@/finance/routes";
 
 const Dashboard = React.lazy(() => import("../dashboard/home/pages/DashboardLayout"));
 const DashboardWelcome = React.lazy(() => import("../dashboard/home/pages/DashboardHome"));
@@ -136,8 +137,8 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           } 
         />
         
-        <Route 
-          path="/works/:workSlug" 
+        <Route
+          path="/works/:workSlug"
           element={
             <motion.div
               initial="initial"
@@ -148,8 +149,12 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
             >
               <WorkPost />
             </motion.div>
-          } 
+          }
         />
+
+        {financeRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
         
         <Route
           path="/gallery/:projectId/:gallerySlug"

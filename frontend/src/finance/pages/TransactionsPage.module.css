@@ -1,0 +1,114 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.filterField {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  min-width: 180px;
+}
+
+.filterField::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.tableWrapper {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(12, 12, 12, 0.7);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.table thead {
+  background: rgba(255, 255, 255, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table th,
+.table td {
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.table tbody tr:hover {
+  background: rgba(250, 51, 86, 0.12);
+}
+
+.amountDebit {
+  color: rgba(250, 51, 86, 0.85);
+  text-align: right;
+}
+
+.amountCredit {
+  color: rgba(132, 255, 191, 0.85);
+  text-align: right;
+}
+
+.tagPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 2px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.75rem;
+  margin-right: 6px;
+}
+
+.bulkBar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: rgba(250, 51, 86, 0.15);
+  border: 1px solid rgba(250, 51, 86, 0.4);
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+.bulkButton {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.bulkButton:hover,
+.bulkButton:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.emptyState {
+  padding: 32px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(12, 12, 12, 0.6);
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}

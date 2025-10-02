@@ -21,7 +21,12 @@ type DashboardNavPanelProps = UseDashboardNavigationArgs & {
 function renderNavItem(item: DashboardNavItem, isCollapsed: boolean) {
   const hasBadge = typeof item.badgeCount === "number" && item.badgeCount > 0 && item.badgeLabel;
   const keyClass = item.key ? `nav-item--${item.key}` : "";
-  const className = ["nav-item", keyClass, item.isAction ? "nav-item--action" : ""]
+  const className = [
+    "nav-item",
+    keyClass,
+    item.isAction ? "nav-item--action" : "",
+    item.isActive ? "nav-item--active" : "",
+  ]
     .filter(Boolean)
     .join(" ");
   const accessibilityProps = isCollapsed
@@ -49,6 +54,8 @@ function renderNavItem(item: DashboardNavItem, isCollapsed: boolean) {
     </>
   );
 
+  const activeProps = item.isActive ? { "aria-current": "page" as const } : {};
+
   if (item.href) {
     return (
       <li key={item.key}>
@@ -59,6 +66,7 @@ function renderNavItem(item: DashboardNavItem, isCollapsed: boolean) {
           rel={item.external ? "noopener noreferrer" : undefined}
           onClick={item.onClick}
           {...accessibilityProps}
+          {...activeProps}
         >
           {inner}
         </a>
@@ -72,6 +80,7 @@ function renderNavItem(item: DashboardNavItem, isCollapsed: boolean) {
         type="button"
         className={className}
         onClick={item.onClick}
+        {...(item.isActive ? { "aria-pressed": true } : {})}
         {...accessibilityProps}
       >
         {inner}

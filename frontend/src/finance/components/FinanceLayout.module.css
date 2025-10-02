@@ -1,0 +1,132 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  background: #0c0c0c;
+  color: #f8f8f8;
+}
+
+.navArea {
+  min-width: 280px;
+  padding: 28px 24px;
+  background: linear-gradient(180deg, rgba(12, 12, 12, 1) 0%, rgba(18, 18, 18, 0.96) 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.navAreaCollapsed {
+  width: 92px;
+  padding-inline: 16px;
+}
+
+.mainArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 40px;
+  gap: 24px;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pageTitle {
+  font-family: "Merriweather", serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.pageSubtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.65);
+  max-width: 680px;
+}
+
+.actionsRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.mobileShell {
+  min-height: 100vh;
+  background: #0c0c0c;
+  color: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 20px 48px;
+  gap: 20px;
+}
+
+.mobileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mobileTitle {
+  font-family: "Merriweather", serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.mobileDescription {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.mobileActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mobileContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.menuButton {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menuButton:hover,
+.menuButton:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(250, 51, 86, 0.18);
+  outline: 2px solid rgba(250, 51, 86, 0.55);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1023px) {
+  .shell {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobileShell {
+    display: none;
+  }
+}

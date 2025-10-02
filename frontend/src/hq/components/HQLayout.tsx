@@ -5,6 +5,8 @@ import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import { useNavCollapsed } from "@/shared/hooks/useNavCollapsed";
 import "@/dashboard/home/pages/dashboard-styles.css";
 import styles from "./HQLayout.module.css";
+import { useUser } from "@/app/contexts/useUser";
+import HQChatPanel from "./HQChatPanel";
 
 type HQLayoutProps = {
   title: string;
@@ -41,6 +43,7 @@ const HQLayout: React.FC<HQLayoutProps> = ({
     () => `hq-nav-${rawDrawerId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
     [rawDrawerId]
   );
+  const { isAdmin } = useUser();
 
   useEffect(() => {
     const handleResize = () => setFlags(getViewportFlags());
@@ -88,23 +91,28 @@ const HQLayout: React.FC<HQLayoutProps> = ({
     </main>
   );
 
+  const chatPanel = isAdmin ? <HQChatPanel /> : null;
+
   if (flags.isDesktop) {
     return (
-      <div
-        className={`dashboard-root${
-          isNavCollapsed ? " dashboard-root--nav-collapsed" : ""
-        }`}
-      >
-        <aside>
-          <DashboardNavPanel
-            variant="persistent"
-            setActiveView={noop}
-            isCollapsed={isNavCollapsed}
-            onToggleCollapse={handleToggleCollapse}
-          />
-        </aside>
-        {mainContent}
-      </div>
+      <>
+        <div
+          className={`dashboard-root${
+            isNavCollapsed ? " dashboard-root--nav-collapsed" : ""
+          }`}
+        >
+          <aside>
+            <DashboardNavPanel
+              variant="persistent"
+              setActiveView={noop}
+              isCollapsed={isNavCollapsed}
+              onToggleCollapse={handleToggleCollapse}
+            />
+          </aside>
+          {mainContent}
+        </div>
+        {chatPanel}
+      </>
     );
   }
 
@@ -117,6 +125,7 @@ const HQLayout: React.FC<HQLayoutProps> = ({
         drawerId={drawerId}
       />
       {mainContent}
+      {chatPanel}
     </>
   );
 };

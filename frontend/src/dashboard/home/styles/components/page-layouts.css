@@ -68,7 +68,7 @@
 }
 
 /* Narrow mobile refinements */
-@media (max-width: var(--breakpoint-sm)) {
+@media (max-width: 768px) {
   .dashboard-wrapper {
     position: relative;
     padding-top: 0;
@@ -85,6 +85,9 @@
   }
   .column-3 {
     padding-bottom: 5px;
+  }
+   .budget-layout {
+    padding: 0 !important;
   }
 }
 

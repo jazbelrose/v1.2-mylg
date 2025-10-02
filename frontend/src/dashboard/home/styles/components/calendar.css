@@ -68,6 +68,49 @@
   flex: none;
 }
 
+.budget-calendar-layout--stacked.budget-calendar-layout--stacked-tall {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.budget-calendar-layout--stacked.budget-calendar-layout--stacked-tall .budget-column {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.budget-calendar-layout--stacked.budget-calendar-layout--stacked-tall .budget-column > * {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.budget-calendar-layout--stacked.budget-calendar-layout--stacked-tall .budget-column .budget-overview-card {
+  flex: 0 0 auto;
+  min-height: clamp(220px, 32vh, 360px);
+  max-height: none;
+}
+
+.budget-calendar-layout--stacked.budget-calendar-layout--stacked-tall .budget-calendar-mobile-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.budget-calendar-layout--stacked.budget-calendar-layout--stacked-tall .budget-calendar-mobile-card > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.budget-calendar-layout--stacked.budget-calendar-layout--stacked-tall .budget-column .view-gallery {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.budget-calendar-layout--stacked.budget-calendar-layout--stacked-tall + .timeline-location-row {
+  margin-top: auto;
+}
+
 /* Mobile stacked layout height optimization */
 @media (max-width: 768px) {
   .budget-calendar-layout .budget-column,

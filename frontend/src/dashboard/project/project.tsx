@@ -27,6 +27,7 @@ import Spinner from "@/shared/ui/Spinner";
 
 const MOBILE_LAYOUT_WIDTH = 640;
 const TASKS_MOBILE_WIDTH = 768;
+const TALL_MOBILE_HEIGHT = 780;
 
 interface LocationState {
   flashDate?: string;
@@ -57,6 +58,12 @@ const SingleProject: React.FC = () => {
   const [isMobileTasksLayout, setIsMobileTasksLayout] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.innerWidth <= TASKS_MOBILE_WIDTH;
+  });
+  const [isTallMobileBudgetLayout, setIsTallMobileBudgetLayout] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.innerWidth <= MOBILE_LAYOUT_WIDTH && window.innerHeight >= TALL_MOBILE_HEIGHT
+    );
   });
 
   const projectNameFromPath = useMemo(() => {
@@ -141,8 +148,12 @@ const SingleProject: React.FC = () => {
     if (typeof window === "undefined") return;
     const handleResize = () => {
       const width = window.innerWidth;
-      setIsMobileBudgetLayout(width <= MOBILE_LAYOUT_WIDTH);
+      const height = window.innerHeight;
+      const isMobileWidth = width <= MOBILE_LAYOUT_WIDTH;
+
+      setIsMobileBudgetLayout(isMobileWidth);
       setIsMobileTasksLayout(width <= TASKS_MOBILE_WIDTH);
+      setIsTallMobileBudgetLayout(isMobileWidth && height >= TALL_MOBILE_HEIGHT);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -381,6 +392,8 @@ const SingleProject: React.FC = () => {
         <div
           className={`dashboard-layout budget-calendar-layout${
             isMobileBudgetLayout ? " budget-calendar-layout--stacked" : ""
+          }${
+            isTallMobileBudgetLayout ? " budget-calendar-layout--stacked-tall" : ""
           }`}
         >
           <div className="budget-column">

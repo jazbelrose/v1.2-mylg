@@ -51,6 +51,17 @@ Improved rendering workflows for 2D/3D assets
 
 ## 📖 Technical Documentation
 
+### 🧪 Dashboard Preview Mode (Dev Only)
+When running the frontend locally (`npm run dev`), you can load the dashboard layout without authenticating. Append one of the following query parameters to any `/dashboard` URL:
+
+- `?dashboardPreview` (implicit on)
+- `?dashboardPreview=off` (turns it off for the current tab)
+- `?preview=dashboard` (alternate shorthand)
+
+Example: `http://localhost:5173/dashboard?dashboardPreview`
+
+The flag is stored in `sessionStorage`, so the preview stays enabled for the current tab until you close it or explicitly disable it. The mode is ignored in production builds and is intended strictly for layout/UX verification—data that normally requires authentication will not load.
+
 ### Lexical Editor System
 For detailed technical information about the real-time collaborative editor:
 

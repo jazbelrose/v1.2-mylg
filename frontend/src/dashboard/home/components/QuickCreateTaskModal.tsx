@@ -214,15 +214,28 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
     const found = projectOptions.find((project) => project.id === targetId);
     return found?.name ?? "";
   }, [activeProjectId, activeProjectName, projectId, projectOptions, scopedProjectId]);
-  const collaboratorIds = useMemo(
-    () =>
-      Array.isArray(userData?.collaborators)
-        ? userData.collaborators.filter(
-            (id): id is string => typeof id === "string" && id.trim().length > 0
-          )
-        : [],
-    [userData?.collaborators]
-  );
+  const collaboratorIds = useMemo(() => {
+    const baseIds = Array.isArray(userData?.collaborators)
+      ? userData.collaborators.filter(
+          (id): id is string => typeof id === "string" && id.trim().length > 0
+        )
+      : [];
+
+    const rawUserId = typeof userData?.userId === "string" ? userData.userId.trim() : "";
+    if (!rawUserId) {
+      return baseIds;
+    }
+
+    const alreadyIncludesSelf = baseIds.some((entry) => {
+      const trimmed = entry.trim();
+      if (!trimmed) return false;
+      const [, extractedId] = trimmed.includes("__") ? trimmed.split("__") : [null, null];
+      const normalizedEntryId = extractedId?.trim() || trimmed;
+      return normalizedEntryId === rawUserId;
+    });
+
+    return alreadyIncludesSelf ? baseIds : [...baseIds, rawUserId];
+  }, [userData?.collaborators, userData?.userId]);
 
   const collaboratorOptions = useMemo(() => {
     if (!collaboratorIds.length) return [] as { value: string; label: string }[];

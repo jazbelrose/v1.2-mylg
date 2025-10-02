@@ -889,7 +889,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
           ))}
         </div>
       </div>
-
     </div>
   );
 
@@ -915,14 +914,3 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
 };
 
 export default BudgetHeader;
-
-
-
-
-
-
-
-
-
-
-

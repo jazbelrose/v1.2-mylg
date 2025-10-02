@@ -838,6 +838,10 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
     }
   };
 
+  const contentRowClassName = showSidebar
+    ? styles.contentRow
+    : `${styles.contentRow} ${styles.contentRowNoSidebar}`;
+
   // ---------- Render ----------
   return (
     <Fragment>
@@ -922,10 +926,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                 </button>
               </div>
 
-              <div
-                className={styles.contentRow}
-                style={showSidebar ? undefined : { minWidth: "850px" }}
-              >
+              <div className={contentRowClassName}>
                 {showSidebar && (
                   <div className={styles.sidebar}>
                     {/* Grouping */}

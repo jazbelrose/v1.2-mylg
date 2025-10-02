@@ -4,6 +4,89 @@ import type { QuickTask, RawTask, TaskMapMarker, TaskStats } from "./taskTypes";
 
 export type { QuickTask, RawTask, TaskStats };
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+export type TaskStatusCategory = "completed" | "overdue" | "dueSoon" | "scheduled" | "unscheduled";
+
+export type TaskStatusContext = {
+  startOfToday: Date;
+  upcomingThreshold: Date;
+};
+
+export function createTaskStatusContext(baseDate: Date = new Date()): TaskStatusContext {
+  const startOfToday = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+  const upcomingThreshold = new Date(startOfToday.getTime() + 7 * DAY_IN_MS);
+
+  return { startOfToday, upcomingThreshold };
+}
+
+export function formatStatusLabel(status: Status): string {
+  const normalized = status.replace(/_/g, " ").trim();
+  if (!normalized) {
+    return "To do";
+  }
+
+  return normalized.replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+export function getTaskStatusCategory(
+  status: Status,
+  dueDate: Date | null,
+  context: TaskStatusContext = createTaskStatusContext(),
+): TaskStatusCategory {
+  if (status === "done") {
+    return "completed";
+  }
+
+  if (!dueDate || Number.isNaN(dueDate.getTime())) {
+    return "unscheduled";
+  }
+
+  if (dueDate < context.startOfToday) {
+    return "overdue";
+  }
+
+  if (dueDate <= context.upcomingThreshold) {
+    return "dueSoon";
+  }
+
+  return "scheduled";
+}
+
+export function getTaskStatusBadge(
+  status: Status,
+  dueDate: Date | null,
+  context?: TaskStatusContext,
+): { label: string; category: TaskStatusCategory } {
+  const category = getTaskStatusCategory(status, dueDate, context);
+
+  switch (category) {
+    case "completed":
+      return { category, label: "Completed" };
+    case "overdue":
+      return { category, label: "Overdue" };
+    case "dueSoon":
+      return { category, label: "Due soon" };
+    default:
+      return { category, label: formatStatusLabel(status) };
+  }
+}
+
+export type TaskStatusTone = "success" | "danger" | "warning" | "neutral";
+
+export function getTaskStatusTone(category: TaskStatusCategory): TaskStatusTone {
+  switch (category) {
+    case "completed":
+      return "success";
+    case "overdue":
+      return "danger";
+    case "dueSoon":
+      return "warning";
+    default:
+      return "neutral";
+  }
+}
+
 export const DRAWER_SNAP_POINTS = [0.1, 0.45, 0.9] as const;
 export type SnapIndex = 0 | 1 | 2;
 
@@ -111,27 +194,20 @@ export function normalizeTask(raw: RawTask): QuickTask | null {
 }
 
 export function computeStats(tasks: QuickTask[]): TaskStats {
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const inSevenDays = new Date(startOfToday.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const context = createTaskStatusContext();
 
   let completed = 0;
   let overdue = 0;
   let dueSoon = 0;
 
   tasks.forEach((task) => {
-    if (task.status === "done") {
+    const { category } = getTaskStatusBadge(task.status, task.dueDate, context);
+
+    if (category === "completed") {
       completed += 1;
-      return;
-    }
-
-    if (!task.dueDate) {
-      return;
-    }
-
-    if (task.dueDate < startOfToday) {
+    } else if (category === "overdue") {
       overdue += 1;
-    } else if (task.dueDate <= inSevenDays) {
+    } else if (category === "dueSoon") {
       dueSoon += 1;
     }
   });

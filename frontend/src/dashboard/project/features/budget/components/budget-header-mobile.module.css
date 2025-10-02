@@ -1,5 +1,9 @@
 .card {
   background: #111;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
   border-radius: 16px;
   padding: 12px;
   display: flex;
@@ -205,12 +209,14 @@
 
 .metricGrid {
   display: flex;
+  width: 100%;
   flex-direction: column;
   gap: 8px;
 }
 
 .metricRow {
   display: grid;
+  min-width: 0;
   gap: 8px;
 }
 
@@ -225,6 +231,7 @@
 .metricChip {
   width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   background: rgba(30, 41, 59, 0.85);
   border-radius: 12px;
   padding: 8px 10px;

@@ -474,10 +474,10 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     return date.toLocaleDateString();
   }, [budgetHeader?.createdAt]);
 
-  const ballparkDisplay = useMemo(
+  const finalDisplay = useMemo(
     () =>
       budgetHeader
-        ? formatUSD(toNumber(budgetHeader.headerBallPark))
+        ? formatUSD(toNumber(budgetHeader.headerFinalTotalCost))
         : "Not available",
     [budgetHeader]
   );
@@ -775,11 +775,13 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     const isReconciledToggleMetric =
       hasReconciled &&
       metric.field === (showReconciled ? "itemReconciledCost" : "itemActualCost");
+    const isBallparkMetric = metric.title === "Ballpark";
 
     const chipClassName = [
       mobileStyles.metricChip,
       selectedMetric === metric.title ? mobileStyles.metricChipActive : "",
       isReconciledToggleMetric ? mobileStyles.metricChipWithSwitch : "",
+      isBallparkMetric ? mobileStyles.metricChipWithAction : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -807,6 +809,21 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             aria-label="Toggle reconciled totals"
           />
         )}
+        {isBallparkMetric && (
+          <button
+            type="button"
+            className={mobileStyles.metricChipEdit}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setBallparkModalOpen(true);
+            }}
+            disabled={!budgetHeader}
+            aria-label="Edit estimate"
+          >
+            <FontAwesomeIcon icon={faPen} />
+          </button>
+        )}
       </div>
     );
   };
@@ -833,17 +850,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       <div className={mobileStyles.summaryLayout}>
         <div className={mobileStyles.summaryColumn}>
           <div className={mobileStyles.amountRow}>
-            <span className={mobileStyles.amountValue}>{ballparkDisplay}</span>
+            <span className={mobileStyles.amountValue}>{finalDisplay}</span>
             <div className={mobileStyles.amountActions}>
-              <button
-                type="button"
-                className={mobileStyles.iconButton}
-                onClick={() => setBallparkModalOpen(true)}
-                aria-label="Edit Ballpark"
-                disabled={!budgetHeader}
-              >
-                <FontAwesomeIcon icon={faPen} />
-              </button>
               <button
                 type="button"
                 className={mobileStyles.iconButton}

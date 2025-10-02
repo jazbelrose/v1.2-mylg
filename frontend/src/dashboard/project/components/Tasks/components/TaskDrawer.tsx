@@ -1,6 +1,6 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { Calendar, ChevronDown, MapPin, Plus, User } from "lucide-react";
+import { Calendar, ChevronDown, MapPin, Plus, User, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 import Map from "@/shared/ui/Map";
@@ -12,6 +12,7 @@ import type { QuickTask, TaskMapMarker, TaskStats } from "./taskTypes";
 
 type TaskDrawerProps = {
   open: boolean;
+  isDesktop: boolean;
   viewportHeight: number;
   targetY: number;
   projectName?: string;
@@ -45,6 +46,7 @@ type TaskDrawerProps = {
 
 const TaskDrawer: React.FC<TaskDrawerProps> = ({
   open,
+  isDesktop,
   viewportHeight,
   targetY,
   projectName,
@@ -80,9 +82,18 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({
   }
 
   const hasMapMarkers = mapMarkers.length > 0;
+  const overlayClassName = isDesktop
+    ? `${styles.sheetOverlay} ${styles.desktopOverlay}`
+    : styles.sheetOverlay;
+  const sheetClassName = isDesktop ? `${styles.sheet} ${styles.desktopSheet}` : styles.sheet;
+  const drawerInitial = isDesktop ? { x: "-100%" } : { y: viewportHeight };
+  const drawerAnimate = isDesktop ? { x: 0 } : { y: targetY };
+  const drawerTransition = isDesktop
+    ? { type: "spring", stiffness: 380, damping: 38, mass: 0.9 }
+    : { type: "spring", stiffness: 360, damping: 42, mass: 0.9 };
 
   return createPortal(
-    <div className={styles.sheetOverlay} role="presentation">
+    <div className={overlayClassName} role="presentation">
       <div className={styles.mapLayer}>
         <div className={styles.mapCanvas}>
           <Map
@@ -121,61 +132,106 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({
           </div>
         ) : null}
       </div>
-      <button type="button" className={styles.sheetDismiss} onClick={onClose} aria-label="Close tasks drawer">
-        <ChevronDown size={20} strokeWidth={2.5} />
-      </button>
-      <button
-        type="button"
-        className={styles.sheetCreate}
-        onClick={onOpenQuickCreate}
-        aria-label="Quick create a task"
-        disabled={loading || !hasQuickCreateProject}
-      >
-        <Plus size={20} strokeWidth={2.5} />
-      </button>
+      {!isDesktop ? (
+        <>
+          <button
+            type="button"
+            className={styles.sheetDismiss}
+            onClick={onClose}
+            aria-label="Close tasks drawer"
+          >
+            <ChevronDown size={20} strokeWidth={2.5} />
+          </button>
+          <button
+            type="button"
+            className={styles.sheetCreate}
+            onClick={onOpenQuickCreate}
+            aria-label="Quick create a task"
+            disabled={loading || !hasQuickCreateProject}
+          >
+            <Plus size={20} strokeWidth={2.5} />
+          </button>
+        </>
+      ) : null}
       <motion.div
         ref={sheetRef}
-        className={styles.sheet}
+        className={sheetClassName}
         role="dialog"
         aria-modal="true"
         aria-label="Project tasks quick view"
         drag={false}
-        initial={{ y: viewportHeight }}
-        animate={{ y: targetY }}
-        transition={{ type: "spring", stiffness: 360, damping: 42, mass: 0.9 }}
+        initial={drawerInitial}
+        animate={drawerAnimate}
+        transition={drawerTransition}
       >
-        <div
-          className={styles.sheetDragArea}
-          role="button"
-          tabIndex={0}
-          aria-label="Toggle tasks drawer size"
-          onClick={onHandleClick}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              onHandleClick();
-            }
-          }}
-        >
-          <div className={styles.sheetHandle}>
-            <span className={styles.sheetHandleBar} aria-hidden="true" />
-          </div>
-          <header className={styles.sheetHeader}>
-            <div className={styles.sheetTitleGroup}>
-              <span className={styles.sheetTitle}>Project tasks</span>
-              <span className={styles.sheetSubtitle}>
-                {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
-              </span>
+        {isDesktop ? (
+          <>
+            <header className={styles.desktopDrawerHeader}>
+              <div className={styles.sheetTitleGroup}>
+                <span className={styles.sheetTitle}>Project tasks</span>
+                <span className={styles.sheetSubtitle}>
+                  {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
+                </span>
+              </div>
+              <div className={styles.desktopDrawerActions}>
+                <button
+                  type="button"
+                  className={`${styles.desktopDrawerButton} ${styles.desktopDrawerGhostButton}`}
+                  onClick={onClose}
+                >
+                  <X size={16} strokeWidth={2.25} aria-hidden="true" /> Close map
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.desktopDrawerButton} ${styles.desktopDrawerPrimaryButton}`}
+                  onClick={onOpenQuickCreate}
+                  disabled={loading || !hasQuickCreateProject}
+                >
+                  <Plus size={16} strokeWidth={2.25} aria-hidden="true" /> New task
+                </button>
+              </div>
+            </header>
+            <div className={`${styles.sheetSummary} ${styles.desktopDrawerSummary}`}>
+              <TaskSummary stats={stats} formatValue={formatValue} statusMessage={statusMessage} />
+              <p className={styles.desktopDrawerMapStatus}>{mapStatusMessage}</p>
             </div>
-          </header>
-        </div>
-        <div className={styles.sheetSummary}>
-          <TaskSummary stats={stats} formatValue={formatValue} statusMessage={statusMessage} />
-        </div>
-        <div className={styles.sheetScrollArea}>
+          </>
+        ) : (
+          <>
+            <div
+              className={styles.sheetDragArea}
+              role="button"
+              tabIndex={0}
+              aria-label="Toggle tasks drawer size"
+              onClick={onHandleClick}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onHandleClick();
+                }
+              }}
+            >
+              <div className={styles.sheetHandle}>
+                <span className={styles.sheetHandleBar} aria-hidden="true" />
+              </div>
+              <header className={styles.sheetHeader}>
+                <div className={styles.sheetTitleGroup}>
+                  <span className={styles.sheetTitle}>Project tasks</span>
+                  <span className={styles.sheetSubtitle}>
+                    {projectName ? `Everything happening in ${projectName}` : "Keep work on track"}
+                  </span>
+                </div>
+              </header>
+            </div>
+            <div className={styles.sheetSummary}>
+              <TaskSummary stats={stats} formatValue={formatValue} statusMessage={statusMessage} />
+            </div>
+          </>
+        )}
+        <div className={`${styles.sheetScrollArea} ${isDesktop ? styles.desktopDrawerScrollArea : ""}`}>
           <section className={styles.sheetSection} aria-label="All project tasks">
             <h3 className={styles.sectionHeading}>Task list</h3>
             {error ? (

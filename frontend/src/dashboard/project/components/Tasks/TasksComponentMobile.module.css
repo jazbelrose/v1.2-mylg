@@ -501,6 +501,18 @@
   color: var(--text-secondary, rgba(246, 247, 251, 0.74));
 }
 
+.desktopDrawerHeader {
+  display: none;
+}
+
+.desktopDrawerSummary {
+  display: none;
+}
+
+.desktopDrawerScrollArea {
+  padding: 0 1.5rem calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+
 .sheetDismiss,
 .sheetCreate {
   position: absolute;
@@ -887,4 +899,151 @@
 
 .mapCanvas :global(.leaflet-map-pane) {
   z-index: inherit;
+}
+
+@media (min-width: 1024px) {
+  .desktopOverlay {
+    --drawer-width: clamp(360px, 32vw, 440px);
+    background: #050607;
+  }
+
+  .desktopSheet {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    width: var(--drawer-width);
+    height: 100vh;
+    margin: 0;
+    max-height: none;
+    border-radius: 0 24px 24px 0;
+    border-left: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 32px 0 64px rgba(0, 0, 0, 0.52);
+  }
+
+  .desktopDrawerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 1.5rem 1.75rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .desktopDrawerActions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .desktopDrawerButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .desktopDrawerButton svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .desktopDrawerButton:focus-visible {
+    outline: 2px solid var(--brand, #fa3356);
+    outline-offset: 2px;
+  }
+
+  .desktopDrawerButton:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .desktopDrawerButton:not(:disabled):hover,
+  .desktopDrawerButton:not(:disabled):focus-visible {
+    transform: translateY(-1px);
+  }
+
+  .desktopDrawerGhostButton {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .desktopDrawerGhostButton:not(:disabled):hover,
+  .desktopDrawerGhostButton:not(:disabled):focus-visible {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .desktopDrawerPrimaryButton {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.26);
+  }
+
+  .desktopDrawerPrimaryButton:not(:disabled):hover,
+  .desktopDrawerPrimaryButton:not(:disabled):focus-visible {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .desktopDrawerSummary {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.35rem 1.75rem 1.6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 0;
+  }
+
+  .desktopDrawerMapStatus {
+    margin: 0;
+    font-size: 0.85rem;
+    color: rgba(246, 247, 251, 0.72);
+  }
+
+  .desktopDrawerScrollArea {
+    padding: 1.75rem 1.75rem 2.75rem;
+  }
+
+  .desktopOverlay .sheetSection {
+    background: rgba(12, 13, 16, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.2rem 1.25rem 1.4rem;
+  }
+
+  .desktopOverlay .mapGradient {
+    top: 0;
+    bottom: 0;
+    left: var(--drawer-width);
+    right: auto;
+    height: 100%;
+    width: min(420px, calc(100vw - var(--drawer-width)));
+    background: linear-gradient(90deg, rgba(5, 6, 7, 0.96) 0%, rgba(5, 6, 7, 0.55) 45%, rgba(5, 6, 7, 0) 100%);
+  }
+
+  .desktopOverlay .mapActiveCard {
+    top: 24px;
+    left: calc(var(--drawer-width) + 24px);
+    right: auto;
+    width: min(360px, calc(100vw - var(--drawer-width) - 48px));
+    max-width: min(360px, calc(100vw - var(--drawer-width) - 48px));
+  }
+
+  .desktopOverlay .mapEmptyBanner {
+    left: calc(var(--drawer-width) + (100vw - var(--drawer-width)) / 2);
+    max-width: min(420px, calc(100vw - var(--drawer-width) - 64px));
+  }
+
+  .desktopOverlay .sheetDismiss,
+  .desktopOverlay .sheetCreate {
+    display: none;
+  }
 }

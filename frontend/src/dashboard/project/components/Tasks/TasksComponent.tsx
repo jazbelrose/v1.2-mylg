@@ -54,6 +54,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
   const [currentDragY, setCurrentDragY] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
   const inlineTaskListRef = useRef<HTMLUListElement | null>(null);
   const drawerTaskListRef = useRef<HTMLUListElement | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
@@ -247,6 +248,25 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       body.style.overflow = previousOverflow;
     };
   }, [drawerOpen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      setIsDesktop(false);
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateMatch = () => setIsDesktop(mediaQuery.matches);
+    updateMatch();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", updateMatch);
+      return () => mediaQuery.removeEventListener("change", updateMatch);
+    }
+
+    mediaQuery.addListener(updateMatch);
+    return () => mediaQuery.removeListener(updateMatch);
+  }, []);
 
   const sheetHeights = useMemo(() => DRAWER_SNAP_POINTS.map((point) => viewportHeight * point), [viewportHeight]);
   const baseTargetY = viewportHeight ? viewportHeight - sheetHeights[snapIndex] : 0;
@@ -463,6 +483,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
 
       <TaskDrawer
         open={drawerOpen}
+        isDesktop={isDesktop}
         viewportHeight={viewportHeight}
         targetY={targetY}
         projectName={projectName}

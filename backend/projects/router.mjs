@@ -361,8 +361,8 @@ const listProjects = async (e, C) => {
       // Fallback to old behavior for debugging
       const r = await ddb.batchGet({
         RequestItems: {
-          [PROJECTS_TABLE]: { 
-            Keys: ids.map((projectId) => ({ projectId })) 
+          [PROJECTS_TABLE]: {
+            Keys: projectIds.map((projectId) => ({ projectId }))
           },
         },
       });

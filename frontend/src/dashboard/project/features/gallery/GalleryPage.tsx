@@ -17,6 +17,7 @@ import { slugify } from "@/shared/utils/slug";
 import { fetchGalleries, fileUrlsToKeys, getFileUrl } from "@/shared/utils/api";
 import Preloader from "@/shared/ui/Preloader";
 import * as pdfjsLibLocal from "pdfjs-dist/legacy/build/pdf";
+import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
 import GalleryMasonry from "./GalleryMasonry";
 
 // Simple types for PDF.js
@@ -345,8 +346,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
       } else {
         if (!pdfjsLib) {
           pdfjsLib = pdfjsLibLocal as PDFLib;
-          pdfjsLib.GlobalWorkerOptions.workerSrc =
-            "https://d2qb21tb4meex0.cloudfront.net/pdfWorker/pdf.worker.js";
+          pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
         }
         setLoading(true);
         const pdfUrl = normalizedUpdatedPdfUrl || normalizedOriginalPdfUrl;

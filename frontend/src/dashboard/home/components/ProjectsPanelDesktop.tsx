@@ -31,10 +31,18 @@ export type ProjectsPanelDesktopProps = {
 
 const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProject }) => {
   const reduceMotion = useReducedMotion();
-  const { projects = [], isLoading, projectsError, fetchProjects, allUsers } = useData() as {
+  const {
+    projects = [],
+    isLoading,
+    projectsError,
+    projectsErrorMessage,
+    fetchProjects,
+    allUsers,
+  } = useData() as {
     projects: ProjectLike[];
     isLoading: boolean;
     projectsError: boolean;
+    projectsErrorMessage: string | null;
     fetchProjects: () => Promise<void> | void;
     allUsers: UserLite[];
   };
@@ -235,6 +243,7 @@ const ProjectsPanelDesktop: React.FC<ProjectsPanelDesktopProps> = ({ onOpenProje
           projects={filteredProjectsToDisplay as ProjectWithMeta[]}
           isLoading={isLoading}
           projectsError={projectsError}
+          projectsErrorMessage={projectsErrorMessage}
           onOpenProject={handleOpen}
           onImageError={handleImageError}
           imgError={imgError}

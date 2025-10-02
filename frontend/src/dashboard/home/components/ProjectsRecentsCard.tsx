@@ -56,7 +56,13 @@ const getProjectActivityTs = (p: ProjectLike): number => {
 };
 
 const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
-  const { projects, isLoading, projectsError, fetchProjects } = useData();
+  const {
+    projects,
+    isLoading,
+    projectsError,
+    projectsErrorMessage,
+    fetchProjects,
+  } = useData();
   const navigate = useNavigate();
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const menuRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -89,7 +95,9 @@ const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
     return enriched.slice(0, 3);
   }, [projects]);
 
-  const errorText = projectsError ? "Failed to load projects." : undefined;
+  const errorText = projectsError
+    ? projectsErrorMessage ?? "Failed to load projects."
+    : undefined;
 
   const handleOpen = (id: string) => {
     if (onOpenProject) return onOpenProject(id);

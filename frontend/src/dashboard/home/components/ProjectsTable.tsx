@@ -13,6 +13,7 @@ type ProjectsTableProps = {
   projects: ProjectWithMeta[];
   isLoading: boolean;
   projectsError: boolean;
+  projectsErrorMessage?: string | null;
   onOpenProject: (projectId: string) => void;
   onImageError: (projectId: string) => void;
   imgError: Record<string, boolean>;
@@ -35,6 +36,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   projects,
   isLoading,
   projectsError,
+  projectsErrorMessage,
   onOpenProject,
   onImageError,
   imgError,
@@ -50,7 +52,9 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     }
   };
 
-  const errorText = projectsError ? "Failed to load projects." : undefined;
+  const errorText = projectsError
+    ? projectsErrorMessage ?? "Failed to load projects."
+    : undefined;
 
   if (errorText) {
     return <div className={desktopStyles.errorState}>{errorText}</div>;

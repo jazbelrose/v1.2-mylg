@@ -33,6 +33,7 @@ export interface ProjectsValue {
   dmReadStatus: DMReadStatusMap;
   setDmReadStatus: React.Dispatch<React.SetStateAction<DMReadStatusMap>>;
   projectsError: boolean;
+  projectsErrorMessage: string | null;
   updateTimelineEvents: (projectId: string, events: TimelineEvent[]) => Promise<void>;
   updateProjectFields: (projectId: string, fields: Partial<Project>) => Promise<void>;
 }

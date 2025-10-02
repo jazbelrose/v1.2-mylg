@@ -59,6 +59,44 @@ const mergeProjectWithFallback = (
 const projectNeedsDetailHydration = (project: Project | null | undefined): project is Project =>
   Boolean(project) && (project.description === undefined || project.customFolders === undefined);
 
+const DEFAULT_PROJECTS_ERROR_MESSAGE =
+  "Failed to load projects. Please check your API configuration and try again.";
+
+const deriveProjectsErrorMessage = (error: unknown): string => {
+  const message =
+    typeof error === "string"
+      ? error
+      : error instanceof Error
+      ? error.message
+      : (error as { message?: unknown })?.message &&
+        typeof (error as { message?: unknown }).message === "string"
+      ? ((error as { message: string }).message)
+      : "";
+
+  if (/failed to fetch/i.test(message) || /network request failed/i.test(message)) {
+    return (
+      "Unable to reach the MYLG API. This often happens when the remote endpoint " +
+      "blocks requests from http://localhost:5173 (CORS) or when the backend is offline. " +
+      "Make sure your API Gateway allows this origin or set VITE_API_BASE_URL / " +
+      "VITE_PROJECTS_SERVICE_URL to a reachable endpoint."
+    );
+  }
+
+  if (/503/.test(message) || /service unavailable/i.test(message)) {
+    return (
+      "The Projects API responded with \"503 Service Unavailable\". Verify that the " +
+      "service is deployed, that the request targets the correct stage (for example, /dev), " +
+      "and that CORS is configured to allow your origin."
+    );
+  }
+
+  if (message) {
+    return `${DEFAULT_PROJECTS_ERROR_MESSAGE} (${message})`;
+  }
+
+  return DEFAULT_PROJECTS_ERROR_MESSAGE;
+};
+
 export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
 
@@ -66,6 +104,7 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [projectsError, setProjectsError] = useState(false);
+  const [projectsErrorMessage, setProjectsErrorMessage] = useState<string | null>(null);
   const [loadingProfile] = useState(false);
 
   const [activeProject, setActiveProject] = useState<Project | null>(() => {
@@ -258,9 +297,12 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
           const updated = detailed.find((p) => p.projectId === prev.projectId);
           return updated ?? prev;
         });
+        setProjectsError(false);
+        setProjectsErrorMessage(null);
       } catch (error) {
         console.error("Error fetching projects:", error);
         setProjectsError(true);
+        setProjectsErrorMessage(deriveProjectsErrorMessage(error));
       } finally {
         setIsLoading(false);
       }
@@ -536,6 +578,7 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
       dmReadStatus,
       setDmReadStatus,
       projectsError,
+      projectsErrorMessage,
       updateTimelineEvents,
       updateProjectFields,
     }),
@@ -553,6 +596,7 @@ export const ProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
       settingsUpdated,
       dmReadStatus,
       projectsError,
+      projectsErrorMessage,
       updateTimelineEvents,
     ]
   );

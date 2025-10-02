@@ -92,6 +92,7 @@ const AllProjects: React.FC = () => {
     isLoading,
     fetchProjectDetails,
     projectsError,
+    projectsErrorMessage,
     fetchProjects,
     allUsers,
   } = useData();
@@ -394,8 +395,8 @@ const AllProjects: React.FC = () => {
           width: '100%',
         }}
       >
-        <p style={{ fontSize: '14px', color: '#aaa', textAlign: 'center' }}>
-          Failed to load projects.
+        <p style={{ fontSize: '14px', color: '#aaa', textAlign: 'center', maxWidth: '420px' }}>
+          {projectsErrorMessage ?? 'Failed to load projects.'}
         </p>
       </div>
     );

@@ -51,6 +51,7 @@ vi.mock('../../../../app/contexts/useProjects', () => ({
     dmReadStatus: {},
     setDmReadStatus: vi.fn(),
     projectsError: false,
+    projectsErrorMessage: null,
     updateTimelineEvents: vi.fn(),
     updateProjectFields: vi.fn(),
     isAdmin: false,

@@ -39,6 +39,7 @@ describe("ProjectsTable", () => {
         projects={[]}
         isLoading={false}
         projectsError
+        projectsErrorMessage="Failed to load projects."
         onOpenProject={vi.fn()}
         onImageError={vi.fn()}
         imgError={{}}
@@ -55,6 +56,7 @@ describe("ProjectsTable", () => {
         projects={[]}
         isLoading
         projectsError={false}
+        projectsErrorMessage={null}
         onOpenProject={vi.fn()}
         onImageError={vi.fn()}
         imgError={{}}
@@ -74,6 +76,7 @@ describe("ProjectsTable", () => {
         projects={[project]}
         isLoading={false}
         projectsError={false}
+        projectsErrorMessage={null}
         onOpenProject={onOpenProject}
         onImageError={vi.fn()}
         imgError={{}}

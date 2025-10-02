@@ -43,8 +43,13 @@ import { useAuth } from './useAuth';
 import type { AuthContextValue } from './AuthContextValue';
 
 const ErrProbe: React.FC = () => {
-  const { projectsError } = useProjects();
-  return <span data-testid="projects-err">{String(!!projectsError)}</span>;
+  const { projectsError, projectsErrorMessage } = useProjects();
+  return (
+    <>
+      <span data-testid="projects-err">{String(!!projectsError)}</span>
+      <span data-testid="projects-err-msg">{projectsErrorMessage ?? ''}</span>
+    </>
+  );
 };
 
 const Kickoff: React.FC = () => {
@@ -84,6 +89,7 @@ describe('ProjectsProvider', () => {
     // Wait for the error to be set
     await waitFor(() => {
       expect(screen.getByTestId('projects-err')).toHaveTextContent('true');
+      expect(screen.getByTestId('projects-err-msg').textContent).toContain('Failed to load projects');
     }, { timeout: 3000 });
   });
 });

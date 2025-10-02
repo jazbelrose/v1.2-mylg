@@ -57,7 +57,13 @@ const getProjectActivityTs = (p: ProjectLike): number => {
 
 const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
   const reduceMotion = useReducedMotion();
-  const { projects, isLoading, projectsError, fetchProjects } = useData();
+  const {
+    projects,
+    isLoading,
+    projectsError,
+    projectsErrorMessage,
+    fetchProjects,
+  } = useData();
   const navigate = useNavigate();
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [imgError, setImgError] = useState<Record<string, boolean>>({});
@@ -203,7 +209,9 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
     nextProjectLabel !== "No upcoming projects" ? nextProjectLabel : undefined;
   const pendingLabel = `${kpis.pendingProjects} Pending`;
 
-  const errorText = projectsError ? "Failed to load projects." : undefined;
+  const errorText = projectsError
+    ? projectsErrorMessage ?? "Failed to load projects."
+    : undefined;
 
   const handleOpen = (id: string) => onOpenProject(id);
 

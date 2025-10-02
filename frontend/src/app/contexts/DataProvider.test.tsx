@@ -71,8 +71,13 @@ import { useData } from './useData';
 import type { TimelineEvent } from './DataProvider';
 
 const ErrProbe: React.FC = () => {
-  const { projectsError } = useData();
-  return <span data-testid="err">{String(!!projectsError)}</span>;
+  const { projectsError, projectsErrorMessage } = useData();
+  return (
+    <>
+      <span data-testid="err">{String(!!projectsError)}</span>
+      <span data-testid="err-msg">{projectsErrorMessage ?? ''}</span>
+    </>
+  );
 };
 
 const Kickoff: React.FC = () => {
@@ -135,6 +140,7 @@ describe('DataProvider', () => {
     // Assert EFFECT (do not assert which helper was called)
     await waitFor(() => {
       expect(screen.getByTestId('err')).toHaveTextContent('true');
+      expect(screen.getByTestId('err-msg').textContent).toContain('Failed to load projects');
     }, { timeout: 3000 });
   });
 

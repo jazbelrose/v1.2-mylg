@@ -194,7 +194,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   activeProject,
   budgetHeader,
   groupBy,
-  setGroupBy,
   budgetItems = [],
   onBallparkChange,
   onOpenRevisionModal,
@@ -456,17 +455,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     ]
   );
 
-  const metricOptions = useMemo(
-    () =>
-      metrics
-        .filter((metric) => metric.field)
-        .map((metric) => ({
-          label: metric.title,
-          value: metric.title,
-        })),
-    [metrics]
-  );
-
   const markupOptions = useMemo(
     () =>
       (showReconciled
@@ -477,17 +465,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         value,
       })),
     [showReconciled]
-  );
-
-  const groupByOptions = useMemo(
-    () =>
-      ([
-        { label: "None", value: "none" },
-        { label: "Area Group", value: "areaGroup" },
-        { label: "Invoice Group", value: "invoiceGroup" },
-        { label: "Category", value: "category" },
-      ] as { label: string; value: GroupBy }[]),
-    []
   );
 
   const createdDateLabel = useMemo(() => {
@@ -722,8 +699,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     chartState.slices.length - legendPreview.length
   );
 
-  const metricSelectId = "budget-mobile-metric-select";
-  const groupSelectId = "budget-mobile-group-select";
   const markupSelectId = "budget-mobile-markup-select";
 
   const desktopContent = (
@@ -884,34 +859,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
 
       <div className={mobileStyles.controls}>
         <div className={mobileStyles.controlRow}>
-          <div className={mobileStyles.controlSelect}>
-            <label className={mobileStyles.srOnly} htmlFor={metricSelectId}>
-              Select metric
-            </label>
-            <Select<MetricTitle>
-              id={metricSelectId}
-              size="small"
-              value={selectedMetric}
-              onChange={(value: MetricTitle) => setSelectedMetric(value)}
-              options={metricOptions}
-              dropdownMatchSelectWidth={false}
-            />
-          </div>
-        </div>
-        <div className={mobileStyles.controlRow}>
-          <div className={mobileStyles.controlSelect}>
-            <label className={mobileStyles.srOnly} htmlFor={groupSelectId}>
-              Group by
-            </label>
-            <Select<GroupBy>
-              id={groupSelectId}
-              size="small"
-              value={groupBy}
-              onChange={(value: GroupBy) => setGroupBy(value)}
-              options={groupByOptions}
-              dropdownMatchSelectWidth={false}
-            />
-          </div>
           <div className={mobileStyles.controlSelect}>
             <label className={mobileStyles.srOnly} htmlFor={markupSelectId}>
               Markup basis

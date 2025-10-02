@@ -853,23 +853,43 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         )}
       </div>
 
-      <div className={mobileStyles.metricScroll}>
-        {metrics.map((metric) => (
-          <button
-            key={metric.title}
-            type="button"
-            className={`${mobileStyles.metricChip} ${
-              selectedMetric === metric.title ? mobileStyles.metricChipActive : ""
-            }`}
-            onClick={metric.field ? () => setSelectedMetric(metric.title) : undefined}
-            disabled={!metric.field}
-          >
-            <span className={mobileStyles.metricTag}>{metric.tag}</span>
-            <span className={mobileStyles.metricValue}>{metric.value}</span>
-            <span className={mobileStyles.metricDescription}>{metric.description}</span>
-          </button>
-        ))}
+      <div className={mobileStyles.metricGrid}>
+        <div className={`${mobileStyles.metricRow} ${mobileStyles.metricRowTop}`}>
+          {metrics.slice(0, 3).map((metric) => (
+            <button
+              key={metric.title}
+              type="button"
+              className={`${mobileStyles.metricChip} ${
+                selectedMetric === metric.title ? mobileStyles.metricChipActive : ""
+              }`}
+              onClick={metric.field ? () => setSelectedMetric(metric.title) : undefined}
+              disabled={!metric.field}
+            >
+              <span className={mobileStyles.metricTag}>{metric.tag}</span>
+              <span className={mobileStyles.metricValue}>{metric.value}</span>
+              <span className={mobileStyles.metricDescription}>{metric.description}</span>
+            </button>
+          ))}
+        </div>
+        <div className={`${mobileStyles.metricRow} ${mobileStyles.metricRowBottom}`}>
+          {metrics.slice(3).map((metric) => (
+            <button
+              key={metric.title}
+              type="button"
+              className={`${mobileStyles.metricChip} ${
+                selectedMetric === metric.title ? mobileStyles.metricChipActive : ""
+              }`}
+              onClick={metric.field ? () => setSelectedMetric(metric.title) : undefined}
+              disabled={!metric.field}
+            >
+              <span className={mobileStyles.metricTag}>{metric.tag}</span>
+              <span className={mobileStyles.metricValue}>{metric.value}</span>
+              <span className={mobileStyles.metricDescription}>{metric.description}</span>
+            </button>
+          ))}
+        </div>
       </div>
+
     </div>
   );
 

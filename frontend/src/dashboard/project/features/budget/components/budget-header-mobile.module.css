@@ -203,17 +203,28 @@
   color: rgba(249, 250, 251, 0.65);
 }
 
-.metricScroll {
+.metricGrid {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  margin: 0 -4px;
-  padding-left: 4px;
+}
+
+.metricRow {
+  display: grid;
+  gap: 8px;
+}
+
+.metricRowTop {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metricRowBottom {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .metricChip {
-  min-width: 120px;
+  width: 100%;
+  min-width: 0;
   background: rgba(30, 41, 59, 0.85);
   border-radius: 12px;
   padding: 8px 10px;
@@ -279,6 +290,6 @@
   }
 
   .metricChip {
-    min-width: 110px;
+    width: 100%;
   }
 }

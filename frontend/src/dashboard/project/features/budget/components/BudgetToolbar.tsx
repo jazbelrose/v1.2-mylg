@@ -1,5 +1,5 @@
 import React from "react";
-import { Segmented, Tooltip as AntTooltip } from "antd";
+import { Tooltip as AntTooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClone, faTrash } from "@fortawesome/free-solid-svg-icons";
 import styles from "./BudgetToolbar.module.css";
@@ -13,6 +13,13 @@ interface BudgetToolbarProps {
   openCreateModal: () => void;
 }
 
+const GROUP_BY_OPTIONS = [
+  { label: "None", value: "none" },
+  { label: "Area Group", value: "areaGroup" },
+  { label: "Invoice Group", value: "invoiceGroup" },
+  { label: "Category", value: "category" },
+];
+
 const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   groupBy,
   onGroupChange,
@@ -22,17 +29,25 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   openCreateModal,
 }) => (
   <div className={styles.toolbar}>
-    <Segmented
-      size="small"
-      options={[
-        { label: "None", value: "none" },
-        { label: "Area Group", value: "areaGroup" },
-        { label: "Invoice Group", value: "invoiceGroup" },
-        { label: "Category", value: "category" },
-      ]}
-      value={groupBy}
-      onChange={(val) => onGroupChange(val as string)}
-    />
+    <div className={styles.groupTabs} role="group" aria-label="Group budget items">
+      {GROUP_BY_OPTIONS.map((option) => {
+        const isActive = option.value === groupBy;
+        const className = isActive
+          ? `${styles.tabButton} ${styles.activeTab}`
+          : styles.tabButton;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={isActive}
+            className={className}
+            onClick={() => onGroupChange(option.value)}
+          >
+            <span>{option.label}</span>
+          </button>
+        );
+      })}
+    </div>
     <div className={styles.actions}>
       {selectedRowKeys.length > 0 && (
         <>

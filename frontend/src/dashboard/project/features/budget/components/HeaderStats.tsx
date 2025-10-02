@@ -505,6 +505,14 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     [budgetHeader]
   );
 
+  const finalCostDisplay = useMemo(
+    () =>
+      budgetHeader
+        ? formatUSD(toNumber(budgetHeader.headerFinalTotalCost))
+        : "Not available",
+    [budgetHeader]
+  );
+
   const handleBallparkSave = async (val: number) => {
     if (!activeProject?.projectId || !budgetHeader) {
       setBallparkModalOpen(false);
@@ -805,48 +813,95 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
 
   const mobileContent = (
     <div className={mobileStyles.card}>
-      <div className={mobileStyles.headerRow}>
-        <div className={mobileStyles.titleGroup}>
-          <span>Budget</span>
-          {budgetHeader?.clientRevisionId != null && budgetHeader.clientRevisionId !== "" && (
-            <span className={mobileStyles.clientRevision}>{`Rev.${budgetHeader.clientRevisionId}`}</span>
-          )}
+      <div className={mobileStyles.summaryRow}>
+        <div className={mobileStyles.summaryDetails}>
+          <div className={mobileStyles.headerRow}>
+            <div className={mobileStyles.titleGroup}>
+              <span>Budget</span>
+              {budgetHeader?.clientRevisionId != null && budgetHeader.clientRevisionId !== "" && (
+                <span className={mobileStyles.clientRevision}>{`Rev.${budgetHeader.clientRevisionId}`}</span>
+              )}
+            </div>
+            <button
+              type="button"
+              className={mobileStyles.revisionButton}
+              onClick={onOpenRevisionModal}
+              disabled={!budgetHeader}
+            >
+              {`Rev.${budgetHeader?.revision ?? 1}`}
+            </button>
+          </div>
+
+          <div className={mobileStyles.finalRow}>
+            <span className={mobileStyles.finalLabel}>Final Cost</span>
+            <span className={mobileStyles.finalValue}>{finalCostDisplay}</span>
+          </div>
+
+          <div className={mobileStyles.estimateRow}>
+            <div className={mobileStyles.estimateCopy}>
+              <span className={mobileStyles.estimateLabel}>Estimate</span>
+              <span className={mobileStyles.estimateValue}>{ballparkDisplay}</span>
+            </div>
+            <div className={mobileStyles.amountActions}>
+              <button
+                type="button"
+                className={mobileStyles.iconButton}
+                onClick={() => setBallparkModalOpen(true)}
+                aria-label="Edit Ballpark"
+                disabled={!budgetHeader}
+              >
+                <FontAwesomeIcon icon={faPen} />
+              </button>
+              <button
+                type="button"
+                className={mobileStyles.iconButton}
+                onClick={openInvoicePreview}
+                aria-label="Invoice preview"
+                disabled={!budgetHeader}
+              >
+                <FontAwesomeIcon icon={faFileInvoiceDollar} />
+              </button>
+            </div>
+          </div>
+
+          <div className={mobileStyles.dateRow}>{createdDateLabel}</div>
         </div>
-        <button
-          type="button"
-          className={mobileStyles.revisionButton}
-          onClick={onOpenRevisionModal}
-          disabled={!budgetHeader}
-        >
-          {`Rev.${budgetHeader?.revision ?? 1}`}
-        </button>
+
+        <div className={mobileStyles.summaryChart}>
+          <div className={mobileStyles.chartContainer}>
+            <BudgetDonut
+              data={chartState.slices}
+              total={chartState.total}
+              palette={chartState.palette}
+              formatTooltip={formatTooltip}
+              totalFormatter={totalFormatter}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className={mobileStyles.amountRow}>
-        <span className={mobileStyles.amountValue}>{ballparkDisplay}</span>
-        <div className={mobileStyles.amountActions}>
-          <button
-            type="button"
-            className={mobileStyles.iconButton}
-            onClick={() => setBallparkModalOpen(true)}
-            aria-label="Edit Ballpark"
-            disabled={!budgetHeader}
-          >
-            <FontAwesomeIcon icon={faPen} />
-          </button>
-          <button
-            type="button"
-            className={mobileStyles.iconButton}
-            onClick={openInvoicePreview}
-            aria-label="Invoice preview"
-            disabled={!budgetHeader}
-          >
-            <FontAwesomeIcon icon={faFileInvoiceDollar} />
-          </button>
-        </div>
+      <div className={mobileStyles.legend}>
+        {legendPreview.map((slice, index) => {
+          const palette = chartState.palette;
+          const paletteLength = palette.length;
+          const background =
+            paletteLength > 0
+              ? palette[index % paletteLength]
+              : getColor(`${slice.id}-${index}`);
+          return (
+            <div className={mobileStyles.legendItem} key={slice.id}>
+              <span
+                className={mobileStyles.legendDot}
+                style={{ background }}
+              />
+              {slice.label}
+            </div>
+          );
+        })}
+        {hiddenLegendCount > 0 && (
+          <span className={mobileStyles.legendMore}>{`+${hiddenLegendCount} more`}</span>
+        )}
       </div>
-
-      <div className={mobileStyles.dateRow}>{createdDateLabel}</div>
 
       <div className={mobileStyles.controls}>
         <div className={mobileStyles.controlRow}>
@@ -902,40 +957,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             />
           </div>
         )}
-      </div>
-
-      <div className={mobileStyles.chartRow}>
-        <div className={mobileStyles.chartContainer}>
-          <BudgetDonut
-            data={chartState.slices}
-            total={chartState.total}
-            palette={chartState.palette}
-            formatTooltip={formatTooltip}
-            totalFormatter={totalFormatter}
-          />
-        </div>
-        <div className={mobileStyles.legend}>
-          {legendPreview.map((slice, index) => {
-            const palette = chartState.palette;
-            const paletteLength = palette.length;
-            const background =
-              paletteLength > 0
-                ? palette[index % paletteLength]
-                : getColor(`${slice.id}-${index}`);
-            return (
-              <div className={mobileStyles.legendItem} key={slice.id}>
-                <span
-                  className={mobileStyles.legendDot}
-                  style={{ background }}
-                />
-                {slice.label}
-              </div>
-            );
-          })}
-          {hiddenLegendCount > 0 && (
-            <span className={mobileStyles.legendMore}>{`+${hiddenLegendCount} more`}</span>
-          )}
-        </div>
       </div>
 
       <div className={mobileStyles.metricScroll}>

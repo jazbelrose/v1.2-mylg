@@ -9,6 +9,21 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 28px rgba(15, 23, 42, 0.4);
 }
 
+.summaryRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.summaryDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
 .headerRow {
   display: flex;
   align-items: center;
@@ -53,17 +68,50 @@
   cursor: not-allowed;
 }
 
-.amountRow {
+
+.finalRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.finalLabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(249, 250, 251, 0.6);
+}
+
+.finalValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.estimateRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.amountValue {
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+.estimateCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.estimateLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(249, 250, 251, 0.5);
+}
+
+.estimateValue {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(249, 250, 251, 0.85);
 }
 
 .amountActions {
@@ -144,15 +192,16 @@
   color: rgba(249, 250, 251, 0.8);
 }
 
-.chartRow {
+.summaryChart {
   display: flex;
-  gap: 12px;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .chartContainer {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   flex-shrink: 0;
 }
 
@@ -160,8 +209,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
-  min-width: 0;
 }
 
 .legendItem {

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import FinanceLayout from "../components/FinanceLayout";
-import type { FinanceTxn } from "../types";
+import HQLayout from "../components/HQLayout";
+import type { HQTxn } from "../types";
 import styles from "./TransactionsPage.module.css";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -9,7 +9,7 @@ const currency = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
 });
 
-const MOCK_TXNS: FinanceTxn[] = [
+const MOCK_TXNS: HQTxn[] = [
   {
     id: "txn-1",
     accountId: "acct-operating",
@@ -100,9 +100,9 @@ const TransactionsPage: React.FC = () => {
   const selectionCount = selectedIds.size;
 
   return (
-    <FinanceLayout
+    <HQLayout
       title="Transactions"
-      description="Review and classify every transaction. Use rules to automate tags, notes, and categories."
+      description="Review and classify every transaction. Use HQ rules to automate tags, notes, and categories."
     >
       <div className={styles.page}>
         <div className={styles.filters}>
@@ -202,7 +202,7 @@ const TransactionsPage: React.FC = () => {
           </div>
         )}
       </div>
-    </FinanceLayout>
+    </HQLayout>
   );
 };
 

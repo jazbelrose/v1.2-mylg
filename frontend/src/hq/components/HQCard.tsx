@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import styles from "./FinanceCard.module.css";
+import styles from "./HQCard.module.css";
 
-export type FinanceCardProps = {
+export type HQCardProps = {
   title: string;
   metric?: ReactNode;
   subtitle?: ReactNode;
@@ -11,7 +11,7 @@ export type FinanceCardProps = {
   "aria-label"?: string;
 };
 
-export function FinanceCard({
+export function HQCard({
   title,
   metric,
   subtitle,
@@ -19,7 +19,7 @@ export function FinanceCard({
   footer,
   children,
   "aria-label": ariaLabel,
-}: FinanceCardProps) {
+}: HQCardProps) {
   return (
     <section className={styles.card} aria-label={ariaLabel}>
       <header className={styles.cardHeader}>
@@ -39,4 +39,4 @@ export function FinanceCard({
   );
 }
 
-export default FinanceCard;
+export default HQCard;

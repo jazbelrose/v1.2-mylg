@@ -1,4 +1,4 @@
-export type FinanceAccount = {
+export type HQAccount = {
   id: string;
   institution: string;
   name: string;
@@ -11,7 +11,7 @@ export type FinanceAccount = {
   lastSyncAt: string;
 };
 
-export type FinanceTxn = {
+export type HQTxn = {
   id: string;
   accountId: string;
   date: string;
@@ -25,7 +25,7 @@ export type FinanceTxn = {
   receiptUrl?: string;
 };
 
-export type FinanceAlert = {
+export type HQAlert = {
   id: string;
   message: string;
   severity: "info" | "warning" | "critical";

@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import FinanceLayout from "../components/FinanceLayout";
+import HQLayout from "../components/HQLayout";
 import TasksOverviewCard from "@/dashboard/home/components/TasksOverviewCard";
-import styles from "./FinanceTasksPage.module.css";
+import styles from "./HQTasksPage.module.css";
 
-const FinanceTasksPage: React.FC = () => {
+const HQTasksPage: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
 
   return (
-    <FinanceLayout
-      title="Finance tasks"
-      description="Action items tied to finance workflows. Syncs with the core Tasks module but scoped to company work."
+    <HQLayout
+      title="HQ tasks"
+      description="Action items tied to company operations. Syncs with the core Tasks module but scoped to internal work."
     >
       <div className={styles.page}>
         <label className={styles.mapToggle}>
@@ -21,7 +21,7 @@ const FinanceTasksPage: React.FC = () => {
           Show geo map for vendor tasks
         </label>
 
-        <TasksOverviewCard className="finance-task-card" />
+        <TasksOverviewCard className={styles.tasksWidget} />
 
         {showMap ? (
           <div className={styles.mapPlaceholder} role="img" aria-label="Map preview placeholder">
@@ -29,8 +29,8 @@ const FinanceTasksPage: React.FC = () => {
           </div>
         ) : null}
       </div>
-    </FinanceLayout>
+    </HQLayout>
   );
 };
 
-export default FinanceTasksPage;
+export default HQTasksPage;

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import FinanceLayout from "../components/FinanceLayout";
+import HQLayout from "../components/HQLayout";
 import styles from "./ReportsPage.module.css";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
@@ -45,13 +45,13 @@ const ReportsPage: React.FC = () => {
   );
 
   return (
-    <FinanceLayout
+    <HQLayout
       title="Reports"
-      description="Drill into profitability and cash flow. Select a tab to view P&L or Cash Flow statements."
+      description="Drill into profitability and cash flow for HQ. Select a tab to view P&L or Cash Flow statements."
       actions={actions}
     >
       <div className={styles.page}>
-        <div className={styles.tabs} role="tablist" aria-label="Finance reports">
+        <div className={styles.tabs} role="tablist" aria-label="HQ reports">
           <button
             type="button"
             role="tab"
@@ -142,7 +142,7 @@ const ReportsPage: React.FC = () => {
           </section>
         )}
       </div>
-    </FinanceLayout>
+    </HQLayout>
   );
 };
 

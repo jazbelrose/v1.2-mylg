@@ -17,7 +17,7 @@ import { Home } from "../pages/home/home";
 import { Works } from "../pages/works/showcase";
 
 import Spinner from "../shared/ui/Spinner";
-import { financeRoutes } from "@/finance/routes";
+import { hqRoutes } from "@/hq/routes";
 
 const Dashboard = React.lazy(() => import("../dashboard/home/pages/DashboardLayout"));
 const DashboardWelcome = React.lazy(() => import("../dashboard/home/pages/DashboardHome"));
@@ -152,7 +152,7 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           }
         />
 
-        {financeRoutes.map((route) => (
+        {hqRoutes.map((route) => (
           <Route key={route.path} path={route.path} element={route.element} />
         ))}
         

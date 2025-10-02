@@ -1,35 +1,38 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
+  font-family: var(--font-family-helvetica-special, "Helvetica Special", sans-serif);
 }
 
 .accountsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
+  gap: 22px;
 }
 
 .accountCard {
-  background: linear-gradient(135deg, rgba(18, 18, 18, 0.9), rgba(12, 12, 12, 0.94));
-  border-radius: 18px;
+  background: linear-gradient(150deg, rgba(14, 14, 14, 0.92), rgba(20, 20, 20, 0.88));
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .accountHeader {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 12px;
 }
 
 .accountName {
   font-size: 1.1rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .accountInstitution {
@@ -38,9 +41,9 @@
 }
 
 .balance {
-  font-size: 1.6rem;
-  font-family: "Roboto", sans-serif;
+  font-size: clamp(1.6rem, 1.2rem + 1vw, 2rem);
   font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .metaRow {
@@ -52,33 +55,49 @@
 }
 
 .statusBadge {
-  padding: 2px 8px;
+  padding: 4px 12px;
   border-radius: 999px;
   font-size: 0.75rem;
-  background: rgba(250, 51, 86, 0.18);
-  color: #fa3356;
   font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  background: rgba(250, 51, 86, 0.2);
+  color: #fa3356;
 }
 
 .emptyState {
-  padding: 32px;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 18px;
+  padding: 36px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   align-items: flex-start;
-  background: rgba(12, 12, 12, 0.6);
+  background: rgba(14, 14, 14, 0.72);
+  color: rgba(255, 255, 255, 0.86);
 }
 
 .emptyStateTitle {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
 .emptyStateDescription {
   color: rgba(255, 255, 255, 0.7);
-  max-width: 420px;
+  max-width: 440px;
+  line-height: 1.6;
+}
+
+@media (max-width: 599px) {
+  .accountsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .accountCard {
+    padding: 20px;
+  }
+
+  .emptyState {
+    padding: 28px;
+  }
 }

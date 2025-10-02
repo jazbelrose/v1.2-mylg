@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
-import FinanceLayout from "../components/FinanceLayout";
-import FinanceCard from "../components/FinanceCard";
+import HQLayout from "../components/HQLayout";
+import HQCard from "../components/HQCard";
 import TasksOverviewCard from "@/dashboard/home/components/TasksOverviewCard";
-import styles from "./FinanceOverview.module.css";
-import type { FinanceAlert } from "../types";
+import styles from "./HQOverview.module.css";
+import type { HQAlert } from "../types";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -53,7 +53,7 @@ const recurringVendors = [
   { vendor: "Notion", amount: 360, cadence: "Monthly workspace" },
 ];
 
-const alerts: FinanceAlert[] = [
+const alerts: HQAlert[] = [
   {
     id: "low-balance",
     severity: "warning",
@@ -66,7 +66,19 @@ const alerts: FinanceAlert[] = [
   },
 ];
 
-const FinanceOverview: React.FC = () => {
+const upcomingEvents = [
+  { id: "event-studio", name: "Summer showcase load-in", date: "Jul 12", location: "Brooklyn Stage" },
+  { id: "event-offsite", name: "Crew offsite planning", date: "Jul 19", location: "HQ Loft" },
+  { id: "event-campaign", name: "Campaign kickoff with Spotify", date: "Jul 24", location: "Virtual" },
+];
+
+const messageDigest = [
+  { id: "msg-1", sender: "Taylor P.", preview: "Approved the venue hold — see updated contract." },
+  { id: "msg-2", sender: "Morgan A.", preview: "Need final numbers for the August pop-up." },
+  { id: "msg-3", sender: "Accounts", preview: "Invoice 2041 marked paid. Apply to AR report." },
+];
+
+const HQOverview: React.FC = () => {
   const [selectedRange, setSelectedRange] = useState<(typeof quickFilters)[number]["id"]>("ytd");
 
   const totals = useMemo(() => {
@@ -102,14 +114,14 @@ const FinanceOverview: React.FC = () => {
   );
 
   return (
-    <FinanceLayout
-      title="Finance"
-      description="A live look at company health across accounts, spend, and runway. Connect Plaid to keep balances and transactions in sync."
+    <HQLayout
+      title="HQ"
+      description="Your company hub for cash, commitments, events, and conversations. Connect Plaid to keep balances and transactions in sync."
       actions={actions}
     >
       <div className={styles.page}>
         <div className={styles.cardsGrid}>
-          <FinanceCard
+          <HQCard
             title="Cash on hand"
             metric={currency.format(totals.cashOnHand)}
             badge="4 accounts"
@@ -117,7 +129,7 @@ const FinanceOverview: React.FC = () => {
             aria-label={`Cash on hand across accounts: ${currency.format(totals.cashOnHand)}.`}
           />
 
-          <FinanceCard
+          <HQCard
             title="Runway"
             metric={`${runwayFormatter.format(totals.runwayMonths)} mo`}
             subtitle="Cash on hand ÷ average burn (last 3 months)"
@@ -127,7 +139,7 @@ const FinanceOverview: React.FC = () => {
             )} months based on average monthly burn of ${currency.format(totals.avgMonthlyBurn)}.`}
           />
 
-          <FinanceCard
+          <HQCard
             title="Cash in vs cash out"
             subtitle={`Range: ${quickFilters.find((f) => f.id === selectedRange)?.label ?? "Year-to-date"}`}
             badge="Bars show inflow vs outflow"
@@ -149,8 +161,8 @@ const FinanceOverview: React.FC = () => {
                     <span>{row.month}</span>
                     <div className={styles.chartBar} aria-hidden>
                       <div
-                        className={styles.chartBarFill}
-                        style={{ width: `${outflowPercent}%`, background: "rgba(255, 255, 255, 0.28)" }}
+                        className={`${styles.chartBarFill} ${styles.chartBarFillMuted}`}
+                        style={{ width: `${outflowPercent}%` }}
                         title={`${row.month} outflow ${preciseCurrency.format(row.outflow)}`}
                       />
                     </div>
@@ -158,9 +170,9 @@ const FinanceOverview: React.FC = () => {
                 );
               })}
             </div>
-          </FinanceCard>
+          </HQCard>
 
-          <FinanceCard
+          <HQCard
             title="Top categories"
             subtitle="Year-to-date"
             aria-label="Top spend categories year to date"
@@ -176,9 +188,9 @@ const FinanceOverview: React.FC = () => {
                 );
               })}
             </ul>
-          </FinanceCard>
+          </HQCard>
 
-          <FinanceCard
+          <HQCard
             title="Recurring vendors"
             subtitle="Subscriptions & retainers"
             aria-label="Recurring vendor commitments"
@@ -194,9 +206,9 @@ const FinanceOverview: React.FC = () => {
                 </li>
               ))}
             </ul>
-          </FinanceCard>
+          </HQCard>
 
-          <FinanceCard
+          <HQCard
             title="AR vs AP"
             subtitle="Outstanding invoices & bills"
             aria-label="Accounts receivable versus accounts payable"
@@ -209,9 +221,9 @@ const FinanceOverview: React.FC = () => {
               <span>Accounts payable</span>
               <span>{currency.format(45200)}</span>
             </div>
-          </FinanceCard>
+          </HQCard>
 
-          <FinanceCard title="Alerts" aria-label="Finance alerts">
+          <HQCard title="Alerts" aria-label="HQ alerts">
             <ul className={styles.alertsList}>
               {alerts.map((alert) => (
                 <li key={alert.id} className={styles.alertItem}>
@@ -220,17 +232,44 @@ const FinanceOverview: React.FC = () => {
                 </li>
               ))}
             </ul>
-          </FinanceCard>
+          </HQCard>
 
-          <FinanceCard title="Tasks" aria-label="Finance tasks overview">
+          <HQCard title="Upcoming events" aria-label="Upcoming events">
+            <ul className={styles.eventsList}>
+              {upcomingEvents.map((event) => (
+                <li key={event.id}>
+                  <div className={styles.eventRow}>
+                    <span className={styles.eventDate}>{event.date}</span>
+                    <div>
+                      <div className={styles.eventName}>{event.name}</div>
+                      <small className={styles.eventLocation}>{event.location}</small>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </HQCard>
+
+          <HQCard title="Tasks" aria-label="HQ tasks overview">
             <div className={styles.tasksCard}>
-              <TasksOverviewCard className="finance-task-card" />
+              <TasksOverviewCard className={styles.tasksWidget} />
             </div>
-          </FinanceCard>
+          </HQCard>
+
+          <HQCard title="Message highlights" aria-label="Recent HQ messages">
+            <ul className={styles.messagesList}>
+              {messageDigest.map((message) => (
+                <li key={message.id}>
+                  <span className={styles.messageSender}>{message.sender}</span>
+                  <span className={styles.messagePreview}>{message.preview}</span>
+                </li>
+              ))}
+            </ul>
+          </HQCard>
         </div>
       </div>
-    </FinanceLayout>
+    </HQLayout>
   );
 };
 
-export default FinanceOverview;
+export default HQOverview;

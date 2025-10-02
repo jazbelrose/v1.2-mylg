@@ -1,5 +1,5 @@
 import React from "react";
-import FinanceLayout from "../components/FinanceLayout";
+import HQLayout from "../components/HQLayout";
 import styles from "./InvoicesPage.module.css";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -28,7 +28,7 @@ const InvoicesPage: React.FC = () => {
   const hasInvoices = mockInvoices.length > 0;
 
   return (
-    <FinanceLayout
+    <HQLayout
       title="Invoices"
       description="Track invoices sent to clients and monitor outstanding AR in one place."
       actions={
@@ -62,7 +62,7 @@ const InvoicesPage: React.FC = () => {
           </div>
         )}
       </div>
-    </FinanceLayout>
+    </HQLayout>
   );
 };
 

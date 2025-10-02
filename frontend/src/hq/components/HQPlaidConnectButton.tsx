@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { Link as LinkIcon, RefreshCw } from "lucide-react";
-import styles from "./FinancePlaidConnectButton.module.css";
+import styles from "./HQPlaidConnectButton.module.css";
 
 type PlaidLinkSuccessMetadata = {
   institution?: { name?: string };
@@ -19,18 +19,18 @@ declare global {
   }
 }
 
-type FinancePlaidConnectButtonProps = {
+type HQPlaidConnectButtonProps = {
   onSuccess?: () => void;
 };
 
-const FinancePlaidConnectButton: React.FC<FinancePlaidConnectButtonProps> = ({ onSuccess }) => {
+const HQPlaidConnectButton: React.FC<HQPlaidConnectButtonProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handlePlaidSuccess = useCallback(
     async (publicToken: string, metadata: PlaidLinkSuccessMetadata) => {
       try {
-        const response = await fetch("/finance/plaid/exchange", {
+        const response = await fetch("/hq/plaid/exchange", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -66,7 +66,7 @@ const FinancePlaidConnectButton: React.FC<FinancePlaidConnectButtonProps> = ({ o
     setError(null);
 
     try {
-      const response = await fetch("/finance/plaid/link-token", {
+      const response = await fetch("/hq/plaid/link-token", {
         method: "GET",
         credentials: "include",
       });
@@ -89,7 +89,7 @@ const FinancePlaidConnectButton: React.FC<FinancePlaidConnectButtonProps> = ({ o
         handler.open();
       } else {
         console.warn("Plaid Link SDK unavailable; using fallback workflow");
-        const exchangeResponse = await fetch("/finance/plaid/exchange", {
+        const exchangeResponse = await fetch("/hq/plaid/exchange", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -141,4 +141,4 @@ const FinancePlaidConnectButton: React.FC<FinancePlaidConnectButtonProps> = ({ o
   );
 };
 
-export default FinancePlaidConnectButton;
+export default HQPlaidConnectButton;

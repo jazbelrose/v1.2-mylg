@@ -10,7 +10,7 @@ import {
   Shield,
   Users,
   Plus,
-  Briefcase,
+  Banknote,
 } from "lucide-react";
 import { signOut } from "aws-amplify/auth";
 import Cookies from "js-cookie";
@@ -49,7 +49,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     if (!isDashboardPath) return null;
     return parseDashboardPath(location.pathname).view;
   }, [isDashboardPath, location.pathname]);
-  const isFinanceActive = location.pathname.startsWith("/finance");
+  const isHQActive = location.pathname.startsWith("/hq");
 
   const unreadNotifications = useMemo(
     () => notifications.filter((n) => !n.read).length,
@@ -80,8 +80,8 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     close();
   }, [navigate, close]);
 
-  const handleFinanceNavigation = useCallback(() => {
-    navigate("/finance");
+  const handleHQNavigation = useCallback(() => {
+    navigate("/hq");
     close();
   }, [navigate, close]);
 
@@ -124,11 +124,11 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         isActive: isDashboardPath && activeDashboardView === "projects",
       },
       {
-        key: "finance",
-        icon: <Briefcase size={24} color="white" />,
-        label: "Finance",
-        onClick: handleFinanceNavigation,
-        isActive: isFinanceActive,
+        key: "hq",
+        icon: <Banknote size={24} color="white" />,
+        label: "HQ",
+        onClick: handleHQNavigation,
+        isActive: isHQActive,
       },
       {
         key: "notifications",
@@ -164,8 +164,8 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
       isDashboardPath,
       activeDashboardView,
       location.pathname,
-      handleFinanceNavigation,
-      isFinanceActive,
+      handleHQNavigation,
+      isHQActive,
     ]
   );
 

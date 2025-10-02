@@ -1,7 +1,7 @@
 import React from "react";
-import FinanceLayout from "../components/FinanceLayout";
-import FinancePlaidConnectButton from "../components/FinancePlaidConnectButton";
-import type { FinanceAccount } from "../types";
+import HQLayout from "../components/HQLayout";
+import HQPlaidConnectButton from "../components/HQPlaidConnectButton";
+import type { HQAccount } from "../types";
 import styles from "./AccountsPage.module.css";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -9,7 +9,7 @@ const currency = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
-const MOCK_ACCOUNTS: FinanceAccount[] = [
+const MOCK_ACCOUNTS: HQAccount[] = [
   {
     id: "acct-operating",
     institution: "First Republic",
@@ -52,10 +52,10 @@ const AccountsPage: React.FC = () => {
   const hasAccounts = MOCK_ACCOUNTS.length > 0;
 
   return (
-    <FinanceLayout
+    <HQLayout
       title="Accounts"
       description="Link banking, credit, and investment accounts to bring balances and transactions into HQ."
-      actions={<FinancePlaidConnectButton />}
+      actions={<HQPlaidConnectButton />}
     >
       <div className={styles.page}>
         {hasAccounts ? (
@@ -92,11 +92,11 @@ const AccountsPage: React.FC = () => {
               Connect a checking, savings, or credit account with Plaid to get cash positions, runway, and transaction history
               in minutes.
             </p>
-            <FinancePlaidConnectButton />
+            <HQPlaidConnectButton />
           </div>
         )}
       </div>
-    </FinanceLayout>
+    </HQLayout>
   );
 };
 

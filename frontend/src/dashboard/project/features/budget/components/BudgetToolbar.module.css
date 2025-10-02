@@ -1,0 +1,69 @@
+.toolbar {
+  color: var(--text-color);
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--color-active);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px var(--brand-20);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.addButton:hover {
+  background: var(--color-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px var(--brand-20);
+}
+
+.addButton:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.addIcon {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--brand-12);
+  color: var(--color-active);
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.addLabel {
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .addButton {
+    transition: background-color 0.2s ease;
+  }
+
+  .addButton:hover {
+    transform: none;
+  }
+}

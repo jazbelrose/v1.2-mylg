@@ -1,7 +1,8 @@
 import React from "react";
 import { Segmented, Tooltip as AntTooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClone, faTrash, faUndo, faRedo, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faClone, faTrash } from "@fortawesome/free-solid-svg-icons";
+import styles from "./BudgetToolbar.module.css";
 
 interface BudgetToolbarProps {
   groupBy: string;
@@ -9,10 +10,6 @@ interface BudgetToolbarProps {
   selectedRowKeys: string[];
   handleDuplicateSelected: () => void;
   openDeleteModal: (ids: string[]) => void;
-  undoStackLength: number;
-  redoStackLength: number;
-  handleUndo: () => void;
-  handleRedo: () => void;
   openCreateModal: () => void;
 }
 
@@ -22,21 +19,9 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   selectedRowKeys,
   handleDuplicateSelected,
   openDeleteModal,
-  undoStackLength,
-  redoStackLength,
-  handleUndo,
-  handleRedo,
   openCreateModal,
 }) => (
-  <div
-    style={{
-      color: "white",
-      width: "100%",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    }}
-  >
+  <div className={styles.toolbar}>
     <Segmented
       size="small"
       options={[
@@ -48,7 +33,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
       value={groupBy}
       onChange={(val) => onGroupChange(val as string)}
     />
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div className={styles.actions}>
       {selectedRowKeys.length > 0 && (
         <>
           <AntTooltip title="Duplicate Selected">
@@ -75,39 +60,17 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
           </AntTooltip>
         </>
       )}
-      <AntTooltip title="Undo">
-        <button
-          type="button"
-          className="modal-button secondary"
-          style={{ borderRadius: "10px" }}
-          onClick={handleUndo}
-          disabled={undoStackLength === 0}
-          aria-label="Undo"
-        >
-          <FontAwesomeIcon icon={faUndo} />
-        </button>
-      </AntTooltip>
-      <AntTooltip title="Redo">
-        <button
-          type="button"
-          className="modal-button secondary"
-          style={{ borderRadius: "10px" }}
-          onClick={handleRedo}
-          disabled={redoStackLength === 0}
-          aria-label="Redo"
-        >
-          <FontAwesomeIcon icon={faRedo} />
-        </button>
-      </AntTooltip>
       <AntTooltip title="Create Line Item">
         <button
           type="button"
-          className="modal-button primary"
-          style={{ borderRadius: "10px" }}
+          className={styles.addButton}
           onClick={openCreateModal}
-          aria-label="Create line item"
+          aria-label="Add budget line item"
         >
-          <FontAwesomeIcon icon={faPlus} />
+          <span className={styles.addIcon} aria-hidden="true">
+            +
+          </span>
+          <span className={styles.addLabel}>Add Item</span>
         </button>
       </AntTooltip>
     </div>

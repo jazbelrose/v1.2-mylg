@@ -639,10 +639,6 @@ const BudgetPageContent = () => {
                                     selectedRowKeys={stateManager.selectedRowKeys}
                                     handleDuplicateSelected={eventHandlers.handleDuplicateSelected}
                                     openDeleteModal={eventHandlers.openDeleteModal}
-                                    undoStackLength={stateManager.undoStack.length}
-                                    redoStackLength={stateManager.redoStack.length}
-                                    handleUndo={stateManager.handleUndo}
-                                    handleRedo={stateManager.handleRedo}
                                     openCreateModal={eventHandlers.openCreateModal}
                                   />
                                   <BudgetItemsTable

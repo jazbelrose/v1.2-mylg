@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { updateBudgetItem } from "@/shared/utils/api";
 import { parseBudget } from "@/shared/utils/budgetUtils";
@@ -255,6 +255,61 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
     setSelectedRowKeys([]);
     await syncHeaderTotals(next.items);
   }, [redoStack, budgetItems, budgetHeader, setBudgetItems, setBudgetHeader, computeGroupsAndClients, syncHeaderTotals]);
+
+  useEffect(() => {
+    const isEditableElement = (element: EventTarget | null): boolean => {
+      if (!(element instanceof HTMLElement)) {
+        return false;
+      }
+
+      if (element.isContentEditable) {
+        return true;
+      }
+
+      const tagName = element.tagName;
+      return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT";
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) {
+        return;
+      }
+
+      if (event.defaultPrevented) {
+        return;
+      }
+
+      if (isEditableElement(event.target)) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+
+      if (key === "z") {
+        event.preventDefault();
+        if (event.shiftKey) {
+          void handleRedo();
+        } else {
+          void handleUndo();
+        }
+        return;
+      }
+
+      if (key === "y" && !event.shiftKey) {
+        event.preventDefault();
+        void handleRedo();
+      }
+    };
+
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [handleUndo, handleRedo]);
 
   const state: BudgetStateManagerState = useMemo(() => ({
     // Undo/Redo state

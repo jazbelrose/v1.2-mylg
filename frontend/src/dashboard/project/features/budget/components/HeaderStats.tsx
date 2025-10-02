@@ -833,9 +833,15 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       <div className={mobileStyles.headerRow}>
         <div className={mobileStyles.titleGroup}>
           <span>Budget</span>
-          {budgetHeader?.clientRevisionId != null && budgetHeader.clientRevisionId !== "" && (
-            <span className={mobileStyles.clientRevision}>{`Rev.${budgetHeader.clientRevisionId}`}</span>
-          )}
+          <button
+            type="button"
+            className={mobileStyles.iconButton}
+            onClick={openInvoicePreview}
+            aria-label="Invoice preview"
+            disabled={!budgetHeader}
+          >
+            <FontAwesomeIcon icon={faFileInvoiceDollar} />
+          </button>
         </div>
         <button
           type="button"
@@ -851,17 +857,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         <div className={mobileStyles.summaryColumn}>
           <div className={mobileStyles.amountRow}>
             <span className={mobileStyles.amountValue}>{finalDisplay}</span>
-            <div className={mobileStyles.amountActions}>
-              <button
-                type="button"
-                className={mobileStyles.iconButton}
-                onClick={openInvoicePreview}
-                aria-label="Invoice preview"
-                disabled={!budgetHeader}
-              >
-                <FontAwesomeIcon icon={faFileInvoiceDollar} />
-              </button>
-            </div>
           </div>
           <div className={mobileStyles.dateRow}>{createdDateLabel}</div>
         </div>

@@ -41,7 +41,6 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
         ]}
         value={groupBy}
         onChange={(val) => onGroupChange(val as string)}
-        className={styles.segmentedControl}
       />
     </div>
     <div className={styles.actions}>

@@ -3,18 +3,13 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 16px;
   color: #ffffff;
   flex-wrap: wrap;
+  row-gap: 16px;
 }
 
 .groupControl {
-  flex: 1;
-  min-width: 240px;
-}
-
-.segmentedControl {
-  width: 100%;
+  flex: 0 0 auto;
 }
 
 .actions {
@@ -39,11 +34,6 @@
 }
 
 @media (max-width: 768px) {
-  .toolbar {
-    justify-content: flex-end;
-    gap: 12px;
-  }
-
   .groupControl {
     display: none;
   }

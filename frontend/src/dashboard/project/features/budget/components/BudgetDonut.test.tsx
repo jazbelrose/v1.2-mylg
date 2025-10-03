@@ -1,5 +1,82 @@
 import React from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { vi } from "vitest";
+
+vi.mock("recharts", () => {
+  return {
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="responsive-container">{children}</div>
+    ),
+    PieChart: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="pie-chart">{children}</div>
+    ),
+    Pie: ({
+      data = [],
+      activeIndex,
+      children,
+      onClick,
+      onMouseEnter,
+      onMouseLeave,
+    }: {
+      data?: unknown[];
+      activeIndex?: number;
+      children?: React.ReactNode;
+      onClick?: (payload: unknown, index: number) => void;
+      onMouseEnter?: (payload: unknown, index: number) => void;
+      onMouseLeave?: (payload: unknown, index: number) => void;
+    }) => (
+      <div data-testid="pie-root">
+        {data.map((entry, index) => (
+          <button
+            key={index}
+            type="button"
+            data-testid={`slice-${index}`}
+            data-active={index === activeIndex}
+            onClick={(event) => onClick?.(event, index)}
+            onMouseEnter={(event) => onMouseEnter?.(event, index)}
+            onMouseLeave={(event) => onMouseLeave?.(event, index)}
+          >
+            {React.Children.map(children, (child) => child)}
+          </button>
+        ))}
+      </div>
+    ),
+    Cell: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+    Tooltip: () => null,
+    Sector: ({ children }: { children?: React.ReactNode }) => (
+      <div data-testid="sector">{children}</div>
+    ),
+  };
+});
+
+beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class ResizeObserverMock {
+      private callback: ResizeObserverCallback;
+
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+      }
+
+      observe() {
+        this.callback([
+          {
+            contentRect: { width: 320, height: 240 },
+          } as unknown as ResizeObserverEntry,
+        ]);
+      }
+
+      unobserve() {}
+
+      disconnect() {}
+    }
+  );
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 import BudgetDonut, { type BudgetDonutSlice } from "./BudgetDonut";
 
@@ -83,5 +160,27 @@ describe("BudgetDonut", () => {
       name: "Budget allocation breakdown",
     });
     expect(within(updatedDialog).getByText("Strategy")).toBeInTheDocument();
+  });
+
+  it("releases a locked slice when pointer interactions finish outside the chart", async () => {
+    render(
+      <div style={{ width: 320, height: 240 }}>
+        <BudgetDonut data={slices} total={1500} />
+      </div>
+    );
+
+    const slice = await screen.findByTestId("slice-0");
+
+    fireEvent.click(slice);
+
+    await waitFor(() => {
+      expect(slice).toHaveAttribute("data-active", "true");
+    });
+
+    fireEvent.pointerUp(document.body);
+
+    await waitFor(() => {
+      expect(slice).toHaveAttribute("data-active", "false");
+    });
   });
 });

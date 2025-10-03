@@ -7,7 +7,8 @@
   --budget-accent-chip: rgba(56, 189, 248, 0.18);
   --budget-accent-chip-active: rgba(56, 189, 248, 0.28);
   --budget-accent-text: rgba(255, 255, 255, 0.92);
-  background: linear-gradient(160deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.88));
+  background: linear-gradient(160deg, rgba(16,16,16,.96), rgba(12,12,12,.88));
+
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

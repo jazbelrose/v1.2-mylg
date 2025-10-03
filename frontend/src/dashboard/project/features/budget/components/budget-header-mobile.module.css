@@ -1,5 +1,13 @@
 .card {
-  background: #111;
+  --budget-accent: #38bdf8;
+  --budget-accent-soft: rgba(56, 189, 248, 0.16);
+  --budget-accent-softer: rgba(56, 189, 248, 0.24);
+  --budget-accent-border: rgba(56, 189, 248, 0.32);
+  --budget-accent-glow: rgba(56, 189, 248, 0.18);
+  --budget-accent-chip: rgba(56, 189, 248, 0.18);
+  --budget-accent-chip-active: rgba(56, 189, 248, 0.28);
+  --budget-accent-text: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(160deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.88));
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -10,8 +18,10 @@
   flex-direction: column;
   gap: 12px;
   color: #f9fafb;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 12px 28px rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 12px 28px rgba(15, 23, 42, 0.45),
+    0 0 32px var(--budget-accent-glow);
+  border: 1px solid var(--budget-accent-border) !important;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .headerRow {
@@ -30,19 +40,23 @@
 }
 
 .revisionButton {
-  background: rgba(255, 255, 255, 0.08);
-  border: none;
+  background: var(--budget-accent-soft);
+  border: 1px solid transparent;
   border-radius: 9999px;
   padding: 4px 10px;
   font-size: 0.75rem;
-  color: inherit;
+  color: var(--budget-accent-text);
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-.revisionButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.16);
+.revisionButton:hover:not(:disabled),
+.revisionButton:focus-visible {
+  background: var(--budget-accent-softer);
   transform: translateY(-1px);
+  box-shadow: 0 0 0 1px var(--budget-accent-border), 0 0 0 4px var(--budget-accent-soft);
+  outline: none;
 }
 
 .revisionButton:disabled {
@@ -89,7 +103,7 @@
 
 .iconButton {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: inherit;
   display: inline-flex;
   align-items: center;
@@ -97,17 +111,27 @@
   border-radius: 9999px;
   padding: 6px;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease,
+    color 0.2s ease;
 }
 
 .iconButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--budget-accent-soft);
   transform: scale(1.05);
+  color: var(--budget-accent-text);
+  box-shadow: 0 0 0 1px var(--budget-accent-border);
 }
 
 .iconButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.iconButton:focus-visible {
+  outline: none;
+  background: var(--budget-accent-softer);
+  color: var(--budget-accent-text);
+  box-shadow: 0 0 0 1px var(--budget-accent-border), 0 0 0 4px var(--budget-accent-soft);
 }
 
 .dateRow {
@@ -136,18 +160,35 @@
 }
 
 .controlSelect :global(.ant-select-selector) {
-  background: rgba(30, 41, 59, 0.9) !important;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.92), var(--budget-accent-soft)) !important;
   border-radius: 12px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: #f9fafb !important;
+  border: 1px solid var(--budget-accent-border) !important;
+  color: var(--budget-accent-text) !important;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12), 0 0 0 1px var(--budget-accent-soft);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
 }
 
 .controlSelect :global(.ant-select-selection-item) {
-  color: inherit !important;
+  color: var(--budget-accent-text) !important;
 }
 
 .controlSelect :global(.ant-select-arrow) {
-  color: rgba(249, 250, 251, 0.8);
+  color: var(--budget-accent) !important;
+}
+
+.controlSelect :global(.ant-select-selection-placeholder) {
+  color: rgba(248, 250, 252, 0.75) !important;
+}
+
+.controlSelect :global(.ant-select-selector:hover) {
+  border-color: var(--budget-accent) !important;
+  box-shadow: 0 0 0 1px var(--budget-accent), 0 0 0 4px var(--budget-accent-soft) !important;
+}
+
+.controlSelect :global(.ant-select-focused .ant-select-selector),
+.controlSelect :global(.ant-select-open .ant-select-selector) {
+  border-color: var(--budget-accent) !important;
+  box-shadow: 0 0 0 1px var(--budget-accent), 0 0 0 4px var(--budget-accent-soft) !important;
 }
 
 .chartRow {
@@ -164,6 +205,11 @@
   position: relative;
   margin: 0;
   box-sizing: border-box;
+  border-radius: 18px;
+  overflow: hidden;
+  background: radial-gradient(circle at top right, var(--budget-accent-soft), rgba(15, 23, 42, 0.4));
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.4), 0 10px 28px rgba(8, 13, 32, 0.45);
 }
 
 .legend {
@@ -228,6 +274,20 @@
   z-index: 1;
 }
 
+.metricChipSwitch :global(.ant-switch) {
+  background: rgba(148, 163, 184, 0.32);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.45);
+}
+
+.metricChipSwitch :global(.ant-switch-checked) {
+  background: var(--budget-accent);
+  box-shadow: 0 0 0 1px var(--budget-accent-border);
+}
+
+.metricChipSwitch :global(.ant-switch-checked .ant-switch-handle::before) {
+  background: #0f172a;
+}
+
 .metricRowTop {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -240,16 +300,18 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  background: rgba(30, 41, 59, 0.85);
+  background: linear-gradient(155deg, rgba(17, 24, 39, 0.94), var(--budget-accent-chip));
   border-radius: 12px;
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border: 1px solid transparent;
-  color: inherit;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  color: var(--budget-accent-text);
   text-align: left;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease,
+    background 0.3s ease;
+  box-shadow: 0 10px 22px rgba(8, 13, 32, 0.4), 0 0 0 1px var(--budget-accent-soft);
 }
 
 .metricChip:active:not(.metricChipActive) {
@@ -262,8 +324,9 @@
 }
 
 .metricChipActive {
-  border-color: rgba(255, 255, 255, 0.8);
-  background: rgba(17, 24, 39, 0.9);
+  border-color: var(--budget-accent);
+  background: linear-gradient(155deg, rgba(17, 24, 39, 0.95), var(--budget-accent-chip-active));
+  box-shadow: 0 0 0 1px var(--budget-accent), 0 0 28px var(--budget-accent-soft);
 }
 
 .metricTag {
@@ -274,7 +337,7 @@
 }
 
 .metricTagBallpark {
-  color: rgba(249, 250, 251, 0.85);
+  color: var(--budget-accent-text);
   text-transform: none;
   letter-spacing: 0.02em;
   font-weight: 600;
@@ -283,11 +346,18 @@
 .metricValue {
   font-size: 1rem;
   font-weight: 600;
+  color: var(--budget-accent-text);
 }
 
 .metricDescription {
   font-size: 0.65rem;
-  color: rgba(249, 250, 251, 0.55);
+  color: rgba(241, 245, 249, 0.66);
+}
+
+.metricChip:focus-visible {
+  outline: none;
+  border-color: var(--budget-accent);
+  box-shadow: 0 0 0 1px var(--budget-accent), 0 0 0 4px var(--budget-accent-soft);
 }
 
 .groupControls {

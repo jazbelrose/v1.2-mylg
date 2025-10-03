@@ -129,6 +129,30 @@ type ChartState = {
 };
 
 const MOBILE_BREAKPOINT = 768;
+const FALLBACK_ACCENT_COLOR = "#38BDF8";
+
+const normalizeHexColor = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(trimmed)) {
+    return null;
+  }
+  if (trimmed.length === 4) {
+    const [, r, g, b] = trimmed;
+    return `#${r}${r}${g}${g}${b}${b}`.toUpperCase();
+  }
+  return trimmed.toUpperCase();
+};
+
+const rgbaFromHex = (hex: string, alpha: number): string => {
+  const value = hex.startsWith("#") ? hex.slice(1) : hex;
+  if (value.length !== 6) {
+    return rgbaFromHex(FALLBACK_ACCENT_COLOR, alpha);
+  }
+  const r = Number.parseInt(value.slice(0, 2), 16);
+  const g = Number.parseInt(value.slice(2, 4), 16);
+  const b = Number.parseInt(value.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
 
 /* =========================
    Helpers
@@ -508,11 +532,27 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     [activeProject?.projectId]
   );
 
-  const computeChartState = useCallback((): ChartState => {
-    const baseColorSource =
+  const accentHex = useMemo(() => {
+    const providedColor =
       typeof activeProject?.color === "string" && activeProject.color.trim() !== ""
-        ? activeProject.color
-        : getColor(resolvedProjectKey ?? "budget");
+        ? normalizeHexColor(activeProject.color)
+        : null;
+
+    if (providedColor) {
+      return providedColor;
+    }
+
+    const generated = normalizeHexColor(getColor(resolvedProjectKey ?? "budget"));
+    return generated ?? FALLBACK_ACCENT_COLOR;
+  }, [activeProject?.color, resolvedProjectKey]);
+
+  const accentAlpha = useCallback(
+    (alpha: number) => rgbaFromHex(accentHex, alpha),
+    [accentHex]
+  );
+
+  const computeChartState = useCallback((): ChartState => {
+    const baseColorSource = accentHex;
 
     if (groupBy === "none") {
       const slices = metrics.map((metric) => ({
@@ -584,13 +624,12 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       signature: computeSignature(sortedSlices),
     };
   }, [
-    activeProject?.color,
+    accentHex,
     budgetHeader?.headerFinalTotalCost,
     budgetItems,
     groupBy,
     markupBasis,
     metrics,
-    resolvedProjectKey,
     selectedMetric,
   ]);
 
@@ -769,6 +808,21 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   const topMetrics = metrics.slice(0, 3);
   const bottomMetrics = metrics.slice(3);
 
+  const mobileAccentStyle = useMemo(
+    () =>
+      ({
+        "--budget-accent": accentHex,
+        "--budget-accent-soft": accentAlpha(0.16),
+        "--budget-accent-softer": accentAlpha(0.24),
+        "--budget-accent-border": accentAlpha(0.32),
+        "--budget-accent-glow": accentAlpha(0.22),
+        "--budget-accent-chip": accentAlpha(0.18),
+        "--budget-accent-chip-active": accentAlpha(0.3),
+        "--budget-accent-text": "rgba(255, 255, 255, 0.92)",
+      }) as React.CSSProperties,
+    [accentAlpha, accentHex]
+  );
+
   const renderMetricChip = (metric: (typeof metrics)[number]) => {
     const isReconciledToggleMetric =
       hasReconciled &&
@@ -866,7 +920,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   };
 
   const mobileContent = (
-    <div className={mobileStyles.card}>
+    <div className={mobileStyles.card} style={mobileAccentStyle}>
       <div className={mobileStyles.headerRow}>
         <div className={mobileStyles.titleGroup}>
           <span>Budget</span>

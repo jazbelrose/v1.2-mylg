@@ -34,5 +34,8 @@ Use any of the following options:
 * The sample data includes two example projects, a handful of collaborators,
   and representative inbox/messages activity so that core dashboard widgets
   render as expected.
+* Previewing invoices is supported: open a project budget and launch the
+  **Invoice Preview** modal to review the full sample invoice, including brand
+  and client information, without signing in.
 * Actions that would normally persist data (e.g. saving settings) are turned
   into no-ops – use this mode only to check styling and layout.

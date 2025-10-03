@@ -1,4 +1,4 @@
-import type { Project, Message, Thread, UserLite } from "@/app/contexts/DataProvider";
+import type { Project, Thread, UserLite } from "@/app/contexts/DataProvider";
 import type { ProjectMessagesMap } from "@/app/contexts/MessagesContextValue";
 
 const PREVIEW_STORAGE_KEY = "dashboardPreviewMode";
@@ -85,8 +85,14 @@ const DEV_PREVIEW_DATA: DevPreviewData = {
       description:
         "A public space refresh with new wayfinding, lighting, and modular seating zones.",
       color: "#0F62FE",
+      invoiceBrandName: "MYLG Lighting Group",
+      invoiceBrandAddress: "145 Dock Street, Suite 400\nWestbridge, NY 11201",
+      invoiceBrandPhone: "+1 (555) 010-0190",
       clientName: "City of Westbridge",
+      clientAddress: "123 Riverwalk Ave, Westbridge, NY 11201",
+      clientPhone: "+1 (555) 020-0110",
       clientEmail: "parks@westbridge.gov",
+      address: "Riverside Park Conservancy HQ\n12 Riverside Dr, Westbridge, NY 11209",
       previewUrl: "project-thumbnails/riverside/main.jpg",
       quickLinks: [
         { id: "brief", title: "Project Brief", url: "https://example.com/brief" },
@@ -125,8 +131,14 @@ const DEV_PREVIEW_DATA: DevPreviewData = {
       description:
         "Seasonal retail pavilion with interactive lighting and vendor stalls.",
       color: "#FF7A45",
+      invoiceBrandName: "Harbor Events Collective",
+      invoiceBrandAddress: "9 Wharfside Road\nHarborport, NY 11221",
+      invoiceBrandPhone: "+1 (555) 010-0215",
       clientName: "Port Authority",
+      clientAddress: "88 Bay Terminal, Harborport, NY 11221",
+      clientPhone: "+1 (555) 020-0225",
       clientEmail: "events@harborport.io",
+      address: "Pier 9 Event Lot\nHarborport, NY 11221",
       previewUrl: "project-thumbnails/harbor/main.jpg",
       quickLinks: [
         { id: "budget", title: "Budget Snapshot", url: "https://example.com/budget" },

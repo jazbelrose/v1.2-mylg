@@ -308,13 +308,49 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
 
   const updateCenterPopoverPosition = useCallback(() => {
     const button = centerButtonRef.current;
-    if (!button) return;
+    if (!button || typeof window === "undefined") return;
 
     const rect = button.getBoundingClientRect();
-    setCenterPopoverPosition({
-      top: rect.top + rect.height / 2,
-      left: rect.left + rect.width / 2,
-    });
+    const baseTop = rect.top + rect.height / 2;
+    const baseLeft = rect.left + rect.width / 2;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const margin = 16;
+
+    const clampPosition = () => {
+      let top = baseTop;
+      let left = baseLeft;
+
+      const popover = centerPopoverRef.current;
+      if (popover) {
+        const halfWidth = popover.offsetWidth / 2;
+        const halfHeight = popover.offsetHeight / 2;
+
+        const minLeft = margin + halfWidth;
+        const maxLeft = viewportWidth - margin - halfWidth;
+        const minTop = margin + halfHeight;
+        const maxTop = viewportHeight - margin - halfHeight;
+
+        left = Math.min(Math.max(left, minLeft), maxLeft);
+        top = Math.min(Math.max(top, minTop), maxTop);
+      } else {
+        left = Math.min(Math.max(left, margin), viewportWidth - margin);
+        top = Math.min(Math.max(top, margin), viewportHeight - margin);
+      }
+
+      setCenterPopoverPosition({
+        top,
+        left,
+      });
+    };
+
+    if (centerPopoverRef.current) {
+      clampPosition();
+    } else if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(clampPosition);
+    } else {
+      clampPosition();
+    }
   }, []);
 
   const openCenterPopover = useCallback(() => {

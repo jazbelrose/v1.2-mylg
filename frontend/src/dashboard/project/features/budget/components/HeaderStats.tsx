@@ -47,6 +47,13 @@ type GroupBy = "none" | "areaGroup" | "invoiceGroup" | "category";
 
 type MarkupBasis = "Budgeted" | "Actual" | "Reconciled";
 
+const GROUP_BY_OPTIONS: { label: string; value: GroupBy }[] = [
+  { label: "None", value: "none" },
+  { label: "Area Group", value: "areaGroup" },
+  { label: "Invoice Group", value: "invoiceGroup" },
+  { label: "Category", value: "category" },
+];
+
 export interface BudgetItem {
   [key: string]: unknown;
   areaGroup?: string;
@@ -855,6 +862,17 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         >
           {`Rev.${budgetHeader?.revision ?? 1}`}
         </button>
+      </div>
+
+      <div className={mobileStyles.groupByRow}>
+        <Segmented
+          size="small"
+          options={GROUP_BY_OPTIONS}
+          value={groupBy}
+          onChange={(val: SegmentedValue) => setGroupBy(val as GroupBy)}
+          className={mobileStyles.groupBySegmented}
+          aria-label="Group budget items"
+        />
       </div>
 
       <div className={mobileStyles.summaryLayout}>

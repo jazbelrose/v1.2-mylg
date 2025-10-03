@@ -74,6 +74,53 @@
   gap: 0.5rem;
 }
 
+.selectionActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-width: 80px;
+}
+
+.iconSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.mobileRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.mobileFilterWrap {
+  display: none;
+}
+
+.mobileFilterRoot {
+  position: relative;
+  width: 100%;
+}
+
+.mobileFilterButton {
+  width: 100%;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.mobileFilterActive {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mobileFilterPopover {
+  margin-top: 4px;
+}
+
 .iconActionButton {
   display: inline-flex;
   align-items: center;
@@ -174,5 +221,32 @@
     width: 32px;
     height: 32px;
     font-size: 0.82rem;
+  }
+
+  .selectionActions {
+    min-width: 72px;
+  }
+
+  .iconSlot {
+    width: 32px;
+    height: 32px;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .mobileRight {
+    flex: 1 1 auto;
+  }
+
+  .mobileFilterWrap {
+    display: flex;
+    flex: 1 1 auto;
+  }
+
+  .mobileFilterButton {
+    padding: 8px 12px;
   }
 }

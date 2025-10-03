@@ -13,6 +13,7 @@ interface BudgetTableLogicProps {
   groupBy: string;
   sortField: string | null;
   sortOrder: string | null;
+  filterQuery: string;
   selectedRowKeys: string[];
   eventsByLineItem: Record<string, Record<string, unknown>[]>;
   setSelectedRowKeys: (keys: string[] | ((prev: string[]) => string[])) => void;
@@ -34,6 +35,7 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
   groupBy,
   sortField,
   sortOrder,
+  filterQuery,
   selectedRowKeys,
   eventsByLineItem,
   setSelectedRowKeys,
@@ -46,6 +48,32 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
   
   // Use context selectors for data
   const budgetItems = getRows();
+
+  const normalizedQuery = filterQuery.trim().toLowerCase();
+
+  const filteredItems = useMemo(() => {
+    if (!normalizedQuery) {
+      return budgetItems;
+    }
+
+    const searchableKeys = [
+      "elementKey",
+      "elementId",
+      "description",
+      "category",
+      "areaGroup",
+      "invoiceGroup",
+      "paymentStatus",
+    ];
+
+    return budgetItems.filter((item) => {
+      return searchableKeys.some((key) => {
+        const value = item[key as keyof typeof item];
+        if (value === undefined || value === null) return false;
+        return String(value).toLowerCase().includes(normalizedQuery);
+      });
+    });
+  }, [budgetItems, normalizedQuery]);
 
   const isDefined = useCallback((val: unknown) => {
     if (val === undefined || val === null) return false;
@@ -138,7 +166,7 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
       "endDate",
       "itemCost",
     ];
-    const safeBudgetItems = budgetItems.filter(Boolean);
+    const safeBudgetItems = filteredItems.filter(Boolean);
     const available = safeBudgetItems.length
       ? Array.from(
           new Set([
@@ -316,7 +344,7 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
     });
     return cols;
   }, [
-    budgetItems,
+    filteredItems,
     groupBy,
     mainColumnsOrder,
     sortField,
@@ -335,11 +363,11 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
 
   const tableData = useMemo(
     () =>
-      budgetItems.map((item) => ({
+      filteredItems.map((item) => ({
         ...item,
         key: item.budgetItemId,
       })),
-    [budgetItems]
+    [filteredItems]
   );
 
   const sortedTableData = useMemo(() => {

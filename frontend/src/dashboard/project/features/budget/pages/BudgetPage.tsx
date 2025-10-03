@@ -531,15 +531,16 @@ const BudgetPageContent = () => {
                     stateManager={stateManager}
                   >
                     {(eventHandlers) => (
-                      <BudgetTableLogic
-                        groupBy={stateManager.groupBy}
-                        sortField={stateManager.sortField}
-                        sortOrder={stateManager.sortOrder}
-                        selectedRowKeys={stateManager.selectedRowKeys}
-                        eventsByLineItem={eventsByLineItem}
-                        setSelectedRowKeys={stateManager.setSelectedRowKeys}
-                        openEventModal={eventHandlers.openEventModal}
-                        openDeleteModal={eventHandlers.openDeleteModal}
+                        <BudgetTableLogic
+                          groupBy={stateManager.groupBy}
+                          sortField={stateManager.sortField}
+                          sortOrder={stateManager.sortOrder}
+                          filterQuery={stateManager.filterQuery as string}
+                          selectedRowKeys={stateManager.selectedRowKeys}
+                          eventsByLineItem={eventsByLineItem}
+                          setSelectedRowKeys={stateManager.setSelectedRowKeys}
+                          openEventModal={eventHandlers.openEventModal}
+                          openDeleteModal={eventHandlers.openDeleteModal}
                         openDuplicateModal={eventHandlers.openDuplicateModal}
                       >
                         {(tableConfig) => (
@@ -640,6 +641,14 @@ const BudgetPageContent = () => {
                                     handleDuplicateSelected={eventHandlers.handleDuplicateSelected}
                                     openDeleteModal={eventHandlers.openDeleteModal}
                                     openCreateModal={eventHandlers.openCreateModal}
+                                    filterQuery={stateManager.filterQuery as string}
+                                    onFilterQueryChange={stateManager.setFilterQuery as (query: string) => void}
+                                    sortField={stateManager.sortField as string | null}
+                                    sortOrder={stateManager.sortOrder as string | null}
+                                    onSortChange={(field, order) => {
+                                      stateManager.setSortField(field);
+                                      stateManager.setSortOrder(order);
+                                    }}
                                   />
                                   <BudgetItemsTable
                                     dataSource={

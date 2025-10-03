@@ -44,6 +44,8 @@ interface BudgetStateManagerState extends Record<string, unknown> {
   sortOrder: string | null;
   setSortField: (field: string | null) => void;
   setSortOrder: (order: string | null) => void;
+  filterQuery: string;
+  setFilterQuery: (query: string) => void;
   selectedRowKeys: string[];
   setSelectedRowKeys: React.Dispatch<React.SetStateAction<string[]>>;
   
@@ -104,6 +106,7 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
   const [groupBy, setGroupBy] = useState("none");
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<string | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   
   // Edit/Create state
@@ -121,7 +124,11 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
   // Pagination
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterQuery]);
+
   // Line locking
   const [lockedLines, setLockedLines] = useState<string[]>([]);
   const [editingLineId, setEditingLineId] = useState<string | null>(null);
@@ -340,6 +347,8 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
     sortOrder,
     setSortField,
     setSortOrder,
+    filterQuery,
+    setFilterQuery,
     selectedRowKeys,
     setSelectedRowKeys,
     
@@ -380,7 +389,7 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
   }), [
     undoStack, redoStack, pushHistory, handleUndo, handleRedo,
     isBudgetModalOpen, isRevisionModalOpen, isCreateModalOpen, isEventModalOpen, isConfirmingDelete,
-    groupBy, sortField, sortOrder, selectedRowKeys,
+    groupBy, sortField, sortOrder, filterQuery, selectedRowKeys,
     editItem, prefillItem, nextElementKey,
     deleteTargets,
     eventItem, eventList,

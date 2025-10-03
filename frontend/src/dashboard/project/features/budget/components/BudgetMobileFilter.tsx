@@ -1,0 +1,160 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUpDown, ChevronDown, Search } from "lucide-react";
+
+import mobileStyles from "@/dashboard/home/components/projects-panel.module.css";
+import desktopStyles from "@/dashboard/home/components/ProjectsPanelDesktop.module.css";
+import styles from "./BudgetToolbar.module.css";
+
+type SortOrder = "ascend" | "descend" | null;
+
+type SortOptionValue =
+  | "default"
+  | "elementKey-asc"
+  | "elementKey-desc"
+  | "description-asc"
+  | "description-desc"
+  | "budgeted-desc"
+  | "budgeted-asc"
+  | "final-desc"
+  | "final-asc";
+
+type SortOption = {
+  value: SortOptionValue;
+  label: string;
+  field: string | null;
+  order: SortOrder;
+};
+
+const SORT_OPTIONS: SortOption[] = [
+  { value: "default", label: "Default order", field: null, order: null },
+  { value: "elementKey-asc", label: "Element Key (A→Z)", field: "elementKey", order: "ascend" },
+  { value: "elementKey-desc", label: "Element Key (Z→A)", field: "elementKey", order: "descend" },
+  { value: "description-asc", label: "Description (A→Z)", field: "description", order: "ascend" },
+  { value: "description-desc", label: "Description (Z→A)", field: "description", order: "descend" },
+  { value: "budgeted-desc", label: "Budgeted Cost (High→Low)", field: "itemBudgetedCost", order: "descend" },
+  { value: "budgeted-asc", label: "Budgeted Cost (Low→High)", field: "itemBudgetedCost", order: "ascend" },
+  { value: "final-desc", label: "Final Cost (High→Low)", field: "itemFinalCost", order: "descend" },
+  { value: "final-asc", label: "Final Cost (Low→High)", field: "itemFinalCost", order: "ascend" },
+];
+
+interface BudgetMobileFilterProps {
+  filterQuery: string;
+  onFilterQueryChange: (query: string) => void;
+  sortField: string | null;
+  sortOrder: SortOrder;
+  onSortChange: (field: string | null, order: SortOrder) => void;
+}
+
+const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
+  filterQuery,
+  onFilterQueryChange,
+  sortField,
+  sortOrder,
+  onSortChange,
+}) => {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointer = (event: MouseEvent | TouchEvent) => {
+      if (!containerRef.current) return;
+      if (event.target instanceof Node && containerRef.current.contains(event.target)) {
+        return;
+      }
+      setOpen(false);
+    };
+
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("touchstart", handlePointer);
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("touchstart", handlePointer);
+    };
+  }, [open]);
+
+  const currentSortValue = useMemo<SortOptionValue>(() => {
+    if (!sortField || !sortOrder) {
+      return "default";
+    }
+
+    const match = SORT_OPTIONS.find(
+      (option) => option.field === sortField && option.order === sortOrder
+    );
+
+    return match ? match.value : "default";
+  }, [sortField, sortOrder]);
+
+  const isActive = filterQuery.trim().length > 0 || currentSortValue !== "default";
+
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextValue = event.target.value as SortOptionValue;
+    const option = SORT_OPTIONS.find((opt) => opt.value === nextValue) ?? SORT_OPTIONS[0];
+    onSortChange(option.field, option.order);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setOpen((prev) => !prev);
+    }
+    if (event.key === "Escape") {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className={styles.mobileFilterRoot} ref={containerRef}>
+      <button
+        type="button"
+        className={`${mobileStyles.recents} ${styles.mobileFilterButton} ${
+          isActive ? styles.mobileFilterActive : ""
+        }`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+        onKeyDown={handleKeyDown}
+      >
+        <span>Filter &amp; Sort</span>
+        <ChevronDown size={14} aria-hidden />
+      </button>
+      {open && (
+        <div className={`${mobileStyles.filterPop} ${styles.mobileFilterPopover}`} role="menu">
+          <div className={mobileStyles.filterSection}>
+            <div className={desktopStyles.filterField}>
+              <Search size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
+              <input
+                type="search"
+                className={desktopStyles.filterInput}
+                placeholder="Search budget items..."
+                value={filterQuery}
+                onChange={(event) => onFilterQueryChange(event.target.value)}
+                aria-label="Filter budget items"
+                autoFocus
+              />
+            </div>
+            <div className={`${desktopStyles.filterField} ${desktopStyles.filterSelect}`}>
+              <ArrowUpDown size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
+              <select
+                className={desktopStyles.filterSelectControl}
+                value={currentSortValue}
+                onChange={handleSortChange}
+                aria-label="Sort budget items"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} aria-hidden className={desktopStyles.filterSelectChevron} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BudgetMobileFilter;

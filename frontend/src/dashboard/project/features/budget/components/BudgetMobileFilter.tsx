@@ -120,7 +120,10 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
         <ChevronDown size={14} aria-hidden />
       </button>
       {open && (
-        <div className={`${mobileStyles.filterPop} ${styles.mobileFilterPopover}`} role="menu">
+        <div
+          className={`${mobileStyles.filterPop} ${mobileStyles.filterPopStart} ${styles.mobileFilterPopover}`}
+          role="menu"
+        >
           <div className={mobileStyles.filterSection}>
             <div className={desktopStyles.filterField}>
               <Search size={16} aria-hidden className={desktopStyles.filterFieldIcon} />

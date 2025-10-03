@@ -133,7 +133,7 @@
   margin-top: 4px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
-  background: rgba(10, 13, 30, 0.92);
+  background: #111;
   backdrop-filter: blur(8px);
 }
 

@@ -99,6 +99,8 @@ const centerValueStyles: React.CSSProperties = {
   fontWeight: 700,
 };
 
+const CENTER_POPOVER_MARGIN = 16;
+
 const centerPopoverStyles: React.CSSProperties = {
   position: "fixed",
   transform: "translate(-50%, -50%)",
@@ -108,7 +110,7 @@ const centerPopoverStyles: React.CSSProperties = {
   padding: "16px 18px",
   boxShadow: "0 20px 45px rgba(15, 23, 42, 0.45)",
   minWidth: "220px",
-  maxWidth: "260px",
+  maxWidth: `min(260px, calc(100vw - ${CENTER_POPOVER_MARGIN * 2}px))`,
   zIndex: 20,
   pointerEvents: "auto",
   backdropFilter: "blur(18px)",
@@ -329,7 +331,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     const baseLeft = rect.left + rect.width / 2;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const margin = 16;
+    const margin = CENTER_POPOVER_MARGIN;
 
     const clampPosition = () => {
       let top = baseTop;
@@ -345,7 +347,12 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         const minTop = margin + halfHeight;
         const maxTop = viewportHeight - margin - halfHeight;
 
-        left = Math.min(Math.max(left, minLeft), maxLeft);
+        if (isMobile) {
+          const desiredLeft = margin + halfWidth;
+          left = Math.min(Math.max(desiredLeft, minLeft), maxLeft);
+        } else {
+          left = Math.min(Math.max(left, minLeft), maxLeft);
+        }
         top = Math.min(Math.max(top, minTop), maxTop);
       } else {
         left = Math.min(Math.max(left, margin), viewportWidth - margin);
@@ -365,7 +372,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     } else {
       clampPosition();
     }
-  }, []);
+  }, [isMobile]);
 
   const updateTooltipPosition = useCallback(() => {
     if (!isMobile) {

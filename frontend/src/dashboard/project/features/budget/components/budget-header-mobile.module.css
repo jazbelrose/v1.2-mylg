@@ -64,6 +64,7 @@
   gap: 8px;
   flex: 1 1 220px;
   min-width: 0;
+  justify-content: center;
 }
 
 .amountRow {
@@ -156,8 +157,8 @@
 
 .chartContainer {
   flex: 0 0 auto;
-  width: clamp(120px, 35vw, 180px);
-  max-width: 200px;
+  width: clamp(140px, 40vw, 210px);
+  max-width: 230px;
   aspect-ratio: 1 / 1;
   position: relative;
   margin: 0;

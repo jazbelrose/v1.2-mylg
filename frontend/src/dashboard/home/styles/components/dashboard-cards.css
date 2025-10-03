@@ -99,9 +99,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
   flex: 1 1 0%;
   max-width: 50%;
   min-width: 0;
+  gap: 12px;
 }
 
 .budget-overview-header {
@@ -126,7 +128,7 @@
 }
 
 .budget-overview-amount {
-  margin-top: 8px;
+  margin-top: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -144,7 +146,7 @@
 }
 
 .budget-overview-date {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 /* Make budget card hover match calendar overview card and gallery feel */
@@ -188,11 +190,11 @@
 
 .budget-chart {
   width: 100%;
-  max-width: 280px;
+  max-width: 320px;
   aspect-ratio: 1 / 1;
   position: relative;
   margin-inline: auto;
-  
+
   box-sizing: border-box;
 }
 
@@ -261,13 +263,13 @@
 
   .budget-chart {
     margin-inline: auto;
-    max-width: 240px;
+    max-width: 280px;
   }
 }
 
 @container budget-card (max-width: 760px) {
   .budget-chart {
-    max-width: 200px;
+    max-width: 220px;
   }
 }
 
@@ -326,13 +328,13 @@
     margin-top: 6px;
   }
   .budget-overview-amount {
-    margin-top: 2px;
+    margin-top: 0;
   }
   .budget-overview-invoice-icon {
     margin-left: 4px;
   }
   .budget-overview-date {
-    margin-top: 4px;
+    margin-top: 0;
   }
   .budget-calendar-mobile-card {
     display: block;

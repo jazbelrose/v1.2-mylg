@@ -264,19 +264,35 @@
 
   .actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .mobileRight {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
     width: 100%;
     margin-left: 0;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .mobileFilterWrap {
     display: flex;
-    flex: 1 1 auto;
-    justify-content: flex-start;
+    flex: 0 0 auto;
+  }
+
+  .mobileFilterButton {
+    padding: 8px 12px;
+    width: auto;
+  }
+
+  .mobileFilterRoot {
+    width: auto;
+  }
+
+  .selectionActions {
+    min-width: auto;
+  }
+
+  .addButton {
+    margin-left: auto;
   }
 }

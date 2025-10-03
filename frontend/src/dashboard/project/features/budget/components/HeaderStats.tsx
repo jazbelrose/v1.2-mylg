@@ -958,6 +958,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             palette={chartState.palette}
             formatTooltip={formatTooltip}
             totalFormatter={totalFormatter}
+            clampTooltipToViewport
           />
         </div>
       </div>

@@ -1,4 +1,11 @@
-import React, { useMemo, useRef, useState, useCallback, useEffect } from "react";
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   ResponsiveContainer,
@@ -8,6 +15,7 @@ import {
   Tooltip,
   Sector,
 } from "recharts";
+import type { TooltipProps } from "recharts";
 
 interface SectorProps {
   cx?: number;
@@ -36,11 +44,6 @@ interface InternalSlice extends BudgetDonutSlice {
 
 export type BudgetDonutDatum = InternalSlice;
 
-interface BudgetDonutTooltipProps {
-  active?: boolean;
-  payload?: Array<{ payload?: BudgetDonutDatum } | undefined>;
-}
-
 export interface BudgetDonutProps {
   data: BudgetDonutSlice[];
   total: number;
@@ -51,6 +54,7 @@ export interface BudgetDonutProps {
   explodeOnHover?: boolean;
   explodeOnClick?: boolean;
   className?: string;
+  clampTooltipToViewport?: boolean;
 }
 
 const srOnlyStyles: React.CSSProperties = {
@@ -170,6 +174,190 @@ const tooltipStyles: React.CSSProperties = {
   backdropFilter: "blur(10px)", // Add blur for frosted effect
   WebkitBackdropFilter: "blur(10px)", // Safari support
 };
+
+type TooltipPosition = { x: number; y: number };
+
+type SafeAreaInsets = { top: number; right: number; bottom: number; left: number };
+
+const ZERO_INSETS: SafeAreaInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+const measureSafeAreaInsets = (): SafeAreaInsets => {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return ZERO_INSETS;
+  }
+
+  const probe = document.createElement("div");
+  probe.setAttribute("data-budget-donut-safe-area", "true");
+  Object.assign(probe.style, {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "0",
+    height: "0",
+    visibility: "hidden",
+    pointerEvents: "none",
+    zIndex: "-1",
+    paddingTop: "env(safe-area-inset-top)",
+    paddingRight: "env(safe-area-inset-right)",
+    paddingBottom: "env(safe-area-inset-bottom)",
+    paddingLeft: "env(safe-area-inset-left)",
+  } as React.CSSProperties);
+
+  document.body.appendChild(probe);
+  const styles = window.getComputedStyle(probe);
+  const parse = (value: string): number => {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const insets: SafeAreaInsets = {
+    top: parse(styles.paddingTop),
+    right: parse(styles.paddingRight),
+    bottom: parse(styles.paddingBottom),
+    left: parse(styles.paddingLeft),
+  };
+  document.body.removeChild(probe);
+  return insets;
+};
+
+interface BudgetDonutTooltipContentProps extends TooltipProps<number, string> {
+  formatTooltip?: (slice: BudgetDonutDatum) => string;
+  clampToViewport: boolean;
+  onPositionChange?: (position: TooltipPosition | undefined) => void;
+}
+
+const clampValue = (value: number, min: number, max: number): number => {
+  if (!Number.isFinite(value)) return min;
+  if (max < min) return min;
+  return Math.min(Math.max(value, min), max);
+};
+
+const BudgetDonutTooltipContent: React.FC<BudgetDonutTooltipContentProps> = ({
+  active,
+  payload,
+  viewBox,
+  formatTooltip,
+  clampToViewport,
+  onPositionChange,
+}) => {
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const [viewportVersion, setViewportVersion] = useState(0);
+
+  const datum = useMemo(
+    () => (payload && payload.length > 0 ? (payload[0]?.payload as BudgetDonutDatum | undefined) : undefined),
+    [payload]
+  );
+
+  const text = useMemo(() => {
+    if (!datum) return "";
+    return formatTooltip
+      ? formatTooltip(datum)
+      : `${datum.label}: ${Math.round(datum.value).toLocaleString()}`;
+  }, [datum, formatTooltip]);
+
+  const safeAreaInsets = useMemo(
+    () => (clampToViewport ? measureSafeAreaInsets() : ZERO_INSETS),
+    [clampToViewport, viewportVersion]
+  );
+
+  useEffect(() => {
+    if (!clampToViewport || !active) return undefined;
+    if (typeof window === "undefined") return undefined;
+
+    const handleViewportChange = () => {
+      setViewportVersion((version) => version + 1);
+    };
+
+    const viewport = window.visualViewport;
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+    viewport?.addEventListener("resize", handleViewportChange);
+    viewport?.addEventListener("scroll", handleViewportChange);
+
+    return () => {
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+      viewport?.removeEventListener("resize", handleViewportChange);
+      viewport?.removeEventListener("scroll", handleViewportChange);
+    };
+  }, [clampToViewport, active]);
+
+  useEffect(() => {
+    if (!clampToViewport || active) return undefined;
+    onPositionChange?.(undefined);
+    return undefined;
+  }, [clampToViewport, active, onPositionChange]);
+
+  useLayoutEffect(() => {
+    if (!clampToViewport) return;
+    if (!active || !datum || !viewBox) {
+      onPositionChange?.(undefined);
+      return;
+    }
+    if (typeof window === "undefined") {
+      onPositionChange?.(undefined);
+      return;
+    }
+
+    const tooltipEl = tooltipRef.current;
+    if (!tooltipEl) return;
+
+    const wrapper = tooltipEl.closest<HTMLElement>(".recharts-wrapper");
+    if (!wrapper) {
+      onPositionChange?.(undefined);
+      return;
+    }
+
+    const tooltipRect = tooltipEl.getBoundingClientRect();
+    const containerRect = wrapper.getBoundingClientRect();
+
+    const centerX = viewBox.x + viewBox.width / 2;
+    const centerY = viewBox.y + viewBox.height / 2;
+
+    const baseLeft = containerRect.left + centerX - tooltipRect.width / 2;
+    const baseTop = containerRect.top + centerY - tooltipRect.height / 2;
+
+    const viewport = window.visualViewport;
+    const viewportOffsetLeft = viewport?.offsetLeft ?? 0;
+    const viewportOffsetTop = viewport?.offsetTop ?? 0;
+    const viewportWidth = viewport?.width ?? window.innerWidth;
+    const viewportHeight = viewport?.height ?? window.innerHeight;
+
+    const margin = 16;
+
+    const minLeft = viewportOffsetLeft + safeAreaInsets.left + margin;
+    const maxLeft = viewportOffsetLeft + viewportWidth - safeAreaInsets.right - margin - tooltipRect.width;
+    const minTop = viewportOffsetTop + safeAreaInsets.top + margin;
+    const maxTop = viewportOffsetTop + viewportHeight - safeAreaInsets.bottom - margin - tooltipRect.height;
+
+    const clampedLeft = clampValue(baseLeft, minLeft, maxLeft);
+    const clampedTop = clampValue(baseTop, minTop, maxTop);
+
+    const relativeX = clampedLeft - containerRect.left;
+    const relativeY = clampedTop - containerRect.top;
+
+    if (Number.isFinite(relativeX) && Number.isFinite(relativeY)) {
+      onPositionChange?.({ x: relativeX, y: relativeY });
+    }
+  }, [
+    clampToViewport,
+    active,
+    datum,
+    viewBox,
+    onPositionChange,
+    safeAreaInsets,
+    text,
+  ]);
+
+  if (!active || !datum) {
+    return null;
+  }
+
+  return (
+    <div ref={tooltipRef} style={tooltipStyles} role="presentation">
+      {text}
+    </div>
+  );
+};
 const renderActiveShape = (props: SectorProps) => {
   const outerRadius = typeof props.outerRadius === "number" ? props.outerRadius : 0;
   return <Sector {...props} outerRadius={outerRadius + 8} />;
@@ -195,6 +383,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
   explodeOnHover = true,
   explodeOnClick = true,
   className,
+  clampTooltipToViewport,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -207,6 +396,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       }
     | null
   >(null);
+  const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | undefined>(undefined);
 
   const centerButtonRef = useRef<HTMLButtonElement | null>(null);
   const centerPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -280,19 +470,28 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     [explodeOnClick]
   );
 
-  const tooltipRenderer = useCallback(({ active, payload }: BudgetDonutTooltipProps) => {
-      if (!active || !payload || payload.length === 0) return null;
-      const datum = payload[0]?.payload as BudgetDonutDatum | undefined;
-      if (!datum) return null;
-      const text = formatTooltip
-        ? formatTooltip(datum)
-        : `${datum.label}: ${Math.round(datum.value).toLocaleString()}`;
-      return (
-        <div style={tooltipStyles} role="presentation">
-          {text}
-        </div>
-      );
-    }, [formatTooltip]);
+  const clampTooltip = Boolean(clampTooltipToViewport);
+
+  const handleTooltipPositionChange = useCallback(
+    (next: TooltipPosition | undefined) => {
+      setTooltipPosition((prev) => {
+        if (!next) {
+          return undefined;
+        }
+        if (prev && Math.abs(prev.x - next.x) < 0.5 && Math.abs(prev.y - next.y) < 0.5) {
+          return prev;
+        }
+        return next;
+      });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!clampTooltip) {
+      setTooltipPosition(undefined);
+    }
+  }, [clampTooltip]);
 
   const formattedTotal = useMemo(() => totalFormatter(total), [total, totalFormatter]);
 
@@ -568,9 +767,16 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
             ))}
           </Pie>
           <Tooltip
-            content={tooltipRenderer}
+            content={
+              <BudgetDonutTooltipContent
+                formatTooltip={formatTooltip}
+                clampToViewport={clampTooltip}
+                onPositionChange={clampTooltip ? handleTooltipPositionChange : undefined}
+              />
+            }
             cursor={{ fill: "rgba(255,255,255,0.08)" }}
             wrapperStyle={{ zIndex: 10 }}
+            position={clampTooltip ? tooltipPosition : undefined}
           />
         </PieChart>
       </ResponsiveContainer>

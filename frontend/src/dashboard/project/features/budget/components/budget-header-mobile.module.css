@@ -77,9 +77,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  flex: 1 1 240px;
+  /* Allow column to shrink so the donut chart can sit alongside it */
+  flex: 1 1 0;
   min-width: 0;
-  padding: 0 16px;
+  
   align-items: stretch;
 }
 
@@ -91,7 +92,7 @@
   box-sizing: border-box;
   background: linear-gradient(155deg, rgba(17, 24, 39, 0.94), var(--budget-accent-chip));
   border-radius: 14px;
-  padding: 12px 14px;
+  padding: 20px 14px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   color: var(--budget-accent-text);
   box-shadow: 0 10px 22px rgba(8, 13, 32, 0.42), 0 0 0 1px var(--budget-accent-soft);
@@ -436,3 +437,4 @@
     width: 100%;
   }
 }
+

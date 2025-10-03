@@ -52,7 +52,7 @@
 
 .summaryLayout {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
@@ -64,6 +64,8 @@
   gap: 8px;
   flex: 1 1 220px;
   min-width: 0;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .amountRow {
@@ -156,8 +158,8 @@
 
 .chartContainer {
   flex: 0 0 auto;
-  width: clamp(120px, 35vw, 180px);
-  max-width: 200px;
+  width: clamp(138px, 40vw, 216px);
+  max-width: 220px;
   aspect-ratio: 1 / 1;
   position: relative;
   margin: 0;
@@ -306,7 +308,7 @@
   }
 
   .chartContainer {
-    width: 110px;
+    width: 130px;
   }
 
   .metricChip {

@@ -1104,7 +1104,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                     .notes{margin-top:20px;}
                     .footer{margin-top:40px;font-size:0.9rem;color:#666;}
                     .pageNumber{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-family:'Roboto',Arial,sans-serif;font-size:0.85rem;color:#666;font-weight:normal;pointer-events:none;user-select:none;}
-                    @media (max-width:768px){
+                    @media screen and (max-width:768px){
                       .invoice-container{padding:16px;width:100%;}
                       .invoice-page{padding:16px;width:100%;min-height:auto;}
                       .invoice-header{flex-direction:column;align-items:flex-start;gap:12px;}
@@ -1116,7 +1116,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                       .items-table th,.items-table td{padding:6px;font-size:0.85rem;}
                       .bottom-block{margin-bottom:28px;}
                     }
-                    @media (max-width:480px){
+                    @media screen and (max-width:480px){
                       .invoice-page{padding:12px;}
                       .invoice-header{gap:10px;}
                       .brand-name{font-size:1.05rem;}

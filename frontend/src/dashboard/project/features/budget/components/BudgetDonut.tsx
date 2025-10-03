@@ -67,6 +67,7 @@ const srOnlyStyles: React.CSSProperties = {
 
 const centerButtonBaseBackground = "rgba(17, 17, 17, 0.6)";
 const centerButtonBaseShadow = "0 8px 20px rgba(17, 17, 17, 0.45)";
+const MOBILE_BREAKPOINT = 768;
 
 const centerButtonStyles: React.CSSProperties = {
   position: "absolute",
@@ -108,7 +109,7 @@ const centerPopoverStyles: React.CSSProperties = {
   padding: "16px 18px",
   boxShadow: "0 20px 45px rgba(15, 23, 42, 0.45)",
   minWidth: "220px",
-  maxWidth: "260px",
+  maxWidth: "min(260px, calc(100vw - 32px))",
   zIndex: 20,
   pointerEvents: "auto",
   backdropFilter: "blur(18px)",
@@ -355,6 +356,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const margin = 16;
+    const isMobileViewport = viewportWidth <= MOBILE_BREAKPOINT;
 
     const clampPosition = () => {
       let top = baseTop;
@@ -370,10 +372,19 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         const minTop = margin + halfHeight;
         const maxTop = viewportHeight - margin - halfHeight;
 
-        left = Math.min(Math.max(left, minLeft), maxLeft);
+        if (isMobileViewport) {
+          left = Math.min(margin + halfWidth, maxLeft);
+        } else {
+          left = Math.min(Math.max(left, minLeft), maxLeft);
+        }
+
         top = Math.min(Math.max(top, minTop), maxTop);
       } else {
-        left = Math.min(Math.max(left, margin), viewportWidth - margin);
+        if (isMobileViewport) {
+          left = margin;
+        } else {
+          left = Math.min(Math.max(left, margin), viewportWidth - margin);
+        }
         top = Math.min(Math.max(top, margin), viewportHeight - margin);
       }
 

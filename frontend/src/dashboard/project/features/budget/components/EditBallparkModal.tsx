@@ -1,8 +1,38 @@
-import React, { useEffect, useId, useState } from "react";
+import React, { useEffect, useId, useMemo, useState } from "react";
+import type { Styles as ReactModalStyles } from "react-modal";
 import Modal from "@/shared/ui/ModalWithStack";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import styles from "./edit-ball-park-modal.module.css";
+
+const normalizeHexColor = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(trimmed)) {
+    return null;
+  }
+
+  if (trimmed.length === 4) {
+    const [, r, g, b] = trimmed;
+    return `#${r}${r}${g}${g}${b}${b}`.toUpperCase();
+  }
+
+  return trimmed.toUpperCase();
+};
+
+const hexToRgb = (value: string): [number, number, number] | null => {
+  const normalized = value.startsWith("#") ? value.slice(1) : value;
+  if (normalized.length !== 6) return null;
+
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+
+  if ([r, g, b].some((component) => Number.isNaN(component))) {
+    return null;
+  }
+
+  return [r, g, b];
+};
 
 if (typeof document !== "undefined") {
   Modal.setAppElement("#root");
@@ -13,6 +43,7 @@ type EditBallparkModalProps = {
   onRequestClose: () => void;
   onSubmit: (value: number) => void;
   initialValue?: number | string;
+  accentColor?: string;
 };
 
 const EditBallparkModal: React.FC<EditBallparkModalProps> = ({
@@ -20,11 +51,35 @@ const EditBallparkModal: React.FC<EditBallparkModalProps> = ({
   onRequestClose,
   onSubmit,
   initialValue,
+  accentColor,
 }) => {
   const [value, setValue] = useState<string>(
     initialValue !== undefined && initialValue !== null ? String(initialValue) : ""
   );
   const inputId = useId();
+
+  const accentStyles = useMemo<ReactModalStyles | undefined>(() => {
+    if (typeof accentColor !== "string" || accentColor.trim() === "") {
+      return undefined;
+    }
+
+    const normalized = normalizeHexColor(accentColor);
+    if (!normalized) {
+      return undefined;
+    }
+
+    const rgb = hexToRgb(normalized);
+    if (!rgb) {
+      return undefined;
+    }
+
+    return {
+      content: {
+        "--edit-ballpark-accent": normalized,
+        "--edit-ballpark-accent-rgb": `${rgb[0]}, ${rgb[1]}, ${rgb[2]}`,
+      } as React.CSSProperties,
+    };
+  }, [accentColor]);
 
   useEffect(() => {
     setValue(
@@ -49,6 +104,7 @@ const EditBallparkModal: React.FC<EditBallparkModalProps> = ({
         afterOpen: styles.modalContentAfterOpen,
         beforeClose: styles.modalContentBeforeClose,
       }}
+      style={accentStyles}
       overlayClassName={{
         base: styles.modalOverlay,
         afterOpen: styles.modalOverlayAfterOpen,

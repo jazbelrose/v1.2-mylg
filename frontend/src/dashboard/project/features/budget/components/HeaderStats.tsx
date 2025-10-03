@@ -1011,6 +1011,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         onRequestClose={() => setBallparkModalOpen(false)}
         onSubmit={handleBallparkSave}
         initialValue={toNumber(budgetHeader?.headerBallPark)}
+        accentColor={accentHex}
       />
 
       <ClientInvoicePreviewModal

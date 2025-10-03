@@ -82,6 +82,10 @@
   margin: 0 0 16px;
 }
 
+:global(body.hq-hide-marketing-nav header.header .nav-bar) {
+  display: none !important;
+}
+
 .mobilePageHeader {
   display: grid;
   gap: 12px;

@@ -110,6 +110,16 @@ const HQLayout: React.FC<HQLayoutProps> = ({
   }, []);
 
   useEffect(() => {
+    if (typeof document === "undefined") return;
+    const { body } = document;
+    if (!body) return;
+    body.classList.add("hq-hide-marketing-nav");
+    return () => {
+      body.classList.remove("hq-hide-marketing-nav");
+    };
+  }, []);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       localStorage.setItem(
@@ -180,11 +190,16 @@ const HQLayout: React.FC<HQLayoutProps> = ({
     return () => window.removeEventListener("hq-open-chat", handleOpenChatEvent);
   }, [handleShowChat, isAdmin]);
 
+  const handleOpenNavigation = () => setIsNavigationOpen(true);
   const handleCloseNavigation = () => setIsNavigationOpen(false);
   const handleToggleCollapse = () => setIsNavCollapsed((previous) => !previous);
 
   const handleHideChat = useCallback(() => {
     setIsChatHidden(true);
+  }, []);
+
+  const handleSetActiveView = useCallback((view: string) => {
+    void view;
   }, []);
 
   const pageHeader = (
@@ -232,7 +247,14 @@ const HQLayout: React.FC<HQLayoutProps> = ({
 
   const mobileWelcomeHeader = !flags.isDesktop ? (
     <div ref={mobileWelcomeHeaderRef} className={styles.mobileWelcomeHeader}>
-      <WelcomeHeader userName={userName} isDesktopLayout />
+      <WelcomeHeader
+        userName={userName}
+        setActiveView={handleSetActiveView}
+        onToggleNavigation={handleOpenNavigation}
+        isNavigationOpen={isNavigationOpen}
+        navigationDrawerId={drawerId}
+        isDesktopLayout={flags.isDesktop}
+      />
     </div>
   ) : null;
 

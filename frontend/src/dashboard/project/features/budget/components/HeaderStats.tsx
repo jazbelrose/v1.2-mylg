@@ -9,7 +9,7 @@ import {
   faCalculator,
   faPen,
 } from "@fortawesome/free-solid-svg-icons";
-import { Segmented, Switch, Select } from "antd";
+import { Segmented, Switch } from "antd";
 
 import EditBallparkModal from "@/dashboard/project/features/budget/components/EditBallparkModal";
 import ClientInvoicePreviewModal from "@/dashboard/project/features/budget/ClientInvoicePreviewModal";
@@ -457,18 +457,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     ]
   );
 
-  const markupOptions = useMemo(
-    () =>
-      (showReconciled
-        ? (["Budgeted", "Actual", "Reconciled"] as MarkupBasis[])
-        : (["Budgeted", "Actual"] as MarkupBasis[])
-      ).map((value) => ({
-        label: value,
-        value,
-      })),
-    [showReconciled]
-  );
-
   const groupOptions = useMemo(
     () => [
       { label: "None", value: "none" as GroupBy },
@@ -701,8 +689,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     []
   );
 
-  const markupSelectId = "budget-mobile-markup-select";
-
   const desktopContent = (
     <div className={summaryStyles.container}>
       <div className={summaryStyles.cardsColumn}>
@@ -787,7 +773,20 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     const isReconciledToggleMetric =
       hasReconciled &&
       metric.field === (showReconciled ? "itemReconciledCost" : "itemActualCost");
+    const isBudgetedMetric = metric.title === "Budgeted Cost";
     const isBallparkMetric = metric.title === "Ballpark";
+
+    const activateBudgetedMetric = () => {
+      setMarkupBasis("Budgeted");
+      setSelectedMetric("Budgeted Cost");
+    };
+
+    const activateActualMetric = () => {
+      const nextTitle = (showReconciled ? "Reconciled Cost" : "Actual Cost") as MetricTitle;
+      const nextBasis = showReconciled ? "Reconciled" : "Actual";
+      setSelectedMetric(nextTitle);
+      setMarkupBasis(nextBasis);
+    };
 
     const chipClassName = [
       mobileStyles.metricChip,
@@ -813,16 +812,38 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
               setBallparkModalOpen(true);
               return;
             }
+            if (isBudgetedMetric) {
+              activateBudgetedMetric();
+              return;
+            }
             if (isReconciledToggleMetric) {
+              const isSelected =
+                selectedMetric === metric.title ||
+                selectedMetric === (showReconciled ? "Reconciled Cost" : "Actual Cost");
+
+              if (!isSelected) {
+                activateActualMetric();
+                return;
+              }
+
               const nextShowReconciled = !showReconciled;
               setShowReconciled(nextShowReconciled);
-              setSelectedMetric(
-                nextShowReconciled ? "Reconciled Cost" : "Actual Cost"
-              );
+              const nextTitle = nextShowReconciled
+                ? ("Reconciled Cost" as MetricTitle)
+                : ("Actual Cost" as MetricTitle);
+              const nextBasis = nextShowReconciled ? "Reconciled" : "Actual";
+              setSelectedMetric(nextTitle);
+              setMarkupBasis(nextBasis);
               return;
             }
             if (metric.field) {
               setSelectedMetric(metric.title);
+              if (
+                metric.title === "Actual Cost" ||
+                metric.title === "Reconciled Cost"
+              ) {
+                setMarkupBasis(metric.title === "Reconciled Cost" ? "Reconciled" : "Actual");
+              }
             }
           }}
           disabled={!metric.field && !isBallparkMetric}
@@ -884,24 +905,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             formatTooltip={formatTooltip}
             totalFormatter={totalFormatter}
           />
-        </div>
-      </div>
-
-      <div className={mobileStyles.controls}>
-        <div className={mobileStyles.controlRow}>
-          <div className={mobileStyles.controlSelect}>
-            <label className={mobileStyles.srOnly} htmlFor={markupSelectId}>
-              Markup basis
-            </label>
-            <Select<MarkupBasis>
-              id={markupSelectId}
-              size="small"
-              value={markupBasis}
-              onChange={(value: MarkupBasis) => setMarkupBasis(value)}
-              options={markupOptions}
-              dropdownMatchSelectWidth={false}
-            />
-          </div>
         </div>
       </div>
 

@@ -280,6 +280,45 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     [explodeOnClick]
   );
 
+  useEffect(() => {
+    if (!explodeOnClick || lockedIndex === null) return undefined;
+
+    const resetInteraction = () => {
+      setLockedIndex(null);
+      setHoverIndex(null);
+    };
+
+    const handlePointerEvent = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && containerRef.current?.contains(target)) {
+        return;
+      }
+
+      resetInteraction();
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.buttons === 0) return;
+      handlePointerEvent(event);
+    };
+
+    const handlePointerCancel = () => {
+      resetInteraction();
+    };
+
+    window.addEventListener("pointerdown", handlePointerEvent);
+    window.addEventListener("pointerup", handlePointerEvent);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointercancel", handlePointerCancel);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerEvent);
+      window.removeEventListener("pointerup", handlePointerEvent);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointercancel", handlePointerCancel);
+    };
+  }, [explodeOnClick, lockedIndex]);
+
   const tooltipRenderer = useCallback(({ active, payload }: BudgetDonutTooltipProps) => {
       if (!active || !payload || payload.length === 0) return null;
       const datum = payload[0]?.payload as BudgetDonutDatum | undefined;

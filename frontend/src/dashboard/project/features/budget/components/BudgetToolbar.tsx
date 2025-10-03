@@ -62,39 +62,6 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
       })}
     </div>
     <div className={styles.actions}>
-      <div
-        className={styles.selectionActions}
-        aria-hidden={selectedRowKeys.length === 0 ? "true" : undefined}
-      >
-        <div className={styles.iconSlot}>
-          {selectedRowKeys.length > 0 && (
-            <AntTooltip title="Duplicate Selected">
-              <button
-                type="button"
-                className={styles.iconActionButton}
-                onClick={handleDuplicateSelected}
-                aria-label="Duplicate selected"
-              >
-                <FontAwesomeIcon icon={faClone} />
-              </button>
-            </AntTooltip>
-          )}
-        </div>
-        <div className={styles.iconSlot}>
-          {selectedRowKeys.length > 0 && (
-            <AntTooltip title="Delete Selected">
-              <button
-                type="button"
-                className={styles.iconActionButton}
-                onClick={() => openDeleteModal(selectedRowKeys)}
-                aria-label="Delete selected"
-              >
-                <FontAwesomeIcon icon={faTrash} />
-              </button>
-            </AntTooltip>
-          )}
-        </div>
-      </div>
       <div className={styles.mobileRight}>
         <div className={styles.mobileFilterWrap}>
           <BudgetMobileFilter
@@ -105,6 +72,34 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
             onSortChange={onSortChange}
           />
         </div>
+        {selectedRowKeys.length > 0 && (
+          <div className={styles.selectionActions}>
+            <div className={styles.iconSlot}>
+              <AntTooltip title="Duplicate Selected">
+                <button
+                  type="button"
+                  className={styles.iconActionButton}
+                  onClick={handleDuplicateSelected}
+                  aria-label="Duplicate selected"
+                >
+                  <FontAwesomeIcon icon={faClone} />
+                </button>
+              </AntTooltip>
+            </div>
+            <div className={styles.iconSlot}>
+              <AntTooltip title="Delete Selected">
+                <button
+                  type="button"
+                  className={styles.iconActionButton}
+                  onClick={() => openDeleteModal(selectedRowKeys)}
+                  aria-label="Delete selected"
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
+              </AntTooltip>
+            </div>
+          </div>
+        )}
         <AntTooltip title="Create Line Item">
           <button
             type="button"

@@ -165,9 +165,23 @@
   color: #000;
   padding: 10px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   flex-direction: column;
+}
+
+.previewViewport {
+  width: 100%;
+  max-width: 210mm;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.previewViewport :global(.invoice-page) {
+  width: 100%;
+  max-width: 210mm;
+  transition: transform 0.2s ease;
 }
 
 .groupSelect,
@@ -270,6 +284,10 @@
     flex: 1 1 auto;
     min-width: 0;
   }
+
+  .previewViewport {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 900px) {
@@ -290,6 +308,31 @@
     padding: 0;
     background: transparent;
     overflow: visible;
+  }
+
+  .previewViewport {
+    overflow: visible;
+  }
+
+  .previewViewport :global(.invoice-page) {
+    padding: 14px;
+  }
+
+  .previewViewport :global(.invoice-header) {
+    gap: 12px;
+  }
+
+  .previewViewport :global(.invoice-title) {
+    font-size: 1.6rem;
+  }
+
+  .previewViewport :global(.billing-info) {
+    font-size: 0.82rem;
+  }
+
+  .previewViewport :global(.items-table th),
+  .previewViewport :global(.items-table td) {
+    padding: 6px;
   }
 
   .sidebar {
@@ -335,6 +378,41 @@
     align-items: stretch;
   }
 
+  .previewViewport {
+    padding-bottom: 16px;
+  }
+
+  .previewViewport :global(.invoice-page) {
+    padding: 12px;
+  }
+
+  .previewViewport :global(.invoice-header) {
+    gap: 10px;
+  }
+
+  .previewViewport :global(.invoice-title) {
+    font-size: 1.4rem;
+  }
+
+  .previewViewport :global(.company-info),
+  .previewViewport :global(.billing-info) {
+    font-size: 0.78rem;
+  }
+
+  .previewViewport :global(.summary) {
+    gap: 10px;
+  }
+
+  .previewViewport :global(.items-table th),
+  .previewViewport :global(.items-table td) {
+    font-size: 0.78rem;
+    padding: 5px;
+  }
+
+  .previewViewport :global(.bottom-block) {
+    margin-bottom: 24px;
+  }
+
   .invoice-container,
   .invoice-page {
     width: 100%;
@@ -343,6 +421,32 @@
   .invoice-page {
     padding: 16px;
   }
+}
+
+.metaInput {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  color: #0c0c0c;
+  font-size: 0.85rem;
+  min-height: 32px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  width: auto;
+  min-width: 150px;
+  max-width: 220px;
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: light;
+}
+
+.metaInput:focus {
+  outline: 2px solid rgba(78, 161, 255, 0.9);
+  outline-offset: 1px;
+}
+
+.metaInput::-webkit-calendar-picker-indicator {
+  filter: invert(15%);
 }
 
 .items-table-wrapper {

@@ -1110,9 +1110,21 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                       .invoice-header{flex-direction:column;align-items:flex-start;gap:12px;}
                       .company-block{flex-direction:column;align-items:flex-start;gap:8px;width:100%;}
                       .invoice-meta{text-align:left;width:100%;}
-                      .billing-info{flex-direction:column;align-items:flex-start;gap:12px;}
+                      .billing-info{flex-direction:column;align-items:flex-start;gap:12px;font-size:0.82rem;}
                       .invoice-title{margin-left:0;text-align:left;font-size:1.6rem;}
                       .summary{flex-direction:column;gap:12px;}
+                      .items-table th,.items-table td{padding:6px;font-size:0.85rem;}
+                      .bottom-block{margin-bottom:28px;}
+                    }
+                    @media (max-width:480px){
+                      .invoice-page{padding:12px;}
+                      .invoice-header{gap:10px;}
+                      .brand-name{font-size:1.05rem;}
+                      .invoice-title{font-size:1.4rem;}
+                      .company-info,.billing-info{font-size:0.78rem;}
+                      .summary{gap:10px;}
+                      .items-table th,.items-table td{padding:5px;font-size:0.78rem;}
+                      .bottom-block{margin-bottom:24px;}
                     }
                     @media print{
                       .invoice-container{width:210mm;max-width:210mm;padding:20px;}
@@ -1125,6 +1137,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                   <div
                     className="invoice-page invoice-container"
                     ref={invoiceRef}
+                    data-preview-role="measure"
                     style={{ position: "absolute", visibility: "hidden", pointerEvents: "none" }}
                   >
                     <div className="invoice-top">
@@ -1427,7 +1440,8 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
                   {/* Visible paginated preview */}
                   {pages[currentPage] && (
-                    <div className="invoice-page invoice-container">
+                    <div className={styles.previewViewport}>
+                      <div className="invoice-page invoice-container">
                       <div className="invoice-top">
                         <header className="invoice-header">
                           <div
@@ -1725,6 +1739,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                           </div>
                         </div>
                       )}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -1095,8 +1095,10 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                     .summary>div{flex:1;}
                     .summary-divider{border:0;border-top:1px solid #ccc;margin-bottom:10px;}
                     .items-table-wrapper{flex:1 0 auto;}
-                    .items-table{width:100%;border-collapse:collapse;margin-top:20px;box-sizing:border-box;}
+                    .items-table{width:100%;border-collapse:collapse;margin-top:20px;box-sizing:border-box;table-layout:fixed;}
                     .items-table th,.items-table td{border:1px solid #ddd;padding:8px;}
+                    .items-table th:nth-child(1),.items-table td:nth-child(1){width:44%;text-align:left;word-break:break-word;}
+                    .items-table th:nth-child(2),.items-table td:nth-child(2),.items-table th:nth-child(3),.items-table td:nth-child(3),.items-table th:nth-child(4),.items-table td:nth-child(4),.items-table th:nth-child(5),.items-table td:nth-child(5){width:14%;text-align:right;white-space:nowrap;}
                     .items-table th{background:#f5f5f5;text-align:left;}
                     .group-header{background:#fafafa;font-weight:bold;}
                     .bottom-block{margin-top:auto;margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;margin-bottom:40px;}

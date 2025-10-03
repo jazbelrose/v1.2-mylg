@@ -290,6 +290,19 @@
   color: rgba(249, 250, 251, 0.55);
 }
 
+.groupControls {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.groupTabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

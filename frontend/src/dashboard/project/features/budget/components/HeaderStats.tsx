@@ -30,6 +30,7 @@ import {
 import summaryStyles from "./budget-header-summary.module.css";
 import headerStyles from "./header-stats.module.css";
 import mobileStyles from "./budget-header-mobile.module.css";
+import toolbarStyles from "./BudgetToolbar.module.css";
 
 /* =========================
    Types
@@ -194,6 +195,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   activeProject,
   budgetHeader,
   groupBy,
+  setGroupBy,
   budgetItems = [],
   onBallparkChange,
   onOpenRevisionModal,
@@ -465,6 +467,16 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         value,
       })),
     [showReconciled]
+  );
+
+  const groupOptions = useMemo(
+    () => [
+      { label: "None", value: "none" as GroupBy },
+      { label: "Area Group", value: "areaGroup" as GroupBy },
+      { label: "Invoice Group", value: "invoiceGroup" as GroupBy },
+      { label: "Category", value: "category" as GroupBy },
+    ],
+    []
   );
 
   const createdDateLabel = useMemo(() => {
@@ -899,6 +911,35 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         </div>
         <div className={`${mobileStyles.metricRow} ${mobileStyles.metricRowBottom}`}>
           {bottomMetrics.map((metric) => renderMetricChip(metric))}
+        </div>
+      </div>
+
+      <div className={mobileStyles.groupControls}>
+        <span id="budget-mobile-group-label" className={mobileStyles.srOnly}>
+          Group budget items
+        </span>
+        <div
+          className={mobileStyles.groupTabs}
+          role="group"
+          aria-labelledby="budget-mobile-group-label"
+        >
+          {groupOptions.map((option) => {
+            const isActive = option.value === groupBy;
+            const className = isActive
+              ? `${toolbarStyles.tabButton} ${toolbarStyles.activeTab}`
+              : toolbarStyles.tabButton;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={isActive}
+                className={className}
+                onClick={() => setGroupBy(option.value)}
+              >
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

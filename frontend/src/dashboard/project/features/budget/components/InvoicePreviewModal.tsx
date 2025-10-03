@@ -691,6 +691,13 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
             <hr class="summary-divider" />
             <div class="items-table-wrapper">
               <table class="items-table">
+                <colgroup>
+                  <col style="width:44%;" />
+                  <col style="width:14%;" />
+                  <col style="width:14%;" />
+                  <col style="width:14%;" />
+                  <col style="width:14%;" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Description</th>
@@ -1096,6 +1103,8 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
                     .summary-divider{border:0;border-top:1px solid #ccc;margin-bottom:10px;}
                     .items-table-wrapper{flex:1 0 auto;}
                     .items-table{width:100%;border-collapse:collapse;margin-top:20px;box-sizing:border-box;}
+                    .items-table col{width:14%;}
+                    .items-table col:first-child{width:44%;}
                     .items-table th,.items-table td{border:1px solid #ddd;padding:8px;}
                     .items-table th{background:#f5f5f5;text-align:left;}
                     .group-header{background:#fafafa;font-weight:bold;}
@@ -1340,6 +1349,13 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
                     <div className="items-table-wrapper">
                       <table className="items-table">
+                        <colgroup>
+                          <col style={{ width: "44%" }} />
+                          <col style={{ width: "14%" }} />
+                          <col style={{ width: "14%" }} />
+                          <col style={{ width: "14%" }} />
+                          <col style={{ width: "14%" }} />
+                        </colgroup>
                         <thead>
                           <tr>
                             <th>Description</th>
@@ -1638,6 +1654,13 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
 
                       <div className="items-table-wrapper">
                         <table className="items-table">
+                          <colgroup>
+                            <col style={{ width: "44%" }} />
+                            <col style={{ width: "14%" }} />
+                            <col style={{ width: "14%" }} />
+                            <col style={{ width: "14%" }} />
+                            <col style={{ width: "14%" }} />
+                          </colgroup>
                           <thead>
                             <tr>
                               <th>Description</th>

@@ -463,11 +463,22 @@
 }
 
 
+
 .items-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
   box-sizing: border-box;
+}
+
+.items-table col,
+:global(.items-table col) {
+  width: 14%;
+}
+
+.items-table col:first-child,
+:global(.items-table col:first-child) {
+  width: 44%;
 }
 
 .items-table th,

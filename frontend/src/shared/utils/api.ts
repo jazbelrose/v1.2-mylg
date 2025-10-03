@@ -1,6 +1,12 @@
 // api.ts
 import { waitForAuthReady } from './waitForAuthReady';
 import { csrfProtection, rateLimiter, logSecurityEvent } from './securityUtils';
+import {
+  getPreviewBudgetHeader,
+  getPreviewBudgetHeaders,
+  getPreviewBudgetItems,
+  isPreviewModeEnabled,
+} from './devPreview';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Types
@@ -355,6 +361,14 @@ function extractItem<T>(data: MaybeItem<T> | JsonRecord): T | null {
   if ('Item' in (data as Record<string, unknown>)) return ((data as Record<string, unknown>).Item ?? null) as T | null;
   return (data as T) ?? null;
 }
+
+const clone = <T,>(value: T): T => {
+  const structured = (globalThis as { structuredClone?: <U>(val: U) => U }).structuredClone;
+  if (typeof structured === 'function') {
+    return structured(value);
+  }
+  return JSON.parse(JSON.stringify(value)) as T;
+};
 
 const userProfilesCache = new Map<string, UserProfile>();
 
@@ -836,6 +850,10 @@ export async function deleteNotification(userId: string, timestampUuid: string):
 
 export async function fetchBudgetHeader(projectId: string): Promise<BudgetHeader | null> {
   if (!projectId) return null;
+  if (isPreviewModeEnabled()) {
+    const preview = getPreviewBudgetHeader(projectId);
+    return preview ? (clone(preview) as BudgetHeader) : null;
+  }
   const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/budget?headers=true`;
   const data = await apiFetch<MaybeItems<BudgetItem>>(url);
   const items = extractItems<BudgetItem>(data);
@@ -859,6 +877,9 @@ export async function fetchBudgetHeader(projectId: string): Promise<BudgetHeader
 
 export async function fetchBudgetHeaders(projectId: string): Promise<BudgetHeader[]> {
   if (!projectId) return [];
+  if (isPreviewModeEnabled()) {
+    return getPreviewBudgetHeaders(projectId).map((header) => clone(header) as BudgetHeader);
+  }
   const url = `${PROJECTS_SERVICE_URL}/projects/${encodeURIComponent(projectId)}/budget?headers=true`;
   const data = await apiFetch<MaybeItems<BudgetItem>>(url);
   const items = extractItems<BudgetItem>(data);
@@ -881,6 +902,9 @@ export async function fetchBudgetHeaders(projectId: string): Promise<BudgetHeade
 
 export async function fetchBudgetItems(budgetId: string, revision?: number): Promise<BudgetLine[]> {
   if (!budgetId) return [];
+  if (isPreviewModeEnabled()) {
+    return getPreviewBudgetItems(budgetId, revision).map((item) => clone(item) as BudgetLine);
+  }
   const url = `${PROJECTS_SERVICE_URL}/budgets/byBudgetId/${encodeURIComponent(budgetId)}`;
   const data = await apiFetch<MaybeItems<BudgetItem>>(url);
   const items = extractItems<BudgetItem>(data);

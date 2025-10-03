@@ -7,7 +7,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Menu } from "lucide-react";
 import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import NavigationDrawer from "@/shared/ui/NavigationDrawer";
 import { useNavCollapsed } from "@/shared/hooks/useNavCollapsed";
@@ -15,6 +14,7 @@ import { useUser } from "@/app/contexts/useUser";
 import ProjectMessagesThread from "@/dashboard/features/messages/ProjectMessagesThread";
 import ChatPanel from "@/dashboard/project/components/Shared/ChatPanel";
 import "@/dashboard/home/pages/dashboard-styles.css";
+import WelcomeHeader from "@/dashboard/home/components/WelcomeHeader";
 import styles from "./HQLayout.module.css";
 
 type HQLayoutProps = {
@@ -72,7 +72,7 @@ const HQLayout: React.FC<HQLayoutProps> = ({
   actions,
   children,
 }) => {
-  const { isAdmin } = useUser();
+  const { isAdmin, userName } = useUser();
   const [flags, setFlags] = useState<ViewportFlags>(() => getViewportFlags());
   const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("hq");
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
@@ -83,6 +83,7 @@ const HQLayout: React.FC<HQLayoutProps> = ({
   );
   const pageHeaderRef = useRef<HTMLElement | null>(null);
   const [headerOffset, setHeaderOffset] = useState<number>(0);
+  const mobileWelcomeHeaderRef = useRef<HTMLDivElement | null>(null);
   const [floatingThread, setFloatingThread] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     try {
@@ -106,6 +107,16 @@ const HQLayout: React.FC<HQLayoutProps> = ({
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const { body } = document;
+    if (!body) return;
+    body.classList.add("hq-hide-marketing-nav");
+    return () => {
+      body.classList.remove("hq-hide-marketing-nav");
+    };
   }, []);
 
   useEffect(() => {
@@ -138,7 +149,10 @@ const HQLayout: React.FC<HQLayoutProps> = ({
     const localHeight = pageHeaderRef.current
       ? pageHeaderRef.current.getBoundingClientRect().height
       : 0;
-    setHeaderOffset(globalHeight + localHeight);
+    const welcomeHeight = mobileWelcomeHeaderRef.current
+      ? mobileWelcomeHeaderRef.current.getBoundingClientRect().height
+      : 0;
+    setHeaderOffset(globalHeight + localHeight + welcomeHeight);
   }, []);
 
   useLayoutEffect(() => {
@@ -149,7 +163,15 @@ const HQLayout: React.FC<HQLayoutProps> = ({
 
   useEffect(() => {
     updateHeaderOffset();
-  }, [updateHeaderOffset, flags.isDesktop, isNavCollapsed, title, description, actions]);
+  }, [
+    updateHeaderOffset,
+    flags.isDesktop,
+    isNavCollapsed,
+    title,
+    description,
+    actions,
+    userName,
+  ]);
 
   const handleShowChat = useCallback(() => {
     setIsChatHidden(false);
@@ -176,21 +198,13 @@ const HQLayout: React.FC<HQLayoutProps> = ({
     setIsChatHidden(true);
   }, []);
 
+  const handleSetActiveView = useCallback((view: string) => {
+    void view;
+  }, []);
+
   const pageHeader = (
     <header ref={pageHeaderRef} className={styles.pageHeader}>
       <div className={styles.pageHeading}>
-        {!flags.isDesktop ? (
-          <button
-            type="button"
-            className={styles.menuButton}
-            onClick={handleOpenNavigation}
-            aria-label="Open navigation"
-            aria-controls={drawerId}
-            aria-expanded={isNavigationOpen}
-          >
-            <Menu size={20} />
-          </button>
-        ) : null}
         <div className={styles.headingCopy}>
           <h1 className={styles.pageTitle}>{title}</h1>
           {description ? (
@@ -199,6 +213,18 @@ const HQLayout: React.FC<HQLayoutProps> = ({
         </div>
       </div>
       {actions ? <div className={styles.actionsRow}>{actions}</div> : null}
+    </header>
+  );
+
+  const mobilePageHeader = (
+    <header ref={pageHeaderRef} className={styles.mobilePageHeader}>
+      <div className={styles.headingCopy}>
+        <h1 className={styles.mobilePageTitle}>{title}</h1>
+        {description ? (
+          <p className={styles.mobilePageSubtitle}>{description}</p>
+        ) : null}
+      </div>
+      {actions ? <div className={styles.mobileActionsRow}>{actions}</div> : null}
     </header>
   );
 
@@ -219,10 +245,24 @@ const HQLayout: React.FC<HQLayoutProps> = ({
   const shouldRenderFloatingPanel =
     isAdmin && !isChatHidden && (floatingThread || !flags.isDesktop);
 
+  const mobileWelcomeHeader = !flags.isDesktop ? (
+    <div ref={mobileWelcomeHeaderRef} className={styles.mobileWelcomeHeader}>
+      <WelcomeHeader
+        userName={userName}
+        setActiveView={handleSetActiveView}
+        onToggleNavigation={handleOpenNavigation}
+        isNavigationOpen={isNavigationOpen}
+        navigationDrawerId={drawerId}
+        isDesktopLayout={flags.isDesktop}
+      />
+    </div>
+  ) : null;
+
   const mainContent = (
     <main className="dashboard-main">
+      {mobileWelcomeHeader}
       <div className={`dashboard-wrapper ${styles.wrapper}`}>
-        {pageHeader}
+        {flags.isDesktop ? pageHeader : mobilePageHeader}
         <div className={styles.contentArea}>
           <div className={styles.content}>{children}</div>
           {shouldRenderDockedThread ? (

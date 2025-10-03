@@ -54,8 +54,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
           <AntTooltip title="Duplicate Selected">
             <button
               type="button"
-              className="modal-button secondary"
-              style={{ borderRadius: "10px" }}
+              className={styles.iconActionButton}
               onClick={handleDuplicateSelected}
               aria-label="Duplicate selected"
             >
@@ -65,8 +64,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
           <AntTooltip title="Delete Selected">
             <button
               type="button"
-              className="modal-button secondary"
-              style={{ borderRadius: "10px" }}
+              className={styles.iconActionButton}
               onClick={() => openDeleteModal(selectedRowKeys)}
               aria-label="Delete selected"
             >

@@ -76,24 +76,66 @@
 .summaryColumn {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1 1 220px;
+  gap: 12px;
+  flex: 1 1 240px;
   min-width: 0;
-  padding: 0px 16px;
-  align-items: flex-start;
+  padding: 0 16px;
+  align-items: stretch;
 }
 
-.amountRow {
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(155deg, rgba(17, 24, 39, 0.94), var(--budget-accent-chip));
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  color: var(--budget-accent-text);
+  box-shadow: 0 10px 22px rgba(8, 13, 32, 0.42), 0 0 0 1px var(--budget-accent-soft);
+}
+
+.summaryCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
-.amountValue {
-  font-size: 1.6rem;
+.summaryCardTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(249, 250, 251, 0.72);
+}
+
+.summaryCardTitleIcon {
+  font-size: 0.75rem;
+  color: var(--budget-accent-text);
+}
+
+.summaryCardValue {
+  font-size: 1.55rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  color: var(--budget-accent-text);
+}
+
+.summaryCardDescription {
+  font-size: 0.75rem;
+  color: rgba(241, 245, 249, 0.74);
+}
+
+.summaryCardDate {
+  font-size: 0.68rem;
+  color: rgba(226, 232, 240, 0.64);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .amountActions {
@@ -133,11 +175,6 @@
   background: var(--budget-accent-softer);
   color: var(--budget-accent-text);
   box-shadow: 0 0 0 1px var(--budget-accent-border), 0 0 0 4px var(--budget-accent-soft);
-}
-
-.dateRow {
-  font-size: 0.75rem;
-  color: rgba(249, 250, 251, 0.7);
 }
 
 .controls {

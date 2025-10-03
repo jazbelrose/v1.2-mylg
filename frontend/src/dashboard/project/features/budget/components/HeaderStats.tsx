@@ -506,6 +506,15 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     [budgetHeader]
   );
 
+  const finalMetric = useMemo(
+    () => metrics.find((metric) => metric.title === "Final Cost"),
+    [metrics]
+  );
+
+  const finalMetricTag = finalMetric?.tag ?? "Final";
+  const finalMetricDescription = finalMetric?.description ?? "All-in total";
+  const finalMetricIcon = finalMetric?.icon ?? faFileInvoiceDollar;
+
   const handleBallparkSave = async (val: number) => {
     if (!activeProject?.projectId || !budgetHeader) {
       setBallparkModalOpen(false);
@@ -946,10 +955,22 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
 
       <div className={mobileStyles.summaryLayout}>
         <div className={mobileStyles.summaryColumn}>
-          <div className={mobileStyles.amountRow}>
-            <span className={mobileStyles.amountValue}>{finalDisplay}</span>
+          <div className={mobileStyles.summaryCard}>
+            <div className={mobileStyles.summaryCardHeader}>
+              <span className={mobileStyles.summaryCardTitle}>
+                <FontAwesomeIcon
+                  icon={finalMetricIcon}
+                  className={mobileStyles.summaryCardTitleIcon}
+                />
+                {finalMetricTag}
+              </span>
+            </div>
+            <span className={mobileStyles.summaryCardValue}>{finalDisplay}</span>
+            <span className={mobileStyles.summaryCardDescription}>
+              {finalMetricDescription}
+            </span>
+            <span className={mobileStyles.summaryCardDate}>{createdDateLabel}</span>
           </div>
-          <div className={mobileStyles.dateRow}>{createdDateLabel}</div>
         </div>
         <div className={mobileStyles.chartContainer}>
           <BudgetDonut

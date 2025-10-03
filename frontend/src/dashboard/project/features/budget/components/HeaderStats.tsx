@@ -154,6 +154,49 @@ const rgbaFromHex = (hex: string, alpha: number): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max);
+
+const hexToRgb = (hex: string): [number, number, number] | null => {
+  const normalized = hex.startsWith("#") ? hex.slice(1) : hex;
+  if (normalized.length !== 6) {
+    return null;
+  }
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+  if ([r, g, b].some((channel) => Number.isNaN(channel))) {
+    return null;
+  }
+  return [r, g, b];
+};
+
+const rgbChannelToHex = (value: number): string =>
+  clamp(Math.round(value), 0, 255)
+    .toString(16)
+    .padStart(2, "0")
+    .toUpperCase();
+
+const mixHexColors = (base: string, other: string, weight: number): string | null => {
+  const baseRgb = hexToRgb(base);
+  const otherRgb = hexToRgb(other);
+  if (!baseRgb || !otherRgb) {
+    return null;
+  }
+  const ratio = clamp(weight, 0, 1);
+  const [r1, g1, b1] = baseRgb;
+  const [r2, g2, b2] = otherRgb;
+
+  const r = r1 * (1 - ratio) + r2 * ratio;
+  const g = g1 * (1 - ratio) + g2 * ratio;
+  const b = b1 * (1 - ratio) + b2 * ratio;
+
+  return `#${rgbChannelToHex(r)}${rgbChannelToHex(g)}${rgbChannelToHex(b)}`;
+};
+
+const lightenHexColor = (hex: string, intensity: number): string =>
+  mixHexColors(hex, "#FFFFFF", intensity) ?? hex;
+
 /* =========================
    Helpers
    ========================= */
@@ -823,6 +866,18 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     [accentAlpha, accentHex]
   );
 
+  const modalAccentColors = useMemo(
+    () => ({
+      accent: accentHex,
+      accentSoft: accentAlpha(0.2),
+      accentStrong: lightenHexColor(accentHex, 0.32),
+      accentBorder: accentAlpha(0.4),
+      accentGlow: accentAlpha(0.28),
+      accentText: "rgba(8, 11, 18, 0.92)",
+    }),
+    [accentAlpha, accentHex]
+  );
+
   const renderMetricChip = (metric: (typeof metrics)[number]) => {
     const isReconciledToggleMetric =
       hasReconciled &&
@@ -1011,6 +1066,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         onRequestClose={() => setBallparkModalOpen(false)}
         onSubmit={handleBallparkSave}
         initialValue={toNumber(budgetHeader?.headerBallPark)}
+        accentColors={modalAccentColors}
       />
 
       <ClientInvoicePreviewModal

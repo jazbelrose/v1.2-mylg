@@ -36,6 +36,12 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.05),
     0 28px 56px rgba(8, 15, 35, 0.55);
   font-family: "Helvetica Neue", "Helvetica Display", sans-serif;
+  --edit-ballpark-accent: #f43f5e;
+  --edit-ballpark-accent-soft: rgba(244, 63, 94, 0.18);
+  --edit-ballpark-accent-strong: #fb7185;
+  --edit-ballpark-accent-border: rgba(244, 63, 94, 0.45);
+  --edit-ballpark-accent-glow: rgba(244, 63, 94, 0.28);
+  --edit-ballpark-button-text: #0b0f1a;
 }
 
 .modalContentAfterOpen {
@@ -139,8 +145,8 @@
 .input:focus,
 .input:focus-visible {
   outline: none;
-  border-color: rgba(250, 51, 86, 0.7);
-  box-shadow: 0 0 0 3px rgba(250, 51, 86, 0.25);
+  border-color: var(--edit-ballpark-accent-border, rgba(244, 63, 94, 0.45));
+  box-shadow: 0 0 0 3px var(--edit-ballpark-accent-glow, rgba(244, 63, 94, 0.28));
   background: rgba(15, 23, 42, 0.95);
 }
 
@@ -184,16 +190,24 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #fa3356, #f43f5e);
+  background: linear-gradient(
+    135deg,
+    var(--edit-ballpark-accent-soft, rgba(244, 63, 94, 0.18)),
+    var(--edit-ballpark-accent, #f43f5e)
+  );
   border-color: transparent;
-  color: #0b0f1a;
-  box-shadow: 0 12px 24px rgba(244, 63, 94, 0.35);
+  color: var(--edit-ballpark-button-text, #0b0f1a);
+  box-shadow: 0 12px 24px var(--edit-ballpark-accent-glow, rgba(244, 63, 94, 0.28));
 }
 
 .primaryButton:hover,
 .primaryButton:focus-visible {
-  background: linear-gradient(135deg, #ff4d6b, #fb7185);
-  box-shadow: 0 16px 28px rgba(244, 63, 94, 0.45);
+  background: linear-gradient(
+    135deg,
+    var(--edit-ballpark-accent-soft, rgba(244, 63, 94, 0.18)),
+    var(--edit-ballpark-accent-strong, #fb7185)
+  );
+  box-shadow: 0 16px 28px var(--edit-ballpark-accent-glow, rgba(244, 63, 94, 0.28));
   transform: translateY(-1px);
   outline: none;
 }

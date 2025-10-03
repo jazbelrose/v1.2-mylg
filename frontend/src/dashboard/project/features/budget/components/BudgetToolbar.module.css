@@ -107,9 +107,21 @@
 }
 
 .mobileFilterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   width: 100%;
   justify-content: space-between;
-  font-size: 0.82rem;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  background-color: transparent;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .mobileFilterActive {
@@ -119,6 +131,24 @@
 
 .mobileFilterPopover {
   margin-top: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  background: rgba(10, 13, 30, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.mobileFilterButton:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.mobileFilterButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 0 0 4px rgba(0, 0, 0, 0.45);
+}
+
+.mobileFilterButton:active {
+  transform: scale(0.98);
 }
 
 .iconActionButton {
@@ -234,19 +264,19 @@
 
   .actions {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: space-between;
   }
 
   .mobileRight {
     flex: 1 1 auto;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
   }
 
   .mobileFilterWrap {
     display: flex;
     flex: 1 1 auto;
-  }
-
-  .mobileFilterButton {
-    padding: 8px 12px;
+    justify-content: flex-start;
   }
 }

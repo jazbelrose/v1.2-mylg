@@ -131,7 +131,6 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
                 value={filterQuery}
                 onChange={(event) => onFilterQueryChange(event.target.value)}
                 aria-label="Filter budget items"
-                autoFocus
               />
             </div>
             <div className={`${desktopStyles.filterField} ${desktopStyles.filterSelect}`}>

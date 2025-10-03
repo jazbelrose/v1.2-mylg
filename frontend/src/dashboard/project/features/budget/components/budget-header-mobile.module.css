@@ -290,6 +290,42 @@
   color: rgba(249, 250, 251, 0.55);
 }
 
+.groupControls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupControlsLabel {
+  font-size: 0.65rem;
+  color: rgba(249, 250, 251, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.groupSegmented :global(.ant-segmented) {
+  width: 100%;
+  background: rgba(30, 41, 59, 0.85);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px;
+}
+
+.groupSegmented :global(.ant-segmented-item) {
+  color: rgba(249, 250, 251, 0.75);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.groupSegmented :global(.ant-segmented-item-selected) {
+  color: #0f172a;
+}
+
+.groupSegmented :global(.ant-segmented-thumb) {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

@@ -128,3 +128,14 @@
     transform: none;
   }
 }
+
+@media (max-width: 768px) {
+  .toolbar {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .groupTabs {
+    display: none;
+  }
+}

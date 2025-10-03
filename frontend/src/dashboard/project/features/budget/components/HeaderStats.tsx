@@ -194,6 +194,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   activeProject,
   budgetHeader,
   groupBy,
+  setGroupBy,
   budgetItems = [],
   onBallparkChange,
   onOpenRevisionModal,
@@ -465,6 +466,16 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         value,
       })),
     [showReconciled]
+  );
+
+  const groupOptions = useMemo(
+    () => [
+      { label: "None", value: "none" as GroupBy },
+      { label: "Area Group", value: "areaGroup" as GroupBy },
+      { label: "Invoice Group", value: "invoiceGroup" as GroupBy },
+      { label: "Category", value: "category" as GroupBy },
+    ],
+    []
   );
 
   const createdDateLabel = useMemo(() => {
@@ -900,6 +911,18 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         <div className={`${mobileStyles.metricRow} ${mobileStyles.metricRowBottom}`}>
           {bottomMetrics.map((metric) => renderMetricChip(metric))}
         </div>
+      </div>
+
+      <div className={mobileStyles.groupControls} role="group" aria-label="Group budget items">
+        <span className={mobileStyles.groupControlsLabel}>Group</span>
+        <Segmented
+          size="middle"
+          options={groupOptions}
+          value={groupBy}
+          onChange={(value: SegmentedValue) => setGroupBy(value as GroupBy)}
+          block
+          className={mobileStyles.groupSegmented}
+        />
       </div>
     </div>
   );

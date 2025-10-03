@@ -386,6 +386,23 @@
   border: 0;
 }
 
+@media (max-width: 768px) {
+  .summaryLayout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .chartContainer {
+    margin: 0 auto;
+  }
+
+  .summaryColumn {
+    align-items: center;
+    text-align: center;
+    padding: 0;
+  }
+}
+
 @media (max-width: 480px) {
   .summaryLayout {
     gap: 12px;

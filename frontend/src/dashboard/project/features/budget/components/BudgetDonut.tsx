@@ -170,6 +170,9 @@ const tooltipStyles: React.CSSProperties = {
   backdropFilter: "blur(10px)", // Add blur for frosted effect
   WebkitBackdropFilter: "blur(10px)", // Safari support
 };
+const MOBILE_BREAKPOINT = 768;
+const TOOLTIP_MARGIN = 12;
+const TOOLTIP_HEIGHT_ESTIMATE = 48;
 const renderActiveShape = (props: SectorProps) => {
   const outerRadius = typeof props.outerRadius === "number" ? props.outerRadius : 0;
   return <Sector {...props} outerRadius={outerRadius + 8} />;
@@ -207,6 +210,17 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       }
     | null
   >(null);
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth <= MOBILE_BREAKPOINT;
+  });
+  const [tooltipPosition, setTooltipPosition] = useState<
+    | {
+        x: number;
+        y: number;
+      }
+    | undefined
+  >(undefined);
 
   const centerButtonRef = useRef<HTMLButtonElement | null>(null);
   const centerPopoverRef = useRef<HTMLDivElement | null>(null);
@@ -353,6 +367,29 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     }
   }, []);
 
+  const updateTooltipPosition = useCallback(() => {
+    if (!isMobile) {
+      setTooltipPosition(undefined);
+      return;
+    }
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const height = container.clientHeight || container.getBoundingClientRect().height;
+    if (!height) return;
+
+    const minY = TOOLTIP_MARGIN;
+    const maxY = Math.max(minY, height - TOOLTIP_HEIGHT_ESTIMATE - TOOLTIP_MARGIN);
+    const centeredY = height / 2 - TOOLTIP_HEIGHT_ESTIMATE / 2;
+    const clampedY = Math.min(Math.max(centeredY, minY), maxY);
+
+    setTooltipPosition({
+      x: TOOLTIP_MARGIN,
+      y: clampedY,
+    });
+  }, [isMobile]);
+
   const openCenterPopover = useCallback(() => {
     setIsCenterOpen(true);
     updateCenterPopoverPosition();
@@ -455,6 +492,41 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       window.removeEventListener("scroll", handleReposition, true);
     };
   }, [isCenterOpen, updateCenterPopoverPosition]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    updateTooltipPosition();
+    if (!isMobile) return;
+
+    if (typeof ResizeObserver === "undefined") return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      updateTooltipPosition();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isMobile, updateTooltipPosition]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    updateTooltipPosition();
+  }, [isMobile, total, stableData, updateTooltipPosition]);
 
   useEffect(() => {
     closeCenterPopover();
@@ -570,7 +642,13 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
           <Tooltip
             content={tooltipRenderer}
             cursor={{ fill: "rgba(255,255,255,0.08)" }}
-            wrapperStyle={{ zIndex: 10 }}
+            wrapperStyle={{
+              zIndex: 10,
+              pointerEvents: "none",
+              maxWidth: "min(220px, calc(100vw - 24px))",
+            }}
+            position={isMobile && tooltipPosition ? tooltipPosition : undefined}
+            allowEscapeViewBox={{ x: false, y: false }}
           />
         </PieChart>
       </ResponsiveContainer>

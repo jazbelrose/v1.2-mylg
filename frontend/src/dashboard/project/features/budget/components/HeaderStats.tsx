@@ -781,7 +781,13 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       mobileStyles.metricChip,
       selectedMetric === metric.title ? mobileStyles.metricChipActive : "",
       isReconciledToggleMetric ? mobileStyles.metricChipWithSwitch : "",
-      isBallparkMetric ? mobileStyles.metricChipWithAction : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const tagClassName = [
+      mobileStyles.metricTag,
+      isBallparkMetric ? mobileStyles.metricTagBallpark : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -791,11 +797,26 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         <button
           type="button"
           className={chipClassName}
-          onClick={metric.field ? () => setSelectedMetric(metric.title) : undefined}
-          disabled={!metric.field}
+          onClick={() => {
+            if (isBallparkMetric) {
+              setBallparkModalOpen(true);
+              return;
+            }
+            if (metric.field) {
+              setSelectedMetric(metric.title);
+            }
+          }}
+          disabled={!metric.field && !isBallparkMetric}
+          aria-label={
+            isBallparkMetric
+              ? "Edit estimate"
+              : metric.field
+              ? undefined
+              : metric.title
+          }
         >
           <div className={mobileStyles.metricChipHeader}>
-            <span className={mobileStyles.metricTag}>{metric.tag}</span>
+            <span className={tagClassName}>{metric.tag}</span>
           </div>
           <span className={mobileStyles.metricValue}>{metric.value}</span>
           <span className={mobileStyles.metricDescription}>{metric.description}</span>
@@ -808,21 +829,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
             className={mobileStyles.metricChipSwitch}
             aria-label="Toggle reconciled totals"
           />
-        )}
-        {isBallparkMetric && (
-          <button
-            type="button"
-            className={mobileStyles.metricChipEdit}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setBallparkModalOpen(true);
-            }}
-            disabled={!budgetHeader}
-            aria-label="Edit estimate"
-          >
-            <FontAwesomeIcon icon={faPen} />
-          </button>
         )}
       </div>
     );

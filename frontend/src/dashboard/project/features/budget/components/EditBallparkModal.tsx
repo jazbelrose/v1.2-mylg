@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useId, useState } from "react";
 import Modal from "@/shared/ui/ModalWithStack";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -24,6 +24,7 @@ const EditBallparkModal: React.FC<EditBallparkModalProps> = ({
   const [value, setValue] = useState<string>(
     initialValue !== undefined && initialValue !== null ? String(initialValue) : ""
   );
+  const inputId = useId();
 
   useEffect(() => {
     setValue(
@@ -66,41 +67,40 @@ const EditBallparkModal: React.FC<EditBallparkModalProps> = ({
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-        <div className="currency-input-wrapper">
-          <span className="currency-prefix">$</span>
-          <input
-            type="number"
-            step="0.01"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="modal-input currency-input"
-            autoFocus
-          />
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.fieldGroup}>
+          <label className={styles.inputLabel} htmlFor={inputId}>
+            Estimate amount
+          </label>
+          <div className={styles.currencyInputWrapper}>
+            <span className={styles.currencyPrefix} aria-hidden="true">
+              $
+            </span>
+            <input
+              id={inputId}
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className={styles.input}
+              placeholder="0.00"
+              autoFocus
+            />
+          </div>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "10px",
-            marginTop: "20px",
-          }}
-        >
-          <button
-            type="submit"
-            className="modal-button primary"
-            style={{ borderRadius: "5px" }}
-          >
-            Save
-          </button>
+        <div className={styles.actions}>
           <button
             type="button"
-            className="modal-button secondary"
-            style={{ borderRadius: "5px" }}
+            className={styles.secondaryButton}
             onClick={onRequestClose}
           >
             Cancel
+          </button>
+          <button type="submit" className={styles.primaryButton}>
+            Save
           </button>
         </div>
       </form>

@@ -780,7 +780,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     const chipClassName = [
       mobileStyles.metricChip,
       selectedMetric === metric.title ? mobileStyles.metricChipActive : "",
-      isReconciledToggleMetric ? mobileStyles.metricChipWithSwitch : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -802,6 +801,14 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
               setBallparkModalOpen(true);
               return;
             }
+            if (isReconciledToggleMetric) {
+              const nextShowReconciled = !showReconciled;
+              setShowReconciled(nextShowReconciled);
+              setSelectedMetric(
+                nextShowReconciled ? "Reconciled Cost" : "Actual Cost"
+              );
+              return;
+            }
             if (metric.field) {
               setSelectedMetric(metric.title);
             }
@@ -821,15 +828,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
           <span className={mobileStyles.metricValue}>{metric.value}</span>
           <span className={mobileStyles.metricDescription}>{metric.description}</span>
         </button>
-        {isReconciledToggleMetric && (
-          <Switch
-            size="small"
-            checked={showReconciled}
-            onChange={(val) => setShowReconciled(val)}
-            className={mobileStyles.metricChipSwitch}
-            aria-label="Toggle reconciled totals"
-          />
-        )}
       </div>
     );
   };

@@ -74,6 +74,54 @@
   gap: 0.5rem;
 }
 
+.selectionActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.selectionActionButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.selectionActionButton:hover,
+.selectionActionButton:focus-visible {
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.selectionActionButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.selectionActionButton:active {
+  transform: scale(0.96);
+}
+
+.duplicateSelectedButton {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.deleteSelectedButton {
+  color: #ff8080;
+}
+
+.deleteSelectedButton:hover,
+.deleteSelectedButton:focus-visible {
+  color: #ffb3b3;
+}
+
 .addButton {
   display: inline-flex;
   align-items: center;
@@ -158,5 +206,14 @@
   .actions {
     width: 100%;
     justify-content: flex-end;
+  }
+
+  .selectionActionButton {
+    width: 30px;
+    height: 30px;
+  }
+
+  .actions {
+    gap: 0.35rem;
   }
 }

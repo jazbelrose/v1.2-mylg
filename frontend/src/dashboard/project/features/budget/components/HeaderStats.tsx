@@ -30,6 +30,7 @@ import {
 import summaryStyles from "./budget-header-summary.module.css";
 import headerStyles from "./header-stats.module.css";
 import mobileStyles from "./budget-header-mobile.module.css";
+import toolbarStyles from "./BudgetToolbar.module.css";
 
 /* =========================
    Types
@@ -913,16 +914,33 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         </div>
       </div>
 
-      <div className={mobileStyles.groupControls} role="group" aria-label="Group budget items">
-        <span className={mobileStyles.groupControlsLabel}>Group</span>
-        <Segmented
-          size="middle"
-          options={groupOptions}
-          value={groupBy}
-          onChange={(value: SegmentedValue) => setGroupBy(value as GroupBy)}
-          block
-          className={mobileStyles.groupSegmented}
-        />
+      <div className={mobileStyles.groupControls}>
+        <span id="budget-mobile-group-label" className={mobileStyles.srOnly}>
+          Group budget items
+        </span>
+        <div
+          className={mobileStyles.groupTabs}
+          role="group"
+          aria-labelledby="budget-mobile-group-label"
+        >
+          {groupOptions.map((option) => {
+            const isActive = option.value === groupBy;
+            const className = isActive
+              ? `${toolbarStyles.tabButton} ${toolbarStyles.activeTab}`
+              : toolbarStyles.tabButton;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={isActive}
+                className={className}
+                onClick={() => setGroupBy(option.value)}
+              >
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

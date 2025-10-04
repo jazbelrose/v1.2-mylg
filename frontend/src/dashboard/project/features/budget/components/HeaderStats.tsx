@@ -123,6 +123,7 @@ interface BudgetHeaderProps {
   budgetItems?: BudgetItem[];
   onBallparkChange?: (val: number) => void;
   onOpenRevisionModal: () => void;
+  initialMetric?: MetricTitle;
 }
 
 const RELEVANT_WS_ACTIONS = new Set<unknown>([
@@ -253,8 +254,11 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   budgetItems = [],
   onBallparkChange,
   onOpenRevisionModal,
+  initialMetric,
 }) => {
-  const [selectedMetric, setSelectedMetric] = useState<MetricTitle>("Final Cost");
+  const [selectedMetric, setSelectedMetric] = useState<MetricTitle>(
+    initialMetric ?? "Final Cost"
+  );
   const [isMobile, setIsMobile] = useState(false);
 
   const hasReconciled = useMemo(
@@ -683,12 +687,34 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       const key = rawKey && rawKey.trim() !== "" ? rawKey : "Unspecified";
       let val: number;
       const quantity = toQuantity(item.quantity);
+      const applyQuantityIfNeeded = (
+        fieldName: keyof BudgetItem | null,
+        value: number
+      ): number => {
+        if (
+          fieldName === "itemBudgetedCost" ||
+          fieldName === "itemActualCost" ||
+          fieldName === "itemReconciledCost"
+        ) {
+          return value * quantity;
+        }
+        return value;
+      };
 
       if (field === "markupAmount") {
-        const finalCost = toNumber(item.itemFinalCost) * quantity;
-        const budgeted = toNumber(item.itemBudgetedCost) * quantity;
-        const actual = toNumber(item.itemActualCost) * quantity;
-        const reconciled = toNumber(item.itemReconciledCost) * quantity;
+        const finalCost = toNumber(item.itemFinalCost);
+        const budgeted = applyQuantityIfNeeded(
+          "itemBudgetedCost",
+          toNumber(item.itemBudgetedCost)
+        );
+        const actual = applyQuantityIfNeeded(
+          "itemActualCost",
+          toNumber(item.itemActualCost)
+        );
+        const reconciled = applyQuantityIfNeeded(
+          "itemReconciledCost",
+          toNumber(item.itemReconciledCost)
+        );
         const resolvedMode: CostMode =
           activeMode === "Reconciled" && hasReconciled ? "Reconciled" : activeMode;
         const base =
@@ -704,12 +730,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       } else {
         const key = field as keyof BudgetItem;
         const numericValue = toNumber(item[key] as number | string | undefined | null);
-        const shouldApplyQuantity =
-          key === "itemReconciledCost" ||
-          key === "itemBudgetedCost" ||
-          key === "itemActualCost" ||
-          key === "itemFinalCost";
-        val = shouldApplyQuantity ? numericValue * quantity : numericValue;
+        val = applyQuantityIfNeeded(key, numericValue);
       }
 
       const safeValue = Number.isNaN(val) ? 0 : val;

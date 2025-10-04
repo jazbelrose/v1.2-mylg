@@ -90,14 +90,14 @@ describe("BudgetHeader computeChartState", () => {
             quantity: 2,
             itemBudgetedCost: 150,
             itemActualCost: 100,
-            itemFinalCost: 200,
+            itemFinalCost: 400,
           },
           {
             category: "Labor",
             quantity: 3,
             itemBudgetedCost: 50,
             itemActualCost: 75,
-            itemFinalCost: 80,
+            itemFinalCost: 240,
           },
         ]}
         onOpenRevisionModal={() => {}}
@@ -136,5 +136,49 @@ describe("BudgetHeader computeChartState", () => {
       ]);
       expect(total).toBe(425);
     });
+  });
+
+  it("computes grouped markup totals without reapplying quantity to final cost", async () => {
+    render(
+      <BudgetHeader
+        activeProject={{ projectId: "p1", color: "#123456" }}
+        budgetHeader={{
+          budgetItemId: "b1",
+          revision: 1,
+          headerBudgetedTotalCost: 450,
+          headerActualTotalCost: 425,
+          headerFinalTotalCost: 640,
+        }}
+        groupBy="category"
+        setGroupBy={() => {}}
+        budgetItems={[
+          {
+            category: "Design",
+            quantity: 2,
+            itemBudgetedCost: 150,
+            itemActualCost: 100,
+            itemFinalCost: 400,
+          },
+          {
+            category: "Labor",
+            quantity: 3,
+            itemBudgetedCost: 50,
+            itemActualCost: 75,
+            itemFinalCost: 240,
+          },
+        ]}
+        onOpenRevisionModal={() => {}}
+        initialMetric="Effective Markup"
+      />
+    );
+
+    await waitFor(() => expect(budgetDonutCalls.length).toBeGreaterThan(0));
+
+    const { data, total } = getLatestChart();
+    expect(data).toEqual([
+      { id: "category-Design", label: "Design", value: 100 },
+      { id: "category-Labor", label: "Labor", value: 90 },
+    ]);
+    expect(total).toBe(190);
   });
 });

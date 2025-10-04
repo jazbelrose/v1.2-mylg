@@ -7,9 +7,7 @@ import {
   faPercent,
   faFileInvoiceDollar,
   faCalculator,
-  faPen,
 } from "@fortawesome/free-solid-svg-icons";
-import { Switch } from "antd";
 
 import EditBallparkModal from "@/dashboard/project/features/budget/components/EditBallparkModal";
 import ClientInvoicePreviewModal from "@/dashboard/project/features/budget/ClientInvoicePreviewModal";
@@ -428,13 +426,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         })()
       : "N/A";
 
-    const markupDescription =
-      resolvedMode === "Budgeted"
-        ? "Markup vs budgeted"
-        : resolvedMode === "Reconciled"
-        ? "Markup vs reconciled"
-        : "Markup vs actual";
-
     const modeLabel =
       resolvedMode === "Reconciled" && !hasReconciled ? "Actual" : resolvedMode;
 
@@ -458,19 +449,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         onSelect: handleOpenBallpark,
         ariaLabel: "Edit project estimate",
         isSelectable: false,
-        extra: (
-          <button
-            className={headerStyles.editButton}
-            onClick={(event) => {
-              event.stopPropagation();
-              handleOpenBallpark();
-            }}
-            aria-label="Edit Ballpark"
-            type="button"
-          >
-            <FontAwesomeIcon icon={faPen} />
-          </button>
-        ),
       },
       {
         title: "Budgeted Cost" as MetricTitle,
@@ -502,30 +480,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         onSelect: handleSelectActual,
         ariaLabel: showReconciled && hasReconciled ? "View reconciled totals" : "View actual totals",
         isSelectable: true,
-        extra: hasReconciled ? (
-          <Switch
-            size="small"
-            checked={showReconciled}
-            onChange={(val) => {
-              const nextShow = hasReconciled ? val : false;
-              setShowReconciled(nextShow);
-              if (nextShow && activeMode !== "Reconciled") {
-                setActiveMode("Reconciled");
-              }
-              if (!nextShow && activeMode === "Reconciled") {
-                setActiveMode("Actual");
-              }
-              if (selectedMetric === "Actual Cost" || selectedMetric === "Reconciled Cost") {
-                const nextTitle = nextShow ? "Reconciled Cost" : "Actual Cost";
-                if (selectedMetric !== nextTitle) {
-                  setSelectedMetric(nextTitle);
-                }
-              }
-            }}
-            className={summaryStyles.toggleSwitch}
-            aria-label="Toggle reconciled costs"
-          />
-        ) : null,
       },
       {
         title: "Effective Markup" as MetricTitle,
@@ -534,7 +488,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         color: CHART_COLORS[2],
         value: markupValue,
         chartValue: markupDiff,
-        description: markupDescription,
+        description: `${modeLabel} Markup`,
         field: "markupAmount",
         isPercentage: true,
         ariaLabel: `Markup difference compared to ${modeLabel.toLowerCase()} totals`,

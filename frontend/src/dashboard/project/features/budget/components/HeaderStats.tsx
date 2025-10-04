@@ -685,9 +685,9 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       const quantity = toQuantity(item.quantity);
 
       if (field === "markupAmount") {
-        const finalCost = toNumber(item.itemFinalCost);
-        const budgeted = toNumber(item.itemBudgetedCost);
-        const actual = toNumber(item.itemActualCost);
+        const finalCost = toNumber(item.itemFinalCost) * quantity;
+        const budgeted = toNumber(item.itemBudgetedCost) * quantity;
+        const actual = toNumber(item.itemActualCost) * quantity;
         const reconciled = toNumber(item.itemReconciledCost) * quantity;
         const resolvedMode: CostMode =
           activeMode === "Reconciled" && hasReconciled ? "Reconciled" : activeMode;
@@ -704,7 +704,12 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       } else {
         const key = field as keyof BudgetItem;
         const numericValue = toNumber(item[key] as number | string | undefined | null);
-        val = key === "itemReconciledCost" ? numericValue * quantity : numericValue;
+        const shouldApplyQuantity =
+          key === "itemReconciledCost" ||
+          key === "itemBudgetedCost" ||
+          key === "itemActualCost" ||
+          key === "itemFinalCost";
+        val = shouldApplyQuantity ? numericValue * quantity : numericValue;
       }
 
       const safeValue = Number.isNaN(val) ? 0 : val;

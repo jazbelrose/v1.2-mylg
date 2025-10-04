@@ -603,7 +603,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     [metrics]
   );
 
-  const finalMetricTag = finalMetric?.tag ?? "Final";
+  const finalMetricTitle = finalMetric?.title ?? "Final Cost";
   const finalMetricDescription = finalMetric?.description ?? "All-in total";
   const finalMetricIcon = finalMetric?.icon ?? faFileInvoiceDollar;
 
@@ -1012,7 +1012,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
                   icon={finalMetricIcon}
                   className={mobileStyles.summaryCardTitleIcon}
                 />
-                {finalMetricTag}
+                {finalMetricTitle}
               </span>
             </div>
             <span className={mobileStyles.summaryCardValue}>{finalDisplay}</span>

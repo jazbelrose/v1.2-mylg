@@ -289,8 +289,12 @@ export const useFileManagerState = ({
   const [touchEndX, setTouchEndX] = useState(0);
   const SWIPE_THRESHOLD = 50;
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX), []);
-  const handleTouchMove = useCallback((e: React.TouchEvent) => setTouchEndX(e.touches[0].clientX), []);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touchX = e.touches[0]?.clientX ?? 0;
+    setTouchStartX(touchX);
+    setTouchEndX(touchX);
+  }, []);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => setTouchEndX(e.touches[0]?.clientX ?? 0), []);
   const handleTouchEnd = useCallback(() => {
     if (touchStartX - touchEndX > SWIPE_THRESHOLD) handleNextImage();
     else if (touchEndX - touchStartX > SWIPE_THRESHOLD) handlePrevImage();

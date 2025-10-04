@@ -6,11 +6,16 @@ import styles from "./MobileTasksOverviewCard.module.css";
 
 type MobileTasksOverviewCardProps = {
   className?: string;
+  onLoadingChange?: (loading: boolean) => void;
 };
 
-const MobileTasksOverviewCard: React.FC<MobileTasksOverviewCardProps> = ({ className }) => {
+const MobileTasksOverviewCard: React.FC<MobileTasksOverviewCardProps> = ({ className, onLoadingChange }) => {
   const { loading, error, stats, groups } = useTasksOverview();
   const location = useLocation();
+
+  React.useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   const formatStatValue = (value: number): string | number => {
     if (error) return "—";

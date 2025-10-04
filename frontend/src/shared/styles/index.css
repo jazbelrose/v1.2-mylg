@@ -32,6 +32,9 @@
 
 @import './components/blog-row-layouts.css';
 
+/* Loading states */
+@import '../../styles/skeleton.css';
+
 /* Marketing Page Styles */
 @import './marketing/index.css';
 

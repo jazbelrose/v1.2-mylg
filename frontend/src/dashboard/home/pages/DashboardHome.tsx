@@ -23,6 +23,10 @@ import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import ProjectsPanelDesktop from "@/dashboard/home/components/ProjectsPanelDesktop";
 import { getColor } from "@/shared/utils/colorUtils";
 import { useNavCollapsed } from "@/shared/hooks/useNavCollapsed";
+import SkeletonSwap from "@/shared/ui/SkeletonSwap";
+import WeekWidgetSkeleton from "@/dashboard/home/components/WeekWidget.skeleton";
+import ProjectsPanelSkeleton from "@/dashboard/home/components/ProjectsPanel.skeleton";
+import TasksRollupSkeleton from "@/dashboard/home/components/TasksRollup.skeleton";
 
 import "./dashboard-styles.css";
 
@@ -90,6 +94,7 @@ const WelcomeScreen: React.FC = () => {
     allUsers,
     projects,
     fetchProjectDetails,
+    isLoading: projectsLoading,
   } = useData();
 
   const location = useLocation();
@@ -193,11 +198,16 @@ const WelcomeScreen: React.FC = () => {
   );
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("dashboard");
+  const [isTasksLoading, setIsTasksLoading] = useState(true);
   const rawDrawerId = useId();
   const drawerId = React.useMemo(
     () => `dashboard-nav-${rawDrawerId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
     [rawDrawerId]
   );
+
+  useEffect(() => {
+    setIsTasksLoading(true);
+  }, [isDesktop]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -313,26 +323,48 @@ const WelcomeScreen: React.FC = () => {
             id="calendar"
             className="welcome-section-anchor welcome-desktop-header"
           >
-            <WeekWidgetDesktop
-              weekOf={weekOf}
-              tracks={tracks}
-              dots={dots}
-              onPrevWeek={(d) => setWeekOf(d)}
-              onNextWeek={(d) => setWeekOf(d)}
-              onSelectDate={(d) => setWeekOf(d)}
-              getTooltipItems={getTooltipItems}
-            />
+            <SkeletonSwap
+              ready={!projectsLoading}
+              skeleton={
+                <WeekWidgetSkeleton
+                  variant="desktop"
+                  className="skeleton-reserve-week-widget"
+                />
+              }
+              className="skeleton-reserve-week-widget"
+            >
+              <WeekWidgetDesktop
+                weekOf={weekOf}
+                tracks={tracks}
+                dots={dots}
+                onPrevWeek={(d) => setWeekOf(d)}
+                onNextWeek={(d) => setWeekOf(d)}
+                onSelectDate={(d) => setWeekOf(d)}
+                getTooltipItems={getTooltipItems}
+              />
+            </SkeletonSwap>
           </section>
           <section
             id="projects"
             className="welcome-section-anchor welcome-desktop-projects"
           >
             <div className="welcome-desktop-projects-scroll">
-              <ProjectsPanelDesktop
-                onOpenProject={(projectId) =>
-                  handleNavigateToProject({ projectId })
+              <SkeletonSwap
+                ready={!projectsLoading}
+                skeleton={
+                  <ProjectsPanelSkeleton
+                    variant="desktop"
+                    className="skeleton-reserve-projects"
+                  />
                 }
-              />
+                className="skeleton-reserve-projects"
+              >
+                <ProjectsPanelDesktop
+                  onOpenProject={(projectId) =>
+                    handleNavigateToProject({ projectId })
+                  }
+                />
+              </SkeletonSwap>
             </div>
           </section>
 
@@ -340,7 +372,21 @@ const WelcomeScreen: React.FC = () => {
             id="tasks"
             className="welcome-section-anchor welcome-desktop-footer"
           >
-            <TasksOverviewCard className="welcome-header-tasks-card" />
+            <SkeletonSwap
+              ready={!isTasksLoading}
+              skeleton={
+                <TasksRollupSkeleton
+                  variant="desktop"
+                  className="welcome-header-tasks-card skeleton-reserve-tasks"
+                />
+              }
+              className="welcome-header-tasks-card skeleton-reserve-tasks"
+            >
+              <TasksOverviewCard
+                className="welcome-header-tasks-card"
+                onLoadingChange={setIsTasksLoading}
+              />
+            </SkeletonSwap>
           </section>
         </div>
       );
@@ -349,20 +395,53 @@ const WelcomeScreen: React.FC = () => {
     return (
       <div className="mobile-welcome-layout">
         <div className="mobile-calendar-section">
-          <AllProjectsWeekWidget />
+          <SkeletonSwap
+            ready={!projectsLoading}
+            skeleton={
+              <WeekWidgetSkeleton
+                variant="mobile"
+                className="skeleton-reserve-week-widget"
+              />
+            }
+            className="skeleton-reserve-week-widget"
+          >
+            <AllProjectsWeekWidget />
+          </SkeletonSwap>
         </div>
         <div className="mobile-projects-tasks">
           <div className="mobile-projects-section">
             <div className="mobile-projects-panel">
-              <ProjectsPanelMobile
-                onOpenProject={(projectId) =>
-                  handleNavigateToProject({ projectId })
+              <SkeletonSwap
+                ready={!projectsLoading}
+                skeleton={
+                  <ProjectsPanelSkeleton
+                    variant="mobile"
+                    className="skeleton-reserve-projects"
+                  />
                 }
-              />
+                className="skeleton-reserve-projects"
+              >
+                <ProjectsPanelMobile
+                  onOpenProject={(projectId) =>
+                    handleNavigateToProject({ projectId })
+                  }
+                />
+              </SkeletonSwap>
             </div>
           </div>
           <div className="mobile-tasks-section dashboard-footer">
-            <MobileTasksOverviewCard />
+            <SkeletonSwap
+              ready={!isTasksLoading}
+              skeleton={
+                <TasksRollupSkeleton
+                  variant="mobile"
+                  className="skeleton-reserve-tasks"
+                />
+              }
+              className="skeleton-reserve-tasks"
+            >
+              <MobileTasksOverviewCard onLoadingChange={setIsTasksLoading} />
+            </SkeletonSwap>
           </div>
         </div>
       </div>

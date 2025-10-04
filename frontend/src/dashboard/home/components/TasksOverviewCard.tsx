@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Plus, MoreHorizontal } from "lucide-react";
 
@@ -10,13 +10,18 @@ import styles from "./TasksOverviewCard.module.css";
 
 type TasksOverviewCardProps = {
   className?: string;
+  onLoadingChange?: (loading: boolean) => void;
 };
-const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
+const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className, onLoadingChange }) => {
   const { loading, error, stats, groups, refreshTasks, projectOptions, getTaskById } =
     useTasksOverview();
   const location = useLocation();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<QuickCreateTaskModalTask | null>(null);
+
+  useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
   const openCreateModal = useCallback(() => {
     setTaskToEdit(null);

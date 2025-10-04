@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState, useMemo } from "react";
+import React, { useEffect, useId, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useData } from "@/app/contexts/useData";
 import { UserLite } from "@/app/contexts/DataProvider";
@@ -12,7 +12,6 @@ import NotificationsPage from "@/dashboard/home/components/NotificationsPage";
 import Messages from "@/dashboard/features/messages";
 import Settings from "@/dashboard/home/components/Settings";
 import Collaborators from "@/dashboard/home/components/Collaborators";
-import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
 import AllProjectsWeekWidget from "@/dashboard/home/components/AllProjectsWeekWidget";
 import WeekWidgetDesktop, { type Track, type Dot } from "@/dashboard/home/components/WeekWidgetDesktop";
@@ -25,6 +24,7 @@ import { getColor } from "@/shared/utils/colorUtils";
 import { useNavCollapsed } from "@/shared/hooks/useNavCollapsed";
 
 import "./dashboard-styles.css";
+import DashboardHomeSkeleton from "./DashboardHomeSkeleton";
 
 type Project = { projectId: string; title: string };
 
@@ -81,7 +81,10 @@ export const parseDashboardPath = (
   return { view, userSlug };
 };
 
+const MIN_SKELETON_DURATION = 400;
+
 const WelcomeScreen: React.FC = () => {
+  const data = useData();
   const {
     userData,
     userName,
@@ -90,7 +93,8 @@ const WelcomeScreen: React.FC = () => {
     allUsers,
     projects,
     fetchProjectDetails,
-  } = useData();
+  } = data;
+  const projectsLoading = (data as { isLoading?: boolean }).isLoading ?? false;
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -193,10 +197,49 @@ const WelcomeScreen: React.FC = () => {
   );
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("dashboard");
+  const skeletonStartRef = useRef<number>(Date.now());
+  const [showSkeleton, setShowSkeleton] = useState(true);
+  const [contentVisible, setContentVisible] = useState(false);
+  const isDataResolved = !loadingProfile && !projectsLoading;
   const rawDrawerId = useId();
   const drawerId = React.useMemo(
     () => `dashboard-nav-${rawDrawerId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
     [rawDrawerId]
+  );
+
+  useEffect(() => {
+    if (!isDataResolved) {
+      skeletonStartRef.current = Date.now();
+      setShowSkeleton(true);
+      setContentVisible(false);
+      return;
+    }
+
+    const elapsed = Date.now() - skeletonStartRef.current;
+    const delay = Math.max(MIN_SKELETON_DURATION - elapsed, 0);
+    const timer = window.setTimeout(() => {
+      setShowSkeleton(false);
+      setContentVisible(true);
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [isDataResolved]);
+
+  const skeletonOverlayStyle = React.useMemo<React.CSSProperties>(
+    () => ({
+      opacity: showSkeleton ? 1 : 0,
+      transition: "opacity 200ms ease",
+      pointerEvents: showSkeleton ? "auto" : "none",
+    }),
+    [showSkeleton]
+  );
+
+  const contentLayerStyle = React.useMemo<React.CSSProperties>(
+    () => ({
+      opacity: contentVisible ? 1 : 0,
+      transition: "opacity 200ms ease",
+    }),
+    [contentVisible]
   );
 
   useEffect(() => {
@@ -301,7 +344,6 @@ const WelcomeScreen: React.FC = () => {
     }
   }, [activeView, dmUserSlug, inbox, userData, allUsers, navigate, isMobile]);
 
-  if (loadingProfile) return <SpinnerScreen />;
   if (userData?.pending) return <PendingApprovalScreen />;
 
 
@@ -400,28 +442,52 @@ const WelcomeScreen: React.FC = () => {
     setIsNavCollapsed((previous) => !previous);
 
   const mainContent = (
-    <main className="dashboard-main">
-      <div className="dashboard-wrapper welcome-screen no-vertical-center">
-        <WelcomeHeader
-          userName={userName}
-          setActiveView={setActiveView}
-          onToggleNavigation={!isDesktop ? handleOpenNavigation : undefined}
-          isNavigationOpen={!isDesktop ? isNavigationOpen : undefined}
-          navigationDrawerId={!isDesktop ? drawerId : undefined}
-          isDesktopLayout={isDesktop}
+    <main
+      className="dashboard-main"
+      style={{ position: "relative", pointerEvents: contentVisible ? undefined : "none" }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          overflowY: "auto",
+          ...skeletonOverlayStyle,
+        }}
+      >
+        <DashboardHomeSkeleton
+          isDesktop={isDesktop}
+          isMobile={isMobile}
+          busy={showSkeleton}
+          hidden={!showSkeleton}
         />
+      </div>
 
-        <div className="row-layout">
-          <div className="welcome-screen-details">
-            <div className="dashboard-content">
-              <div
-                className={`main-content${
-                  activeView === "welcome" && isDesktop
-                    ? " main-content--welcome"
-                    : ""
-                }`}
-              >
-                {renderActiveView()}
+      <div style={{ ...contentLayerStyle, height: "100%" }} aria-hidden={!contentVisible}>
+        <div className="dashboard-wrapper welcome-screen no-vertical-center">
+          <WelcomeHeader
+            userName={userName}
+            setActiveView={setActiveView}
+            onToggleNavigation={!isDesktop ? handleOpenNavigation : undefined}
+            isNavigationOpen={!isDesktop ? isNavigationOpen : undefined}
+            navigationDrawerId={!isDesktop ? drawerId : undefined}
+            isDesktopLayout={isDesktop}
+          />
+
+          <div className="row-layout">
+            <div className="welcome-screen-details">
+              <div className="dashboard-content">
+                <div
+                  className={`main-content${
+                    activeView === "welcome" && isDesktop
+                      ? " main-content--welcome"
+                      : ""
+                  }`}
+                >
+                  {renderActiveView()}
+                </div>
               </div>
             </div>
           </div>
@@ -437,7 +503,7 @@ const WelcomeScreen: React.FC = () => {
           isNavCollapsed ? " dashboard-root--nav-collapsed" : ""
         }`}
       >
-        <aside>
+        <aside style={{ pointerEvents: contentVisible ? undefined : "none" }}>
           <DashboardNavPanel
             variant="persistent"
             setActiveView={setActiveView}
@@ -452,12 +518,14 @@ const WelcomeScreen: React.FC = () => {
 
   return (
     <>
-      <NavigationDrawer
-        open={isNavigationOpen}
-        onClose={handleCloseNavigation}
-        setActiveView={setActiveView}
-        drawerId={drawerId}
-      />
+      <div style={{ pointerEvents: contentVisible ? undefined : "none" }}>
+        <NavigationDrawer
+          open={isNavigationOpen}
+          onClose={handleCloseNavigation}
+          setActiveView={setActiveView}
+          drawerId={drawerId}
+        />
+      </div>
       {mainContent}
     </>
   );

@@ -119,6 +119,38 @@ describe("BudgetDonut", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("aligns the center popover with the viewport edge on mobile widths", async () => {
+    const originalInnerWidth = window.innerWidth;
+
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 480,
+      writable: true,
+    });
+
+    try {
+      render(
+        <div style={{ width: 320, height: 240 }}>
+          <BudgetDonut data={slices} total={1500} />
+        </div>
+      );
+
+      const centerButton = screen.getByRole("button", { name: /view budget allocation/i });
+      fireEvent.mouseEnter(centerButton);
+
+      const dialog = await screen.findByRole("dialog", { name: "Budget allocation breakdown" });
+
+      expect(dialog.style.transform).toBe("translate(-100%, -50%)");
+      expect(dialog.style.left).toBe("480px");
+    } finally {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: originalInnerWidth,
+        writable: true,
+      });
+    }
+  });
+
   it("refreshes the center popover when slice labels change", async () => {
     const { rerender } = render(
       <div style={{ width: 320, height: 240 }}>

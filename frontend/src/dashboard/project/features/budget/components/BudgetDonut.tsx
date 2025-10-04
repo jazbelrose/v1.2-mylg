@@ -204,6 +204,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     | {
         top: number;
         left: number;
+        transform: string;
       }
     | null
   >(null);
@@ -350,45 +351,73 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     if (!button || typeof window === "undefined") return;
 
     const rect = button.getBoundingClientRect();
-    const baseTop = rect.top + rect.height / 2;
-    const baseLeft = rect.left + rect.width / 2;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    const visualViewport = typeof window.visualViewport !== "undefined" ? window.visualViewport : null;
+    const viewportOffsetLeft = visualViewport?.offsetLeft ?? 0;
+    const viewportOffsetTop = visualViewport?.offsetTop ?? 0;
+    const viewportWidth = visualViewport?.width ?? window.innerWidth;
+    const viewportHeight = visualViewport?.height ?? window.innerHeight;
     const isMobileViewport = viewportWidth <= 768;
     const margin = 16;
+    const mobileRightMargin = 0;
+
+    const baseTop = rect.top + rect.height / 2 + viewportOffsetTop;
+    const baseLeft = rect.left + rect.width / 2 + viewportOffsetLeft;
+
+    let top = baseTop;
+    let left = baseLeft;
+    let transform = "translate(-50%, -50%)";
+
+    if (isMobileViewport) {
+      transform = "translate(-100%, -50%)";
+      left = viewportOffsetLeft + viewportWidth - mobileRightMargin;
+    }
 
     const clampPosition = () => {
-      let top = baseTop;
-      let left = baseLeft;
-
       const popover = centerPopoverRef.current;
       if (popover) {
-        const halfWidth = popover.offsetWidth / 2;
-        const halfHeight = popover.offsetHeight / 2;
+        const popoverWidth = popover.offsetWidth;
+        const popoverHeight = popover.offsetHeight;
+        const halfWidth = popoverWidth / 2;
+        const halfHeight = popoverHeight / 2;
 
-        const leftMargin = margin;
-        const rightMargin = isMobileViewport ? 0 : margin;
-        const minLeft = leftMargin + halfWidth;
-        const maxLeft = viewportWidth - rightMargin - halfWidth;
-        const minTop = margin + halfHeight;
-        const maxTop = viewportHeight - margin - halfHeight;
+        const safeMinTop = viewportOffsetTop + margin + halfHeight;
+        const safeMaxTop = viewportOffsetTop + viewportHeight - margin - halfHeight;
 
         if (isMobileViewport) {
-          const desiredLeft = viewportWidth - rightMargin - halfWidth;
-          left = Math.min(Math.max(desiredLeft, minLeft), maxLeft);
+          const desiredRightEdge = viewportOffsetLeft + viewportWidth - mobileRightMargin;
+          const minRightEdge = viewportOffsetLeft + margin + popoverWidth;
+          const maxRightEdge = viewportOffsetLeft + viewportWidth - mobileRightMargin;
+          const clampedRightEdge = Math.min(
+            Math.max(desiredRightEdge, minRightEdge),
+            maxRightEdge
+          );
+          left = clampedRightEdge;
         } else {
-          left = Math.min(Math.max(left, minLeft), maxLeft);
+          const minLeft = viewportOffsetLeft + margin + halfWidth;
+          const maxLeft = viewportOffsetLeft + viewportWidth - margin - halfWidth;
+          left = Math.min(Math.max(left, minLeft), Math.max(minLeft, maxLeft));
         }
 
-        top = Math.min(Math.max(top, minTop), maxTop);
+        if (safeMinTop > safeMaxTop) {
+          top = viewportOffsetTop + viewportHeight / 2;
+        } else {
+          top = Math.min(Math.max(top, safeMinTop), safeMaxTop);
+        }
       } else {
-        left = Math.min(Math.max(left, margin), viewportWidth - margin);
-        top = Math.min(Math.max(top, margin), viewportHeight - margin);
+        const safeMinLeft = viewportOffsetLeft + margin;
+        const safeMaxLeft =
+          viewportOffsetLeft + viewportWidth - (isMobileViewport ? mobileRightMargin : margin);
+        const safeMinTop = viewportOffsetTop + margin;
+        const safeMaxTop = viewportOffsetTop + viewportHeight - margin;
+
+        left = Math.min(Math.max(left, safeMinLeft), safeMaxLeft);
+        top = Math.min(Math.max(top, safeMinTop), safeMaxTop);
       }
 
       setCenterPopoverPosition({
         top,
         left,
+        transform,
       });
     };
 
@@ -529,6 +558,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
               ...centerPopoverStyles,
               top: centerPopoverPosition.top,
               left: centerPopoverPosition.left,
+              transform: centerPopoverPosition.transform,
             }}
             role="dialog"
             aria-label="Budget allocation breakdown"

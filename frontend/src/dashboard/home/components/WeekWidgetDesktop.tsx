@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { startOfWeek, endOfWeek, addDays } from "../utils/dateUtils";
 import "./week-widget.css";
@@ -107,6 +107,13 @@ export default function WeekWidgetDesktop({
   const [tooltipDate, setTooltipDate] = useState<Date | null>(null);
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!tooltipDate) {
+      tooltipRef.current = null;
+    }
+  }, [tooltipDate]);
 
   // Build tooltip items; fallback to dots if callback returns none
   const items = useMemo(() => {
@@ -126,7 +133,15 @@ export default function WeekWidgetDesktop({
   useEffect(() => {
     if (!tooltipDate) return;
     const close = (e: MouseEvent | TouchEvent | KeyboardEvent | Event) => {
-      if ((e as KeyboardEvent).type === "keydown" && (e as KeyboardEvent).key !== "Escape") return;
+      const type = e.type;
+      if (type === "keydown") {
+        if ((e as KeyboardEvent).key !== "Escape") return;
+      } else if (type === "mousedown" || type === "touchstart") {
+        const target = e.target as Node | null;
+        if (target && tooltipRef.current?.contains(target)) {
+          return;
+        }
+      }
       setTooltipDate(null);
       setAnchor(null);
       setShowAll(false);
@@ -164,6 +179,9 @@ export default function WeekWidgetDesktop({
         className={`ww-top-tooltip ${overflow && !showAll ? "has-overflow" : ""}`}
         role="dialog"
         aria-label="Day details"
+        ref={(node) => {
+          tooltipRef.current = node;
+        }}
         style={
           {
             position: "fixed",

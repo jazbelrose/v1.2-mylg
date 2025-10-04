@@ -92,6 +92,29 @@ interface SummaryCardProps {
   active?: boolean;
   className?: string;
   children?: React.ReactNode;
+  ariaLabel?: string;
+  isToggle?: boolean;
+  ariaHasPopup?: React.AriaAttributes["aria-haspopup"];
+}
+
+type MetricField = keyof BudgetItem | "markupAmount" | null;
+
+interface MetricDefinition {
+  title: MetricTitle;
+  tag: string;
+  icon: IconDefinition;
+  color: string;
+  value: string;
+  chartValue: number;
+  description: string;
+  field: MetricField;
+  sticky?: boolean;
+  extra?: React.ReactNode;
+  isPercentage?: boolean;
+  isSelectable?: boolean;
+  onCardClick?: () => void;
+  ariaLabel?: string;
+  ariaHasPopup?: React.AriaAttributes["aria-haspopup"];
 }
 
 interface BudgetHeaderProps {
@@ -182,13 +205,19 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   active,
   className = "",
   children,
+  ariaLabel,
+  isToggle,
+  ariaHasPopup,
 }) => (
   <div
     className={`${summaryStyles.card} ${active ? summaryStyles.active : ""} ${className}`}
     onClick={onClick}
     role={onClick ? "button" : undefined}
     tabIndex={onClick ? 0 : undefined}
-    aria-label={onClick ? title : undefined}
+    aria-label={onClick ? ariaLabel ?? title : undefined}
+    aria-pressed={onClick && isToggle ? active : undefined}
+    aria-haspopup={onClick ? ariaHasPopup : undefined}
+    data-clickable={onClick ? "true" : "false"}
     onKeyDown={
       onClick
         ? (e) => {
@@ -306,13 +335,41 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     [budgetItems]
   );
 
+  const openBallparkEditor = useCallback(() => {
+    setBallparkModalOpen(true);
+  }, []);
+
+  const activateBudgetedMetric = useCallback(() => {
+    setMarkupBasis("Budgeted");
+    setSelectedMetric("Budgeted Cost");
+  }, []);
+
+  const activateActualMetric = useCallback(() => {
+    const nextTitle = (showReconciled ? "Reconciled Cost" : "Actual Cost") as MetricTitle;
+    const nextBasis = showReconciled ? "Reconciled" : "Actual";
+    setSelectedMetric(nextTitle);
+    setMarkupBasis(nextBasis);
+  }, [showReconciled]);
+
+  const toggleActualBasis = useCallback(() => {
+    if (!hasReconciled) return;
+    const nextShowReconciled = !showReconciled;
+    setShowReconciled(nextShowReconciled);
+    const nextTitle = nextShowReconciled
+      ? ("Reconciled Cost" as MetricTitle)
+      : ("Actual Cost" as MetricTitle);
+    const nextBasis = nextShowReconciled ? "Reconciled" : "Actual";
+    setSelectedMetric(nextTitle);
+    setMarkupBasis(nextBasis);
+  }, [hasReconciled, showReconciled]);
+
   useEffect(() => {
     if (selectedMetric === "Actual Cost" || selectedMetric === "Reconciled Cost") {
       setSelectedMetric(showReconciled ? "Reconciled Cost" : "Actual Cost");
     }
   }, [showReconciled, selectedMetric]);
 
-  const metrics = useMemo(
+  const metrics = useMemo<MetricDefinition[]>(
     () => [
       {
         title: "Ballpark" as MetricTitle,
@@ -323,11 +380,15 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         chartValue: toNumber(budgetHeader?.headerBallPark),
         description: "Estimated total",
         field: null,
+        isSelectable: false,
+        onCardClick: openBallparkEditor,
+        ariaLabel: "Open estimate editor",
+        ariaHasPopup: "dialog",
         extra: (
           <button
             className={headerStyles.editButton}
-            onClick={() => setBallparkModalOpen(true)}
-            aria-label="Edit Ballpark"
+            onClick={openBallparkEditor}
+            aria-label="Edit estimate"
             type="button"
           >
             <FontAwesomeIcon icon={faPen} />
@@ -344,6 +405,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         description: "Planned expenses",
         field: "itemBudgetedCost",
         sticky: true,
+        onCardClick: activateBudgetedMetric,
+        ariaLabel: "View budgeted totals",
       },
       {
         title: (showReconciled ? "Reconciled Cost" : "Actual Cost") as MetricTitle,
@@ -359,11 +422,24 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         description: showReconciled ? "Reconciled spending" : "Recorded spending",
         field: showReconciled ? "itemReconciledCost" : "itemActualCost",
         sticky: true,
+        onCardClick: activateActualMetric,
+        ariaLabel: hasReconciled
+          ? "View actual totals or toggle reconciled totals"
+          : "View actual totals",
         extra: hasReconciled ? (
           <Switch
             size="small"
             checked={showReconciled}
-            onChange={(val) => setShowReconciled(val)}
+            onChange={(val) => {
+              setShowReconciled(val);
+              if (val) {
+                setSelectedMetric("Reconciled Cost");
+                setMarkupBasis("Reconciled");
+              } else {
+                setSelectedMetric("Actual Cost");
+                setMarkupBasis("Actual");
+              }
+            }}
             className={summaryStyles.toggleSwitch}
           />
         ) : null,
@@ -403,6 +479,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         description: "Markup amount",
         field: "markupAmount",
         isPercentage: true,
+        isSelectable: false,
+        ariaLabel: "Effective markup amount",
         extra: (
           <Segmented
             size="small"
@@ -427,6 +505,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         description: "All-in total",
         field: "itemFinalCost",
         sticky: true,
+        ariaLabel: "View final totals",
+        onCardClick: () => setSelectedMetric("Final Cost"),
         extra: (
           <div className={summaryStyles.invoicePreviewContainer}>
             <FontAwesomeIcon
@@ -471,13 +551,16 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       },
     ],
     [
+      activateActualMetric,
+      activateBudgetedMetric,
       budgetHeader,
-      showReconciled,
-      reconciledTotal,
-      hasReconciled,
       markupBasis,
-      openInvoicePreview,
       onOpenRevisionModal,
+      openBallparkEditor,
+      openInvoicePreview,
+      reconciledTotal,
+      showReconciled,
+      hasReconciled,
     ]
   );
 
@@ -741,41 +824,11 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     <div className={summaryStyles.container}>
       <div className={summaryStyles.cardsColumn}>
         <div className={summaryStyles.cardsRow}>
-          {metrics.slice(0, 3).map((m) => (
-            <SummaryCard
-              key={m.title}
-              icon={m.icon}
-              color={m.color}
-              title={m.title}
-              tag={m.tag}
-              value={m.value}
-              description={m.description}
-              className={m.sticky ? summaryStyles.stickyCard : ""}
-              onClick={m.field ? () => setSelectedMetric(m.title) : undefined}
-              active={selectedMetric === m.title}
-            >
-              {m.extra}
-            </SummaryCard>
-          ))}
+          {metrics.slice(0, 3).map((m) => renderSummaryCard(m))}
         </div>
 
         <div className={summaryStyles.cardsRow}>
-          {metrics.slice(3).map((m) => (
-            <SummaryCard
-              key={m.title}
-              icon={m.icon}
-              color={m.color}
-              title={m.title}
-              tag={m.tag}
-              value={m.value}
-              description={m.description}
-              className={m.sticky ? summaryStyles.stickyCard : ""}
-              onClick={m.field ? () => setSelectedMetric(m.title) : undefined}
-              active={selectedMetric === m.title}
-            >
-              {m.extra}
-            </SummaryCard>
-          ))}
+          {metrics.slice(3).map((m) => renderSummaryCard(m))}
         </div>
       </div>
 
@@ -832,28 +885,27 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     [accentAlpha, accentHex]
   );
 
-  const renderMetricChip = (metric: (typeof metrics)[number]) => {
-    const isReconciledToggleMetric =
-      hasReconciled &&
-      metric.field === (showReconciled ? "itemReconciledCost" : "itemActualCost");
-    const isBudgetedMetric = metric.title === "Budgeted Cost";
+  const renderMetricChip = (metric: MetricDefinition) => {
     const isBallparkMetric = metric.title === "Ballpark";
+    const isBudgetedMetric = metric.title === "Budgeted Cost";
+    const isActualMetric =
+      metric.title === "Actual Cost" || metric.title === "Reconciled Cost";
+    const isMarkupMetric = metric.title === "Effective Markup";
 
-    const activateBudgetedMetric = () => {
-      setMarkupBasis("Budgeted");
-      setSelectedMetric("Budgeted Cost");
-    };
-
-    const activateActualMetric = () => {
-      const nextTitle = (showReconciled ? "Reconciled Cost" : "Actual Cost") as MetricTitle;
-      const nextBasis = showReconciled ? "Reconciled" : "Actual";
-      setSelectedMetric(nextTitle);
-      setMarkupBasis(nextBasis);
-    };
+    const isActualSelected =
+      selectedMetric === "Actual Cost" || selectedMetric === "Reconciled Cost";
+    const isBudgetedSelected = selectedMetric === "Budgeted Cost";
+    const isMetricSelected = isBallparkMetric
+      ? false
+      : isBudgetedMetric
+      ? isBudgetedSelected
+      : isActualMetric
+      ? isActualSelected
+      : selectedMetric === metric.title;
 
     const chipClassName = [
       mobileStyles.metricChip,
-      selectedMetric === metric.title ? mobileStyles.metricChipActive : "",
+      isMetricSelected ? mobileStyles.metricChipActive : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -865,58 +917,63 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       .filter(Boolean)
       .join(" ");
 
+    let ariaLabel: string | undefined;
+    if (isBallparkMetric) {
+      ariaLabel = "Edit estimate";
+    } else if (isBudgetedMetric) {
+      ariaLabel = "View budgeted totals";
+    } else if (isActualMetric) {
+      ariaLabel = hasReconciled
+        ? `Toggle between actual and reconciled totals (currently ${
+            showReconciled ? "reconciled" : "actual"
+          })`
+        : "View actual totals";
+    } else if (isMarkupMetric) {
+      ariaLabel = "Effective markup amount";
+    } else if (metric.field) {
+      ariaLabel = `View ${metric.title}`;
+    }
+
+    const supportsToggle =
+      isBudgetedMetric || isActualMetric || (!!metric.field && metric.isSelectable !== false);
+
+    const handleClick = () => {
+      if (isBallparkMetric) {
+        openBallparkEditor();
+        return;
+      }
+
+      if (isBudgetedMetric) {
+        activateBudgetedMetric();
+        return;
+      }
+
+      if (isActualMetric) {
+        if (!isMetricSelected) {
+          activateActualMetric();
+          return;
+        }
+        toggleActualBasis();
+        return;
+      }
+
+      if (metric.field && metric.isSelectable !== false) {
+        setSelectedMetric(metric.title);
+      }
+    };
+
+    const isDisabled = !isBallparkMetric && metric.isSelectable === false;
+
     return (
       <div key={metric.title} className={mobileStyles.metricChipWrapper}>
         <button
           type="button"
           className={chipClassName}
-          onClick={() => {
-            if (isBallparkMetric) {
-              setBallparkModalOpen(true);
-              return;
-            }
-            if (isBudgetedMetric) {
-              activateBudgetedMetric();
-              return;
-            }
-            if (isReconciledToggleMetric) {
-              const isSelected =
-                selectedMetric === metric.title ||
-                selectedMetric === (showReconciled ? "Reconciled Cost" : "Actual Cost");
-
-              if (!isSelected) {
-                activateActualMetric();
-                return;
-              }
-
-              const nextShowReconciled = !showReconciled;
-              setShowReconciled(nextShowReconciled);
-              const nextTitle = nextShowReconciled
-                ? ("Reconciled Cost" as MetricTitle)
-                : ("Actual Cost" as MetricTitle);
-              const nextBasis = nextShowReconciled ? "Reconciled" : "Actual";
-              setSelectedMetric(nextTitle);
-              setMarkupBasis(nextBasis);
-              return;
-            }
-            if (metric.field) {
-              setSelectedMetric(metric.title);
-              if (
-                metric.title === "Actual Cost" ||
-                metric.title === "Reconciled Cost"
-              ) {
-                setMarkupBasis(metric.title === "Reconciled Cost" ? "Reconciled" : "Actual");
-              }
-            }
-          }}
-          disabled={!metric.field && !isBallparkMetric}
-          aria-label={
-            isBallparkMetric
-              ? "Edit estimate"
-              : metric.field
-              ? undefined
-              : metric.title
-          }
+          onClick={handleClick}
+          disabled={isDisabled}
+          aria-label={ariaLabel}
+          aria-haspopup={isBallparkMetric ? "dialog" : undefined}
+          aria-pressed={supportsToggle && !isBallparkMetric ? isMetricSelected : undefined}
         >
           <div className={mobileStyles.metricChipHeader}>
             <span className={tagClassName}>{metric.tag}</span>
@@ -925,6 +982,76 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
           <span className={mobileStyles.metricDescription}>{metric.description}</span>
         </button>
       </div>
+    );
+  };
+
+  const renderSummaryCard = (metric: MetricDefinition) => {
+    const isBallparkMetric = metric.title === "Ballpark";
+    const isBudgetedMetric = metric.title === "Budgeted Cost";
+    const isActualMetric =
+      metric.title === "Actual Cost" || metric.title === "Reconciled Cost";
+    const isMarkupMetric = metric.title === "Effective Markup";
+    const isSelectableCard = metric.isSelectable !== false && metric.field !== null;
+
+    const onClick = metric.onCardClick
+      ? metric.onCardClick
+      : isSelectableCard
+      ? () => setSelectedMetric(metric.title)
+      : undefined;
+
+    const isActualSelected =
+      selectedMetric === "Actual Cost" || selectedMetric === "Reconciled Cost";
+    const isBudgetedSelected = selectedMetric === "Budgeted Cost";
+
+    const active = metric.isSelectable === false && !isBudgetedMetric && !isActualMetric
+      ? false
+      : isBudgetedMetric
+      ? isBudgetedSelected
+      : isActualMetric
+      ? isActualSelected
+      : selectedMetric === metric.title;
+
+    let ariaLabel = metric.ariaLabel;
+    if (!ariaLabel) {
+      if (isBallparkMetric) {
+        ariaLabel = "Open estimate editor";
+      } else if (isBudgetedMetric) {
+        ariaLabel = "View budgeted totals";
+      } else if (isActualMetric) {
+        ariaLabel = hasReconciled
+          ? `Toggle between actual and reconciled totals (currently ${
+              showReconciled ? "reconciled" : "actual"
+            })`
+          : "View actual totals";
+      } else if (isMarkupMetric) {
+        ariaLabel = "Effective markup amount";
+      } else if (metric.field) {
+        ariaLabel = `View ${metric.title}`;
+      }
+    }
+
+    const isToggle =
+      !isBallparkMetric &&
+      (isBudgetedMetric || isActualMetric || (isSelectableCard && metric.isSelectable !== false));
+
+    return (
+      <SummaryCard
+        key={metric.title}
+        icon={metric.icon}
+        color={metric.color}
+        title={metric.title}
+        tag={metric.tag}
+        value={metric.value}
+        description={metric.description}
+        className={metric.sticky ? summaryStyles.stickyCard : ""}
+        onClick={onClick}
+        active={active}
+        ariaLabel={ariaLabel}
+        isToggle={isToggle}
+        ariaHasPopup={metric.ariaHasPopup}
+      >
+        {metric.extra}
+      </SummaryCard>
     );
   };
 

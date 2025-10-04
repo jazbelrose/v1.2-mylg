@@ -23,6 +23,10 @@ import DashboardNavPanel from "@/shared/ui/DashboardNavPanel";
 import ProjectsPanelDesktop from "@/dashboard/home/components/ProjectsPanelDesktop";
 import { getColor } from "@/shared/utils/colorUtils";
 import { useNavCollapsed } from "@/shared/hooks/useNavCollapsed";
+import SkeletonSwap from "@/shared/ui/SkeletonSwap";
+import WeekWidgetSkeleton from "@/dashboard/home/components/WeekWidget.skeleton";
+import ProjectsPanelSkeleton from "@/dashboard/home/components/ProjectsPanel.skeleton";
+import TasksRollupSkeleton from "@/dashboard/home/components/TasksRollup.skeleton";
 
 import "./dashboard-styles.css";
 
@@ -82,6 +86,7 @@ export const parseDashboardPath = (
 };
 
 const WelcomeScreen: React.FC = () => {
+  const data = useData() as ReturnType<typeof useData> & { isLoading: boolean };
   const {
     userData,
     userName,
@@ -90,12 +95,18 @@ const WelcomeScreen: React.FC = () => {
     allUsers,
     projects,
     fetchProjectDetails,
-  } = useData();
+    isLoading: projectsLoading,
+  } = data;
 
   const location = useLocation();
   const navigate = useNavigate();
 
   const [weekOf, setWeekOf] = useState<Date>(new Date());
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   // Map for consistent colors
   const colorMap = useMemo(() => {
@@ -301,6 +312,11 @@ const WelcomeScreen: React.FC = () => {
     }
   }, [activeView, dmUserSlug, inbox, userData, allUsers, navigate, isMobile]);
 
+  const isHydratingProjects = !hasMounted || projectsLoading;
+  const isWeekLoading = isHydratingProjects;
+  const isProjectsPanelLoading = isHydratingProjects;
+  const isTasksLoading = isHydratingProjects;
+
   if (loadingProfile) return <SpinnerScreen />;
   if (userData?.pending) return <PendingApprovalScreen />;
 
@@ -313,26 +329,38 @@ const WelcomeScreen: React.FC = () => {
             id="calendar"
             className="welcome-section-anchor welcome-desktop-header"
           >
-            <WeekWidgetDesktop
-              weekOf={weekOf}
-              tracks={tracks}
-              dots={dots}
-              onPrevWeek={(d) => setWeekOf(d)}
-              onNextWeek={(d) => setWeekOf(d)}
-              onSelectDate={(d) => setWeekOf(d)}
-              getTooltipItems={getTooltipItems}
-            />
+            <SkeletonSwap
+              ready={!isWeekLoading}
+              skeleton={<WeekWidgetSkeleton variant="desktop" className="h-full" />}
+              className="min-h-[220px]"
+            >
+              <WeekWidgetDesktop
+                weekOf={weekOf}
+                tracks={tracks}
+                dots={dots}
+                onPrevWeek={(d) => setWeekOf(d)}
+                onNextWeek={(d) => setWeekOf(d)}
+                onSelectDate={(d) => setWeekOf(d)}
+                getTooltipItems={getTooltipItems}
+              />
+            </SkeletonSwap>
           </section>
           <section
             id="projects"
             className="welcome-section-anchor welcome-desktop-projects"
           >
             <div className="welcome-desktop-projects-scroll">
-              <ProjectsPanelDesktop
-                onOpenProject={(projectId) =>
-                  handleNavigateToProject({ projectId })
-                }
-              />
+              <SkeletonSwap
+                ready={!isProjectsPanelLoading}
+                skeleton={<ProjectsPanelSkeleton variant="desktop" className="h-full" />}
+                className="min-h-[360px]"
+              >
+                <ProjectsPanelDesktop
+                  onOpenProject={(projectId) =>
+                    handleNavigateToProject({ projectId })
+                  }
+                />
+              </SkeletonSwap>
             </div>
           </section>
 
@@ -340,7 +368,13 @@ const WelcomeScreen: React.FC = () => {
             id="tasks"
             className="welcome-section-anchor welcome-desktop-footer"
           >
-            <TasksOverviewCard className="welcome-header-tasks-card" />
+            <SkeletonSwap
+              ready={!isTasksLoading}
+              skeleton={<TasksRollupSkeleton className="h-full" />}
+              className="min-h-[320px]"
+            >
+              <TasksOverviewCard className="welcome-header-tasks-card" />
+            </SkeletonSwap>
           </section>
         </div>
       );
@@ -349,20 +383,38 @@ const WelcomeScreen: React.FC = () => {
     return (
       <div className="mobile-welcome-layout">
         <div className="mobile-calendar-section">
-          <AllProjectsWeekWidget />
+          <SkeletonSwap
+            ready={!isWeekLoading}
+            skeleton={<WeekWidgetSkeleton variant="mobile" className="h-full" />}
+            className="min-h-[200px]"
+          >
+            <AllProjectsWeekWidget />
+          </SkeletonSwap>
         </div>
         <div className="mobile-projects-tasks">
           <div className="mobile-projects-section">
             <div className="mobile-projects-panel">
-              <ProjectsPanelMobile
-                onOpenProject={(projectId) =>
-                  handleNavigateToProject({ projectId })
-                }
-              />
+              <SkeletonSwap
+                ready={!isProjectsPanelLoading}
+                skeleton={<ProjectsPanelSkeleton variant="mobile" className="h-full" />}
+                className="min-h-[320px]"
+              >
+                <ProjectsPanelMobile
+                  onOpenProject={(projectId) =>
+                    handleNavigateToProject({ projectId })
+                  }
+                />
+              </SkeletonSwap>
             </div>
           </div>
           <div className="mobile-tasks-section dashboard-footer">
-            <MobileTasksOverviewCard />
+            <SkeletonSwap
+              ready={!isTasksLoading}
+              skeleton={<TasksRollupSkeleton variant="mobile" className="h-full" />}
+              className="min-h-[220px]"
+            >
+              <MobileTasksOverviewCard />
+            </SkeletonSwap>
           </div>
         </div>
       </div>

@@ -24,6 +24,8 @@ import { useProjectPalette } from "@/dashboard/project/hooks/useProjectPalette";
 import { resolveProjectCoverUrl } from "@/dashboard/project/utils/theme";
 import { getProjectDashboardPath } from "@/shared/utils/projectUrl";
 import Spinner from "@/shared/ui/Spinner";
+import SkeletonSwap from "@/shared/ui/SkeletonSwap";
+import WeekWidgetSkeleton from "@/dashboard/home/components/WeekWidget.skeleton";
 
 const MOBILE_LAYOUT_WIDTH = 640;
 const TASKS_MOBILE_WIDTH = 768;
@@ -310,15 +312,28 @@ const SingleProject: React.FC = () => {
     />
   ) : null;
 
-  const calendarWeekWidget = calendarProject ? (
-    <ProjectWeekWidget
-      project={calendarProject}
-      initialFlashDate={flashDate}
-      showEventList={false}
-      onWrapperClick={openCalendarPage}
-      onDateSelect={noop}
-    />
-  ) : null;
+  const calendarWeekWidget = (
+    <SkeletonSwap
+      ready={Boolean(calendarProject) && !isProjectLoading}
+      skeleton={
+        <WeekWidgetSkeleton
+          variant={isMobileBudgetLayout ? "mobile" : "desktop"}
+          className="h-full"
+        />
+      }
+      className="min-h-[200px]"
+    >
+      {calendarProject ? (
+        <ProjectWeekWidget
+          project={calendarProject}
+          initialFlashDate={flashDate}
+          showEventList={false}
+          onWrapperClick={openCalendarPage}
+          onDateSelect={noop}
+        />
+      ) : null}
+    </SkeletonSwap>
+  );
 
   const shouldShowLoader = Boolean(
     projectId &&

@@ -29,6 +29,7 @@
 @import './components/grid-layouts.css';
 @import './components/work-layouts.css';
 @import '../ui/squircle/squircle.css';
+@import '../styles/skeleton.css';
 
 @import './components/blog-row-layouts.css';
 

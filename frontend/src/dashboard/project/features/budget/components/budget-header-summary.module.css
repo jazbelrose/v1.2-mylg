@@ -32,6 +32,13 @@
 .card:hover {
   transform: translateY(-4px);
 }
+.noHover:hover {
+  transform: none;
+}
+.noPointer,
+.noPointer:hover {
+  cursor: default;
+}
 .active {
   box-shadow: 0 0 0 2px #fff inset;
 }

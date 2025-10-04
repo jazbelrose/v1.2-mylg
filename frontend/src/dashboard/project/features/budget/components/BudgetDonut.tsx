@@ -354,6 +354,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     const baseLeft = rect.left + rect.width / 2;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
+    const isMobileViewport = viewportWidth <= 768;
     const margin = 16;
 
     const clampPosition = () => {
@@ -365,12 +366,20 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         const halfWidth = popover.offsetWidth / 2;
         const halfHeight = popover.offsetHeight / 2;
 
-        const minLeft = margin + halfWidth;
-        const maxLeft = viewportWidth - margin - halfWidth;
+        const leftMargin = margin;
+        const rightMargin = isMobileViewport ? 0 : margin;
+        const minLeft = leftMargin + halfWidth;
+        const maxLeft = viewportWidth - rightMargin - halfWidth;
         const minTop = margin + halfHeight;
         const maxTop = viewportHeight - margin - halfHeight;
 
-        left = Math.min(Math.max(left, minLeft), maxLeft);
+        if (isMobileViewport) {
+          const desiredLeft = viewportWidth - rightMargin - halfWidth;
+          left = Math.min(Math.max(desiredLeft, minLeft), maxLeft);
+        } else {
+          left = Math.min(Math.max(left, minLeft), maxLeft);
+        }
+
         top = Math.min(Math.max(top, minTop), maxTop);
       } else {
         left = Math.min(Math.max(left, margin), viewportWidth - margin);

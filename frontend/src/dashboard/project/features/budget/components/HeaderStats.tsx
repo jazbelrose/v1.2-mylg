@@ -429,12 +429,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     const modeLabel =
       resolvedMode === "Reconciled" && !hasReconciled ? "Actual" : resolvedMode;
 
-    const finalDescription =
-      resolvedMode === "Budgeted"
-        ? "All-in total vs budgeted"
-        : resolvedMode === "Reconciled"
-        ? "All-in total vs reconciled"
-        : "All-in total vs actual";
+    const finalDescription = `All-in ${modeLabel.toLowerCase()} cost`;
 
     return [
       {

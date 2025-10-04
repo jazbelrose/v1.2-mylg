@@ -90,6 +90,8 @@ interface SummaryCardProps {
   children?: React.ReactNode;
   ariaLabel?: string;
   ariaPressed?: boolean;
+  disableHover?: boolean;
+  disablePointer?: boolean;
 }
 
 type MetricField = keyof BudgetItem | "markupAmount" | null;
@@ -109,6 +111,8 @@ interface MetricConfig {
   onSelect?: () => void;
   ariaLabel?: string;
   isSelectable?: boolean;
+  disableHover?: boolean;
+  disablePointer?: boolean;
 }
 
 interface BudgetHeaderProps {
@@ -201,9 +205,15 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   children,
   ariaLabel,
   ariaPressed,
+  disableHover,
+  disablePointer,
 }) => (
   <div
-    className={`${summaryStyles.card} ${active ? summaryStyles.active : ""} ${className}`}
+    className={`${summaryStyles.card} ${
+      active ? summaryStyles.active : ""
+    } ${disableHover ? summaryStyles.noHover : ""} ${
+      disablePointer ? summaryStyles.noPointer : ""
+    } ${className}`}
     onClick={onClick}
     role={onClick ? "button" : undefined}
     tabIndex={onClick ? 0 : undefined}
@@ -429,7 +439,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     const modeLabel =
       resolvedMode === "Reconciled" && !hasReconciled ? "Actual" : resolvedMode;
 
-    const finalDescription = `All-in ${modeLabel.toLowerCase()} cost`;
+    const finalDescription = "All-in cost";
 
     return [
       {
@@ -492,7 +502,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       },
       {
         title: "Final Cost" as MetricTitle,
-        tag: modeLabel,
+        tag: "Final",
         icon: faFileInvoiceDollar,
         color: CHART_COLORS[3],
         value: formatUSD(finalTotal),
@@ -503,6 +513,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         onSelect: handleSelectFinal,
         ariaLabel: "View final totals",
         isSelectable: true,
+        disableHover: true,
+        disablePointer: true,
         extra: (
           <div className={summaryStyles.invoicePreviewContainer}>
             <FontAwesomeIcon
@@ -840,6 +852,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
               active={Boolean(m.isSelectable && selectedMetric === m.title)}
               ariaLabel={m.ariaLabel}
               ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
+              disableHover={m.disableHover}
+              disablePointer={m.disablePointer}
             >
               {m.extra}
             </SummaryCard>
@@ -861,6 +875,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
               active={Boolean(m.isSelectable && selectedMetric === m.title)}
               ariaLabel={m.ariaLabel}
               ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
+              disableHover={m.disableHover}
+              disablePointer={m.disablePointer}
             >
               {m.extra}
             </SummaryCard>

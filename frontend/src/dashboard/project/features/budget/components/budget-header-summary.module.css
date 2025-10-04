@@ -48,13 +48,20 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: var(--tag-bg, rgba(255,255,255,0.2));
-  font-size: 0.6rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: var(--tag-color, inherit);
-  border: 1px solid var(--tag-border, transparent);
-  box-shadow: var(--tag-shadow, none);
+  display: inline-flex;
+  align-items: center;
+  background: var(--tag-bg, rgba(148, 163, 184, 0.22));
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  color: var(--tag-color, rgba(248, 250, 252, 0.9));
+  border: 1px solid var(--tag-border, rgba(255, 255, 255, 0.15));
+  box-shadow: var(--tag-shadow, 0 4px 10px rgba(15, 23, 42, 0.25));
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  backdrop-filter: blur(6px);
 }
 .cardTitle {
   font-size: 0.8rem;

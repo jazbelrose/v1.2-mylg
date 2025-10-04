@@ -18,6 +18,9 @@ import SpinnerScreen from "@/shared/ui/SpinnerScreen";
 import PendingApprovalScreen from "@/shared/ui/PendingApprovalScreen";
 import AllProjectsCalendar from "@/features/dashboard/components/AllProjectsCalendar";
 import AllProjectsWeekWidget from "@/features/dashboard/components/AllProjectsWeekWidget";
+import SkeletonSwap from "@/shared/ui/SkeletonSwap";
+import ProjectsPanelSkeleton from "@/features/dashboard/components/ProjectsPanel.skeleton";
+import WeekWidgetSkeleton from "@/features/dashboard/components/WeekWidget.skeleton";
 
 import "./dashboard-styles.css";
 
@@ -39,6 +42,7 @@ const WelcomeScreen: React.FC = () => {
     allUsers,
     projects,
     fetchProjectDetails,
+    isLoading,
   } = useData();
 
   const location = useLocation();
@@ -61,6 +65,8 @@ const WelcomeScreen: React.FC = () => {
   const [activeView, setActiveView] = useState<string>(initialView);
   const [dmUserSlug, setDmUserSlug] = useState<string | null>(initialDMUserSlug);
   const [isMobile, setIsMobile] = useState(false);
+  const isProjectsLoading = Boolean(isLoading);
+  const isWeekLoading = Boolean(isLoading);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -170,10 +176,26 @@ const WelcomeScreen: React.FC = () => {
                     {/* DashboardHome.tsx (mobile welcome layout) */}
                     <div className="mobile-welcome-layout">
                       <div className="mobile-projects-section">
-                        <ProjectsPanel onOpenProject={(projectId) => handleNavigateToProject({ projectId })} />
+                        <SkeletonSwap
+                          ready={!isProjectsLoading}
+                          skeleton={<ProjectsPanelSkeleton />}
+                          className="projects-panel-shell"
+                        >
+                          <ProjectsPanel
+                            onOpenProject={(projectId) =>
+                              handleNavigateToProject({ projectId })
+                            }
+                          />
+                        </SkeletonSwap>
                       </div>
                       <div className="mobile-calendar-section">
-                        <AllProjectsWeekWidget />
+                        <SkeletonSwap
+                          ready={!isWeekLoading}
+                          skeleton={<WeekWidgetSkeleton />}
+                          className="week-widget-shell"
+                        >
+                          <AllProjectsWeekWidget />
+                        </SkeletonSwap>
                       </div>
                     </div>
                   </>

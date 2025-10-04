@@ -1,4 +1,5 @@
 import './shared/styles/index.css';
+import './styles/skeleton.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Amplify } from 'aws-amplify';

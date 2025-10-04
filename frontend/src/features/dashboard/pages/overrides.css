@@ -20,3 +20,22 @@
 
 /* Leave empty unless temporarily staging a small set of page-specific rules. */
 
+.projects-panel-shell,
+.week-widget-shell,
+.tasks-rollup-shell {
+  position: relative;
+  width: 100%;
+}
+
+.projects-panel-shell {
+  min-height: 275px;
+}
+
+.week-widget-shell {
+  min-height: 180px;
+}
+
+.tasks-rollup-shell {
+  min-height: 140px;
+}
+

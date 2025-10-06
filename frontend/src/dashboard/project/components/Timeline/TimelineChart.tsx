@@ -443,26 +443,6 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                           )}
                         </Group>
                       </svg>
-
-                      <div
-                        className="zoom-controls"
-                        style={{ position: "absolute", right: 10, top: 10 }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => zoom.scale({ scaleX: 1.2, scaleY: 1 })}
-                          aria-label="Zoom in"
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => zoom.scale({ scaleX: 0.8, scaleY: 1 })}
-                          aria-label="Zoom out"
-                        >
-                          –
-                        </button>
-                      </div>
                     </>
                   );
                 }}

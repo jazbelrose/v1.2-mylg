@@ -57,20 +57,69 @@
   overflow-y: auto;
 }
 
-.chart-mode-toggle {
+.timeline-chart__header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  justify-content: flex-end;
+  padding: 4px 4px 8px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.agenda-date-row {
-  margin-top: 10px;
+.timeline-chart .chart-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.timeline-chart .chart-mode-toggle__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.timeline-chart .chart-mode-toggle__btn:hover,
+.timeline-chart .chart-mode-toggle__btn:focus-visible {
+  background: rgba(250, 51, 86, 0.2);
+  color: #fff;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(250, 51, 86, 0.35);
+}
+
+.timeline-chart .chart-mode-toggle__btn.is-active {
+  background: var(--accent-strong, #FA3356);
+  color: #0c0c0c;
+}
+
+.timeline-chart .chart-mode-toggle__btn.is-active svg {
+  color: inherit;
+}
+
+.timeline-chart .chart-mode-toggle__btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.timeline-chart .agenda-date-row {
+  margin-top: 0;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  padding: 0 4px 8px;
 }
 
-.chart-mode-toggle .agenda-date-picker {
+.timeline-chart .agenda-date-row .agenda-date-picker {
   border-radius: 8px;
   border: 1px solid var(--text-color-3);
   background-color: var(--primary-color);
@@ -79,11 +128,11 @@
   font-family: "Helvetica Neue", "Helvetica Display", sans-serif;
 }
 
-.chart-mode-toggle .agenda-date-picker::-webkit-calendar-picker-indicator {
+.timeline-chart .agenda-date-row .agenda-date-picker::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
 
-.chart-mode-toggle .agenda-date-picker:focus {
+.timeline-chart .agenda-date-row .agenda-date-picker:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--text-color-3);
 }

@@ -369,17 +369,24 @@
 }
 
 .metricTag {
-  font-size: 0.65rem;
-  color: rgba(249, 250, 251, 0.65);
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.22);
+  color: rgba(248, 250, 252, 0.92);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(8, 13, 32, 0.35);
 }
 
 .metricTagBallpark {
   color: var(--budget-accent-text);
-  text-transform: none;
-  letter-spacing: 0.02em;
-  font-weight: 600;
+  background: rgba(56, 189, 248, 0.32);
+  letter-spacing: 0.08em;
 }
 
 .metricValue {

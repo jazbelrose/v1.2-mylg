@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Plus, MoreHorizontal } from "lucide-react";
 
@@ -17,6 +17,48 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
   const location = useLocation();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<QuickCreateTaskModalTask | null>(null);
+  const [isShortViewport, setIsShortViewport] = useState(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return false;
+    }
+
+    return window.matchMedia("(max-height: 900px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(max-height: 900px)");
+    const updateMatch = () => setIsShortViewport(mediaQuery.matches);
+    const handleChange = (event: MediaQueryListEvent) => setIsShortViewport(event.matches);
+
+    updateMatch();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+
+    if (typeof mediaQuery.addListener === "function") {
+      mediaQuery.addListener(handleChange);
+      return () => mediaQuery.removeListener(handleChange);
+    }
+
+    return undefined;
+  }, []);
+
+  const compactTasks = useMemo(
+    () =>
+      groups.flatMap((group) =>
+        group.items.map((item) => ({
+          ...item,
+          dayLabel: group.dayLabel,
+        })),
+      ),
+    [groups],
+  );
 
   const openCreateModal = useCallback(() => {
     setTaskToEdit(null);
@@ -116,37 +158,62 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
         {error ? (
           <div className={styles.empty}>We couldn’t load tasks right now. Please try again later.</div>
         ) : groups.length ? (
-          <div className={styles.groups}>
-            {groups.map((group) => (
-              <div key={group.id} className={styles.group}>
-                <div className={styles.groupLabel}>{group.dayLabel}</div>
-                <div className={styles.chips}>
-                  {group.items.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`${styles.chip} ${styles.chipButton}`}
-                      onClick={() => handleChipSelect(item.id)}
-                    >
-                      <span
-                        className={styles.chipDot}
-                        style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
-                        aria-hidden="true"
-                      />
-                      <span className={styles.chipTitle}>{item.title}</span>
-                      {(item.time || item.project) && (
-                        <span className={styles.chipMeta}>
-                          {item.time}
-                          {item.time && item.project ? " · " : ""}
-                          {item.project}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+          isShortViewport ? (
+            <div className={styles.compactList}>
+              {compactTasks.map((item) => {
+                const metaParts = [item.time, item.project, item.dayLabel].filter(Boolean);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`${styles.chip} ${styles.chipButton} ${styles.compactChip}`}
+                    onClick={() => handleChipSelect(item.id)}
+                  >
+                    <span
+                      className={styles.chipDot}
+                      style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
+                      aria-hidden="true"
+                    />
+                    <span className={styles.chipTitle}>{item.title}</span>
+                    {metaParts.length > 0 && (
+                      <span className={styles.chipMeta}>{metaParts.join(" · ")}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.groups}>
+              {groups.map((group) => (
+                <div key={group.id} className={styles.group}>
+                  <div className={styles.groupLabel}>{group.dayLabel}</div>
+                  <div className={styles.chips}>
+                    {group.items.map((item) => {
+                      const metaParts = [item.time, item.project].filter(Boolean);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={`${styles.chip} ${styles.chipButton}`}
+                          onClick={() => handleChipSelect(item.id)}
+                        >
+                          <span
+                            className={styles.chipDot}
+                            style={{ backgroundColor: item.color || "var(--brand, #fa3356)" }}
+                            aria-hidden="true"
+                          />
+                          <span className={styles.chipTitle}>{item.title}</span>
+                          {metaParts.length > 0 && (
+                            <span className={styles.chipMeta}>{metaParts.join(" · ")}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         ) : (
           <div className={styles.empty}>
             {loading ? "Loading tasks…" : "No open tasks are due this week. You’re all caught up!"}

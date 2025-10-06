@@ -256,6 +256,79 @@
 
 
 
+@media (max-height: 900px) {
+  .card {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .actions {
+    align-self: flex-end;
+  }
+
+  .statGrid {
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .stat {
+    padding: 10px 12px;
+    min-height: 66px;
+  }
+
+  .empty {
+    padding: 12px 0 4px;
+  }
+}
+
+@media (max-height: 900px) and (min-width: 641px) {
+  .groups {
+    flex-direction: column;
+    gap: 10px;
+    overflow: visible;
+    margin: 0;
+    padding-inline: 0;
+    scroll-snap-type: none;
+  }
+
+  .group {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 auto;
+  }
+
+  .groupLabel {
+    flex: 0 0 auto;
+    min-width: 84px;
+  }
+
+  .chips {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+
+  .chips::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .chip {
+    flex-shrink: 0;
+    gap: 8px;
+    padding: 7px 12px;
+  }
+}
+
 
 
 

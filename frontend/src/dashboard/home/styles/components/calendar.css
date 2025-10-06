@@ -2,12 +2,13 @@
   flex-direction: column;
   gap: 16px;
   align-items: stretch;
+  min-height: 0;
 }
 
 .calendar-layout .project-calendar-wrapper {
-  max-height: none;
-  flex: 1 1 0;
-  min-height: 750px;
+  flex: 3 1 0;
+  min-height: clamp(280px, 50vh, 680px);
+  max-height: min(62vh, 740px);
   overflow-y: auto;
 }
 
@@ -22,9 +23,9 @@
 
 .calendar-layout .timeline-chart {
   flex: 2 1 0;
-  min-height: 450px;
+  min-height: clamp(200px, 34vh, 420px);
   height: auto;
-  max-height: none;
+  max-height: min(42vh, 500px);
 }
 
 /* Budget + Calendar two-column layout */
@@ -111,6 +112,12 @@
 @media (max-width: 1024px) {
   .budget-calendar-layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calendar-layout .project-calendar-wrapper,
+  .calendar-layout .timeline-chart {
+    max-height: none;
+    min-height: 0;
   }
 }
 
@@ -316,10 +323,4 @@
   color: grey !important;
   font-size: 0.6em !important;
 }
-
-
-
-
-
-
 

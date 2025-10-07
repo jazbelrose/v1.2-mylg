@@ -35,7 +35,7 @@ type TimelineChartProps = {
 const PX_PER_HOUR = 24; // ← fix: non-zero so bars are visible
 const LABEL_MIN_WIDTH = 80;
 const LABEL_MAX_WIDTH = 180;
-const DEFAULT_LABEL_WIDTH = 140;
+const DEFAULT_LABEL_WIDTH = 120;
 const LABEL_RESIZER_WIDTH = 8;
 
 // Level of Detail thresholds by zoom

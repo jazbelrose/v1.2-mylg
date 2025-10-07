@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { parseDashboardPath } from "../../dashboard/home/pages/DashboardHome";
+import {
+  PROJECTS_OVERVIEW_VIEW,
+  parseDashboardPath,
+} from "../../dashboard/home/pages/DashboardHome";
 
 describe("parseDashboardPath", () => {
-  it("returns the welcome view by default", () => {
+  it("returns the projects overview view by default", () => {
     expect(parseDashboardPath("/dashboard")).toEqual({
-      view: "welcome",
+      view: PROJECTS_OVERVIEW_VIEW,
       userSlug: null,
     });
   });
@@ -35,7 +38,7 @@ describe("parseDashboardPath", () => {
 
   it("tolerates missing dashboard segment", () => {
     expect(parseDashboardPath("/other/path")).toEqual({
-      view: "welcome",
+      view: PROJECTS_OVERVIEW_VIEW,
       userSlug: null,
     });
   });

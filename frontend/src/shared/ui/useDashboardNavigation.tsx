@@ -15,7 +15,11 @@ import Cookies from "js-cookie";
 import { useAuth } from "@/app/contexts/useAuth";
 import { useData } from "@/app/contexts/useData";
 import { useNotifications } from "@/app/contexts/useNotifications";
-import { parseDashboardPath } from "@/dashboard/home/pages/DashboardHome";
+import {
+  PROJECTS_LIST_VIEW,
+  PROJECTS_OVERVIEW_VIEW,
+  parseDashboardPath,
+} from "@/dashboard/home/pages/DashboardHome";
 
 export type DashboardNavItem = {
   key: string;
@@ -67,7 +71,19 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     (view: string) => {
       setActiveView(view);
       const base = "/dashboard";
-      const path = view === "welcome" ? base : `${base}/${view}`;
+      let path: string;
+      switch (view) {
+        case PROJECTS_OVERVIEW_VIEW:
+        case "welcome":
+          path = base;
+          break;
+        case PROJECTS_LIST_VIEW:
+        case "projects":
+          path = `${base}/projects`;
+          break;
+        default:
+          path = `${base}/${view}`;
+      }
       navigate(path);
       close();
     },
@@ -118,9 +134,13 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         key: "home",
         icon: <Folder size={24} color="white" />,
         label: "Projects",
-        onClick: () => handleNavigation("welcome"),
+        onClick: () => handleNavigation(PROJECTS_OVERVIEW_VIEW),
         isActive:
-          (isDashboardPath && (!activeDashboardView || activeDashboardView === "welcome")) ||
+          (isDashboardPath &&
+            (!activeDashboardView ||
+              activeDashboardView === PROJECTS_OVERVIEW_VIEW ||
+              activeDashboardView === PROJECTS_LIST_VIEW ||
+              activeDashboardView === "projects")) ||
           location.pathname === "/dashboard",
       },
       {

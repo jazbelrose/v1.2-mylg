@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, Suspense } from "react";
-import { Routes, Route, Navigate, useLocation, Location } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, Location, useParams } from "react-router-dom";
 import Login from "../dashboard/features/auth/Login/Login";
 import Register from "../dashboard/features/auth/Register/Register";
 import EmailVerification from "@/dashboard/features/auth/email-verification/EmailVerification";
@@ -116,6 +116,15 @@ const LegacyDashboardProjectsRedirect: React.FC<{ to: string }> = ({ to }) => {
   return <Navigate to={`${to}${location.search}${location.hash}`} replace />;
 };
 
+const LegacyDashboardMessagesRedirect: React.FC = () => {
+  const location = useLocation();
+  const { userSlug } = useParams<{ userSlug?: string }>();
+  const basePath = "/dashboard/projects/messages";
+  const target = userSlug ? `${basePath}/${userSlug}` : basePath;
+
+  return <Navigate to={`${target}${location.search}${location.hash}`} replace />;
+};
+
 const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
   return (
     <AnimatePresence mode="wait">
@@ -187,6 +196,27 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
         <Route
           path="/dashboard/tasks"
           element={<LegacyDashboardProjectsRedirect to="/dashboard/projects/tasks" />}
+        />
+        <Route
+          path="/dashboard/notifications"
+          element={
+            <LegacyDashboardProjectsRedirect to="/dashboard/projects/notifications" />
+          }
+        />
+        <Route
+          path="/dashboard/messages"
+          element={<LegacyDashboardProjectsRedirect to="/dashboard/projects/messages" />}
+        />
+        <Route path="/dashboard/messages/:userSlug" element={<LegacyDashboardMessagesRedirect />} />
+        <Route
+          path="/dashboard/collaborators"
+          element={
+            <LegacyDashboardProjectsRedirect to="/dashboard/projects/collaborators" />
+          }
+        />
+        <Route
+          path="/dashboard/settings"
+          element={<LegacyDashboardProjectsRedirect to="/dashboard/projects/settings" />}
         />
         <Route
           path="/dashboard/new"

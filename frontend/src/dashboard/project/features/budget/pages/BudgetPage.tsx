@@ -635,8 +635,6 @@ const BudgetPageContent = () => {
                                   }}
                                 >
                                   <BudgetToolbar
-                                    groupBy={stateManager.groupBy}
-                                    onGroupChange={(val) => stateManager.setGroupBy(val as string)}
                                     selectedRowKeys={stateManager.selectedRowKeys}
                                     handleDuplicateSelected={eventHandlers.handleDuplicateSelected}
                                     openDeleteModal={eventHandlers.openDeleteModal}
@@ -644,7 +642,7 @@ const BudgetPageContent = () => {
                                     filterQuery={stateManager.filterQuery as string}
                                     onFilterQueryChange={stateManager.setFilterQuery as (query: string) => void}
                                     sortField={stateManager.sortField as string | null}
-                                    sortOrder={stateManager.sortOrder as string | null}
+                                    sortOrder={stateManager.sortOrder as "ascend" | "descend" | null}
                                     onSortChange={(field, order) => {
                                       stateManager.setSortField(field);
                                       stateManager.setSortOrder(order);

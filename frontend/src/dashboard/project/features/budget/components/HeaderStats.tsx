@@ -962,6 +962,36 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Group controls for desktop */}
+      <div className={summaryStyles.groupControls}>
+        <span id="budget-desktop-group-label" className={summaryStyles.srOnly}>
+          Group budget items
+        </span>
+        <div
+          className={summaryStyles.groupTabs}
+          role="group"
+          aria-labelledby="budget-desktop-group-label"
+        >
+          {groupOptions.map((option) => {
+            const isActive = option.value === groupBy;
+            const className = isActive
+              ? `${summaryStyles.groupTabButton} ${summaryStyles.activeGroupTab}`
+              : summaryStyles.groupTabButton;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={isActive}
+                className={className}
+                onClick={() => setGroupBy(option.value)}
+              >
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 

@@ -8,8 +8,6 @@ import styles from "./BudgetToolbar.module.css";
 type SortOrder = "ascend" | "descend" | null;
 
 interface BudgetToolbarProps {
-  groupBy: string;
-  onGroupChange: (val: string) => void;
   selectedRowKeys: string[];
   handleDuplicateSelected: () => void;
   openDeleteModal: (ids: string[]) => void;
@@ -21,16 +19,7 @@ interface BudgetToolbarProps {
   onSortChange: (field: string | null, order: SortOrder) => void;
 }
 
-const GROUP_BY_OPTIONS = [
-  { label: "None", value: "none" },
-  { label: "Area Group", value: "areaGroup" },
-  { label: "Invoice Group", value: "invoiceGroup" },
-  { label: "Category", value: "category" },
-];
-
 const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
-  groupBy,
-  onGroupChange,
   selectedRowKeys,
   handleDuplicateSelected,
   openDeleteModal,
@@ -42,25 +31,6 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   onSortChange,
 }) => (
   <div className={styles.toolbar}>
-    <div className={styles.groupTabs} role="group" aria-label="Group budget items">
-      {GROUP_BY_OPTIONS.map((option) => {
-        const isActive = option.value === groupBy;
-        const className = isActive
-          ? `${styles.tabButton} ${styles.activeTab}`
-          : styles.tabButton;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={isActive}
-            className={className}
-            onClick={() => onGroupChange(option.value)}
-          >
-            <span>{option.label}</span>
-          </button>
-        );
-      })}
-    </div>
     <div className={styles.actions}>
       <div className={styles.mobileRight}>
         <div className={styles.mobileFilterWrap}>

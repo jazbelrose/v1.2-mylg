@@ -1,20 +1,54 @@
 .panel {
+  position: relative;
   width: 100%;
   box-sizing: border-box;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #101010;
-  color: rgba(255, 255, 255, 0.94);
-  padding: 24px;
+  border-radius: 28px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 22px 48px rgba(0, 0, 0, 0.35);
+  gap: 20px;
+  color: rgba(255, 255, 255, 0.94);
+  background:
+    radial-gradient(
+      130% 120% at 100% 0%,
+      color-mix(in srgb, var(--brand, #fa3356) 14%, transparent) 0%,
+      transparent 70%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 75%),
+    var(--bg2, #111213);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 28px 48px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(18px);
+  isolation: isolate;
+  overflow: hidden;
   flex: 1 1 auto;
   min-height: 0;
 }
 
+.panel::before,
+.panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+.panel::before {
+  background: radial-gradient(120% 100% at 0% 0%, rgba(98, 207, 255, 0.2), transparent 68%);
+  mix-blend-mode: screen;
+}
+
+.panel::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 25%);
+  mix-blend-mode: screen;
+}
+
 .inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -56,90 +90,177 @@
 
 .statsRow {
   display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .statChip {
+  --accent-rgb: 120, 190, 255;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-tint: transparent;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --chip-linear: linear-gradient(135deg, rgba(30, 40, 54, 0.34), rgba(16, 22, 30, 0.18));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(var(--accent-rgb), 0.18), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(var(--accent-rgb), 0.12), transparent 50%);
   position: relative;
   overflow: hidden;
-  border-radius: 20px;
-  background: #111111;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 1rem;
+  border-radius: 22px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  padding: 20px;
+  min-height: 108px;
+  display: flex;
+  align-items: center;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  outline: 1px solid rgba(255, 255, 255, 0.06);
+  outline-offset: -1px;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    backdrop-filter 180ms ease;
 }
 
-.statChip::before {
+.statChip::before,
+.statChip::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.9;
 }
 
-.statToneOk::before {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0));
+.statChip::before {
+  background:
+    var(--glass-tint),
+    var(--chip-radial-b),
+    var(--chip-radial-a),
+    var(--chip-linear);
 }
 
-.statToneWarn::before {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.18), rgba(244, 63, 94, 0));
+.statChip::after {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 22%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
 }
 
-.statToneSoon::before {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(251, 191, 36, 0));
+.statChip:hover,
+.statChip:focus-visible,
+.statChip:focus-within {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 0 0 6px rgba(var(--accent-rgb), 0.12),
+    0 16px 40px rgba(0, 0, 0, 0.48);
+}
+
+.statChip:active {
+  transform: scale(0.995);
+  backdrop-filter: blur(13px);
+}
+
+.statToneOk {
+  --accent-rgb: 28, 213, 172;
+  --chip-linear: linear-gradient(135deg, rgba(26, 62, 52, 0.35), rgba(25, 81, 67, 0.2));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(28, 213, 172, 0.18), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(123, 255, 220, 0.12), transparent 50%);
+}
+
+.statToneWarn {
+  --accent-rgb: 250, 51, 86;
+  --chip-linear: linear-gradient(135deg, rgba(80, 23, 30, 0.38), rgba(60, 16, 22, 0.24));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(250, 51, 86, 0.2), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(255, 140, 160, 0.12), transparent 50%);
+}
+
+.statToneSoon {
+  --accent-rgb: 255, 186, 64;
+  --chip-linear: linear-gradient(135deg, rgba(85, 58, 18, 0.36), rgba(72, 45, 10, 0.22));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(255, 186, 64, 0.2), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(255, 226, 170, 0.12), transparent 50%);
 }
 
 .statChipContent {
   position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  width: 100%;
 }
 
 .statIcon {
   display: grid;
   place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.35);
+  width: 3rem;
+  height: 3rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0)),
+    rgba(6, 10, 14, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .statCopy {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.3rem;
 }
 
 .statLabel {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.68);
 }
 
 .statValue {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 600;
   line-height: 1.1;
+  color: #f4f7f9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .notice {
-  background: #151515;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  padding: 1rem 1.25rem;
-  font-size: 0.9rem;
+  position: relative;
+  z-index: 1;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    rgba(12, 16, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  padding: 1.1rem 1.35rem;
+  font-size: 0.95rem;
   line-height: 1.5;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 12px 28px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(14px);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.notice::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 100% 0%, rgba(255, 255, 255, 0.18), transparent 65%);
+  opacity: 0.7;
+  mix-blend-mode: screen;
 }
 
 .noticeStrong {
   font-weight: 600;
+  color: #f8fafc;
 }
 
 .noticeSubtle {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .listSection {
@@ -174,49 +295,81 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.9rem;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
 }
 
 .taskItem {
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.35);
-  transition: border-color 0.2s ease;
+  position: relative;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(150deg, rgba(10, 14, 18, 0.65), rgba(5, 8, 12, 0.45));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 34px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+  overflow: hidden;
+}
+
+.taskItem::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(130% 90% at 100% 0%, rgba(255, 255, 255, 0.12), transparent 70%);
+  opacity: 0.7;
+  mix-blend-mode: screen;
 }
 
 .taskItem:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 40px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
 }
 
 .taskItemActive {
   border-color: rgba(250, 51, 86, 0.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(250, 51, 86, 0.35),
+    0 20px 44px rgba(250, 51, 86, 0.25),
+    0 12px 30px rgba(0, 0, 0, 0.5);
 }
 
 .taskContent {
-  padding: 1rem 1.25rem;
+  position: relative;
+  z-index: 1;
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.9rem;
 }
 
 .taskMain {
   background: transparent;
   border: none;
   padding: 0;
+  margin: 0;
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
   color: inherit;
   cursor: pointer;
+  border-radius: 18px;
 }
 
-.taskMain:focus {
+.taskMain:focus-visible {
   outline: 2px solid rgba(250, 51, 86, 0.6);
-  outline-offset: 2px;
+  outline-offset: 4px;
 }
 
 .taskTitleRow {
@@ -227,48 +380,55 @@
 }
 
 .taskTitle {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.32;
 }
 
 .statusBadge {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.08em;
+  padding: 0.28rem 0.7rem;
   border-radius: 999px;
-  padding: 0.25rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
   white-space: nowrap;
 }
 
 .statusBadgeDanger {
   background: rgba(250, 51, 86, 0.2);
-  color: #ffb3c1;
+  border-color: rgba(250, 51, 86, 0.4);
+  color: #ffd5dd;
 }
 
 .taskMeta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.875rem;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.88rem;
 }
 
 .metaEntry {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .taskActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .mapButton {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .accentButton {
@@ -276,6 +436,11 @@
   border-color: transparent;
   color: #0c0c0c;
   font-weight: 600;
+  box-shadow: 0 18px 32px rgba(250, 51, 86, 0.35);
+}
+
+.accentButton:hover:not(:disabled) {
+  box-shadow: 0 20px 38px rgba(250, 51, 86, 0.45);
 }
 
 .buttonWithIcon {
@@ -287,28 +452,47 @@
 .empty,
 .error,
 .loading {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 1.25rem;
+  position: relative;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    rgba(10, 12, 16, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 1.3rem 1.4rem;
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 26px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(12px);
+}
+
+.empty::before,
+.error::before,
+.loading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 100% 0%, rgba(255, 255, 255, 0.14), transparent 65%);
+  opacity: 0.7;
+  mix-blend-mode: screen;
 }
 
 .separator {
   height: 1px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.18);
   width: 100%;
 }
 
 .footerText {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.68);
 }
 
 @media (min-width: 768px) {
   .panel {
-    padding: 2rem;
+    padding: 32px;
   }
 
   .title {
@@ -316,6 +500,6 @@
   }
 
   .taskContent {
-    padding: 1.25rem 1.5rem;
+    padding: 1.35rem 1.65rem;
   }
 }

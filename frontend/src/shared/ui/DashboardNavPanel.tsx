@@ -31,8 +31,8 @@ function renderNavItem(item: DashboardNavItem, isCollapsed: boolean) {
     .join(" ");
   const accessibilityProps = isCollapsed
     ? {
-        "aria-label": item.label,
-        title: item.label,
+        "aria-label": item.shortLabel || item.label,
+        title: item.shortLabel || item.label,
       }
     : {};
   const labelClass = ["nav-item__label", isCollapsed ? "nav-item__label--hidden" : ""]

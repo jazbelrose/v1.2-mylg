@@ -1,7 +1,6 @@
 import { useCallback, useMemo, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  Home,
   Folder,
   Bell,
   MessageSquare,
@@ -10,7 +9,6 @@ import {
   Shield,
   Users,
   Plus,
-  Banknote,
 } from "lucide-react";
 import { signOut } from "aws-amplify/auth";
 import Cookies from "js-cookie";
@@ -30,6 +28,7 @@ export type DashboardNavItem = {
   badgeCount?: number;
   badgeLabel?: string;
   isActive?: boolean;
+  shortLabel?: string;
 };
 
 export type UseDashboardNavigationArgs = {
@@ -108,27 +107,21 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         isAction: true,
       },
       {
-        key: "home",
-        icon: <Home size={24} color="white" />,
+        key: "hq",
+        icon: <span className="nav-item__text-icon">HQ</span>,
         label: "Home",
+        shortLabel: "HQ",
+        onClick: handleHQNavigation,
+        isActive: isHQActive,
+      },
+      {
+        key: "home",
+        icon: <Folder size={24} color="white" />,
+        label: "Projects",
         onClick: () => handleNavigation("welcome"),
         isActive:
           (isDashboardPath && (!activeDashboardView || activeDashboardView === "welcome")) ||
           location.pathname === "/dashboard",
-      },
-      {
-        key: "projects",
-        icon: <Folder size={24} color="white" />,
-        label: "Projects",
-        onClick: () => handleNavigation("projects"),
-        isActive: isDashboardPath && activeDashboardView === "projects",
-      },
-      {
-        key: "hq",
-        icon: <Banknote size={24} color="white" />,
-        label: "HQ",
-        onClick: handleHQNavigation,
-        isActive: isHQActive,
       },
       {
         key: "notifications",

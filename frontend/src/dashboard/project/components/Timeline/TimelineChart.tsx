@@ -272,6 +272,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
         const svgHeight = margin.top + margin.bottom + contentHeight;
 
         const fitScale = timelineViewportWidth / contentWidth;
+        const minScale = Math.max(1, fitScale);
 
         const baseXScale = scaleTime<number>({
           domain: [startDate, endDate],
@@ -371,10 +372,10 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
               <Zoom
                 width={svgWidth}
                 height={svgHeight}
-                scaleXMin={fitScale}
+                scaleXMin={minScale}
                 scaleXMax={20}
                 initialTransformMatrix={{
-                  scaleX: fitScale,
+                  scaleX: minScale,
                   scaleY: 1,
                   translateX: 0,
                   translateY: 0,
@@ -516,26 +517,6 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                           )}
                         </Group>
                       </svg>
-                    </div>
-
-                    <div
-                      className="zoom-controls"
-                      style={{ position: "absolute", right: 10, top: 10 }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => zoom.scale({ scaleX: 1.2, scaleY: 1 })}
-                        aria-label="Zoom in"
-                      >
-                        +
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => zoom.scale({ scaleX: 0.8, scaleY: 1 })}
-                        aria-label="Zoom out"
-                      >
-                        –
-                      </button>
                     </div>
                   </>
                   );

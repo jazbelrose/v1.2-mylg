@@ -272,7 +272,8 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
         const svgHeight = margin.top + margin.bottom + contentHeight;
 
         const fitScale = timelineViewportWidth / contentWidth;
-        const minScale = Math.max(1, fitScale);
+        const minScale = Math.min(1, fitScale);
+        const maxScale = 20;
 
         const baseXScale = scaleTime<number>({
           domain: [startDate, endDate],
@@ -373,7 +374,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                 width={svgWidth}
                 height={svgHeight}
                 scaleXMin={minScale}
-                scaleXMax={20}
+                scaleXMax={maxScale}
                 initialTransformMatrix={{
                   scaleX: minScale,
                   scaleY: 1,
@@ -383,15 +384,18 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                   skewY: 0,
                 }}
                 constrain={(transform) => {
-                  // Prevent panning beyond the range of actual events
-                  const scaledFirstX = firstEventX * transform.scaleX;
-                  const scaledLastX = lastEventX * transform.scaleX;
+                  // Prevent panning beyond the range of actual events and enforce min zoom
+                  const clampedScaleX = Math.max(minScale, Math.min(transform.scaleX, maxScale));
                   const viewportWidth = timelineViewportWidth;
+                  const scaledFirstX = firstEventX * clampedScaleX;
+                  const scaledLastX = lastEventX * clampedScaleX;
                   const minX = Math.min(0, viewportWidth - scaledLastX);
                   const maxX = -scaledFirstX;
+                  const clampedTranslateX = Math.max(minX, Math.min(transform.translateX, maxX));
                   return {
                     ...transform,
-                    translateX: Math.max(minX, Math.min(transform.translateX, maxX)),
+                    scaleX: clampedScaleX,
+                    translateX: clampedTranslateX,
                   };
                 }}
               >

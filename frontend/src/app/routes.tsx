@@ -100,8 +100,23 @@ interface ActualRoutesProps {
   location: Location;
 }
 
+const LegacyHQRedirect: React.FC = () => {
+  const location = useLocation();
+  const remainder = location.pathname.slice(3); // remove "/hq"
+  const normalizedRemainder = remainder.startsWith("/") || remainder.length === 0
+    ? remainder
+    : `/${remainder}`;
+  const targetPath = `/dashboard${normalizedRemainder}`;
+
+  return <Navigate to={`${targetPath}${location.search}${location.hash}`} replace />;
+};
+
+const LegacyDashboardProjectsRedirect: React.FC<{ to: string }> = ({ to }) => {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}${location.hash}`} replace />;
+};
+
 const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
-  
   return (
     <AnimatePresence mode="wait">
       <Routes key={location.pathname} location={location}>
@@ -152,9 +167,7 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           }
         />
 
-        {hqRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
+        <Route path="/hq/*" element={<LegacyHQRedirect />} />
         
         <Route
           path="/gallery/:projectId/:gallerySlug"
@@ -172,6 +185,26 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
         />
         
         <Route
+          path="/dashboard/tasks"
+          element={<LegacyDashboardProjectsRedirect to="/dashboard/projects/tasks" />}
+        />
+        <Route
+          path="/dashboard/new"
+          element={<LegacyDashboardProjectsRedirect to="/dashboard/projects/new" />}
+        />
+        <Route
+          path="/dashboard/welcome/*"
+          element={<LegacyDashboardProjectsRedirect to="/dashboard/projects" />}
+        />
+        <Route
+          path="/dashboard/projects-overview"
+          element={<LegacyDashboardProjectsRedirect to="/dashboard/projects" />}
+        />
+        <Route
+          path="/dashboard/allprojects/*"
+          element={<LegacyDashboardProjectsRedirect to="/dashboard/projects/allprojects" />}
+        />
+        <Route
           path="/dashboard/*"
           element={
             <ProtectedRoute>
@@ -179,6 +212,13 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
             </ProtectedRoute>
           }
         >
+          {hqRoutes.map((route) =>
+            route.path === "" ? (
+              <Route key="hq-index" index element={route.element} />
+            ) : (
+              <Route key={`hq-${route.path}`} path={route.path} element={route.element} />
+            )
+          )}
           <Route
             path="projects/:projectId/:projectName?"
             element={<DashboardSingleProject key={location.key} />}
@@ -199,10 +239,11 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
             path="projects/:projectId/:projectName?/editor"
             element={<DashboardEditorPage />}
           />
-          <Route path="tasks" element={<DashboardTasksPage />} />
-          <Route path="new" element={<DashboardNewProject />} />
-          <Route path="welcome/*" element={<Navigate to=".." replace />} />
-          <Route path="*" element={<DashboardWelcome />} />
+          <Route path="projects/tasks" element={<DashboardTasksPage />} />
+          <Route path="projects/new" element={<DashboardNewProject />} />
+          <Route path="projects" element={<DashboardWelcome />} />
+          <Route path="projects/allprojects" element={<DashboardWelcome />} />
+          <Route path="projects/*" element={<DashboardWelcome />} />
         </Route>
         
         <Route 

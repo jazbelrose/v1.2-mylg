@@ -47,12 +47,13 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isDashboardPath = location.pathname.startsWith("/dashboard");
+  const isProjectsPath = location.pathname.startsWith("/dashboard/projects");
   const activeDashboardView = useMemo(() => {
-    if (!isDashboardPath) return null;
+    if (!isProjectsPath) return null;
     return parseDashboardPath(location.pathname).view;
-  }, [isDashboardPath, location.pathname]);
-  const isHQActive = location.pathname.startsWith("/hq");
+  }, [isProjectsPath, location.pathname]);
+  const isHQActive =
+    location.pathname.startsWith("/dashboard") && !isProjectsPath;
 
   const unreadNotifications = useMemo(
     () => notifications.filter((n) => !n.read).length,
@@ -70,7 +71,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   const handleNavigation = useCallback(
     (view: string) => {
       setActiveView(view);
-      const base = "/dashboard";
+      const base = "/dashboard/projects";
       let path: string;
       switch (view) {
         case PROJECTS_OVERVIEW_VIEW:
@@ -79,7 +80,8 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
           break;
         case PROJECTS_LIST_VIEW:
         case "projects":
-          path = `${base}/projects`;
+        case "allprojects":
+          path = `${base}/allprojects`;
           break;
         default:
           path = `${base}/${view}`;
@@ -91,12 +93,12 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   );
 
   const handleCreateProject = useCallback(() => {
-    navigate("/dashboard/new");
+    navigate("/dashboard/projects/new");
     close();
   }, [navigate, close]);
 
   const handleHQNavigation = useCallback(() => {
-    navigate("/hq");
+    navigate("/dashboard");
     close();
   }, [navigate, close]);
 
@@ -136,12 +138,12 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         label: "Projects",
         onClick: () => handleNavigation(PROJECTS_OVERVIEW_VIEW),
         isActive:
-          (isDashboardPath &&
-            (!activeDashboardView ||
-              activeDashboardView === PROJECTS_OVERVIEW_VIEW ||
-              activeDashboardView === PROJECTS_LIST_VIEW ||
-              activeDashboardView === "projects")) ||
-          location.pathname === "/dashboard",
+          isProjectsPath &&
+          (!activeDashboardView ||
+            activeDashboardView === PROJECTS_OVERVIEW_VIEW ||
+            activeDashboardView === PROJECTS_LIST_VIEW ||
+            activeDashboardView === "projects" ||
+            activeDashboardView === "allprojects"),
       },
       {
         key: "notifications",
@@ -150,7 +152,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         onClick: () => handleNavigation("notifications"),
         badgeCount: unreadNotifications,
         badgeLabel: "notification",
-        isActive: isDashboardPath && activeDashboardView === "notifications",
+        isActive: isProjectsPath && activeDashboardView === "notifications",
       },
       {
         key: "messages",
@@ -159,14 +161,14 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         onClick: () => handleNavigation("messages"),
         badgeCount: unreadMessages,
         badgeLabel: "message",
-        isActive: isDashboardPath && activeDashboardView === "messages",
+        isActive: isProjectsPath && activeDashboardView === "messages",
       },
       {
         key: "collaborators",
         icon: <Users size={24} color="white" />,
         label: "Collaborators",
         onClick: () => handleNavigation("collaborators"),
-        isActive: isDashboardPath && activeDashboardView === "collaborators",
+        isActive: isProjectsPath && activeDashboardView === "collaborators",
       },
     ],
     [
@@ -174,7 +176,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
       handleNavigation,
       unreadNotifications,
       unreadMessages,
-      isDashboardPath,
+      isProjectsPath,
       activeDashboardView,
       location.pathname,
       handleHQNavigation,
@@ -197,7 +199,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         icon: <Settings size={24} color="white" />,
         label: "Settings",
         onClick: () => handleNavigation("settings"),
-        isActive: isDashboardPath && activeDashboardView === "settings",
+        isActive: isProjectsPath && activeDashboardView === "settings",
       },
       {
         key: "sign-out",
@@ -206,7 +208,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         onClick: handleSignOut,
       },
     ],
-    [close, handleNavigation, handleSignOut, isDashboardPath, activeDashboardView]
+    [close, handleNavigation, handleSignOut, isProjectsPath, activeDashboardView]
   );
 
   return {

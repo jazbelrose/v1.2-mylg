@@ -840,7 +840,7 @@ const fetchMessages = async () => {
     const otherId = a === userData.userId ? b : a;
     const otherUser = allUsers.find((u) => u.userId === otherId);
     const slug = otherUser ? slugify(`${otherUser.firstName}-${otherUser.lastName}`) : otherId;
-    navigate(`/dashboard/features/messages/${slug}`);
+    navigate(`/dashboard/projects/messages/${slug}`);
 
     setSelectedConversation(normalizedConversationId);
     if (isMobile) setShowConversation(true);

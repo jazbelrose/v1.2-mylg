@@ -14,23 +14,60 @@ const Dashboard: React.FC = () => {
   const hasRestored = useRef<boolean>(false);
 
   const getPageTitle = (): string => {
-    const path = location.pathname;
-    if (path.startsWith("/dashboard/projects/")) return "Dashboard - Project Details";
-    switch (path) {
-      case "/dashboard":
+    const segments = location.pathname.split("/").filter(Boolean);
+    if (segments[0] !== "dashboard") {
+      return "Dashboard";
+    }
+
+    const section = segments[1];
+
+    if (!section) {
+      return "Dashboard - Home";
+    }
+
+    if (section !== "projects") {
+      switch (section) {
+        case "accounts":
+          return "Dashboard - Accounts";
+        case "transactions":
+          return "Dashboard - Transactions";
+        case "reports":
+          return "Dashboard - Reports";
+        case "invoices":
+          return "Dashboard - Invoices";
+        case "tasks":
+          return "Dashboard - Tasks";
+        case "events":
+          return "Dashboard - Events";
+        case "messages":
+          return "Dashboard - Messages";
+        default:
+          return "Dashboard";
+      }
+    }
+
+    const projectView = segments[2];
+
+    switch (projectView) {
+      case undefined:
         return "Dashboard - Projects";
-      case "/dashboard/new":
-        return "Dashboard - Start something";
-      case "/dashboard/projects":
+      case "allprojects":
+      case "projects":
         return "Dashboard - Project List";
-      case "/dashboard/tasks":
+      case "new":
+        return "Dashboard - Start something";
+      case "tasks":
         return "Dashboard - Tasks";
-      case "/dashboard/settings":
-        return "Dashboard - Settings";
-      case "/dashboard/collaborators":
+      case "notifications":
+        return "Dashboard - Notifications";
+      case "messages":
+        return "Dashboard - Messages";
+      case "collaborators":
         return "Dashboard - Collaborators";
+      case "settings":
+        return "Dashboard - Settings";
       default:
-        return "Dashboard";
+        return "Dashboard - Project Details";
     }
   };
 
@@ -59,12 +96,18 @@ const Dashboard: React.FC = () => {
       }
 
       if (saved && saved !== "/dashboard") {
-        const normalized = saved
-          .replace("/dashboard/welcome", "/dashboard")
-          .replace("/dashboard/projects-overview", "/dashboard");
+        const normalized = (saved === "/dashboard/projects"
+          ? "/dashboard/projects/allprojects"
+          : saved)
+          .replace("/dashboard/welcome", "/dashboard/projects")
+          .replace("/dashboard/projects-overview", "/dashboard/projects")
+          .replace("/dashboard/tasks", "/dashboard/projects/tasks")
+          .replace("/dashboard/new", "/dashboard/projects/new")
+          .replace(
+            "/dashboard/projects/projects",
+            "/dashboard/projects/allprojects"
+          );
         navigate(normalized, { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
       }
     }
   }, [location, navigate]);

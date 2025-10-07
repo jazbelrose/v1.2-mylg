@@ -68,30 +68,37 @@ export const parseDashboardPath = (
     return { view: PROJECTS_OVERVIEW_VIEW, userSlug: null };
   }
 
-  let view = segments[idx + 1] || PROJECTS_OVERVIEW_VIEW;
-  let userSlug = segments[idx + 2] || null;
+  const afterDashboard = segments.slice(idx + 1);
+  if (afterDashboard[0] !== "projects") {
+    return { view: PROJECTS_OVERVIEW_VIEW, userSlug: null };
+  }
+
+  let view = afterDashboard[1] || PROJECTS_OVERVIEW_VIEW;
+  let userSlug = afterDashboard[2] || null;
 
   if (view === "features") {
-    view = segments[idx + 2] || PROJECTS_OVERVIEW_VIEW;
-    userSlug = segments[idx + 3] || null;
+    view = afterDashboard[2] || PROJECTS_OVERVIEW_VIEW;
+    userSlug = afterDashboard[3] || null;
   }
 
   if (view === "welcome") {
-    const nestedView = segments[idx + 2];
+    const nestedView = afterDashboard[2];
     if (nestedView) {
       view = nestedView;
-      userSlug = segments[idx + 3] || null;
+      userSlug = afterDashboard[3] || null;
     } else {
       view = PROJECTS_OVERVIEW_VIEW;
       userSlug = null;
     }
   }
 
-  if (view === "projects") {
-    const hasAdditionalSegment = segments.length > idx + 2;
-    if (!hasAdditionalSegment) {
-      view = PROJECTS_LIST_VIEW;
-    }
+  if (view === "projects" || view === "allprojects") {
+    view = PROJECTS_LIST_VIEW;
+    userSlug = null;
+  }
+
+  if (view === "messages") {
+    userSlug = afterDashboard[2] || null;
   }
 
   return { view, userSlug };
@@ -190,7 +197,7 @@ const WelcomeScreen: React.FC = () => {
   const { view: initialView, userSlug: initialDMUserSlug } = parsePath();
   const normalizeView = useCallback((view: string) => {
     if (view === "welcome") return PROJECTS_OVERVIEW_VIEW;
-    if (view === "projects") return PROJECTS_LIST_VIEW;
+    if (view === "projects" || view === "allprojects") return PROJECTS_LIST_VIEW;
     return view;
   }, []);
   const [activeView, setActiveView] = useState<string>(() =>
@@ -319,7 +326,7 @@ const WelcomeScreen: React.FC = () => {
             ? slugify(`${user.firstName}-${user.lastName}`)
             : otherId;
           setDmUserSlug(slug);
-          navigate(`/dashboard/features/messages/${slug}`, { replace: true });
+          navigate(`/dashboard/projects/messages/${slug}`, { replace: true });
         }
       }
     }
@@ -400,6 +407,7 @@ const WelcomeScreen: React.FC = () => {
         return renderWelcomeView();
       case PROJECTS_LIST_VIEW:
       case "projects":
+      case "allprojects":
         return <AllProjects />;
       case "notifications":
         return (

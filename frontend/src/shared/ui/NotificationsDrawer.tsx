@@ -202,7 +202,7 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
         : user.username || thread.otherUserId
       : thread.otherUserId;
 
-    navigate(`/dashboard/features/messages/${slug}`);
+    navigate(`/dashboard/projects/messages/${slug}`);
     handleItemClick();
   };
 

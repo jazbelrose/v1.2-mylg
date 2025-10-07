@@ -388,7 +388,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
               New task
             </Button>
             <Link
-              to="/dashboard/tasks"
+              to="/dashboard/projects/tasks"
               className={cn(styles.secondaryAction, styles.actionButton)}
               state={{ from: `${location.pathname}${location.search}` }}
             >

@@ -559,7 +559,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '', onNavigate 
           : '';
         const fallback = collaborator?.userId || result.userId || 'conversation';
         const slug = slugify(slugSource || fallback);
-        navigate(`/dashboard/features/messages/${slug}`);
+        navigate(`/dashboard/projects/messages/${slug}`);
       } catch (error) {
         console.error('Error navigating to collaborator conversation:', error);
       }

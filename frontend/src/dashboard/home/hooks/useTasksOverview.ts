@@ -533,7 +533,7 @@ export function useTasksOverview() {
   }, [navigateToProject, primaryProjectId]);
 
   const handleViewAll = useCallback(() => {
-    navigate("/dashboard/tasks");
+    navigate("/dashboard/projects/tasks");
   }, [navigate]);
 
   const tasksById = useMemo(() => {

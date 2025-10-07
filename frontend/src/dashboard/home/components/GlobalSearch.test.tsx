@@ -248,7 +248,7 @@ describe('GlobalSearch', () => {
     fireEvent.click(collaboratorButton!);
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/features/messages/jane-collaborator');
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/projects/messages/jane-collaborator');
     });
   });
 

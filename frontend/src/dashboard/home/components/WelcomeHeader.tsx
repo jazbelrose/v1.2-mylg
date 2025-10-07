@@ -180,7 +180,7 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
           <div className="welcome-header-actions">
             <div
               className="nav-item-style"
-              onClick={() => navigate("/dashboard/new")}
+              onClick={() => navigate("/dashboard/projects/new")}
               title="Start something"
             >
               <Plus size={isMobile ? 20 : 26} color="white" />

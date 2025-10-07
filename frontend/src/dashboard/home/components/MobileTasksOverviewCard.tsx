@@ -39,7 +39,7 @@ const MobileTasksOverviewCard: React.FC<MobileTasksOverviewCardProps> = ({ class
       <header className={styles.header}>
         <h3 className={styles.title}>Tasks</h3>
         <Link
-          to="/dashboard/tasks"
+          to="/dashboard/projects/tasks"
           className={styles.viewAllButton}
           aria-label="View all tasks"
           state={{ from: `${location.pathname}${location.search}` }}

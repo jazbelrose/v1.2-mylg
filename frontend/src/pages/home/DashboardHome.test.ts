@@ -13,26 +13,22 @@ describe("parseDashboardPath", () => {
     });
   });
 
-  it("returns nested welcome view and slug", () => {
-    expect(parseDashboardPath("/dashboard/welcome/messages/my-user")).toEqual({
-      view: "messages",
-      userSlug: "my-user",
+  it("interprets project routes", () => {
+    expect(parseDashboardPath("/dashboard/projects")).toEqual({
+      view: PROJECTS_OVERVIEW_VIEW,
+      userSlug: null,
+    });
+
+    expect(parseDashboardPath("/dashboard/projects/allprojects")).toEqual({
+      view: "projects-list",
+      userSlug: null,
     });
   });
 
-  it("returns direct feature view and slug", () => {
-    expect(parseDashboardPath("/dashboard/messages/teammate")).toEqual({
+  it("returns the direct messages view and slug", () => {
+    expect(parseDashboardPath("/dashboard/projects/messages/teammate")).toEqual({
       view: "messages",
       userSlug: "teammate",
-    });
-  });
-
-  it("handles feature routes under the features prefix", () => {
-    expect(
-      parseDashboardPath("/dashboard/features/messages/another-user")
-    ).toEqual({
-      view: "messages",
-      userSlug: "another-user",
     });
   });
 

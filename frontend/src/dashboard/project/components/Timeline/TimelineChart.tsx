@@ -35,7 +35,7 @@ type TimelineChartProps = {
 const PX_PER_HOUR = 24; // ← fix: non-zero so bars are visible
 
 // Level of Detail thresholds by zoom
-function getLOD(pxPerDay: number) {
+function getLOD(pxPerDay: number): 0 | 1 | 2 {
   if (pxPerDay < 6) return 0;    // dots only
   if (pxPerDay < 20) return 1;   // tiny unlabeled pills
   return 2;                      // full labeled clips
@@ -213,7 +213,8 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
     <ParentSize>
       {({ width: w }) => {
         const parentWidth = Math.max(1, w || 900);
-        const margin = { top: 10, right: 20, bottom: 20, left: 60 };
+        const axisHeight = 28;
+        const margin = { top: axisHeight, right: 20, bottom: 20, left: 60 };
 
         // Dynamic track height
         const minTrackHeight = 32;
@@ -350,6 +351,15 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                   // LOD calculation: px per day
                   const pxPerDay = xScale(new Date("2025-01-02")) - xScale(new Date("2025-01-01"));
                   const lod = getLOD(pxPerDay);
+                  const formatTickLabel = (value: Date) => {
+                    if (lod === 0) {
+                      return value.toLocaleDateString(undefined, { month: "short" });
+                    }
+                    if (lod === 1) {
+                      return value.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+                    }
+                    return value.toLocaleDateString(undefined, { weekday: "short", day: "numeric" });
+                  };
                   const playheadX = playheadDate ? xScale(playheadDate) : null;
 
                   const color = project?.color || "#FA3356";
@@ -380,12 +390,18 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                           top={margin.top}
                           left={margin.left}
                           scale={xScale}
-                          stroke="#ccc"
-                          tickStroke="#ccc"
+                          stroke="rgba(255, 255, 255, 0.3)"
+                          tickStroke="rgba(255, 255, 255, 0.3)"
+                          tickLength={lod === 2 ? 12 : 8}
+                          numTicks={lod === 0 ? 8 : lod === 1 ? 12 : 18}
+                          tickFormat={(value) => formatTickLabel(value as Date)}
                           tickLabelProps={() => ({
-                            fill: "#ccc",
-                            fontSize: 12,
+                            fill: "#f1f1f1",
+                            fontSize: 11,
+                            fontWeight: 600,
                             textAnchor: "middle",
+                            dominantBaseline: "baseline",
+                            dy: "-0.45em",
                           })}
                         />
 
@@ -569,14 +585,12 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
 
   return (
     <div className="dashboard-item timeline-chart">
-      <h3 style={{ margin: 0, color: "#fff", textAlign: "center" }}>Timeline</h3>
-
-      <div className="chart-mode-toggle">
-        <div className="segmented-control" role="group" aria-label="Chart mode toggle">
+      <div className="timeline-chart__header">
+        <div className="chart-mode-toggle" role="group" aria-label="Select timeline mode">
           <button
             type="button"
             onClick={() => onModeChange?.("overview")}
-            className={mode === "overview" ? "active" : ""}
+            className={`chart-mode-toggle__btn${mode === "overview" ? " is-active" : ""}`}
             aria-pressed={mode === "overview"}
           >
             Overview
@@ -584,24 +598,24 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
           <button
             type="button"
             onClick={() => onModeChange?.("agenda")}
-            className={mode === "agenda" ? "active" : ""}
+            className={`chart-mode-toggle__btn${mode === "agenda" ? " is-active" : ""}`}
             aria-pressed={mode === "agenda"}
           >
             Agenda
           </button>
         </div>
-      </div>
 
-      {mode === "agenda" && (
-        <div className="agenda-date-row">
-          <input
-            type="date"
-            value={currentDate}
-            onChange={(e) => onDateChange?.(e.target.value)}
-            className="agenda-date-picker"
-          />
-        </div>
-      )}
+        {mode === "agenda" && (
+          <div className="agenda-date-row">
+            <input
+              type="date"
+              value={currentDate}
+              onChange={(e) => onDateChange?.(e.target.value)}
+              className="agenda-date-picker"
+            />
+          </div>
+        )}
+      </div>
 
       {mode === "overview"
         ? tracks.length === 0

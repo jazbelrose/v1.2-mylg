@@ -351,15 +351,8 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                   // LOD calculation: px per day
                   const pxPerDay = xScale(new Date("2025-01-02")) - xScale(new Date("2025-01-01"));
                   const lod = getLOD(pxPerDay);
-                  const formatTickLabel = (value: Date) => {
-                    if (lod === 0) {
-                      return value.toLocaleDateString(undefined, { month: "short" });
-                    }
-                    if (lod === 1) {
-                      return value.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-                    }
-                    return value.toLocaleDateString(undefined, { weekday: "short", day: "numeric" });
-                  };
+                  const formatTickLabel = (value: Date) =>
+                    value.toLocaleDateString(undefined, { month: "short", day: "numeric" });
                   const playheadX = playheadDate ? xScale(playheadDate) : null;
 
                   const color = project?.color || "#FA3356";

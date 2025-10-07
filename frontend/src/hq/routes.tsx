@@ -10,14 +10,14 @@ const HQEventsPage = React.lazy(() => import("./pages/HQEventsPage"));
 const HQMessagesPage = React.lazy(() => import("./pages/HQMessagesPage"));
 
 export const hqRoutes = [
-  { path: "/hq", element: <HQOverview /> },
-  { path: "/hq/accounts", element: <AccountsPage /> },
-  { path: "/hq/transactions", element: <TransactionsPage /> },
-  { path: "/hq/reports", element: <ReportsPage /> },
-  { path: "/hq/invoices", element: <InvoicesPage /> },
-  { path: "/hq/tasks", element: <HQTasksPage /> },
-  { path: "/hq/events", element: <HQEventsPage /> },
-  { path: "/hq/messages", element: <HQMessagesPage /> },
+  { path: "hq", element: <HQOverview /> },
+  { path: "hq/accounts", element: <AccountsPage /> },
+  { path: "hq/transactions", element: <TransactionsPage /> },
+  { path: "hq/reports", element: <ReportsPage /> },
+  { path: "hq/invoices", element: <InvoicesPage /> },
+  { path: "hq/tasks", element: <HQTasksPage /> },
+  { path: "hq/events", element: <HQEventsPage /> },
+  { path: "hq/messages", element: <HQMessagesPage /> },
 ];
 
 export default hqRoutes;

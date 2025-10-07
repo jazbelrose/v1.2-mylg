@@ -48,11 +48,15 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   const location = useLocation();
 
   const isDashboardPath = location.pathname.startsWith("/dashboard");
+  const isHQSection =
+    location.pathname === "/dashboard" ||
+    location.pathname.startsWith("/dashboard/hq");
   const activeDashboardView = useMemo(() => {
     if (!isDashboardPath) return null;
+    if (isHQSection) return "hq";
     return parseDashboardPath(location.pathname).view;
-  }, [isDashboardPath, location.pathname]);
-  const isHQActive = location.pathname.startsWith("/hq");
+  }, [isDashboardPath, isHQSection, location.pathname]);
+  const isHQActive = isHQSection;
 
   const unreadNotifications = useMemo(
     () => notifications.filter((n) => !n.read).length,
@@ -96,7 +100,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   }, [navigate, close]);
 
   const handleHQNavigation = useCallback(() => {
-    navigate("/hq");
+    navigate("/dashboard");
     close();
   }, [navigate, close]);
 
@@ -136,12 +140,12 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         label: "Projects",
         onClick: () => handleNavigation(PROJECTS_OVERVIEW_VIEW),
         isActive:
-          (isDashboardPath &&
-            (!activeDashboardView ||
-              activeDashboardView === PROJECTS_OVERVIEW_VIEW ||
-              activeDashboardView === PROJECTS_LIST_VIEW ||
-              activeDashboardView === "projects")) ||
-          location.pathname === "/dashboard",
+          isDashboardPath &&
+          !isHQSection &&
+          (!activeDashboardView ||
+            activeDashboardView === PROJECTS_OVERVIEW_VIEW ||
+            activeDashboardView === PROJECTS_LIST_VIEW ||
+            activeDashboardView === "projects"),
       },
       {
         key: "notifications",
@@ -175,8 +179,8 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
       unreadNotifications,
       unreadMessages,
       isDashboardPath,
+      isHQSection,
       activeDashboardView,
-      location.pathname,
       handleHQNavigation,
       isHQActive,
     ]

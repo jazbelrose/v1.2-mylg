@@ -74,7 +74,7 @@ const HQLayout: React.FC<HQLayoutProps> = ({
 }) => {
   const { isAdmin, userName } = useUser();
   const [flags, setFlags] = useState<ViewportFlags>(() => getViewportFlags());
-  const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("hq");
+  const [isNavCollapsed, setIsNavCollapsed] = useNavCollapsed("dashboard");
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const rawDrawerId = useId();
   const drawerId = useMemo(

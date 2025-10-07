@@ -83,9 +83,11 @@ const pageTransition = {
   duration: 1,
 };
 
+const hqRootRoute = hqRoutes.find((route) => route.path === "hq");
+
 function AppRoutes(): React.ReactElement {
   const location = useLocation();
-  
+
   return (
     <ErrorBoundary>
       <Suspense fallback={<Spinner />}>
@@ -152,10 +154,36 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           }
         />
 
-        {hqRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
-        
+        <Route path="/hq" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="/hq/accounts"
+          element={<Navigate to="/dashboard/hq/accounts" replace />}
+        />
+        <Route
+          path="/hq/transactions"
+          element={<Navigate to="/dashboard/hq/transactions" replace />}
+        />
+        <Route
+          path="/hq/reports"
+          element={<Navigate to="/dashboard/hq/reports" replace />}
+        />
+        <Route
+          path="/hq/invoices"
+          element={<Navigate to="/dashboard/hq/invoices" replace />}
+        />
+        <Route
+          path="/hq/tasks"
+          element={<Navigate to="/dashboard/hq/tasks" replace />}
+        />
+        <Route
+          path="/hq/events"
+          element={<Navigate to="/dashboard/hq/events" replace />}
+        />
+        <Route
+          path="/hq/messages"
+          element={<Navigate to="/dashboard/hq/messages" replace />}
+        />
+
         <Route
           path="/gallery/:projectId/:gallerySlug"
           element={
@@ -179,6 +207,16 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
             </ProtectedRoute>
           }
         >
+          {hqRootRoute ? (
+            <Route index element={hqRootRoute.element} />
+          ) : null}
+          {hqRoutes.map((route) => (
+            <Route
+              key={`dashboard-${route.path}`}
+              path={route.path}
+              element={route.element}
+            />
+          ))}
           <Route
             path="projects/:projectId/:projectName?"
             element={<DashboardSingleProject key={location.key} />}

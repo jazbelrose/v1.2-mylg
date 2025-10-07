@@ -7,7 +7,7 @@ import "./dashboard-styles.css";
 
 const Dashboard: React.FC = () => {
   // If your DataProvider has types, replace `any` below with the real shape.
-  const { userName, opacity } = useData() as { userName?: string; opacity?: number };
+  const { opacity } = useData() as { opacity?: number };
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -16,9 +16,13 @@ const Dashboard: React.FC = () => {
   const getPageTitle = (): string => {
     const path = location.pathname;
     if (path.startsWith("/dashboard/projects/")) return "Dashboard - Project Details";
+    if (path === "/dashboard" || path === "/dashboard/hq") {
+      return "Dashboard - HQ";
+    }
+    if (path.startsWith("/dashboard/hq/")) {
+      return "Dashboard - HQ";
+    }
     switch (path) {
-      case "/dashboard":
-        return "Dashboard - Projects";
       case "/dashboard/new":
         return "Dashboard - Start something";
       case "/dashboard/projects":
@@ -58,13 +62,26 @@ const Dashboard: React.FC = () => {
         // ignore storage errors
       }
 
-      if (saved && saved !== "/dashboard") {
-        const normalized = saved
-          .replace("/dashboard/welcome", "/dashboard")
-          .replace("/dashboard/projects-overview", "/dashboard");
+      if (!saved) return;
+
+      let normalized = saved;
+      if (normalized === "/hq") {
+        normalized = "/dashboard";
+      } else if (normalized.startsWith("/hq/")) {
+        normalized = normalized.replace("/hq/", "/dashboard/hq/");
+      }
+
+      normalized = normalized
+        .replace("/dashboard/welcome", "/dashboard/projects")
+        .replace("/dashboard/projects-overview", "/dashboard/projects");
+
+      const shouldRedirect =
+        normalized !== "/dashboard" &&
+        normalized !== "/dashboard/projects" &&
+        !normalized.startsWith("/dashboard/hq");
+
+      if (shouldRedirect) {
         navigate(normalized, { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
       }
     }
   }, [location, navigate]);

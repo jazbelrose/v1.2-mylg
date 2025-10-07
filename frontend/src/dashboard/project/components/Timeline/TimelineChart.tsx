@@ -34,8 +34,8 @@ type TimelineChartProps = {
 
 const PX_PER_HOUR = 24; // ← fix: non-zero so bars are visible
 const LABEL_MIN_WIDTH = 80;
-const LABEL_MAX_WIDTH = 320;
-const DEFAULT_LABEL_WIDTH = 160;
+const LABEL_MAX_WIDTH = 150;
+const DEFAULT_LABEL_WIDTH = 120;
 
 // Level of Detail thresholds by zoom
 function getLOD(pxPerDay: number): 0 | 1 | 2 {
@@ -322,6 +322,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                   <div
                     key={t.name}
                     className="track-label"
+                    data-full-label={t.name}
                     style={{
                       position: "absolute",
                       top: y + margin.top,
@@ -335,7 +336,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                       lineHeight: 1.2,
                       padding: "2px 4px",
                       textShadow: "0 1px 2px #000",
-                      pointerEvents: "none",
+                      pointerEvents: "auto",
                       whiteSpace: "nowrap",
                       textOverflow: "ellipsis",
                       overflow: "hidden",

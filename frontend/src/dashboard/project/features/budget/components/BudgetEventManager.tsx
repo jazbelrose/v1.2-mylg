@@ -142,6 +142,48 @@ const BudgetEventManager: React.FC<BudgetEventManagerProps> = ({
     stateManager.setCreateModalOpen(true);
   }, [getNextElementKey, stateManager]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const isEditableElement = (element: EventTarget | null): boolean => {
+      if (!(element instanceof HTMLElement)) {
+        return false;
+      }
+
+      if (element.isContentEditable) {
+        return true;
+      }
+
+      const tagName = element.tagName;
+      return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT";
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (!(event.ctrlKey || event.metaKey)) return;
+      if (isEditableElement(event.target)) return;
+
+      const isPlusKey =
+        event.key === "+" ||
+        event.key === "=" ||
+        event.code === "Equal" ||
+        event.code === "NumpadAdd";
+      const hasRequiredModifiers = event.shiftKey || event.code === "NumpadAdd";
+
+      if (isPlusKey && hasRequiredModifiers) {
+        event.preventDefault();
+        openCreateModal();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [openCreateModal]);
+
   const openEditModal = useCallback((item: Record<string, unknown>) => {
     const lockedLines = getLocks();
     const budgetItemId = String(item.budgetItemId);

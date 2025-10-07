@@ -34,8 +34,9 @@ type TimelineChartProps = {
 
 const PX_PER_HOUR = 24; // ← fix: non-zero so bars are visible
 const LABEL_MIN_WIDTH = 80;
-const LABEL_MAX_WIDTH = 150;
-const DEFAULT_LABEL_WIDTH = 120;
+const LABEL_MAX_WIDTH = 180;
+const DEFAULT_LABEL_WIDTH = 140;
+const LABEL_RESIZER_WIDTH = 8;
 
 // Level of Detail thresholds by zoom
 function getLOD(pxPerDay: number): 0 | 1 | 2 {
@@ -249,7 +250,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
       {({ width: w }) => {
         const parentWidth = Math.max(1, w || 900);
         const axisHeight = 28;
-        const margin = { top: axisHeight, right: 20, bottom: 20, left: labelWidth };
+        const margin = { top: axisHeight, right: 20, bottom: 20, left: 0 };
 
         // Dynamic track height
         const minTrackHeight = 32;
@@ -263,11 +264,13 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
         else trackHeight = minTrackHeight;
 
         const contentHeight = Math.max(trackCount * trackHeight, minChartHeight);
-        const contentWidth = Math.max(parentWidth, 900, Math.ceil(totalHours)); // hours are scaled by time, not pixels here
+        const resizerWidth = LABEL_RESIZER_WIDTH;
+        const timelineViewportWidth = Math.max(1, parentWidth - labelWidth - resizerWidth);
+        const contentWidth = Math.max(timelineViewportWidth, Math.ceil(totalHours));
         const svgWidth = margin.left + margin.right + contentWidth;
         const svgHeight = margin.top + margin.bottom + contentHeight;
 
-        const fitScale = parentWidth / contentWidth;
+        const fitScale = timelineViewportWidth / contentWidth;
 
         const baseXScale = scaleTime<number>({
           domain: [startDate, endDate],
@@ -311,7 +314,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                 justifyContent: "flex-start",
                 alignItems: "flex-end",
                 paddingTop: margin.top,
-                paddingRight: 8,
+                paddingRight: LABEL_RESIZER_WIDTH,
               }}
               aria-hidden
             >
@@ -323,10 +326,11 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                     key={t.name}
                     className="track-label"
                     data-full-label={t.name}
+                    tabIndex={0}
                     style={{
                       position: "absolute",
                       top: y + margin.top,
-                      right: 8,
+                      right: LABEL_RESIZER_WIDTH,
                       height: h,
                       display: "flex",
                       alignItems: "center",
@@ -340,7 +344,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                       whiteSpace: "nowrap",
                       textOverflow: "ellipsis",
                       overflow: "hidden",
-                      maxWidth: Math.max(0, labelWidth - 16),
+                      maxWidth: Math.max(0, labelWidth - LABEL_RESIZER_WIDTH * 2),
                     }}
                     title={t.name}
                   >
@@ -351,7 +355,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
             </div>
             <div
               className="timeline-chart__label-resizer"
-              style={{ height: svgHeight }}
+              style={{ height: svgHeight, width: LABEL_RESIZER_WIDTH }}
               role="separator"
               aria-orientation="vertical"
               aria-valuemin={LABEL_MIN_WIDTH}
@@ -380,7 +384,8 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                   // Prevent panning beyond the range of actual events
                   const scaledFirstX = firstEventX * transform.scaleX;
                   const scaledLastX = lastEventX * transform.scaleX;
-                  const minX = Math.min(0, parentWidth - scaledLastX);
+                  const viewportWidth = timelineViewportWidth;
+                  const minX = Math.min(0, viewportWidth - scaledLastX);
                   const maxX = -scaledFirstX;
                   return {
                     ...transform,

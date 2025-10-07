@@ -97,6 +97,10 @@
   position: relative;
 }
 
+
+.timeline-chart .track-label:focus-visible {
+  outline: none;
+}
 .timeline-chart .track-label::after {
   content: attr(data-full-label);
   position: absolute;

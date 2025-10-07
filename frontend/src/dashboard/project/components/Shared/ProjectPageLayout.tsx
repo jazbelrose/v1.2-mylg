@@ -240,7 +240,8 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
             flex: 1,
             minWidth: 0,
             minHeight: 0,
-            overflow: "auto",
+            overflowY: "auto",
+            overflowX: "hidden",
           }}
         >
           {children}

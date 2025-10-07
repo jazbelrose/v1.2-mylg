@@ -1,13 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Pagination, Table } from "antd";
-import type { ColumnsType, TableProps } from "antd/es/table";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Pagination } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClone, faClock, faTrash } from "@fortawesome/free-solid-svg-icons";
 import styles from "@/dashboard/project/features/budget/pages/budget-page.module.css";
 import { formatUSD } from "@/shared/utils/budgetUtils";
 
-const TABLE_HEADER_FOOTER = 110;
 const MOBILE_BREAKPOINT = 768;
+
+const PAGINATION_ESTIMATE = 96;
 
 type BudgetItem = Record<string, unknown> & {
   budgetItemId: string;
@@ -16,11 +22,9 @@ type BudgetItem = Record<string, unknown> & {
 
 interface BudgetItemsTableProps {
   dataSource: BudgetItem[];
-  columns: ColumnsType<BudgetItem>;
   selectedRowKeys: string[];
   setSelectedRowKeys: (keys: string[] | ((prev: string[]) => string[])) => void;
   lockedLines: string[];
-  handleTableChange: TableProps<BudgetItem>['onChange'];
   openEditModal: (record: BudgetItem) => void;
   openDuplicateModal: (record: BudgetItem) => void;
   openDeleteModal: (ids: string[]) => void;
@@ -37,11 +41,9 @@ interface BudgetItemsTableProps {
 const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
   ({
     dataSource,
-    columns,
     selectedRowKeys,
     setSelectedRowKeys,
     lockedLines,
-    handleTableChange,
     openEditModal,
     openDuplicateModal,
     openDeleteModal,
@@ -55,6 +57,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
     setPageSize,
   }) => {
     const [isMobile, setIsMobile] = useState(false);
+    const selectAllRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
       if (typeof window === "undefined") return;
@@ -119,6 +122,47 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       []
     );
 
+    const availableIds = useMemo(
+      () => dataSource.map((item) => String(item.budgetItemId)),
+      [dataSource]
+    );
+
+    const availableIdSet = useMemo(() => new Set(availableIds), [availableIds]);
+
+    const selectedInScope = useMemo(
+      () => selectedRowKeys.filter((id) => availableIdSet.has(id)),
+      [selectedRowKeys, availableIdSet]
+    );
+
+    const isSelectAllChecked =
+      availableIds.length > 0 && selectedInScope.length === availableIds.length;
+
+    const isSelectAllIndeterminate =
+      selectedInScope.length > 0 && selectedInScope.length < availableIds.length;
+
+    useEffect(() => {
+      if (!selectAllRef.current) return;
+      selectAllRef.current.indeterminate = isSelectAllIndeterminate;
+    }, [isSelectAllIndeterminate]);
+
+    const handleSelectAllChange = useCallback(
+      (checked: boolean) => {
+        setSelectedRowKeys((prevKeys) => {
+          if (checked) {
+            const next = new Set(prevKeys);
+            availableIds.forEach((id) => next.add(id));
+            return Array.from(next);
+          }
+          return prevKeys.filter((id) => !availableIdSet.has(id));
+        });
+      },
+      [availableIds, availableIdSet, setSelectedRowKeys]
+    );
+
+    const handleClearSelection = useCallback(() => {
+      setSelectedRowKeys((prevKeys) => prevKeys.filter((id) => !availableIdSet.has(id)));
+    }, [availableIdSet, setSelectedRowKeys]);
+
     const handleCardKeyDown = useCallback(
       (event: React.KeyboardEvent<HTMLElement>, record: BudgetItem, isLocked: boolean) => {
         if (isLocked) return;
@@ -149,11 +193,18 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       [setSelectedRowKeys]
     );
 
-    const paginatedMobileData = useMemo(() => {
-      if (!isMobile) return [];
+    useEffect(() => {
+      const totalItems = dataSource.length;
+      const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / pageSize);
+      if (currentPage > totalPages) {
+        setCurrentPage(totalPages);
+      }
+    }, [currentPage, dataSource.length, pageSize, setCurrentPage]);
+
+    const paginatedData = useMemo(() => {
       const startIndex = Math.max(0, (currentPage - 1) * pageSize);
       return dataSource.slice(startIndex, startIndex + pageSize);
-    }, [isMobile, dataSource, currentPage, pageSize]);
+    }, [dataSource, currentPage, pageSize]);
 
     const formatMetricValue = useCallback(
       (record: BudgetItem, metricKey: string) => {
@@ -224,204 +275,181 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       [pageSize, setCurrentPage, setPageSize]
     );
 
+    const listStyle = useMemo(() => {
+      if (!tableHeight) return undefined;
+      const minHeight = Math.max(0, tableHeight - PAGINATION_ESTIMATE);
+      return { minHeight };
+    }, [tableHeight]);
+
     return (
       <div ref={tableRef} className={styles.tableContainer}>
-        <div className={styles.desktopTable}>
-          <Table<BudgetItem>
-            dataSource={dataSource}
-            columns={columns.map((col) => ({
-              ...col,
-              ellipsis: col.key !== "actions" && col.key !== "events",
-            }))}
-            locale={{
-              emptyText: (
-                <div className={styles.emptyPlaceholder}>No budget items to display</div>
-              ),
-            }}
-            onChange={handleTableChange}
-            rowClassName={(record) =>
-              `${styles.clickableRow}${
-                selectedRowKeys.includes(record.budgetItemId)
-                  ? ` ${styles.selectedRow}`
-                  : ""
-              }${
-                lockedLines.includes(record.budgetItemId)
-                  ? ` ${styles.lockedRow}`
-                  : ""
-              }`
-            }
-            onRow={(record) => ({
-              onClick: () => openEditModal(record),
-              tabIndex: lockedLines.includes(record.budgetItemId) ? -1 : 0,
-              onKeyDown: (e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  openEditModal(record);
-                } else if (e.key === " ") {
-                  e.preventDefault();
-                  openDeleteModal([record.budgetItemId]);
-                }
-              },
-            })}
-            pagination={{
-              pageSize,
-              current: currentPage,
-              showSizeChanger: true,
-              pageSizeOptions: ["10", "20", "50", "100"],
-              position: ["bottomRight"],
-              showTotal: (total, range) => `Showing ${range[0]}–${range[1]} of ${total} items`,
-              size: "small",
-              onChange: (page, size) => {
-                setCurrentPage(page);
-                if (size !== pageSize) setPageSize(size);
-              },
-            }}
-            scroll={{ y: Math.max(0, tableHeight - TABLE_HEADER_FOOTER) }}
-            className={styles.tableMinHeight}
-            style={{ height: tableHeight }}
-          />
-        </div>
-
-        {isMobile && (
-          <div className={styles.mobileCardList}>
-            {paginatedMobileData.length === 0 ? (
-              <div className={styles.emptyPlaceholder}>No budget items to display</div>
-            ) : (
-              <>
-                {paginatedMobileData.map((record) => {
-                  const isSelected = selectedRowKeys.includes(record.budgetItemId);
-                  const isLocked = lockedLines.includes(record.budgetItemId);
-                  const events = eventsByLineItem[record.budgetItemId] || [];
-                  const eventCount = events.length;
-
-                  return (
-                    <article
-                      key={record.key}
-                      className={`${styles.mobileCard}${
-                        isSelected ? ` ${styles.mobileCardSelected}` : ""
-                      }${isLocked ? ` ${styles.mobileCardLocked}` : ""}`}
-                      role="button"
-                      tabIndex={isLocked ? -1 : 0}
-                      aria-pressed={isSelected}
-                      aria-disabled={isLocked}
-                      onClick={() => {
-                        if (!isLocked) {
-                          openEditModal(record);
-                        }
-                      }}
-                      onKeyDown={(event) => handleCardKeyDown(event, record, isLocked)}
-                    >
-                      <header className={styles.mobileCardHeader}>
-                        <div className={styles.mobileCardHeaderLeft}>
-                          <label className={styles.mobileCardCheckbox}>
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              disabled={isLocked}
-                              onChange={(event) => {
-                                event.stopPropagation();
-                                toggleSelection(record, event.target.checked);
-                              }}
-                              onClick={(event) => event.stopPropagation()}
-                              aria-label="Select budget line item"
-                            />
-                          </label>
-                          <div className={styles.mobileCardIdentifiers}>
-                            <span className={styles.mobileCardKey}>
-                              {String(record.elementKey ?? "—")}
-                            </span>
-                            {record.elementId && (
-                              <span className={styles.mobileCardId}>
-                                {String(record.elementId)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className={styles.mobileCardControls}>
-                          <button
-                            className={styles.mobileIconButton}
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openEventModal(record);
-                            }}
-                            aria-label={
-                              eventCount > 0
-                                ? `Manage ${eventCount} scheduled events`
-                                : "Manage events"
-                            }
-                          >
-                            <FontAwesomeIcon icon={faClock} />
-                            {eventCount > 0 && (
-                              <span className={styles.mobileEventBadge}>{eventCount}</span>
-                            )}
-                          </button>
-                          <button
-                            className={styles.mobileIconButton}
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openDuplicateModal(record);
-                            }}
-                            aria-label="Duplicate line item"
-                          >
-                            <FontAwesomeIcon icon={faClone} />
-                          </button>
-                          <button
-                            className={styles.mobileIconButton}
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openDeleteModal([record.budgetItemId]);
-                            }}
-                            aria-label="Delete line item"
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </button>
-                        </div>
-                      </header>
-
-                      <div className={styles.mobileCardDescription}>
-                        {record.description ? String(record.description) : "No description"}
-                      </div>
-
-                      <div className={styles.mobileCardMetrics}>
-                        {mobileMetrics.map((metric) => (
-                          <div key={metric.key} className={styles.mobileCardMetric}>
-                            <span className={styles.mobileCardMetricLabel}>{metric.label}</span>
-                            <span className={styles.mobileCardMetricValue}>
-                              {formatMetricValue(record, metric.key)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {record.paymentStatus && (
-                        <footer className={styles.mobileCardFooter}>
-                          <span className={styles.mobileCardFooterLabel}>Payment</span>
-                          <span className={styles.mobileCardFooterValue}>
-                            {renderPaymentStatus(String(record.paymentStatus))}
-                          </span>
-                        </footer>
-                      )}
-                    </article>
-                  );
-                })}
-
-                <Pagination
-                  className={styles.mobilePagination}
-                  current={currentPage}
-                  pageSize={pageSize}
-                  total={dataSource.length}
-                  showSizeChanger
-                  pageSizeOptions={["10", "20", "50", "100"]}
-                  size="small"
-                  onChange={handlePaginationChange}
-                  onShowSizeChange={handlePaginationChange}
-                />
-              </>
+        {dataSource.length > 0 && (
+          <div className={styles.cardListHeader}>
+            <label className={styles.selectAllControl}>
+              <input
+                ref={selectAllRef}
+                type="checkbox"
+                checked={isSelectAllChecked}
+                onChange={(event) => handleSelectAllChange(event.target.checked)}
+                aria-label="Select all budget items"
+              />
+              <span>Select all</span>
+              <span className={styles.selectionCount}>
+                {selectedInScope.length}/{availableIds.length}
+              </span>
+            </label>
+            {selectedInScope.length > 0 && (
+              <button
+                type="button"
+                className={styles.clearSelectionButton}
+                onClick={handleClearSelection}
+              >
+                Clear selection
+              </button>
             )}
           </div>
+        )}
+
+        <div className={styles.cardListWrapper} style={listStyle}>
+          {paginatedData.length === 0 ? (
+            <div className={styles.emptyPlaceholder}>No budget items to display</div>
+          ) : (
+            <div className={`${styles.cardList}${isMobile ? ` ${styles.cardListMobile}` : ""}`}>
+              {paginatedData.map((record) => {
+                const isSelected = selectedRowKeys.includes(record.budgetItemId);
+                const isLocked = lockedLines.includes(record.budgetItemId);
+                const events = eventsByLineItem[record.budgetItemId] || [];
+                const eventCount = events.length;
+
+                return (
+                  <article
+                    key={record.key}
+                    className={`${styles.card}${
+                      isSelected ? ` ${styles.cardSelected}` : ""
+                    }${isLocked ? ` ${styles.cardLocked}` : ""}`}
+                    role="button"
+                    tabIndex={isLocked ? -1 : 0}
+                    aria-pressed={isSelected}
+                    aria-disabled={isLocked}
+                    onClick={() => {
+                      if (!isLocked) {
+                        openEditModal(record);
+                      }
+                    }}
+                    onKeyDown={(event) => handleCardKeyDown(event, record, isLocked)}
+                  >
+                    <header className={styles.cardHeader}>
+                      <div className={styles.cardHeaderLeft}>
+                        <label className={styles.cardCheckbox}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={isLocked}
+                            onChange={(event) => {
+                              event.stopPropagation();
+                              toggleSelection(record, event.target.checked);
+                            }}
+                            onClick={(event) => event.stopPropagation()}
+                            aria-label="Select budget line item"
+                          />
+                        </label>
+                        <div className={styles.cardIdentifiers}>
+                          <span className={styles.cardKey}>
+                            {String(record.elementKey ?? "—")}
+                          </span>
+                          {record.elementId && (
+                            <span className={styles.cardId}>
+                              {String(record.elementId)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className={styles.cardControls}>
+                        <button
+                          className={styles.cardIconButton}
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openEventModal(record);
+                          }}
+                          aria-label={
+                            eventCount > 0
+                              ? `Manage ${eventCount} scheduled events`
+                              : "Manage events"
+                          }
+                        >
+                          <FontAwesomeIcon icon={faClock} />
+                          {eventCount > 0 && (
+                            <span className={styles.cardEventBadge}>{eventCount}</span>
+                          )}
+                        </button>
+                        <button
+                          className={styles.cardIconButton}
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openDuplicateModal(record);
+                          }}
+                          aria-label="Duplicate line item"
+                        >
+                          <FontAwesomeIcon icon={faClone} />
+                        </button>
+                        <button
+                          className={styles.cardIconButton}
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openDeleteModal([record.budgetItemId]);
+                          }}
+                          aria-label="Delete line item"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    </header>
+
+                    <div className={styles.cardDescription}>
+                      {record.description ? String(record.description) : "No description"}
+                    </div>
+
+                    <div className={styles.cardMetrics}>
+                      {mobileMetrics.map((metric) => (
+                        <div key={metric.key} className={styles.cardMetric}>
+                          <span className={styles.cardMetricLabel}>{metric.label}</span>
+                          <span className={styles.cardMetricValue}>
+                            {formatMetricValue(record, metric.key)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {record.paymentStatus && (
+                      <footer className={styles.cardFooter}>
+                        <span className={styles.cardFooterLabel}>Payment</span>
+                        <span className={styles.cardFooterValue}>
+                          {renderPaymentStatus(String(record.paymentStatus))}
+                        </span>
+                      </footer>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {dataSource.length > 0 && (
+          <Pagination
+            className={styles.cardPagination}
+            current={currentPage}
+            pageSize={pageSize}
+            total={dataSource.length}
+            showSizeChanger
+            pageSizeOptions={["10", "20", "50", "100"]}
+            size="small"
+            onChange={handlePaginationChange}
+            onShowSizeChange={handlePaginationChange}
+          />
         )}
       </div>
     );
@@ -429,15 +457,3 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
 );
 
 export default BudgetItemsTable;
-
-
-
-
-
-
-
-
-
-
-
-

@@ -98,19 +98,21 @@
 }
 
 .mobileFilterWrap {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 220px;
 }
 
 .mobileFilterRoot {
   position: relative;
-  width: 100%;
+  width: auto;
 }
 
 .mobileFilterButton {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  width: 100%;
   justify-content: space-between;
   padding: 8px 16px;
   border: 1px solid rgba(255, 255, 255, 0.15);

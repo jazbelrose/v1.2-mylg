@@ -658,29 +658,9 @@ const BudgetPageContent = () => {
                                           })[])
                                         : []
                                     }
-                                    columns={tableConfig.tableColumns}
                                     selectedRowKeys={stateManager.selectedRowKeys}
                                     setSelectedRowKeys={stateManager.setSelectedRowKeys}
                                     lockedLines={stateManager.lockedLines}
-                                    handleTableChange={(_pagination, _filters, sorter) => {
-                                      const sortConfig = Array.isArray(sorter) ? sorter[0] : sorter;
-
-                                      if (sortConfig && typeof sortConfig === "object") {
-                                        const columnKey = (sortConfig.columnKey ?? sortConfig.field) as
-                                          | string
-                                          | undefined;
-                                        const order = sortConfig.order ?? null;
-
-                                        if (columnKey && order) {
-                                          stateManager.setSortField(columnKey);
-                                          stateManager.setSortOrder(order);
-                                          return;
-                                        }
-                                      }
-
-                                      stateManager.setSortField(null);
-                                      stateManager.setSortOrder(null);
-                                    }}
                                     openEditModal={eventHandlers.openEditModal}
                                     openDuplicateModal={eventHandlers.openDuplicateModal}
                                     openDeleteModal={eventHandlers.openDeleteModal}

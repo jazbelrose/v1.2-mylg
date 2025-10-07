@@ -42,21 +42,79 @@
 }
 
 .stat-item {
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-tint: transparent;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --accent-rgb: 244, 71, 105;
+  --glass-blur: 14px;
+  position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 20px;
-  border: 2px solid white;
-  border-radius: min(20px, 4vw);
-  transition: background 0.25s ease-in-out,
-    transform 0.25s ease-in-out,
-    box-shadow 0.25s ease-in-out;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: clamp(1rem, 4vw, 1.25rem);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  outline: 1px solid rgba(255, 255, 255, 0.06);
+  outline-offset: -1px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 var(--glass-highlight);
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    backdrop-filter 0.25s ease,
+    -webkit-backdrop-filter 0.25s ease;
 }
 
-.stat-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 3px 12px rgba(255, 255, 255, 0.15);
+.stat-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    var(--glass-tint),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 22%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+}
+
+.stat-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--glass-overlay, transparent);
+  mix-blend-mode: screen;
+  opacity: 0.95;
+}
+
+.stat-item:hover,
+.stat-item:focus-visible {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 var(--glass-highlight),
+    0 0 0 6px rgba(var(--accent-rgb), 0.1);
+  transform: translateY(-1px);
+}
+
+.stat-item:focus-visible {
+  outline: none;
+}
+
+.stat-item:active {
+  --glass-blur: 10px;
+  transform: scale(0.995);
 }
 
 .stat-item-header {
@@ -71,8 +129,27 @@
   width: 100%;
 }
 
+.stat-item-header {
+  position: relative;
+  z-index: 1;
+}
+
 .stat-icon {
-  color: #FA3356;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  color: rgb(var(--accent-rgb));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.stat-icon svg {
   width: 20px;
   height: 20px;
 }
@@ -80,12 +157,24 @@
 .stats-count,
 .stats-title {
   font-size: 16px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+}
+
+.stats-count {
+  color: #f4f7f9;
+}
+
+.stats-title {
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .progress-bar {
   width: 100%;
   height: 10px;
-  background-color: #d3d3d3;
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   overflow: hidden;
   position: relative;
@@ -93,18 +182,23 @@
 
 .progress-completed {
   height: 100%;
-  background-color: #00c853;
+  background-image: linear-gradient(
+      120deg,
+      rgba(var(--accent-rgb), 0.4),
+      rgba(var(--accent-rgb), 0.8)
+    );
   transition: width 0.3s ease-in-out;
 }
 
 .progress-text {
   font-size: 14px;
-  color: #888888;
+  color: rgba(255, 255, 255, 0.64);
   text-align: center;
   margin: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
 }
 
 /* Inbox preview (DMs) inside quick stats card */
@@ -207,5 +301,52 @@
   .quick-stats-container-row { width: 100%; }
   .stats-count,
   .stats-title { font-size: 14px; }
+}
+
+/* Task stat variants */
+
+.task-stat-grid > .stat-item:nth-child(1),
+.stats-grid.task-stat-grid > .stat-item:nth-child(1),
+.stat-item.task-stat--done,
+.stat-item.task-stat-card--done,
+.stat-item.task-stat-card.done,
+.stat-item.task-stat.done {
+  --accent-rgb: 28, 213, 172;
+  --glass-tint: linear-gradient(135deg, rgba(26, 62, 52, 0.35), rgba(25, 81, 67, 0.2));
+  --glass-overlay:
+    radial-gradient(120% 80% at 0% 0%, rgba(28, 213, 172, 0.18), transparent 55%),
+    radial-gradient(140% 100% at 100% 100%, rgba(123, 255, 220, 0.12), transparent 50%);
+}
+
+.task-stat-grid > .stat-item:nth-child(2),
+.stats-grid.task-stat-grid > .stat-item:nth-child(2),
+.stat-item.task-stat--overdue,
+.stat-item.task-stat-card--overdue,
+.stat-item.task-stat-card.overdue,
+.stat-item.task-stat.overdue {
+  --accent-rgb: 250, 51, 86;
+  --glass-tint: linear-gradient(135deg, rgba(80, 23, 30, 0.38), rgba(60, 16, 22, 0.24));
+  --glass-overlay:
+    radial-gradient(120% 80% at 0% 0%, rgba(250, 51, 86, 0.2), transparent 55%),
+    radial-gradient(140% 100% at 100% 100%, rgba(255, 140, 160, 0.12), transparent 50%);
+}
+
+.task-stat-grid > .stat-item:nth-child(3),
+.stats-grid.task-stat-grid > .stat-item:nth-child(3),
+.stat-item.task-stat--due-soon,
+.stat-item.task-stat-card--dueSoon,
+.stat-item.task-stat-card.due-soon,
+.stat-item.task-stat.due-soon {
+  --accent-rgb: 255, 186, 64;
+  --glass-tint: linear-gradient(135deg, rgba(85, 58, 18, 0.36), rgba(72, 45, 10, 0.22));
+  --glass-overlay:
+    radial-gradient(120% 80% at 0% 0%, rgba(255, 186, 64, 0.2), transparent 55%),
+    radial-gradient(140% 100% at 100% 100%, rgba(255, 226, 170, 0.12), transparent 50%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .stat-item {
+    background: rgba(23, 23, 23, 0.88);
+  }
 }
 

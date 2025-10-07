@@ -654,10 +654,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
           )}
         </section>
 
-        <div className={styles.separator} />
-        <p className={styles.footerText}>
-          Tip: keep everything on a single surface. Use flat cards for items; avoid wrapping the list in another heavy panel.
-        </p>
+     
       </div>
 
       <TaskDrawer

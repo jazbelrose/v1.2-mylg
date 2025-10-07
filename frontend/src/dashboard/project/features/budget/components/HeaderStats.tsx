@@ -26,7 +26,6 @@ import {
 } from "@/shared/utils/colorUtils";
 
 import summaryStyles from "./budget-header-summary.module.css";
-import headerStyles from "./header-stats.module.css";
 import mobileStyles from "./budget-header-mobile.module.css";
 import toolbarStyles from "./BudgetToolbar.module.css";
 
@@ -208,39 +207,50 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   ariaPressed,
   disableHover,
   disablePointer,
-}) => (
-  <div
-    className={`${summaryStyles.card} ${
-      active ? summaryStyles.active : ""
-    } ${disableHover ? summaryStyles.noHover : ""} ${
-      disablePointer ? summaryStyles.noPointer : ""
-    } ${className}`}
-    onClick={onClick}
-    role={onClick ? "button" : undefined}
-    tabIndex={onClick ? 0 : undefined}
-    aria-label={onClick ? ariaLabel ?? title : undefined}
-    aria-pressed={onClick && typeof ariaPressed === "boolean" ? ariaPressed : undefined}
-    onKeyDown={
-      onClick
-        ? (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onClick();
-            }
+}) => {
+  const handleKeyDown =
+    onClick != null
+      ? (e: React.KeyboardEvent<HTMLDivElement>) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick();
           }
-        : undefined
-    }
-  >
-    <div className={summaryStyles.cardIcon} style={{ background: color }}>
-      <FontAwesomeIcon icon={icon} />
+        }
+      : undefined;
+
+  return (
+    <div
+      className={`${summaryStyles.card} ${
+        active ? summaryStyles.active : ""
+      } ${disableHover ? summaryStyles.noHover : ""} ${
+        disablePointer ? summaryStyles.noPointer : ""
+      } ${className}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? ariaLabel ?? title : undefined}
+      aria-pressed={
+        onClick && typeof ariaPressed === "boolean" ? ariaPressed : undefined
+      }
+      onKeyDown={handleKeyDown}
+    >
+      <div className={summaryStyles.cardHeader}>
+        <div className={summaryStyles.cardIcon} style={{ background: color }}>
+          <FontAwesomeIcon icon={icon} />
+        </div>
+        <span className={summaryStyles.cardTag}>{tag}</span>
+        {children ? (
+          <div className={summaryStyles.cardActions}>{children}</div>
+        ) : null}
+      </div>
+      <div className={summaryStyles.cardBody}>
+        <div className={summaryStyles.cardTitle}>{title}</div>
+        <div className={summaryStyles.cardValue}>{value}</div>
+        <div className={summaryStyles.cardDesc}>{description}</div>
+      </div>
     </div>
-    <span className={summaryStyles.cardTag}>{tag}</span>
-    {children}
-    <div className={summaryStyles.cardTitle}>{title}</div>
-    <div className={summaryStyles.cardValue}>{value}</div>
-    <div className={summaryStyles.cardDesc}>{description}</div>
-  </div>
-);
+  );
+};
 
 /* =========================
    Main
@@ -519,47 +529,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         isSelectable: true,
         disableHover: true,
         disablePointer: true,
-        extra: (
-          <div className={summaryStyles.invoicePreviewContainer}>
-            <FontAwesomeIcon
-              icon={faFileInvoiceDollar}
-              className={summaryStyles.invoicePreviewIcon}
-              title="Invoice preview"
-              aria-label="Invoice preview"
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                openInvoicePreview();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  openInvoicePreview();
-                }
-              }}
-            />
-            <span
-              className={headerStyles.revisionLabel}
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenRevisionModal();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onOpenRevisionModal();
-                }
-              }}
-            >
-              {`Rev.${budgetHeader?.revision ?? 1}`}
-            </span>
-          </div>
-        ),
       },
     ];
   }, [
@@ -570,8 +539,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     handleSelectBudgeted,
     handleSelectFinal,
     hasReconciled,
-    onOpenRevisionModal,
-    openInvoicePreview,
     reconciledTotal,
     selectedMetric,
     showReconciled,
@@ -593,6 +560,9 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     if (Number.isNaN(date.getTime())) return "No date";
     return date.toLocaleDateString();
   }, [budgetHeader?.createdAt]);
+
+  const headerDateText =
+    createdDateLabel === "No date" ? "No revision date" : `As of ${createdDateLabel}`;
 
   const finalDisplay = useMemo(
     () =>
@@ -860,95 +830,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     []
   );
 
-  const desktopContent = (
-    <div className={summaryStyles.container}>
-      <div className={summaryStyles.cardsColumn}>
-        <div className={summaryStyles.cardsRow}>
-          {metrics.slice(0, 3).map((m) => (
-            <SummaryCard
-              key={m.title}
-              icon={m.icon}
-              color={m.color}
-              title={m.title}
-              tag={m.tag}
-              value={m.value}
-              description={m.description}
-              className={m.sticky ? summaryStyles.stickyCard : ""}
-              onClick={m.onSelect}
-              active={Boolean(m.isSelectable && selectedMetric === m.title)}
-              ariaLabel={m.ariaLabel}
-              ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
-              disableHover={m.disableHover}
-              disablePointer={m.disablePointer}
-            >
-              {m.extra}
-            </SummaryCard>
-          ))}
-        </div>
-
-        <div className={summaryStyles.cardsRow}>
-          {metrics.slice(3).map((m) => (
-            <SummaryCard
-              key={m.title}
-              icon={m.icon}
-              color={m.color}
-              title={m.title}
-              tag={m.tag}
-              value={m.value}
-              description={m.description}
-              className={m.sticky ? summaryStyles.stickyCard : ""}
-              onClick={m.onSelect}
-              active={Boolean(m.isSelectable && selectedMetric === m.title)}
-              ariaLabel={m.ariaLabel}
-              ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
-              disableHover={m.disableHover}
-              disablePointer={m.disablePointer}
-            >
-              {m.extra}
-            </SummaryCard>
-          ))}
-        </div>
-      </div>
-
-      <div className={summaryStyles.chartColumn}>
-        <div className={summaryStyles.chartAndLegend}>
-          <div className={summaryStyles.chartContainer}>
-            <BudgetDonut
-              data={chartState.slices}
-              total={chartState.total}
-              palette={chartState.palette}
-              formatTooltip={formatTooltip}
-              totalFormatter={totalFormatter}
-            />
-          </div>
-          <ul className={summaryStyles.legend}>
-            {chartState.slices.map((slice, index) => {
-              const palette = chartState.palette;
-              const paletteLength = palette.length;
-              const background =
-                paletteLength > 0
-                  ? palette[index % paletteLength]
-                  : getColor(`${slice.id}-${index}`);
-              return (
-                <li className={summaryStyles.legendItem} key={slice.id}>
-                  <span
-                    className={summaryStyles.legendDot}
-                    style={{ background }}
-                  />
-                  {slice.label}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
-
-  const topMetrics = metrics.slice(0, 3);
-  const bottomMetrics = metrics.slice(3);
-
-  const mobileAccentStyle = useMemo(
+  const accentStyle = useMemo(
     () =>
       ({
         "--budget-accent": accentHex,
@@ -959,9 +841,134 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         "--budget-accent-chip": accentAlpha(0.18),
         "--budget-accent-chip-active": accentAlpha(0.3),
         "--budget-accent-text": "rgba(255, 255, 255, 0.92)",
+        "--budget-accent-text-muted": "rgba(241, 245, 249, 0.7)",
       }) as React.CSSProperties,
     [accentAlpha, accentHex]
   );
+
+  const desktopAccentStyle = accentStyle;
+
+  const desktopContent = (
+    <div className={summaryStyles.surface} style={desktopAccentStyle}>
+      <div className={summaryStyles.headerRow}>
+        <div className={summaryStyles.titleGroup}>
+          <span className={summaryStyles.title}>Budget</span>
+          <span className={summaryStyles.dateLabel}>{headerDateText}</span>
+        </div>
+        <div className={summaryStyles.headerActions}>
+          <button
+            type="button"
+            className={summaryStyles.iconButton}
+            onClick={openInvoicePreview}
+            aria-label="Invoice preview"
+            disabled={!budgetHeader}
+          >
+            <FontAwesomeIcon icon={faFileInvoiceDollar} />
+          </button>
+          <button
+            type="button"
+            className={summaryStyles.revisionButton}
+            onClick={onOpenRevisionModal}
+            disabled={!budgetHeader}
+          >
+            {`Rev.${budgetHeader?.revision ?? 1}`}
+          </button>
+        </div>
+      </div>
+      <div className={summaryStyles.bodyRow}>
+        <div className={summaryStyles.cardsColumn}>
+          <div
+            className={`${summaryStyles.cardsRow} ${summaryStyles.cardsRowTop}`}
+          >
+            {metrics.slice(0, 3).map((m) => (
+              <SummaryCard
+                key={m.title}
+                icon={m.icon}
+                color={m.color}
+                title={m.title}
+                tag={m.tag}
+                value={m.value}
+                description={m.description}
+                className={[
+                  m.sticky ? summaryStyles.stickyCard : "",
+                  m.title === "Final Cost" ? summaryStyles.finalCard : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={m.onSelect}
+                active={Boolean(m.isSelectable && selectedMetric === m.title)}
+                ariaLabel={m.ariaLabel}
+                ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
+                disableHover={m.disableHover}
+                disablePointer={m.disablePointer}
+              />
+            ))}
+          </div>
+
+          <div
+            className={`${summaryStyles.cardsRow} ${summaryStyles.cardsRowBottom}`}
+          >
+            {metrics.slice(3).map((m) => (
+              <SummaryCard
+                key={m.title}
+                icon={m.icon}
+                color={m.color}
+                title={m.title}
+                tag={m.tag}
+                value={m.value}
+                description={m.description}
+                className={m.sticky ? summaryStyles.stickyCard : ""}
+                onClick={m.onSelect}
+                active={Boolean(m.isSelectable && selectedMetric === m.title)}
+                ariaLabel={m.ariaLabel}
+                ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
+                disableHover={m.disableHover}
+                disablePointer={m.disablePointer}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className={summaryStyles.chartColumn}>
+          <div className={summaryStyles.chartCard}>
+            <div className={summaryStyles.chartContainer}>
+              <BudgetDonut
+                data={chartState.slices}
+                total={chartState.total}
+                palette={chartState.palette}
+                formatTooltip={formatTooltip}
+                totalFormatter={totalFormatter}
+              />
+            </div>
+            <ul className={summaryStyles.legend}>
+              {chartState.slices.map((slice, index) => {
+                const palette = chartState.palette;
+                const paletteLength = palette.length;
+                const background =
+                  paletteLength > 0
+                    ? palette[index % paletteLength]
+                    : getColor(`${slice.id}-${index}`);
+                return (
+                  <li className={summaryStyles.legendItem} key={slice.id}>
+                    <span
+                      className={summaryStyles.legendDot}
+                      style={{ background }}
+                    />
+                    {slice.label}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const topMetrics = metrics.slice(0, 3);
+  const bottomMetrics = metrics.slice(3);
+
+  const mobileAccentStyle = accentStyle;
 
   const renderMetricChip = (metric: (typeof metrics)[number]) => {
     const isBallparkMetric = metric.title === "Ballpark";

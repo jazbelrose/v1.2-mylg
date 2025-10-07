@@ -65,6 +65,33 @@
   gap: 12px;
 }
 
+.timeline-chart__label-resizer {
+  width: 8px;
+  cursor: col-resize;
+  flex: 0 0 auto;
+  position: relative;
+  align-self: stretch;
+  touch-action: none;
+}
+
+.timeline-chart__label-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.timeline-chart__label-resizer:hover::after,
+.timeline-chart__label-resizer:active::after {
+  background: rgba(250, 51, 86, 0.45);
+}
+
+
 .timeline-chart .chart-mode-toggle {
   display: inline-flex;
   align-items: center;

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { scaleLinear, scaleBand, scaleTime } from "@visx/scale";
 import { Group } from "@visx/group";
 import { Bar } from "@visx/shape";
@@ -33,6 +33,9 @@ type TimelineChartProps = {
 };
 
 const PX_PER_HOUR = 24; // ← fix: non-zero so bars are visible
+const LABEL_MIN_WIDTH = 80;
+const LABEL_MAX_WIDTH = 320;
+const DEFAULT_LABEL_WIDTH = 160;
 
 // Level of Detail thresholds by zoom
 function getLOD(pxPerDay: number): 0 | 1 | 2 {
@@ -124,6 +127,38 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
   );
 
   const firstDate = events.length > 0 ? events[0].date : new Date().toISOString().split("T")[0];
+  const [labelWidth, setLabelWidth] = useState(DEFAULT_LABEL_WIDTH);
+
+  const clampLabelWidth = useCallback(
+    (value: number) => Math.min(Math.max(value, LABEL_MIN_WIDTH), LABEL_MAX_WIDTH),
+    []
+  );
+
+  const handleLabelResizeStart = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = labelWidth;
+
+    const handleMove = (moveEvent: PointerEvent) => {
+      const delta = moveEvent.clientX - startX;
+      setLabelWidth(clampLabelWidth(startWidth + delta));
+    };
+
+    const stop = () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+    };
+
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+  }, [clampLabelWidth, labelWidth]);
+
+  const resetLabelWidth = useCallback(() => {
+    setLabelWidth(DEFAULT_LABEL_WIDTH);
+  }, []);
+
   const currentDate = selectedDateProp || firstDate;
 
   // Start date
@@ -214,7 +249,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
       {({ width: w }) => {
         const parentWidth = Math.max(1, w || 900);
         const axisHeight = 28;
-        const margin = { top: axisHeight, right: 20, bottom: 20, left: 60 };
+        const margin = { top: axisHeight, right: 20, bottom: 20, left: labelWidth };
 
         // Dynamic track height
         const minTrackHeight = 32;
@@ -266,8 +301,9 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                 left: 0,
                 zIndex: 2,
                 background: "#181818",
-                minWidth: margin.left,
-                width: margin.left,
+                minWidth: labelWidth,
+                width: labelWidth,
+                flex: "0 0 auto",
                 height: svgHeight,
                 borderRight: "1px solid #222",
                 display: "flex",
@@ -275,6 +311,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                 justifyContent: "flex-start",
                 alignItems: "flex-end",
                 paddingTop: margin.top,
+                paddingRight: 8,
               }}
               aria-hidden
             >
@@ -288,7 +325,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                     style={{
                       position: "absolute",
                       top: y + margin.top,
-                      right: 4,
+                      right: 8,
                       height: h,
                       display: "flex",
                       alignItems: "center",
@@ -302,7 +339,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                       whiteSpace: "nowrap",
                       textOverflow: "ellipsis",
                       overflow: "hidden",
-                      maxWidth: "90%",
+                      maxWidth: Math.max(0, labelWidth - 16),
                     }}
                     title={t.name}
                   >
@@ -311,6 +348,18 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                 );
               })}
             </div>
+            <div
+              className="timeline-chart__label-resizer"
+              style={{ height: svgHeight }}
+              role="separator"
+              aria-orientation="vertical"
+              aria-valuemin={LABEL_MIN_WIDTH}
+              aria-valuemax={LABEL_MAX_WIDTH}
+              aria-valuenow={Math.round(labelWidth)}
+              title="Drag to resize labels"
+              onPointerDown={handleLabelResizeStart}
+              onDoubleClick={resetLabelWidth}
+            />
 
             <div style={{ overflowX: "auto", flex: 1 }}>
               <Zoom

@@ -1,8 +1,15 @@
 .panel {
-  background: #0c0c0c;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 24px;
-  color: #ffffff;
-  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #101010;
+  color: rgba(255, 255, 255, 0.94);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 22px 48px rgba(0, 0, 0, 0.35);
 }
 
 .inner {

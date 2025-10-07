@@ -160,6 +160,83 @@
   overflow: auto;
 }
 
+.tableSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 640px;
+  padding: 12px 16px 16px;
+}
+
+.skeletonHead,
+.skeletonRow {
+  display: grid;
+  grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 0.8fr);
+  gap: 16px;
+}
+
+.skeletonHead {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.skeletonHeadCol {
+  height: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.skeletonRow {
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.skeletonRow:last-of-type {
+  border-bottom: none;
+}
+
+.skeletonProject {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skeletonThumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.skeletonLine,
+.skeletonLineShort,
+.skeletonBadge,
+.skeletonPill {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.skeletonLine {
+  height: 12px;
+  width: 160px;
+}
+
+.skeletonLineShort {
+  height: 12px;
+  width: 110px;
+}
+
+.skeletonBadge {
+  height: 18px;
+  width: 80px;
+}
+
+.skeletonPill {
+  height: 22px;
+  width: 48px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

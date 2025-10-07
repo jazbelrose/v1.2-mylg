@@ -56,10 +56,32 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     return <div className={desktopStyles.errorState}>{errorText}</div>;
   }
 
+  const skeletonRows = Array.from({ length: 5 });
+
   return (
     <div className={desktopStyles.tableWrap}>
       {isLoading ? (
-        <div className={desktopStyles.emptyState}>Loading projects…</div>
+        <div className={desktopStyles.tableSkeleton} aria-hidden>
+          <div className={desktopStyles.skeletonHead}>
+            <div className={desktopStyles.skeletonHeadCol} />
+            <div className={desktopStyles.skeletonHeadCol} />
+            <div className={desktopStyles.skeletonHeadCol} />
+            <div className={desktopStyles.skeletonHeadCol} />
+            <div className={desktopStyles.skeletonHeadCol} />
+          </div>
+          {skeletonRows.map((_, index) => (
+            <div className={desktopStyles.skeletonRow} key={index}>
+              <div className={desktopStyles.skeletonProject}>
+                <div className={desktopStyles.skeletonThumb} />
+                <div className={desktopStyles.skeletonLine} />
+              </div>
+              <div className={desktopStyles.skeletonBadge} />
+              <div className={desktopStyles.skeletonLineShort} />
+              <div className={desktopStyles.skeletonLine} />
+              <div className={desktopStyles.skeletonPill} />
+            </div>
+          ))}
+        </div>
       ) : projects.length === 0 ? (
         <div className={desktopStyles.emptyState}>No projects match filters.</div>
       ) : (

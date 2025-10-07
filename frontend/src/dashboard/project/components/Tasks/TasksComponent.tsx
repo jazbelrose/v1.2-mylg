@@ -1,23 +1,35 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { Button } from "@/components/ui";
 import { fetchTasks } from "@/shared/utils/api";
 import QuickCreateTaskModal, {
   type QuickCreateTaskModalProject,
   type QuickCreateTaskModalTask,
 } from "@/dashboard/home/components/QuickCreateTaskModal";
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Plus,
+  User2,
+} from "lucide-react";
 
-import styles from "./TasksComponentMobile.module.css";
+import styles from "./TasksComponent.module.css";
 import TaskDrawer from "./components/TaskDrawer";
-import TaskList from "./components/TaskList";
-import TaskSummary from "./components/TaskSummary";
 import {
   DEFAULT_LOCATION,
   DRAWER_SNAP_POINTS,
   buildMapMarkers,
   buildMarkerThumbnail,
   computeStats,
+  createTaskStatusContext,
   formatDueDate,
   formatDueLabel,
+  formatStatusLabel,
+  getTaskStatusBadge,
   getViewportHeight,
   isSameDay,
   normalizeTask,
@@ -27,8 +39,156 @@ import {
   type TaskMapMarker,
   type TaskStats,
   type SnapIndex,
+  type TaskStatusContext,
 } from "./components/quickTaskUtils";
-import { formatAssigneeDisplay } from "./utils";
+import { buildDirectionsLinks, formatAssigneeDisplay } from "./utils";
+
+type StatTone = "ok" | "warn" | "soon";
+
+type StatChipProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  tone: StatTone;
+};
+
+const toneClassMap: Record<StatTone, string> = {
+  ok: styles.statToneOk,
+  warn: styles.statToneWarn,
+  soon: styles.statToneSoon,
+};
+
+const StatChip: React.FC<StatChipProps> = ({ icon, label, value, tone }) => {
+  const toneClass = toneClassMap[tone];
+
+  return (
+    <div className={`${styles.statChip} ${toneClass}`}>
+      <div className={styles.statChipContent}>
+        <div className={styles.statIcon}>{icon}</div>
+        <div className={styles.statCopy}>
+          <span className={styles.statLabel}>{label}</span>
+          <span className={styles.statValue}>{value}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+type TaskListItemProps = {
+  task: QuickTask;
+  isActive: boolean;
+  onSelect: (taskId: string) => void;
+  onEdit: (taskId: string) => void;
+  onMarkDone: (taskId: string) => void;
+  formatDue: (task: QuickTask) => string;
+  statusContext: TaskStatusContext;
+};
+
+const TaskListItem: React.FC<TaskListItemProps> = ({
+  task,
+  isActive,
+  onSelect,
+  onEdit,
+  onMarkDone,
+  formatDue,
+  statusContext,
+}) => {
+  const { label: statusLabel, category } = getTaskStatusBadge(task.status, task.dueDate, statusContext);
+  const baseStatusLabel = formatStatusLabel(task.status);
+  const displayStatusLabel = statusLabel === baseStatusLabel ? statusLabel : `${statusLabel} · ${baseStatusLabel}`;
+  const assigneeLabel = formatAssigneeDisplay(task.assignedTo);
+  const directionsLinks = buildDirectionsLinks(task.address);
+
+  const metaEntries: Array<{ icon: React.ReactNode; label: string }> = [];
+  const dueLabel = formatDue(task);
+  if (dueLabel) {
+    metaEntries.push({ icon: <CalendarDays size={16} aria-hidden="true" />, label: dueLabel });
+  }
+
+  if (task.address) {
+    metaEntries.push({ icon: <MapPin size={16} aria-hidden="true" />, label: task.address });
+  }
+
+  if (assigneeLabel) {
+    metaEntries.push({ icon: <User2 size={16} aria-hidden="true" />, label: `Assigned to: ${assigneeLabel}` });
+  }
+
+  return (
+    <li className={`${styles.taskItem}${isActive ? ` ${styles.taskItemActive}` : ""}`} data-task-id={task.id}>
+      <div className={styles.taskContent}>
+        <button
+          type="button"
+          className={styles.taskMain}
+          onClick={() => onSelect(task.id)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onSelect(task.id);
+            }
+          }}
+        >
+          <div className={styles.taskTitleRow}>
+            <span className={styles.taskTitle}>{task.title}</span>
+            <span
+              className={`${styles.statusBadge}${category === "overdue" ? ` ${styles.statusBadgeDanger}` : ""}`}
+            >
+              {displayStatusLabel}
+            </span>
+          </div>
+          {metaEntries.length > 0 ? (
+            <div className={styles.taskMeta}>
+              {metaEntries.map((entry, index) => (
+                <span key={`${task.id}-meta-${index}`} className={styles.metaEntry}>
+                  {entry.icon}
+                  <span>{entry.label}</span>
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </button>
+        <div className={styles.taskActions}>
+          {directionsLinks ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className={`${styles.mapButton} ${styles.buttonWithIcon}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                const url = directionsLinks.googleMaps || directionsLinks.appleMaps;
+                if (typeof window !== "undefined") {
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }
+              }}
+            >
+              Open in Maps
+              <ArrowUpRight aria-hidden="true" size={16} />
+            </Button>
+          ) : null}
+          <Button
+            size="sm"
+            className={styles.accentButton}
+            onClick={(event) => {
+              event.stopPropagation();
+              onMarkDone(task.id);
+            }}
+          >
+            Mark done
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit(task.id);
+            }}
+          >
+            Edit task
+          </Button>
+        </div>
+      </div>
+    </li>
+  );
+};
 
 export type TasksComponentProps = {
   projectId?: string;
@@ -55,7 +215,6 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   const [dragStartY, setDragStartY] = useState<number | null>(null);
   const [currentDragY, setCurrentDragY] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
-  const inlineTaskListRef = useRef<HTMLUListElement | null>(null);
   const drawerTaskListRef = useRef<HTMLUListElement | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const initialScrollDoneRef = useRef(false);
@@ -153,6 +312,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   }, [tasks, activeTaskId]);
 
   const stats = useMemo<TaskStats>(() => computeStats(tasks), [tasks]);
+  const statusContext = useMemo(() => createTaskStatusContext(), []);
 
   const formatStatValue = (value: number): string | number => {
     if (error) return "—";
@@ -278,20 +438,44 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   );
   const selectedAssigneeName = formatAssigneeDisplay(selectedTask?.assignedTo);
 
+  const openTaskEditor = useCallback(
+    (taskId: string, overrides?: Partial<QuickCreateTaskModalTask>) => {
+      const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
+      if (!match) return;
+
+      const modalTask = toModalTask(match);
+      setTaskToEdit(overrides ? { ...modalTask, ...overrides } : modalTask);
+      setQuickCreateOpen(true);
+    },
+    [drawerTasks, tasks, toModalTask],
+  );
+
   const handleTaskSelect = useCallback(
     (taskId: string) => {
       if (activeTaskId === taskId) {
-        const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
-        if (match) {
-          setTaskToEdit(toModalTask(match));
-          setQuickCreateOpen(true);
-        }
+        openTaskEditor(taskId);
       } else {
         setActiveTaskId(taskId);
         setSnapIndex((current) => (current === 0 ? 1 : current));
       }
     },
-    [activeTaskId, drawerTasks, tasks, toModalTask],
+    [activeTaskId, openTaskEditor],
+  );
+
+  const handleEditTask = useCallback(
+    (taskId: string) => {
+      setActiveTaskId(taskId);
+      openTaskEditor(taskId);
+    },
+    [openTaskEditor],
+  );
+
+  const handleMarkTaskDone = useCallback(
+    (taskId: string) => {
+      setActiveTaskId(taskId);
+      openTaskEditor(taskId, { status: "done" });
+    },
+    [openTaskEditor],
   );
 
   const handleMarkerClick = useCallback(
@@ -406,80 +590,75 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   }, [error, loading, tasks.length]);
 
   return (
-    <section className={`${styles.card} ${styles.desktopCard} tasks-component`} aria-label="Project tasks overview">
-      <header className={styles.header}>
-        <div className={styles.headingGroup}>
-          <h3 className={styles.title}>Tasks</h3>
-          <p className={styles.subtitle}>
-            {projectName ? `Keep ${projectName} moving forward.` : "Keep this project moving forward."}
-          </p>
-        </div>
-        <div className={styles.desktopActions}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={handleOpenQuickCreate}
-            disabled={loading || !hasQuickCreateProject}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+    <section className={styles.panel} aria-label="Project tasks overview">
+      <div className={styles.inner}>
+        <header className={styles.header}>
+          <div className={styles.titleGroup}>
+            <h3 className={styles.title}>Tasks</h3>
+            <p className={styles.subtitle}>
+              {projectName ? `Keep ${projectName} moving forward.` : "Keep this project moving forward."}
+            </p>
+          </div>
+          <div className={styles.actions}>
+            <Button
+              className={`${styles.accentButton} ${styles.buttonWithIcon}`}
+              onClick={handleOpenQuickCreate}
+              disabled={loading || !hasQuickCreateProject}
             >
-              <path d="M12 5v14" />
-              <path d="M5 12h14" />
-            </svg>
-            New task
-          </button>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={handleOpenDrawer}
-            disabled={loading}
-          >
-            Open map view
-          </button>
-        </div>
-      </header>
+              <Plus aria-hidden="true" size={16} />
+              New task
+            </Button>
+            <Button variant="outline" onClick={handleOpenDrawer} disabled={loading}>
+              Open map view
+            </Button>
+          </div>
+        </header>
 
-      <div className={styles.desktopSummaryRow}>
-        <TaskSummary stats={stats} formatValue={formatStatValue} statusMessage={statusMessage} />
-        <div className={styles.statusCard}>
-          <span className={styles.statusEyebrow}>What to know</span>
-          <p className={styles.statusMessage}>{statusMessage}</p>
-          <p className={styles.statusSupport}>{mapStatusMessage}</p>
+        <div className={styles.statsRow}>
+          <StatChip icon={<CheckCircle2 aria-hidden="true" />} label="Done" value={formatStatValue(stats.completed)} tone="ok" />
+          <StatChip icon={<AlertTriangle aria-hidden="true" />} label="Overdue" value={formatStatValue(stats.overdue)} tone="warn" />
+          <StatChip icon={<Clock aria-hidden="true" />} label="Due soon" value={formatStatValue(stats.dueSoon)} tone="soon" />
         </div>
-      </div>
 
-      <section className={styles.listSection} aria-label="All project tasks">
-        <div className={styles.listHeader}>
-          <h4 className={styles.sectionHeading}>Task list</h4>
-          <span className={styles.listMeta}>{listMetaLabel}</span>
+        <div className={styles.notice}>
+          <span className={styles.noticeStrong}>What to know:</span> {statusMessage}{" "}
+          <span className={styles.noticeSubtle}>{mapStatusMessage}</span>
         </div>
-        <div className={styles.listSurface}>
+
+        <section className={styles.listSection} aria-label="All project tasks">
+          <div className={styles.listHeader}>
+            <h4 className={styles.sectionHeading}>Task list</h4>
+            <span className={styles.listMeta}>{listMetaLabel}</span>
+          </div>
           {error ? (
             <div className={styles.error}>{error}</div>
           ) : loading ? (
             <div className={styles.loading}>Loading tasks…</div>
           ) : tasks.length ? (
-            <TaskList
-              tasks={drawerTasks}
-              activeTaskId={activeTaskId}
-              onTaskSelect={handleTaskSelect}
-              formatDueLabel={formatDueLabel}
-              taskListRef={inlineTaskListRef}
-            />
+            <ul className={styles.taskList}>
+              {drawerTasks.map((task) => (
+                <TaskListItem
+                  key={task.id}
+                  task={task}
+                  isActive={task.id === activeTaskId}
+                  onSelect={handleTaskSelect}
+                  onEdit={handleEditTask}
+                  onMarkDone={handleMarkTaskDone}
+                  formatDue={formatDueLabel}
+                  statusContext={statusContext}
+                />
+              ))}
+            </ul>
           ) : (
             <div className={styles.empty}>No tasks yet. Create one to get started.</div>
           )}
-        </div>
-      </section>
+        </section>
+
+        <div className={styles.separator} />
+        <p className={styles.footerText}>
+          Tip: keep everything on a single surface. Use flat cards for items; avoid wrapping the list in another heavy panel.
+        </p>
+      </div>
 
       <TaskDrawer
         open={drawerOpen}

@@ -32,8 +32,9 @@
 
 .titleGroup {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  gap: 8px;
+  align-items: baseline;
 }
 
 .title {
@@ -46,7 +47,7 @@
 .dateLabel {
   font-size: 0.72rem;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-variant: small-caps;
   color: var(--budget-accent-text-muted);
 }
 

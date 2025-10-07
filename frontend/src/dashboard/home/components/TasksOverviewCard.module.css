@@ -1,349 +1,380 @@
-.card {
+.panel {
   width: 100%;
-  max-width: 100%;
-  margin: 0;
-  background: var(--bg2, #111111);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  overflow: hidden;
-  padding: 18px;
   box-sizing: border-box;
-  flex-shrink: 0;
-  position: relative;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #101010;
+  color: rgba(255, 255, 255, 0.94);
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  color: rgba(255, 255, 255, 0.95);
-  isolation: isolate;
-  background:
-    radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 70%),
-    var(--bg2, #111213);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
-    0 8px 24px rgba(0, 0, 0, 0.25);
+  gap: 24px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 22px 48px rgba(0, 0, 0, 0.35);
 }
 
-.card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.header {
+.headerRow {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 16px;
 }
 
-.titleWrap {
+.titleGroup {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .title {
   margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-}
-
-.subtitle {
-  margin: 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.iconButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 13px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.92);
-  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
-}
-
-.iconButton:hover:not(:disabled) {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.iconButton:focus-visible {
-  outline: 2px solid var(--color-focus, var(--brand, #fa3356));
-  outline-offset: 2px;
-}
-
-.iconButton:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.iconButtonPrimary {
-  border-color: color-mix(in srgb, var(--brand, #fa3356) 52%, transparent);
-  background: color-mix(in srgb, var(--brand, #fa3356) 18%, transparent);
-  color: color-mix(in srgb, var(--brand, #fa3356) 82%, white 18%);
-}
-
-.iconButtonPrimary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--brand, #fa3356) 26%, transparent);
-}
-
-.statGrid {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  min-height: 74px;
-}
-
-.statOk {
-  border-color: color-mix(in srgb, var(--color-success, #4caf50) 48%, transparent);
-  background: color-mix(in srgb, var(--color-success, #4caf50) 15%, transparent);
-}
-
-.statWarn {
-  border-color: color-mix(in srgb, var(--color-warning, #ff9800) 48%, transparent);
-  background: color-mix(in srgb, var(--color-warning, #ff9800) 15%, transparent);
-}
-
-.statDanger {
-  border-color: color-mix(in srgb, var(--color-error, #ef5350) 52%, transparent);
-  background: color-mix(in srgb, var(--color-error, #ef5350) 18%, transparent);
-}
-
-.statLabel {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.statValue {
-  font-size: 22px;
+  font-size: 1.45rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
-.groups {
+.subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.headerActions {
   display: flex;
-  flex-direction: row;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  margin: 0 -4px;
-  padding-inline: 4px;
-  scroll-snap-type: x proximity;
-}
-
-.compactList {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  margin: 0 -4px;
-  padding-inline: 4px;
-  scroll-snap-type: x proximity;
-}
-
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  flex: 0 0 clamp(220px, 24vw, 280px);
-  scroll-snap-align: start;
-}
-
-.compactChip {
-  scroll-snap-align: start;
-  flex: 0 0 clamp(190px, 24vw, 240px);
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .groups {
-    flex-direction: column;
-    overflow: visible;
-    margin: 0;
-    padding-inline: 0;
-    scroll-snap-type: none;
-  }
-
-  .group {
-    flex: 1 1 auto;
-  }
-}
-
-.groupLabel {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.58);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-}
-
-.chips {
-  display: flex;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
-  gap: 9px;
+  justify-content: flex-end;
 }
 
-.chip {
+.actionButton {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 13px;
-  border-radius: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  font-size: 12px;
-  line-height: 1.2;
+  gap: 8px;
+  font-size: 0.8rem;
 }
 
-.chipButton {
-  cursor: pointer;
-  font: inherit;
-  text-align: left;
-  transition: transform 0.2s ease, background 0.2s ease;
+.actionButton svg {
+  width: 16px;
+  height: 16px;
 }
 
-.chipButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
+.accentButton {
+  background: #fa3356 !important;
+  color: #ffffff !important;
+  border-color: rgba(250, 51, 86, 0.85) !important;
+  box-shadow: 0 18px 32px rgba(250, 51, 86, 0.35);
 }
 
-.chipButton:focus-visible {
-  outline: 2px solid rgba(250, 51, 86, 0.45);
-  outline-offset: 2px;
+.accentButton:hover:not(:disabled) {
+  background: #ff466b !important;
 }
 
-.chipDot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+.accentButton:disabled {
+  box-shadow: none;
 }
 
-.chipTitle {
-  font-weight: 600;
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
-.chipMeta {
-  font-size: 11px;
+.secondaryAction:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+}
+
+.statChip {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 88px;
+  --chip-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.statChipToneOk {
+  --chip-gradient: linear-gradient(140deg, rgba(16, 185, 129, 0.25), transparent);
+}
+
+.statChipToneWarn {
+  --chip-gradient: linear-gradient(140deg, rgba(239, 68, 68, 0.28), transparent);
+}
+
+.statChipToneSoon {
+  --chip-gradient: linear-gradient(140deg, rgba(245, 158, 11, 0.28), transparent);
+}
+
+.statChipAccent {
+  position: absolute;
+  inset: 0;
+  background: var(--chip-gradient);
+  pointer-events: none;
+  opacity: 1;
+}
+
+.statChipIcon {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+}
+
+.statChipIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.statChipCopy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statChipLabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.62);
 }
 
+.statChipValue {
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.notice {
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #151515;
+  padding: 16px 18px;
+}
+
+.noticeText {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.noticeStrong {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.listSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.listTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.listCount {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.taskList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.taskItem {
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.taskItem:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.taskMain {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.taskMain:focus-visible {
+  outline: 2px solid rgba(250, 51, 86, 0.6);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
+.taskText {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.taskTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.taskMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.82rem;
+}
+
+.taskMetaEntry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.taskMetaIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.taskMetaIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.taskMetaLabel {
+  white-space: nowrap;
+}
+
+.taskBadge {
+  align-self: flex-start;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: rgba(239, 68, 68, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mapButton {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.24);
+  padding-inline: 0.85rem;
+}
+
+.mapButton svg {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+}
+
+.footerNote {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.52);
+}
+
 .empty {
-  padding: 16px 0 6px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.62);
+  padding: 16px 0 8px;
 }
 
-@media (max-width: 900px) {
-  .card {
-    padding: 10px;
+@media (max-width: 860px) {
+  .panel {
+    padding: 20px;
+    border-radius: 20px;
+    gap: 20px;
   }
 
-  .statGrid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  }
-}
-
-
-
-
-@media (max-height: 900px) {
-  .card {
-    gap: 10px;
-    padding: 14px;
+  .statsRow {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
 
-  .header {
-    gap: 10px;
-  }
-
-  .title {
-    font-size: 16px;
-  }
-
-  .subtitle {
-    font-size: 11px;
-  }
-
-  .statGrid {
-    gap: 10px;
-  }
-
-  .stat {
-    gap: 4px;
-    padding: 10px 12px;
-    min-height: 64px;
-  }
-
-  .groups {
-    gap: 10px;
-  }
-
-  .group {
-    gap: 7px;
-  }
-
-  .chips {
-    gap: 7px;
-  }
-
-  .compactList {
-    gap: 8px;
-  }
-
-  .compactChip {
-    flex: 0 0 clamp(170px, 28vw, 220px);
-  }
-
-  .chip {
-    gap: 8px;
-    padding: 6px 11px;
-  }
-
-  .chipDot {
-    width: 8px;
-    height: 8px;
-  }
-
-  .chipTitle {
-    font-size: 12px;
-  }
-
-  .chipMeta {
-    font-size: 10px;
-  }
-
-  .empty {
-    padding: 12px 0 4px;
+  .taskItem {
+    padding: 16px;
   }
 }
 
+@media (max-width: 640px) {
+  .headerRow {
+    align-items: flex-start;
+  }
 
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 
-
+  .taskMetaLabel {
+    white-space: normal;
+  }
+}

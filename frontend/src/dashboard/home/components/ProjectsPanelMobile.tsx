@@ -69,6 +69,11 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
       typeof window === "undefined" ? undefined : window.innerWidth
     )
   );
+  const skeletonRows = useMemo(() => Array.from({ length: 4 }), []);
+  const skeletonQuickIcons = useMemo(
+    () => Array.from({ length: Math.min(Math.max(maxQuickIcons, 3), 6) }),
+    [maxQuickIcons]
+  );
 
   // Compact filter/sort options (mirrors AllProjects)
   type SortOption = "titleAsc" | "titleDesc" | "dateNewest" | "dateOldest";
@@ -397,11 +402,30 @@ const ProjectsPanelMobile: React.FC<Props> = ({ onOpenProject }) => {
 
       <div className={styles.list} role="list">
         {isLoading ? (
-          <div className={`${styles.row} ${styles.skeleton}`} aria-hidden>
-            <div className={`${styles.icon} ${styles.skel}`} />
-            <div className={styles.meta}>
-              <div className={styles.skelBar} />
+          <div className={styles.skeletonList} aria-hidden>
+            <div className={styles.skeletonIconsStrip}>
+              {skeletonQuickIcons.map((_, index) => (
+                <div
+                  key={`skeleton-icon-${index}`}
+                  className={styles.skeletonIconBtn}
+                />
+              ))}
             </div>
+            {skeletonRows.map((_, index) => (
+              <div
+                key={`skeleton-row-${index}`}
+                className={`${styles.row} ${styles.skeletonRow}`}
+              >
+                <div className={`${styles.rowMain} ${styles.skeletonRowMain}`}>
+                  <div className={styles.skeletonThumb} />
+                  <div className={styles.skeletonMeta}>
+                    <div className={styles.skeletonLine} />
+                    <div className={styles.skeletonLineShort} />
+                  </div>
+                </div>
+                <div className={styles.skeletonMenu} />
+              </div>
+            ))}
           </div>
         ) : items.length === 0 ? (
           <div className={styles.empty} role="note">

@@ -679,6 +679,71 @@
   background: rgba(255, 255, 255, .08);
 }
 
+.skeletonList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 6px;
+}
+
+.skeletonIconsStrip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.skeletonIconBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.skeletonRow {
+  pointer-events: none;
+}
+
+.skeletonRowMain {
+  padding: 4px 6px;
+  gap: 10px;
+}
+
+.skeletonThumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.skeletonMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeletonLine,
+.skeletonLineShort,
+.skeletonMenu {
+  background: rgba(255, 255, 255, .08);
+  border-radius: 999px;
+  height: 10px;
+}
+
+.skeletonLine {
+  width: 160px;
+}
+
+.skeletonLineShort {
+  width: 96px;
+}
+
+.skeletonMenu {
+  width: 18px;
+  height: 18px;
+  justify-self: center;
+}
+
 /* iPhone compact widths */
 @media (max-width: 390px) {
   .panel {
@@ -692,6 +757,14 @@
 
   .cta {
     padding: 10px;
+  }
+
+  .skeletonLine {
+    width: 120px;
+  }
+
+  .skeletonLineShort {
+    width: 72px;
   }
 
   .grid {

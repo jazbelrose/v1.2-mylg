@@ -122,6 +122,7 @@ interface BudgetHeaderProps {
   budgetItems?: BudgetItem[];
   onBallparkChange?: (val: number) => void;
   onOpenRevisionModal: () => void;
+  onOpenCreateModal?: () => void;
   initialMetric?: MetricTitle;
 }
 
@@ -264,6 +265,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   budgetItems = [],
   onBallparkChange,
   onOpenRevisionModal,
+  onOpenCreateModal,
   initialMetric,
 }) => {
   const [selectedMetric, setSelectedMetric] = useState<MetricTitle>(
@@ -873,6 +875,19 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
           >
             {`Rev.${budgetHeader?.revision ?? 1}`}
           </button>
+          {onOpenCreateModal && (
+            <button
+              type="button"
+              className={summaryStyles.addButton}
+              onClick={onOpenCreateModal}
+              aria-label="Add item"
+            >
+              <span className={summaryStyles.addIcon} aria-hidden="true">
+                +
+              </span>
+              <span className={summaryStyles.addLabel}>Add Item</span>
+            </button>
+          )}
         </div>
       </div>
       <div className={summaryStyles.bodyRow}>

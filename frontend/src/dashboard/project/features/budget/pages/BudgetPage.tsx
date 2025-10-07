@@ -552,6 +552,7 @@ const BudgetPageContent = () => {
                               groupBy={stateManager.groupBy as "none" | "areaGroup" | "invoiceGroup" | "category"}
                               setGroupBy={(g) => stateManager.setGroupBy(g as "none" | "areaGroup" | "invoiceGroup" | "category")}
                               onOpenRevisionModal={() => stateManager.setRevisionModalOpen(true)}
+                              onOpenCreateModal={eventHandlers.openCreateModal}
                               onBallparkChange={handleBallparkChange}
                             />
                             <BudgetFileModal

@@ -26,7 +26,6 @@ import {
 } from "@/shared/utils/colorUtils";
 
 import summaryStyles from "./budget-header-summary.module.css";
-import headerStyles from "./header-stats.module.css";
 import mobileStyles from "./budget-header-mobile.module.css";
 import toolbarStyles from "./BudgetToolbar.module.css";
 
@@ -92,6 +91,7 @@ interface SummaryCardProps {
   ariaPressed?: boolean;
   disableHover?: boolean;
   disablePointer?: boolean;
+  style?: React.CSSProperties;
 }
 
 type MetricField = keyof BudgetItem | "markupAmount" | null;
@@ -208,39 +208,58 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   ariaPressed,
   disableHover,
   disablePointer,
-}) => (
-  <div
-    className={`${summaryStyles.card} ${
-      active ? summaryStyles.active : ""
-    } ${disableHover ? summaryStyles.noHover : ""} ${
-      disablePointer ? summaryStyles.noPointer : ""
-    } ${className}`}
-    onClick={onClick}
-    role={onClick ? "button" : undefined}
-    tabIndex={onClick ? 0 : undefined}
-    aria-label={onClick ? ariaLabel ?? title : undefined}
-    aria-pressed={onClick && typeof ariaPressed === "boolean" ? ariaPressed : undefined}
-    onKeyDown={
-      onClick
-        ? (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onClick();
+  style,
+}) => {
+  const cardStyle = useMemo(
+    () =>
+      ({
+        "--metric-accent": color,
+        ...(style ?? {}),
+      }) as React.CSSProperties,
+    [color, style]
+  );
+
+  const classNames = [
+    summaryStyles.card,
+    active ? summaryStyles.active : "",
+    disableHover ? summaryStyles.noHover : "",
+    disablePointer ? summaryStyles.noPointer : "",
+    className ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div
+      className={classNames}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? ariaLabel ?? title : undefined}
+      aria-pressed={onClick && typeof ariaPressed === "boolean" ? ariaPressed : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
             }
-          }
-        : undefined
-    }
-  >
-    <div className={summaryStyles.cardIcon} style={{ background: color }}>
-      <FontAwesomeIcon icon={icon} />
-    </div>
+          : undefined
+      }
+      style={cardStyle}
+    >
+      <div className={summaryStyles.cardIcon}>
+        <FontAwesomeIcon icon={icon} />
+      </div>
     <span className={summaryStyles.cardTag}>{tag}</span>
     {children}
     <div className={summaryStyles.cardTitle}>{title}</div>
     <div className={summaryStyles.cardValue}>{value}</div>
     <div className={summaryStyles.cardDesc}>{description}</div>
   </div>
-);
+  );
+};
 
 /* =========================
    Main
@@ -519,47 +538,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
         isSelectable: true,
         disableHover: true,
         disablePointer: true,
-        extra: (
-          <div className={summaryStyles.invoicePreviewContainer}>
-            <FontAwesomeIcon
-              icon={faFileInvoiceDollar}
-              className={summaryStyles.invoicePreviewIcon}
-              title="Invoice preview"
-              aria-label="Invoice preview"
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                openInvoicePreview();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  openInvoicePreview();
-                }
-              }}
-            />
-            <span
-              className={headerStyles.revisionLabel}
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenRevisionModal();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onOpenRevisionModal();
-                }
-              }}
-            >
-              {`Rev.${budgetHeader?.revision ?? 1}`}
-            </span>
-          </div>
-        ),
       },
     ];
   }, [
@@ -570,10 +548,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     handleSelectBudgeted,
     handleSelectFinal,
     hasReconciled,
-    onOpenRevisionModal,
-    openInvoicePreview,
     reconciledTotal,
-    selectedMetric,
     showReconciled,
   ]);
 
@@ -861,57 +836,47 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   );
 
   const desktopContent = (
-    <div className={summaryStyles.container}>
-      <div className={summaryStyles.cardsColumn}>
-        <div className={summaryStyles.cardsRow}>
-          {metrics.slice(0, 3).map((m) => (
-            <SummaryCard
-              key={m.title}
-              icon={m.icon}
-              color={m.color}
-              title={m.title}
-              tag={m.tag}
-              value={m.value}
-              description={m.description}
-              className={m.sticky ? summaryStyles.stickyCard : ""}
-              onClick={m.onSelect}
-              active={Boolean(m.isSelectable && selectedMetric === m.title)}
-              ariaLabel={m.ariaLabel}
-              ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
-              disableHover={m.disableHover}
-              disablePointer={m.disablePointer}
-            >
-              {m.extra}
-            </SummaryCard>
-          ))}
+    <div className={summaryStyles.container} style={accentThemeStyle}>
+      <div className={summaryStyles.headerRow}>
+        <div className={summaryStyles.titleGroup}>
+          <span className={summaryStyles.headerTitle}>Budget</span>
+          <button
+            type="button"
+            className={summaryStyles.iconButton}
+            onClick={openInvoicePreview}
+            aria-label="Invoice preview"
+            disabled={!budgetHeader}
+          >
+            <FontAwesomeIcon icon={faFileInvoiceDollar} />
+          </button>
         </div>
-
-        <div className={summaryStyles.cardsRow}>
-          {metrics.slice(3).map((m) => (
-            <SummaryCard
-              key={m.title}
-              icon={m.icon}
-              color={m.color}
-              title={m.title}
-              tag={m.tag}
-              value={m.value}
-              description={m.description}
-              className={m.sticky ? summaryStyles.stickyCard : ""}
-              onClick={m.onSelect}
-              active={Boolean(m.isSelectable && selectedMetric === m.title)}
-              ariaLabel={m.ariaLabel}
-              ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
-              disableHover={m.disableHover}
-              disablePointer={m.disablePointer}
-            >
-              {m.extra}
-            </SummaryCard>
-          ))}
+        <div className={summaryStyles.headerActions}>
+          <button
+            type="button"
+            className={summaryStyles.revisionButton}
+            onClick={onOpenRevisionModal}
+            disabled={!budgetHeader}
+          >
+            {`Rev.${budgetHeader?.revision ?? 1}`}
+          </button>
         </div>
       </div>
 
-      <div className={summaryStyles.chartColumn}>
-        <div className={summaryStyles.chartAndLegend}>
+      <div className={summaryStyles.topSection}>
+        <div className={summaryStyles.finalCard}>
+          <div className={summaryStyles.finalCardHeader}>
+            <span className={summaryStyles.finalTitle}>
+              <FontAwesomeIcon icon={finalMetricIcon} className={summaryStyles.finalTitleIcon} />
+              {finalMetricTitle}
+            </span>
+            <span className={summaryStyles.finalTag}>{finalMetric?.tag ?? "Final"}</span>
+          </div>
+          <span className={summaryStyles.finalValue}>{finalDisplay}</span>
+          <span className={summaryStyles.finalDescription}>{finalMetricDescription}</span>
+          <span className={summaryStyles.finalDate}>{createdDateLabel}</span>
+        </div>
+
+        <div className={summaryStyles.chartCard}>
           <div className={summaryStyles.chartContainer}>
             <BudgetDonut
               data={chartState.slices}
@@ -942,13 +907,76 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
           </ul>
         </div>
       </div>
+
+      <div className={summaryStyles.metricsGrid}>
+        {supportingMetrics.map((m) => (
+          <SummaryCard
+            key={m.title}
+            icon={m.icon}
+            color={m.color}
+            title={m.title}
+            tag={m.tag}
+            value={m.value}
+            description={m.description}
+            className={[
+              m.sticky ? summaryStyles.stickyCard : "",
+              summaryStyles.metricCard,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={m.onSelect}
+            active={Boolean(m.isSelectable && selectedMetric === m.title)}
+            ariaLabel={m.ariaLabel}
+            ariaPressed={m.isSelectable ? selectedMetric === m.title : undefined}
+            disableHover={m.disableHover}
+            disablePointer={m.disablePointer}
+            style={{ "--metric-accent": m.color } as React.CSSProperties}
+          >
+            {m.extra}
+          </SummaryCard>
+        ))}
+      </div>
+
+      <div className={summaryStyles.groupControls}>
+        <span id="budget-desktop-group-label" className={summaryStyles.srOnly}>
+          Group budget items
+        </span>
+        <div
+          className={summaryStyles.groupTabs}
+          role="group"
+          aria-labelledby="budget-desktop-group-label"
+        >
+          {groupOptions.map((option) => {
+            const isActive = option.value === groupBy;
+            const className = isActive
+              ? `${summaryStyles.groupTabButton} ${summaryStyles.groupTabButtonActive}`
+              : summaryStyles.groupTabButton;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={isActive}
+                className={className}
+                onClick={() => setGroupBy(option.value)}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 
   const topMetrics = metrics.slice(0, 3);
   const bottomMetrics = metrics.slice(3);
 
-  const mobileAccentStyle = useMemo(
+  const supportingMetrics = useMemo(
+    () => metrics.filter((metric) => metric.title !== "Final Cost"),
+    [metrics]
+  );
+
+  const accentThemeStyle = useMemo(
     () =>
       ({
         "--budget-accent": accentHex,
@@ -1005,7 +1033,7 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   };
 
   const mobileContent = (
-    <div className={mobileStyles.card} style={mobileAccentStyle}>
+    <div className={mobileStyles.card} style={accentThemeStyle}>
       <div className={mobileStyles.headerRow}>
         <div className={mobileStyles.titleGroup}>
           <span>Budget</span>

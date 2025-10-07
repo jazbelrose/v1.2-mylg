@@ -151,7 +151,7 @@ const GalleryPage: FC<GalleryPageProps> = ({ projectId: propProjectId }) => {
     if (projectId) {
       navigate(`/dashboard/projects/${encodeURIComponent(projectId)}`);
     } else {
-      navigate("/dashboard");
+      navigate("/dashboard/projects");
     }
   }, [navigate, projectId]);
 

@@ -155,7 +155,7 @@ const MoodboardPage: React.FC = () => {
     (projectId: string) => {
       setProjects((prev) => prev.filter((item) => item.projectId !== projectId));
       setSelectedProjects((prev) => prev.filter((id) => id !== projectId));
-      navigate("/dashboard/projects");
+      navigate("/dashboard/projects/allprojects");
     },
     [navigate, setProjects, setSelectedProjects]
   );
@@ -165,7 +165,7 @@ const MoodboardPage: React.FC = () => {
   }, []);
 
   const showWelcomeScreen = useCallback(() => {
-    navigate("/dashboard");
+    navigate("/dashboard/projects");
   }, [navigate]);
 
   const resolvedProjectId = activeProject?.projectId ?? "";

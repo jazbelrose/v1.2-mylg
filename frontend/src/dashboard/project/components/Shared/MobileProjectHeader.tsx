@@ -80,7 +80,7 @@ const MobileProjectHeader: React.FC<MobileProjectHeaderProps> = ({
   };
 
   const handleBackToDashboard = React.useCallback(() => {
-    navigate("/dashboard");
+    navigate("/dashboard/projects");
   }, [navigate]);
 
   const handleOpenChat = React.useCallback(() => {

@@ -83,6 +83,26 @@ const pageTransition = {
   duration: 1,
 };
 
+const mapHqPathToDashboard = (pathname: string) => {
+  const suffix = pathname.replace(/^\/hq/, "");
+  if (!suffix || suffix === "/") {
+    return "/dashboard";
+  }
+
+  const normalizedSuffix = suffix.startsWith("/") ? suffix : `/${suffix}`;
+  return `/dashboard/hq${normalizedSuffix}`;
+};
+
+const HQRedirect: React.FC = () => {
+  const location = useLocation();
+  const target = React.useMemo(
+    () => `${mapHqPathToDashboard(location.pathname)}${location.search}${location.hash}`,
+    [location.hash, location.pathname, location.search]
+  );
+
+  return <Navigate to={target} replace />;
+};
+
 function AppRoutes(): React.ReactElement {
   const location = useLocation();
   
@@ -152,10 +172,6 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           }
         />
 
-        {hqRoutes.map((route) => (
-          <Route key={route.path} path={route.path} element={route.element} />
-        ))}
-        
         <Route
           path="/gallery/:projectId/:gallerySlug"
           element={
@@ -179,6 +195,13 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
             </ProtectedRoute>
           }
         >
+          {hqRoutes.map((route) => {
+            const key = route.index ? "dashboard-hq-index" : `dashboard-${route.path}`;
+            if ("index" in route && route.index) {
+              return <Route key={key} index element={route.element} />;
+            }
+            return <Route key={key} path={route.path} element={route.element} />;
+          })}
           <Route
             path="projects/:projectId/:projectName?"
             element={<DashboardSingleProject key={location.key} />}
@@ -295,8 +318,8 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           } 
         />
         
-        <Route 
-          path="*" 
+        <Route
+          path="*"
           element={
             <motion.div
               initial="initial"
@@ -307,8 +330,9 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
             >
               <NotFound />
             </motion.div>
-          } 
+          }
         />
+        <Route path="/hq/*" element={<HQRedirect />} />
       </Routes>
     </AnimatePresence>
   );

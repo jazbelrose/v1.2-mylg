@@ -94,7 +94,7 @@ const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
   const handleOpen = (id: string) => {
     if (onOpenProject) return onOpenProject(id);
     // Fallback: route to projects list, then rely on default flow
-    navigate("/dashboard/projects");
+    navigate("/dashboard/projects/allprojects");
   };
 
   const handleKeyRow = (e: React.KeyboardEvent, id: string) => {
@@ -231,7 +231,7 @@ const ProjectsRecentsCard: React.FC<Props> = ({ onOpenProject }) => {
       <button
         type="button"
         className="prc-cta"
-        onClick={() => navigate("/dashboard/projects")}
+        onClick={() => navigate("/dashboard/projects/allprojects")}
       >
         See all projects
       </button>

@@ -104,7 +104,7 @@ const SingleProject: React.FC = () => {
 
 
   const showWelcome = useCallback(() => {
-    navigate("/dashboard");
+    navigate("/dashboard/projects");
   }, [navigate]);
 
   const openCalendarPage = useCallback(() => {
@@ -122,7 +122,7 @@ const SingleProject: React.FC = () => {
     (deletedProjectId: string) => {
       setProjects((prev) => prev.filter((p) => p.projectId !== deletedProjectId));
       setSelectedProjects((prev) => prev.filter((id: string) => id !== deletedProjectId));
-      navigate("/dashboard/projects");
+      navigate("/dashboard/projects/allprojects");
     },
     [navigate, setProjects, setSelectedProjects]
   );

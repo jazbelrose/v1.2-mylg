@@ -304,7 +304,7 @@ const NewProject: React.FC = () => {
           <header className={styles.newProjectHeader}>
             <button
               className={styles.backButton}
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/dashboard/projects")}
               aria-label="Back to dashboard"
             >
               <FaArrowLeft />

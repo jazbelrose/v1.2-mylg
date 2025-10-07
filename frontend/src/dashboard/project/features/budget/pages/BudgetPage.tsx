@@ -149,7 +149,7 @@ const BudgetPageContent = () => {
 
   const handleBack = () => {
     if (!projectId) {
-      navigate("/dashboard/projects");
+      navigate("/dashboard/projects/allprojects");
       return;
     }
 
@@ -174,7 +174,7 @@ const BudgetPageContent = () => {
   const handleProjectDeleted = (deletedProjectId) => {
     setProjects((prev) => prev.filter((p) => p.projectId !== deletedProjectId));
     setSelectedProjects((prev) => prev.filter((id) => id !== deletedProjectId));
-    navigate("/dashboard/projects");
+    navigate("/dashboard/projects/allprojects");
   };
 
   const handleBallparkChange = async (val) => {

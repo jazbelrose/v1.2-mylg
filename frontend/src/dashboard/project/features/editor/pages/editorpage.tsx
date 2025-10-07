@@ -156,12 +156,12 @@ const EditorPage: React.FC = () => {
   const handleProjectDeleted = (deletedProjectId: string) => {
     setProjects((prev: Project[]) => prev.filter((p) => p.projectId !== deletedProjectId));
     setSelectedProjects((prev: string[]) => prev.filter((id) => id !== deletedProjectId));
-    navigate("/dashboard/projects");
+    navigate("/dashboard/projects/allprojects");
   };
 
   const handleBack = () => {
     if (!projectId) {
-      navigate('/dashboard/projects');
+      navigate('/dashboard/projects/allprojects');
       return;
     }
 

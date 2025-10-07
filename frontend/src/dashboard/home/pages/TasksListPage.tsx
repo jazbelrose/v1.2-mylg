@@ -123,7 +123,7 @@ const TasksListPage: React.FC = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
       navigate(-1);
     } else {
-      navigate("/dashboard");
+      navigate("/dashboard/projects");
     }
   }, [navigate, returnTo]);
 

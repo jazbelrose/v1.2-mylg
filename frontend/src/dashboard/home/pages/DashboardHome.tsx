@@ -71,6 +71,41 @@ export const parseDashboardPath = (
   let view = segments[idx + 1] || PROJECTS_OVERVIEW_VIEW;
   let userSlug = segments[idx + 2] || null;
 
+  if (view === "projects") {
+    const subSegment = segments[idx + 2];
+    if (!subSegment) {
+      return { view: PROJECTS_OVERVIEW_VIEW, userSlug: null };
+    }
+
+    if (subSegment === "allprojects") {
+      return { view: PROJECTS_LIST_VIEW, userSlug: null };
+    }
+
+    if (subSegment === "features") {
+      return {
+        view: segments[idx + 3] || PROJECTS_OVERVIEW_VIEW,
+        userSlug: segments[idx + 4] || null,
+      };
+    }
+
+    if (subSegment === "welcome") {
+      const nestedView = segments[idx + 3];
+      if (nestedView) {
+        return {
+          view: nestedView,
+          userSlug: segments[idx + 4] || null,
+        };
+      }
+
+      return { view: PROJECTS_OVERVIEW_VIEW, userSlug: null };
+    }
+
+    return {
+      view: subSegment,
+      userSlug: segments[idx + 3] || null,
+    };
+  }
+
   if (view === "features") {
     view = segments[idx + 2] || PROJECTS_OVERVIEW_VIEW;
     userSlug = segments[idx + 3] || null;
@@ -84,13 +119,6 @@ export const parseDashboardPath = (
     } else {
       view = PROJECTS_OVERVIEW_VIEW;
       userSlug = null;
-    }
-  }
-
-  if (view === "projects") {
-    const hasAdditionalSegment = segments.length > idx + 2;
-    if (!hasAdditionalSegment) {
-      view = PROJECTS_LIST_VIEW;
     }
   }
 
@@ -190,7 +218,8 @@ const WelcomeScreen: React.FC = () => {
   const { view: initialView, userSlug: initialDMUserSlug } = parsePath();
   const normalizeView = useCallback((view: string) => {
     if (view === "welcome") return PROJECTS_OVERVIEW_VIEW;
-    if (view === "projects") return PROJECTS_LIST_VIEW;
+    if (view === "projects") return PROJECTS_OVERVIEW_VIEW;
+    if (view === "allprojects") return PROJECTS_LIST_VIEW;
     return view;
   }, []);
   const [activeView, setActiveView] = useState<string>(() =>

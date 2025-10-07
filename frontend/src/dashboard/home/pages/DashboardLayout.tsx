@@ -5,6 +5,43 @@ import { useData } from "@/app/contexts/useData";
 import "./dashboard-styles.css";
 
 
+const DASHBOARD_LAST_PATH_KEY = "dashboardLastPath";
+const DASHBOARD_LAST_PATH_VERSION_KEY = "dashboardLastPathVersion";
+const DASHBOARD_LAST_PATH_VERSION = "2";
+
+const buildDashboardHQPath = (suffix: string): string => {
+  if (!suffix || suffix === "/") {
+    return "/dashboard";
+  }
+
+  const normalizedSuffix = suffix.startsWith("/") ? suffix : `/${suffix}`;
+  return `/dashboard/hq${normalizedSuffix}`;
+};
+
+const mapLegacyDashboardPath = (fullPath: string): string => {
+  if (!fullPath) {
+    return "/dashboard";
+  }
+
+  const [pathOnly, rest = ""] = fullPath.split(/(?=[?#])/);
+  let nextPath = pathOnly;
+
+  if (
+    pathOnly === "/dashboard" ||
+    pathOnly === "/dashboard/welcome" ||
+    pathOnly === "/dashboard/projects-overview"
+  ) {
+    nextPath = "/dashboard/projects";
+  } else if (pathOnly === "/dashboard/projects") {
+    nextPath = "/dashboard/projects/allprojects";
+  } else if (pathOnly.startsWith("/hq")) {
+    const suffix = pathOnly.replace(/^\/hq/, "");
+    nextPath = buildDashboardHQPath(suffix);
+  }
+
+  return `${nextPath}${rest}`;
+};
+
 const Dashboard: React.FC = () => {
   // If your DataProvider has types, replace `any` below with the real shape.
   const { userName, opacity } = useData() as { userName?: string; opacity?: number };
@@ -15,13 +52,20 @@ const Dashboard: React.FC = () => {
 
   const getPageTitle = (): string => {
     const path = location.pathname;
-    if (path.startsWith("/dashboard/projects/")) return "Dashboard - Project Details";
+    if (
+      path.startsWith("/dashboard/projects/") &&
+      !path.startsWith("/dashboard/projects/allprojects")
+    ) {
+      return "Dashboard - Project Details";
+    }
     switch (path) {
       case "/dashboard":
-        return "Dashboard - Projects";
+        return "Dashboard - HQ";
       case "/dashboard/new":
         return "Dashboard - Start something";
       case "/dashboard/projects":
+        return "Dashboard - Project List";
+      case "/dashboard/projects/allprojects":
         return "Dashboard - Project List";
       case "/dashboard/tasks":
         return "Dashboard - Tasks";
@@ -29,6 +73,20 @@ const Dashboard: React.FC = () => {
         return "Dashboard - Settings";
       case "/dashboard/collaborators":
         return "Dashboard - Collaborators";
+      case "/dashboard/hq/accounts":
+        return "Dashboard - Accounts";
+      case "/dashboard/hq/transactions":
+        return "Dashboard - Transactions";
+      case "/dashboard/hq/reports":
+        return "Dashboard - Reports";
+      case "/dashboard/hq/invoices":
+        return "Dashboard - Invoices";
+      case "/dashboard/hq/tasks":
+        return "Dashboard - Tasks";
+      case "/dashboard/hq/events":
+        return "Dashboard - Events";
+      case "/dashboard/hq/messages":
+        return "Dashboard - Messages";
       default:
         return "Dashboard";
     }
@@ -38,7 +96,11 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (location.pathname.startsWith("/dashboard")) {
       try {
-        localStorage.setItem("dashboardLastPath", location.pathname + location.search);
+        localStorage.setItem(
+          DASHBOARD_LAST_PATH_KEY,
+          location.pathname + location.search
+        );
+        localStorage.setItem(DASHBOARD_LAST_PATH_VERSION_KEY, DASHBOARD_LAST_PATH_VERSION);
       } catch {
         // ignore storage errors
       }
@@ -52,20 +114,27 @@ const Dashboard: React.FC = () => {
 
     if (location.pathname === "/dashboard") {
       let saved: string | null = null;
+      let savedVersion: string | null = null;
       try {
-        saved = localStorage.getItem("dashboardLastPath");
+        saved = localStorage.getItem(DASHBOARD_LAST_PATH_KEY);
+        savedVersion = localStorage.getItem(DASHBOARD_LAST_PATH_VERSION_KEY);
       } catch {
         // ignore storage errors
       }
 
-      if (saved && saved !== "/dashboard") {
-        const normalized = saved
-          .replace("/dashboard/welcome", "/dashboard")
-          .replace("/dashboard/projects-overview", "/dashboard");
-        navigate(normalized, { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
+      if (saved) {
+        const normalized =
+          savedVersion === DASHBOARD_LAST_PATH_VERSION
+            ? saved
+            : mapLegacyDashboardPath(saved);
+
+        if (normalized !== "/dashboard") {
+          navigate(normalized, { replace: true });
+          return;
+        }
       }
+
+      navigate("/dashboard", { replace: true });
     }
   }, [location, navigate]);
 

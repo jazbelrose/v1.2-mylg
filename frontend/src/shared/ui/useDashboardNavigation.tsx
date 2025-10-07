@@ -20,6 +20,7 @@ import {
   PROJECTS_OVERVIEW_VIEW,
   parseDashboardPath,
 } from "@/dashboard/home/pages/DashboardHome";
+import { HQ_ROUTE_SEGMENTS } from "@/hq/routes";
 
 export type DashboardNavItem = {
   key: string;
@@ -40,6 +41,10 @@ export type UseDashboardNavigationArgs = {
   onClose?: () => void;
 };
 
+const HQ_DASHBOARD_PATHS = HQ_ROUTE_SEGMENTS.map((segment) =>
+  segment ? `/dashboard/${segment}` : "/dashboard"
+);
+
 export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardNavigationArgs) {
   const { setIsAuthenticated, setCognitoUser } = useAuth();
   const { inbox } = useData();
@@ -52,7 +57,17 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
     if (!isDashboardPath) return null;
     return parseDashboardPath(location.pathname).view;
   }, [isDashboardPath, location.pathname]);
-  const isHQActive = location.pathname.startsWith("/hq");
+  const isHQActive = useMemo(() => {
+    return HQ_DASHBOARD_PATHS.some((path) => {
+      if (path === "/dashboard") {
+        return location.pathname === path;
+      }
+
+      return (
+        location.pathname === path || location.pathname.startsWith(`${path}/`)
+      );
+    });
+  }, [location.pathname]);
 
   const unreadNotifications = useMemo(
     () => notifications.filter((n) => !n.read).length,
@@ -75,11 +90,11 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
       switch (view) {
         case PROJECTS_OVERVIEW_VIEW:
         case "welcome":
-          path = base;
+          path = `${base}/projects`;
           break;
         case PROJECTS_LIST_VIEW:
         case "projects":
-          path = `${base}/projects`;
+          path = `${base}/projects/allprojects`;
           break;
         default:
           path = `${base}/${view}`;
@@ -96,7 +111,7 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
   }, [navigate, close]);
 
   const handleHQNavigation = useCallback(() => {
-    navigate("/hq");
+    navigate("/dashboard");
     close();
   }, [navigate, close]);
 
@@ -136,12 +151,12 @@ export function useDashboardNavigation({ setActiveView, onClose }: UseDashboardN
         label: "Projects",
         onClick: () => handleNavigation(PROJECTS_OVERVIEW_VIEW),
         isActive:
-          (isDashboardPath &&
-            (!activeDashboardView ||
-              activeDashboardView === PROJECTS_OVERVIEW_VIEW ||
-              activeDashboardView === PROJECTS_LIST_VIEW ||
-              activeDashboardView === "projects")) ||
-          location.pathname === "/dashboard",
+          isDashboardPath &&
+          location.pathname.startsWith("/dashboard/projects") &&
+          (!activeDashboardView ||
+            activeDashboardView === PROJECTS_OVERVIEW_VIEW ||
+            activeDashboardView === PROJECTS_LIST_VIEW ||
+            activeDashboardView === "projects"),
       },
       {
         key: "notifications",

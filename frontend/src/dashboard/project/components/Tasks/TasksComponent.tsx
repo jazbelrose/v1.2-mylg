@@ -6,10 +6,7 @@ import QuickCreateTaskModal, {
   type QuickCreateTaskModalTask,
 } from "@/dashboard/home/components/QuickCreateTaskModal";
 
-import styles from "./TasksComponentMobile.module.css";
 import TaskDrawer from "./components/TaskDrawer";
-import TaskList from "./components/TaskList";
-import TaskSummary from "./components/TaskSummary";
 import {
   DEFAULT_LOCATION,
   DRAWER_SNAP_POINTS,
@@ -28,7 +25,240 @@ import {
   type TaskStats,
   type SnapIndex,
 } from "./components/quickTaskUtils";
-import { formatAssigneeDisplay } from "./utils";
+import { formatAssigneeDisplay, buildDirectionsLinks } from "./utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Plus,
+  User2,
+} from "lucide-react";
+import {
+  createTaskStatusContext,
+  getTaskStatusBadge,
+  getTaskStatusTone,
+  type TaskStatusTone,
+} from "./components/quickTaskUtils";
+
+const brand = {
+  bg: "bg-[#0c0c0c]",
+  surface: "bg-[#111111]",
+  surface2: "bg-[#151515]",
+  border: "border-[rgba(255,255,255,0.06)]",
+  textDim: "text-white/70",
+  accent: "#FA3356",
+} as const;
+
+type StatChipTone = "ok" | "warn" | "soon";
+
+type StatChipProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone: StatChipTone;
+};
+
+function StatChip({ icon, label, value, tone }: StatChipProps) {
+  const toneGrad =
+    tone === "ok"
+      ? "from-emerald-500/20 to-emerald-500/0"
+      : tone === "warn"
+        ? "from-rose-500/20 to-rose-500/0"
+        : "from-amber-500/20 to-amber-500/0";
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl ${brand.surface} border ${brand.border} p-3 md:p-4`}
+    >
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${toneGrad}`} />
+      <div className="relative flex items-center gap-3">
+        <div className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-black/30">
+          {icon}
+        </div>
+        <div>
+          <div className="text-xs uppercase tracking-wide text-white/60">{label}</div>
+          <div className="text-lg font-semibold leading-none">{value}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const STATUS_BADGE_TONES: Record<TaskStatusTone, string> = {
+  success:
+    "border border-emerald-500/30 bg-emerald-500/10 text-emerald-200 group-hover:border-emerald-400/50",
+  danger:
+    "border border-rose-500/40 bg-rose-500/10 text-rose-200 group-hover:border-rose-400/60",
+  warning:
+    "border border-amber-400/40 bg-amber-500/10 text-amber-100 group-hover:border-amber-300/60",
+  neutral:
+    "border border-white/15 bg-white/5 text-white/80 group-hover:border-white/25",
+};
+
+type InlineTaskItemProps = {
+  task: QuickTask;
+  isActive: boolean;
+  dueLabel: string;
+  statusContext: ReturnType<typeof createTaskStatusContext>;
+  onSelect: (taskId: string) => void;
+  onEdit: (task: QuickTask) => void;
+  canEdit: boolean;
+};
+
+const InlineTaskItem: React.FC<InlineTaskItemProps> = ({
+  task,
+  isActive,
+  dueLabel,
+  statusContext,
+  onSelect,
+  onEdit,
+  canEdit,
+}) => {
+  const assigneeLabel = formatAssigneeDisplay(task.assignedTo);
+  const { category, label } = getTaskStatusBadge(task.status, task.dueDate, statusContext);
+  const tone = getTaskStatusTone(category);
+  const badgeTone = STATUS_BADGE_TONES[tone];
+  const directionsLinks = buildDirectionsLinks(task.address);
+
+  return (
+    <li
+      key={task.id}
+      data-task-id={task.id}
+      className={`group rounded-2xl border border-white/10 bg-black/30 backdrop-blur-sm transition-colors hover:border-white/20 ${
+        isActive ? "border-white/40" : ""
+      }`}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        className="flex flex-col gap-4 p-4 md:p-5 focus:outline-none"
+        onClick={() => onSelect(task.id)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelect(task.id);
+          }
+        }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h4 className="truncate text-base font-medium md:text-lg">{task.title}</h4>
+              <Badge className={`rounded-full px-3 py-1 text-xs font-medium ${badgeTone}`}>{label}</Badge>
+            </div>
+            <div className={`mt-1 flex flex-wrap items-center gap-3 text-sm ${brand.textDim}`}>
+              <span className="inline-flex items-center gap-1">
+                <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                {dueLabel}
+              </span>
+              {task.address ? (
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  <span className="truncate">{task.address}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  No location
+                </span>
+              )}
+              {assigneeLabel ? (
+                <span className="inline-flex items-center gap-1">
+                  <User2 className="h-4 w-4" aria-hidden="true" />
+                  Assigned to: {assigneeLabel}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <User2 className="h-4 w-4" aria-hidden="true" />
+                  No assignee
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {directionsLinks ? (
+            <Button
+              asChild
+              variant="secondary"
+              size="sm"
+              className="rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10"
+            >
+              <a
+                href={directionsLinks.googleMaps}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => event.stopPropagation()}
+              >
+                Open in Maps <ArrowUpRight className="ml-1 inline h-4 w-4" />
+              </a>
+            </Button>
+          ) : null}
+          <Button
+            size="sm"
+            className="rounded-xl text-white"
+            style={{ background: brand.accent }}
+            disabled={!canEdit}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (canEdit) {
+                onEdit(task);
+              }
+            }}
+          >
+            Mark done
+          </Button>
+        </div>
+      </div>
+    </li>
+  );
+};
+
+type InlineTaskListProps = {
+  tasks: QuickTask[];
+  activeTaskId: string | null;
+  onTaskSelect: (taskId: string) => void;
+  onTaskEdit: (task: QuickTask) => void;
+  formatDueLabel: (task: QuickTask) => string;
+  taskListRef: React.RefObject<HTMLUListElement>;
+  canEdit: boolean;
+};
+
+const InlineTaskList: React.FC<InlineTaskListProps> = ({
+  tasks,
+  activeTaskId,
+  onTaskSelect,
+  onTaskEdit,
+  formatDueLabel,
+  taskListRef,
+  canEdit,
+}) => {
+  const statusContext = useMemo(() => createTaskStatusContext(), []);
+
+  return (
+    <ul ref={taskListRef} className="space-y-3">
+      {tasks.map((task) => (
+        <InlineTaskItem
+          key={task.id}
+          task={task}
+          isActive={task.id === activeTaskId}
+          dueLabel={formatDueLabel(task)}
+          statusContext={statusContext}
+          onSelect={onTaskSelect}
+          onEdit={onTaskEdit}
+          canEdit={canEdit}
+        />
+      ))}
+    </ul>
+  );
+};
 
 export type TasksComponentProps = {
   projectId?: string;
@@ -405,81 +635,99 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     return `${tasks.length} ${noun}`;
   }, [error, loading, tasks.length]);
 
+  const handleInlineEdit = useCallback(
+    (task: QuickTask) => {
+      setTaskToEdit(toModalTask(task));
+      setQuickCreateOpen(true);
+    },
+    [toModalTask],
+  );
+
+  const toStatString = (value: number) => {
+    const formatted = formatStatValue(value);
+    return typeof formatted === "number" ? formatted.toString() : formatted;
+  };
+
   return (
-    <section className={`${styles.card} ${styles.desktopCard} tasks-component`} aria-label="Project tasks overview">
-      <header className={styles.header}>
-        <div className={styles.headingGroup}>
-          <h3 className={styles.title}>Tasks</h3>
-          <p className={styles.subtitle}>
-            {projectName ? `Keep ${projectName} moving forward.` : "Keep this project moving forward."}
-          </p>
-        </div>
-        <div className={styles.desktopActions}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={handleOpenQuickCreate}
-            disabled={loading || !hasQuickCreateProject}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+    <section className="tasks-component" aria-label="Project tasks overview">
+      <div
+        className={`flex w-full flex-col gap-6 rounded-3xl border ${brand.border} ${brand.surface} p-4 text-white shadow-[0_20px_40px_rgba(0,0,0,0.45)] md:p-6 lg:p-8`}
+      >
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h3 className="text-xl font-semibold md:text-2xl">Tasks</h3>
+            <p className={`${brand.textDim} text-sm`}>
+              {projectName ? `Keep ${projectName} moving forward.` : "Keep this project moving forward."}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              className="rounded-xl"
+              style={{ background: brand.accent }}
+              onClick={handleOpenQuickCreate}
+              disabled={loading || !hasQuickCreateProject}
             >
-              <path d="M12 5v14" />
-              <path d="M5 12h14" />
-            </svg>
-            New task
-          </button>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            onClick={handleOpenDrawer}
-            disabled={loading}
-          >
-            Open map view
-          </button>
+              <Plus className="mr-1 h-4 w-4" /> New task
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-xl border-white/20 text-white hover:bg-white/10"
+              onClick={handleOpenDrawer}
+              disabled={loading}
+            >
+              Open map view
+            </Button>
+          </div>
         </div>
-      </header>
 
-      <div className={styles.desktopSummaryRow}>
-        <TaskSummary stats={stats} formatValue={formatStatValue} statusMessage={statusMessage} />
-        <div className={styles.statusCard}>
-          <span className={styles.statusEyebrow}>What to know</span>
-          <p className={styles.statusMessage}>{statusMessage}</p>
-          <p className={styles.statusSupport}>{mapStatusMessage}</p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <StatChip icon={<CheckCircle2 className="h-5 w-5" />} label="Done" value={toStatString(stats.completed)} tone="ok" />
+          <StatChip icon={<AlertTriangle className="h-5 w-5" />} label="Overdue" value={toStatString(stats.overdue)} tone="warn" />
+          <StatChip icon={<Clock className="h-5 w-5" />} label="Due soon" value={toStatString(stats.dueSoon)} tone="soon" />
         </div>
-      </div>
 
-      <section className={styles.listSection} aria-label="All project tasks">
-        <div className={styles.listHeader}>
-          <h4 className={styles.sectionHeading}>Task list</h4>
-          <span className={styles.listMeta}>{listMetaLabel}</span>
+        <div className={`rounded-2xl border ${brand.border} ${brand.surface2} p-4 md:p-5`}>
+          <div className="text-sm">
+            <span className="font-medium">What to know:</span> {statusMessage}{" "}
+            <span className={brand.textDim}>{mapStatusMessage}</span>
+          </div>
         </div>
-        <div className={styles.listSurface}>
+
+        <section aria-label="All project tasks" className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-lg font-semibold">Task list</h4>
+            <span className={`${brand.textDim} text-sm`}>{listMetaLabel}</span>
+          </div>
           {error ? (
-            <div className={styles.error}>{error}</div>
+            <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
+              {error}
+            </div>
           ) : loading ? (
-            <div className={styles.loading}>Loading tasks…</div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white/80">
+              Loading tasks…
+            </div>
           ) : tasks.length ? (
-            <TaskList
+            <InlineTaskList
               tasks={drawerTasks}
               activeTaskId={activeTaskId}
               onTaskSelect={handleTaskSelect}
+              onTaskEdit={handleInlineEdit}
               formatDueLabel={formatDueLabel}
               taskListRef={inlineTaskListRef}
+              canEdit={hasQuickCreateProject}
             />
           ) : (
-            <div className={styles.empty}>No tasks yet. Create one to get started.</div>
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-center text-sm text-white/70">
+              No tasks yet. Create one to get started.
+            </div>
           )}
-        </div>
-      </section>
+        </section>
+
+        <Separator className="bg-white/10" />
+        <p className={`${brand.textDim} text-xs`}>
+          Tip: keep everything on a single surface. Use flat cards for items; avoid wrapping the list in another heavy panel.
+        </p>
+      </div>
 
       <TaskDrawer
         open={drawerOpen}

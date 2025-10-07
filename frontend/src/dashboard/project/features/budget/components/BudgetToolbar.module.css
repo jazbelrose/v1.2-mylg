@@ -183,7 +183,7 @@
 }
 
 .addButton {
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 0.5rem;
   padding: 8px 16px;
@@ -194,6 +194,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: 0.01em;
+  flex-shrink: 0;
   cursor: pointer;
   transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -293,6 +294,7 @@
   }
 
   .addButton {
+    display: inline-flex;
     margin-left: auto;
   }
 }

@@ -11,6 +11,7 @@ interface BudgetToolbarProps {
   selectedRowKeys: string[];
   handleDuplicateSelected: () => void;
   openDeleteModal: (ids: string[]) => void;
+  openCreateModal?: () => void;
   filterQuery: string;
   onFilterQueryChange: (query: string) => void;
   sortField: string | null;
@@ -22,6 +23,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   selectedRowKeys,
   handleDuplicateSelected,
   openDeleteModal,
+  openCreateModal,
   filterQuery,
   onFilterQueryChange,
   sortField,
@@ -40,6 +42,19 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
             onSortChange={onSortChange}
           />
         </div>
+        {openCreateModal && (
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={openCreateModal}
+            aria-label="Add item"
+          >
+            <span className={styles.addIcon} aria-hidden="true">
+              +
+            </span>
+            <span className={styles.addLabel}>Add Item</span>
+          </button>
+        )}
         {selectedRowKeys.length > 0 && (
           <div className={styles.selectionActions}>
             <div className={styles.iconSlot}>

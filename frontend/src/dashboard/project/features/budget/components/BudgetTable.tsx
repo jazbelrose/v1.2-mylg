@@ -7,7 +7,12 @@ import React, {
 } from "react";
 import { Pagination } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClone, faClock, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronDown,
+  faClone,
+  faClock,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import styles from "@/dashboard/project/features/budget/pages/budget-page.module.css";
 import { formatUSD } from "@/shared/utils/budgetUtils";
 
@@ -57,7 +62,9 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
     setPageSize,
   }) => {
     const [isMobile, setIsMobile] = useState(false);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const selectAllRef = useRef<HTMLInputElement | null>(null);
+    const menuContainersRef = useRef<Map<string, HTMLDivElement>>(new Map());
 
     useEffect(() => {
       if (typeof window === "undefined") return;
@@ -174,13 +181,15 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
         if (isLocked) return;
         if (event.key === "Enter") {
           event.preventDefault();
+          setOpenMenuId(null);
           openEditModal(record);
         } else if (event.key === " ") {
           event.preventDefault();
+          setOpenMenuId(null);
           openDeleteModal([record.budgetItemId]);
         }
       },
-      [openDeleteModal, openEditModal]
+      [openDeleteModal, openEditModal, setOpenMenuId]
     );
 
     const toggleSelection = useCallback(
@@ -287,6 +296,50 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       return { minHeight };
     }, [tableHeight]);
 
+    const registerMenuContainer = useCallback(
+      (id: string, node: HTMLDivElement | null) => {
+        if (node) {
+          menuContainersRef.current.set(id, node);
+        } else {
+          menuContainersRef.current.delete(id);
+        }
+      },
+      []
+    );
+
+    useEffect(() => {
+      if (typeof document === "undefined") return undefined;
+
+      const handleDocumentClick = (event: MouseEvent) => {
+        const target = event.target;
+        if (!(target instanceof Node)) return;
+
+        for (const container of menuContainersRef.current.values()) {
+          if (container.contains(target)) {
+            return;
+          }
+        }
+
+        setOpenMenuId(null);
+      };
+
+      document.addEventListener("click", handleDocumentClick);
+      return () => document.removeEventListener("click", handleDocumentClick);
+    }, [setOpenMenuId]);
+
+    useEffect(() => {
+      if (typeof document === "undefined") return undefined;
+
+      const handleEscape = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          setOpenMenuId(null);
+        }
+      };
+
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }, [setOpenMenuId]);
+
     return (
       <div ref={tableRef} className={styles.tableContainer}>
         {dataSource.length > 0 && (
@@ -339,6 +392,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                     aria-disabled={isLocked}
                     onClick={() => {
                       if (!isLocked) {
+                        setOpenMenuId(null);
                         openEditModal(record);
                       }
                     }}
@@ -414,48 +468,95 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                           </span>
                         </div>
                       )}
-
-                      <div className={styles.cardControls}>
+                      <div
+                        className={styles.cardControls}
+                        ref={(node) => registerMenuContainer(record.budgetItemId, node)}
+                      >
                         <button
-                          className={styles.cardIconButton}
+                          className={`${styles.cardMenuTrigger}${
+                            openMenuId === record.budgetItemId
+                              ? ` ${styles.cardMenuTriggerActive}`
+                              : ""
+                          }`}
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation();
-                            openEventModal(record);
+                            setOpenMenuId((prev) =>
+                              prev === record.budgetItemId ? null : record.budgetItemId
+                            );
                           }}
                           aria-label={
                             eventCount > 0
-                              ? `Manage ${eventCount} scheduled events`
-                              : "Manage events"
+                              ? `View options for ${eventCount} scheduled events`
+                              : "View budget line item options"
+                          }
+                          aria-haspopup="menu"
+                          aria-expanded={openMenuId === record.budgetItemId}
+                          aria-controls={
+                            openMenuId === record.budgetItemId
+                              ? `budget-card-menu-${record.key}`
+                              : undefined
                           }
                         >
-                          <FontAwesomeIcon icon={faClock} />
+                          <FontAwesomeIcon icon={faChevronDown} />
                           {eventCount > 0 && (
                             <span className={styles.cardEventBadge}>{eventCount}</span>
                           )}
                         </button>
-                        <button
-                          className={styles.cardIconButton}
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openDuplicateModal(record);
-                          }}
-                          aria-label="Duplicate line item"
-                        >
-                          <FontAwesomeIcon icon={faClone} />
-                        </button>
-                        <button
-                          className={styles.cardIconButton}
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openDeleteModal([record.budgetItemId]);
-                          }}
-                          aria-label="Delete line item"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                        {openMenuId === record.budgetItemId && (
+                          <div
+                            id={`budget-card-menu-${record.key}`}
+                            role="menu"
+                            className={styles.cardMenu}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className={styles.cardMenuItem}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setOpenMenuId(null);
+                                openEventModal(record);
+                              }}
+                            >
+                              <span className={styles.cardMenuItemIcon}>
+                                <FontAwesomeIcon icon={faClock} />
+                              </span>
+                              <span>Manage events</span>
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className={styles.cardMenuItem}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setOpenMenuId(null);
+                                openDuplicateModal(record);
+                              }}
+                            >
+                              <span className={styles.cardMenuItemIcon}>
+                                <FontAwesomeIcon icon={faClone} />
+                              </span>
+                              <span>Duplicate line item</span>
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className={`${styles.cardMenuItem} ${styles.cardMenuItemDanger}`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setOpenMenuId(null);
+                                openDeleteModal([record.budgetItemId]);
+                              }}
+                            >
+                              <span className={styles.cardMenuItemIcon}>
+                                <FontAwesomeIcon icon={faTrash} />
+                              </span>
+                              <span>Delete line item</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </article>

@@ -31,6 +31,8 @@
   gap: 8px;
   flex-shrink: 0;
   white-space: nowrap;
+  margin-left: auto;
+  align-self: flex-start;
 }
 
 .headingGroup {
@@ -66,26 +68,20 @@
 
 @media (max-width: 640px) {
   .header {
-    flex-wrap: wrap;
     align-items: flex-start;
     gap: 12px;
   }
 
   .headingGroup {
-    max-width: 100%;
+    max-width: calc(100% - 140px);
   }
 
   .actions {
-    flex: 1 1 100%;
-    width: 100%;
+    flex-direction: row;
+    align-items: flex-end;
     justify-content: flex-start;
-    flex-wrap: wrap;
     gap: 10px;
-    white-space: normal;
-  }
-
-  .primaryButton {
-    flex: 0 1 auto;
+    white-space: nowrap;
   }
 }
 

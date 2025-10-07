@@ -202,6 +202,7 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
             }
             return <Route key={key} path={route.path} element={route.element} />;
           })}
+          <Route path="projects/allprojects" element={<DashboardWelcome />} />
           <Route
             path="projects/:projectId/:projectName?"
             element={<DashboardSingleProject key={location.key} />}

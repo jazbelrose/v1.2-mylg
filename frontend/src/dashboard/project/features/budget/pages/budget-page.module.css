@@ -717,16 +717,11 @@
   }
 
   .cardMetricLabel {
-    text-align: right;
+    text-align: left;
   }
 
   .cardMetricValue {
-    text-align: right;
-  }
-
-  .cardMetricRowSummary .cardMetricLabel,
-  .cardMetricRowSummary .cardMetricValue {
-    text-align: right;
+    text-align: left;
   }
 
   .cardPayment {

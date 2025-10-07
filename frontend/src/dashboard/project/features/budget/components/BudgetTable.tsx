@@ -109,13 +109,19 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       [isDefined]
     );
 
-    const mobileMetrics = useMemo(
+    const primaryMetrics = useMemo(
       () => [
         { key: "quantity", label: "Qty" },
         { key: "unit", label: "U" },
         { key: "itemBudgetedCost", label: "BC" },
         { key: "itemActualCost", label: "AC" },
         { key: "itemReconciledCost", label: "RC" },
+      ],
+      []
+    );
+
+    const summaryMetrics = useMemo(
+      () => [
         { key: "itemMarkUp", label: "MK" },
         { key: "itemFinalCost", label: "FC" },
       ],
@@ -373,14 +379,31 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                       </div>
 
                       <div className={styles.cardMetrics}>
-                        {mobileMetrics.map((metric) => (
-                          <div key={metric.key} className={styles.cardMetric}>
-                            <span className={styles.cardMetricLabel}>{metric.label}</span>
-                            <span className={styles.cardMetricValue}>
-                              {formatMetricValue(record, metric.key)}
-                            </span>
-                          </div>
-                        ))}
+                        <div className={styles.cardMetricRow}>
+                          {primaryMetrics.map((metric) => (
+                            <div key={metric.key} className={styles.cardMetric}>
+                              <span className={styles.cardMetricLabel}>{metric.label}</span>
+                              <span className={styles.cardMetricValue}>
+                                {formatMetricValue(record, metric.key)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div
+                          className={`${styles.cardMetricRow} ${styles.cardMetricRowSummary}`}
+                        >
+                          {summaryMetrics.map((metric) => (
+                            <div
+                              key={metric.key}
+                              className={`${styles.cardMetric} ${styles.cardMetricSummary}`}
+                            >
+                              <span className={styles.cardMetricLabel}>{metric.label}</span>
+                              <span className={styles.cardMetricValue}>
+                                {formatMetricValue(record, metric.key)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                       {record.paymentStatus && (

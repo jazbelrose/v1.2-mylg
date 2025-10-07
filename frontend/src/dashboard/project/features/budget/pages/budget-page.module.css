@@ -311,8 +311,8 @@
 }
 
 .cardCheckbox input {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   margin: 0;
   accent-color: #FA3356;
 }
@@ -341,14 +341,14 @@
 .cardControls {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex: 0 0 auto;
 }
 
 .cardIconButton {
   position: relative;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 1px solid #2a2a2a;
   background: #131313;
@@ -357,6 +357,10 @@
   align-items: center;
   justify-content: center;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.cardIconButton :global(svg) {
+  font-size: 12px;
 }
 
 .cardIconButton:hover,
@@ -390,12 +394,27 @@
   max-width: 100%;
 }
 
+
+
 .cardMetrics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 320px;
+  min-width: 220px;
+}
+
+.cardMetricRow {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  flex: 1 1 320px;
-  min-width: 220px;
+  align-items: baseline;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.cardMetricRowSummary {
+  justify-content: flex-end;
 }
 
 .cardMetric {
@@ -404,13 +423,26 @@
   gap: 4px;
   flex: 0 1 auto;
   min-width: 56px;
+  justify-content: flex-end;
+  text-align: right;
 }
+
+.cardMetricSummary {
+  text-align: right;
+}
+
+.cardMetricRowSummary .cardMetric {
+  justify-content: flex-end;
+  text-align: right;
+}
+
 
 .cardMetricLabel {
   font-size: 0.6rem;
   color: #8f8f8f;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  text-align: right;
 }
 
 .cardMetricValue {
@@ -418,6 +450,14 @@
   font-weight: 500;
   color: #f5f5f5;
   min-height: 1.1em;
+}
+
+.cardMetricRowSummary .cardMetricLabel {
+  color: rgba(250, 51, 86, 0.72);
+}
+
+.cardMetricRowSummary .cardMetricValue {
+  color: rgba(250, 51, 86, 0.88);
 }
 
 .cardMetricValue span {
@@ -488,7 +528,10 @@
 
   .cardMetrics {
     flex: 1 1 100%;
-    gap: 10px;
+  }
+
+  .cardMetricRow {
+    gap: 8px;
   }
 
   .cardMetric {
@@ -519,9 +562,15 @@
   }
 
   .cardMetrics {
+    gap: 10px;
+  }
+
+  .cardMetricRow {
     display: grid;
-    grid-template-columns: repeat(7, minmax(88px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
     gap: 8px;
+    justify-content: flex-start;
+    justify-items: start;
   }
 
   .cardMetric {
@@ -530,6 +579,31 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
+    text-align: left;
+  }
+
+  .cardMetricRowSummary {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .cardMetricRowSummary .cardMetric {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .cardMetricLabel {
+    text-align: left;
+  }
+
+  .cardMetricValue {
+    text-align: left;
+  }
+
+  .cardMetricRowSummary .cardMetricLabel,
+  .cardMetricRowSummary .cardMetricValue {
+    text-align: right;
   }
 
   .cardPayment {
@@ -541,8 +615,16 @@
 
 @media (max-width: 480px) {
   .cardMetrics {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 8px;
+  }
+
+  .cardMetricRow {
+    grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    gap: 6px;
+  }
+
+  .cardMetricRowSummary {
+    gap: 6px;
   }
 
   .card {

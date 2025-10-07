@@ -56,43 +56,118 @@
 }
 
 .stat {
+  position: relative;
+  overflow: hidden;
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 3px;
   padding: 9px 11px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 17px;
   min-height: 58px;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-tint: transparent;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --accent-rgb: 120, 196, 255;
+  --card-gradient: none;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  outline: 1px solid rgba(255, 255, 255, 0.06);
+  outline-offset: -1px;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: box-shadow 220ms ease, transform 220ms ease, backdrop-filter 220ms ease;
+  will-change: transform, box-shadow, backdrop-filter;
+}
+
+.stat::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--card-gradient, none);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.stat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0) 22%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.stat > * {
+  position: relative;
+  z-index: 1;
+}
+
+.stat:hover,
+.stat:focus-within {
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    0 0 0 6px rgba(var(--accent-rgb), 0.1);
+}
+
+.stat:active {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transform: scale(0.995);
 }
 
 .statValue {
   font-size: 17px;
   font-weight: 600;
+  color: #f4f7f9;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
 }
 
 .statLabel {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
 }
 
 .statOk {
-  background: color-mix(in srgb, var(--color-success, #4caf50) 12%, transparent);
-  border-color: color-mix(in srgb, var(--color-success, #4caf50) 36%, transparent);
+  --accent-rgb: 28, 213, 172;
+  --card-gradient:
+    linear-gradient(135deg, rgba(26, 62, 52, 0.35), rgba(25, 81, 67, 0.2)),
+    radial-gradient(120% 80% at 0% 0%, rgba(28, 213, 172, 0.18), transparent 55%),
+    radial-gradient(140% 100% at 100% 100%, rgba(123, 255, 220, 0.12), transparent 50%);
 }
 
 .statDanger {
-  background: color-mix(in srgb, var(--color-error, #ef5350) 14%, transparent);
-  border-color: color-mix(in srgb, var(--color-error, #ef5350) 38%, transparent);
+  --accent-rgb: 250, 51, 86;
+  --card-gradient:
+    linear-gradient(135deg, rgba(80, 23, 30, 0.38), rgba(60, 16, 22, 0.24)),
+    radial-gradient(120% 80% at 0% 0%, rgba(250, 51, 86, 0.2), transparent 55%),
+    radial-gradient(140% 100% at 100% 100%, rgba(255, 140, 160, 0.12), transparent 50%);
 }
 
 .statWarn {
-  background: color-mix(in srgb, var(--color-warning, #ff9800) 14%, transparent);
-  border-color: color-mix(in srgb, var(--color-warning, #ff9800) 36%, transparent);
+  --accent-rgb: 255, 186, 64;
+  --card-gradient:
+    linear-gradient(135deg, rgba(85, 58, 18, 0.36), rgba(72, 45, 10, 0.22)),
+    radial-gradient(120% 80% at 0% 0%, rgba(255, 186, 64, 0.2), transparent 55%),
+    radial-gradient(140% 100% at 100% 100%, rgba(255, 226, 170, 0.12), transparent 50%);
 }
 
 .status {

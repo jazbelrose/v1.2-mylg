@@ -590,7 +590,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
   }, [error, loading, tasks.length]);
 
   return (
-    <section className={styles.panel} aria-label="Project tasks overview">
+    <section className={`${styles.panel} tasks-component`} aria-label="Project tasks overview">
       <div className={styles.inner}>
         <header className={styles.header}>
           <div className={styles.titleGroup}>

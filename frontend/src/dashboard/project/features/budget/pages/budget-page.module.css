@@ -311,8 +311,8 @@
 }
 
 .cardCheckbox input {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   margin: 0;
   accent-color: #FA3356;
 }
@@ -341,14 +341,14 @@
 .cardControls {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex: 0 0 auto;
 }
 
 .cardIconButton {
   position: relative;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 1px solid #2a2a2a;
   background: #131313;
@@ -357,6 +357,10 @@
   align-items: center;
   justify-content: center;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.cardIconButton :global(svg) {
+  font-size: 12px;
 }
 
 .cardIconButton:hover,
@@ -391,6 +395,7 @@
 }
 
 
+
 .cardMetrics {
   display: flex;
   flex-direction: column;
@@ -404,6 +409,8 @@
   flex-wrap: wrap;
   gap: 10px;
   align-items: baseline;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .cardMetricRowSummary {
@@ -416,6 +423,8 @@
   gap: 4px;
   flex: 0 1 auto;
   min-width: 56px;
+  justify-content: flex-end;
+  text-align: right;
 }
 
 .cardMetricSummary {
@@ -427,11 +436,13 @@
   text-align: right;
 }
 
+
 .cardMetricLabel {
   font-size: 0.6rem;
   color: #8f8f8f;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  text-align: right;
 }
 
 .cardMetricValue {
@@ -556,13 +567,14 @@
 
   .cardMetricRow {
     gap: 8px;
+    justify-content: flex-end;
   }
 
   .cardMetric {
     flex: initial;
     min-width: 0;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
     gap: 2px;
   }
 

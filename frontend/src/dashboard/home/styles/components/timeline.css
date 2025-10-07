@@ -74,6 +74,39 @@
   touch-action: none;
 }
 
+
+
+.timeline-chart__scroll-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-chart__canvas {
+  border-radius: 0 0 12px 12px;
+}
+.timeline-chart__axis {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(12, 12, 12, 0.94), rgba(12, 12, 12, 0.78));
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.timeline-chart__axis .visx-axis-line {
+  stroke: rgba(255, 255, 255, 0.22);
+}
+
+.timeline-chart__axis .visx-axis-tick line {
+  stroke: rgba(255, 255, 255, 0.22);
+}
+
+.timeline-chart__axis .visx-axis-tick text {
+  fill: #dcdcdc;
+}
 .timeline-chart__label-resizer::after {
   content: "";
   position: absolute;

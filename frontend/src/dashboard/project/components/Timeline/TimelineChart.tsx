@@ -35,7 +35,7 @@ type TimelineChartProps = {
 const PX_PER_HOUR = 24; // ← fix: non-zero so bars are visible
 const LABEL_MIN_WIDTH = 80;
 const LABEL_MAX_WIDTH = 180;
-const DEFAULT_LABEL_WIDTH = 120;
+const DEFAULT_LABEL_WIDTH = 140;
 const LABEL_RESIZER_WIDTH = 8;
 
 // Level of Detail thresholds by zoom
@@ -266,7 +266,8 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
         const contentHeight = Math.max(trackCount * trackHeight, minChartHeight);
         const resizerWidth = LABEL_RESIZER_WIDTH;
         const timelineViewportWidth = Math.max(1, parentWidth - labelWidth - resizerWidth);
-        const contentWidth = Math.max(timelineViewportWidth, Math.ceil(totalHours));
+        const effectiveHours = Math.max(totalHours, 24);
+        const contentWidth = Math.max(timelineViewportWidth, Math.ceil(effectiveHours));
         const svgWidth = margin.left + margin.right + contentWidth;
         const svgHeight = margin.top + margin.bottom + contentHeight;
 
@@ -366,7 +367,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
               onDoubleClick={resetLabelWidth}
             />
 
-            <div style={{ overflowX: "auto", flex: 1 }}>
+            <div style={{ overflowX: "auto", flex: 1, position: "relative" }}>
               <Zoom
                 width={svgWidth}
                 height={svgHeight}
@@ -414,9 +415,36 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
 
                   return (
                     <>
+                      <div className="timeline-chart__scroll-frame" style={{ width: svgWidth, minWidth: svgWidth }}>
+                        <svg
+                          className="timeline-chart__axis"
+                          width={svgWidth}
+                          height={axisHeight}
+                        >
+                        <AxisTop
+                          top={axisHeight - 1}
+                          left={margin.left}
+                          scale={xScale}
+                          stroke="rgba(255, 255, 255, 0.3)"
+                          tickStroke="rgba(255, 255, 255, 0.3)"
+                          tickLength={lod === 2 ? 12 : 8}
+                          numTicks={lod === 0 ? 8 : lod === 1 ? 12 : 18}
+                          tickFormat={(value) => formatTickLabel(value as Date)}
+                          tickLabelProps={() => ({
+                            fill: "#f1f1f1",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            textAnchor: "middle",
+                            dominantBaseline: "baseline",
+                            dy: "-0.35em",
+                          })}
+                        />
+                      </svg>
+
                       <svg
                         width={svgWidth}
                         height={svgHeight}
+                        className="timeline-chart__canvas"
                         style={{
                           background: "#1a1a1a",
                           cursor: zoom.isDragging ? "grabbing" : "grab",
@@ -432,25 +460,6 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                           onMouseMove={zoom.dragMove}
                           onMouseUp={zoom.dragEnd}
                           onMouseLeave={zoom.dragEnd}
-                        />
-
-                        <AxisTop
-                          top={margin.top}
-                          left={margin.left}
-                          scale={xScale}
-                          stroke="rgba(255, 255, 255, 0.3)"
-                          tickStroke="rgba(255, 255, 255, 0.3)"
-                          tickLength={lod === 2 ? 12 : 8}
-                          numTicks={lod === 0 ? 8 : lod === 1 ? 12 : 18}
-                          tickFormat={(value) => formatTickLabel(value as Date)}
-                          tickLabelProps={() => ({
-                            fill: "#f1f1f1",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            textAnchor: "middle",
-                            dominantBaseline: "baseline",
-                            dy: "-0.45em",
-                          })}
                         />
 
                         <Group left={margin.left} top={margin.top}>
@@ -507,7 +516,28 @@ const TimelineChart: React.FC<TimelineChartProps> = ({
                           )}
                         </Group>
                       </svg>
-                    </>
+                    </div>
+
+                    <div
+                      className="zoom-controls"
+                      style={{ position: "absolute", right: 10, top: 10 }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => zoom.scale({ scaleX: 1.2, scaleY: 1 })}
+                        aria-label="Zoom in"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => zoom.scale({ scaleX: 0.8, scaleY: 1 })}
+                        aria-label="Zoom out"
+                      >
+                        –
+                      </button>
+                    </div>
+                  </>
                   );
                 }}
               </Zoom>

@@ -385,7 +385,9 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                     key={record.key}
                     className={`${styles.card}${
                       isSelected ? ` ${styles.cardSelected}` : ""
-                    }${isLocked ? ` ${styles.cardLocked}` : ""}`}
+                    }${isLocked ? ` ${styles.cardLocked}` : ""}${
+                      openMenuId === record.budgetItemId ? ` ${styles.cardMenuOpen}` : ""
+                    }`}
                     role="button"
                     tabIndex={isLocked ? -1 : 0}
                     aria-pressed={isSelected}

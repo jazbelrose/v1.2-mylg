@@ -338,8 +338,8 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                     }}
                     onKeyDown={(event) => handleCardKeyDown(event, record, isLocked)}
                   >
-                    <header className={styles.cardHeader}>
-                      <div className={styles.cardHeaderLeft}>
+                    <div className={styles.cardRow}>
+                      <div className={styles.cardPrimary}>
                         <label className={styles.cardCheckbox}>
                           <input
                             type="checkbox"
@@ -353,17 +353,45 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                             aria-label="Select budget line item"
                           />
                         </label>
-                        <div className={styles.cardIdentifiers}>
-                          <span className={styles.cardKey}>
-                            {String(record.elementKey ?? "—")}
-                          </span>
-                          {record.elementId && (
-                            <span className={styles.cardId}>
-                              {String(record.elementId)}
+                        <div className={styles.cardSummary}>
+                          <div className={styles.cardIdentifiers}>
+                            <span className={styles.cardKey}>
+                              {String(record.elementKey ?? "—")}
                             </span>
-                          )}
+                            {record.elementId && (
+                              <span className={styles.cardId}>
+                                {String(record.elementId)}
+                              </span>
+                            )}
+                          </div>
+                          <div className={styles.cardDescription}>
+                            {record.description
+                              ? String(record.description)
+                              : "No description"}
+                          </div>
                         </div>
                       </div>
+
+                      <div className={styles.cardMetrics}>
+                        {mobileMetrics.map((metric) => (
+                          <div key={metric.key} className={styles.cardMetric}>
+                            <span className={styles.cardMetricLabel}>{metric.label}</span>
+                            <span className={styles.cardMetricValue}>
+                              {formatMetricValue(record, metric.key)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {record.paymentStatus && (
+                        <div className={styles.cardPayment}>
+                          <span className={styles.cardFooterLabel}>Payment</span>
+                          <span className={styles.cardFooterValue}>
+                            {renderPaymentStatus(String(record.paymentStatus))}
+                          </span>
+                        </div>
+                      )}
+
                       <div className={styles.cardControls}>
                         <button
                           className={styles.cardIconButton}
@@ -406,31 +434,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                           <FontAwesomeIcon icon={faTrash} />
                         </button>
                       </div>
-                    </header>
-
-                    <div className={styles.cardDescription}>
-                      {record.description ? String(record.description) : "No description"}
                     </div>
-
-                    <div className={styles.cardMetrics}>
-                      {mobileMetrics.map((metric) => (
-                        <div key={metric.key} className={styles.cardMetric}>
-                          <span className={styles.cardMetricLabel}>{metric.label}</span>
-                          <span className={styles.cardMetricValue}>
-                            {formatMetricValue(record, metric.key)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {record.paymentStatus && (
-                      <footer className={styles.cardFooter}>
-                        <span className={styles.cardFooterLabel}>Payment</span>
-                        <span className={styles.cardFooterValue}>
-                          {renderPaymentStatus(String(record.paymentStatus))}
-                        </span>
-                      </footer>
-                    )}
                   </article>
                 );
               })}

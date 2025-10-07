@@ -163,9 +163,13 @@ const RegularProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [projectsViewState] = useState<string>(() => {
     try {
-      return localStorage.getItem("dashboardViewState") || "welcome";
+      const stored = localStorage.getItem("dashboardViewState");
+      if (!stored) return "projects-overview";
+      if (stored === "welcome") return "projects-overview";
+      if (stored === "projects") return "projects-list";
+      return stored;
     } catch {
-      return "welcome";
+      return "projects-overview";
     }
   });
 

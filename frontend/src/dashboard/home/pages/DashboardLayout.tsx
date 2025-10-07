@@ -18,11 +18,11 @@ const Dashboard: React.FC = () => {
     if (path.startsWith("/dashboard/projects/")) return "Dashboard - Project Details";
     switch (path) {
       case "/dashboard":
-        return `Dashboard - Welcome, ${userName ?? "Guest"}`;
+        return "Dashboard - Projects";
       case "/dashboard/new":
         return "Dashboard - Start something";
       case "/dashboard/projects":
-        return "Dashboard - All Projects";
+        return "Dashboard - Project List";
       case "/dashboard/tasks":
         return "Dashboard - Tasks";
       case "/dashboard/settings":
@@ -59,7 +59,9 @@ const Dashboard: React.FC = () => {
       }
 
       if (saved && saved !== "/dashboard") {
-        const normalized = saved.replace("/dashboard/welcome", "/dashboard");
+        const normalized = saved
+          .replace("/dashboard/welcome", "/dashboard")
+          .replace("/dashboard/projects-overview", "/dashboard");
         navigate(normalized, { replace: true });
       } else {
         navigate("/dashboard", { replace: true });

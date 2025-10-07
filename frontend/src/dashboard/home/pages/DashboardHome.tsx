@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useId, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useData } from "@/app/contexts/useData";
 import { UserLite } from "@/app/contexts/DataProvider";
@@ -54,6 +54,9 @@ function sameDay(a: Date | null, b: Date | null) {
   return !!(a && b) && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+export const PROJECTS_OVERVIEW_VIEW = "projects-overview" as const;
+export const PROJECTS_LIST_VIEW = "projects-list" as const;
+
 // eslint-disable-next-line react-refresh/only-export-components
 export const parseDashboardPath = (
   pathname: string
@@ -62,20 +65,33 @@ export const parseDashboardPath = (
   const idx = segments.indexOf("dashboard");
 
   if (idx === -1) {
-    return { view: "welcome", userSlug: null };
+    return { view: PROJECTS_OVERVIEW_VIEW, userSlug: null };
   }
 
-  let view = segments[idx + 1] || "welcome";
+  let view = segments[idx + 1] || PROJECTS_OVERVIEW_VIEW;
   let userSlug = segments[idx + 2] || null;
 
   if (view === "features") {
-    view = segments[idx + 2] || "welcome";
+    view = segments[idx + 2] || PROJECTS_OVERVIEW_VIEW;
     userSlug = segments[idx + 3] || null;
   }
 
   if (view === "welcome") {
-    view = segments[idx + 2] || "welcome";
-    userSlug = segments[idx + 3] || null;
+    const nestedView = segments[idx + 2];
+    if (nestedView) {
+      view = nestedView;
+      userSlug = segments[idx + 3] || null;
+    } else {
+      view = PROJECTS_OVERVIEW_VIEW;
+      userSlug = null;
+    }
+  }
+
+  if (view === "projects") {
+    const hasAdditionalSegment = segments.length > idx + 2;
+    if (!hasAdditionalSegment) {
+      view = PROJECTS_LIST_VIEW;
+    }
   }
 
   return { view, userSlug };
@@ -172,7 +188,14 @@ const WelcomeScreen: React.FC = () => {
   const parsePath = () => parseDashboardPath(location.pathname);
 
   const { view: initialView, userSlug: initialDMUserSlug } = parsePath();
-  const [activeView, setActiveView] = useState<string>(initialView);
+  const normalizeView = useCallback((view: string) => {
+    if (view === "welcome") return PROJECTS_OVERVIEW_VIEW;
+    if (view === "projects") return PROJECTS_LIST_VIEW;
+    return view;
+  }, []);
+  const [activeView, setActiveView] = useState<string>(() =>
+    normalizeView(initialView)
+  );
   const [dmUserSlug, setDmUserSlug] = useState<string | null>(
     initialDMUserSlug
   );
@@ -261,10 +284,11 @@ const WelcomeScreen: React.FC = () => {
 
   useEffect(() => {
     const { view, userSlug } = parsePath();
-    if (view !== activeView) setActiveView(view);
+    const normalizedView = normalizeView(view);
+    if (normalizedView !== activeView) setActiveView(normalizedView);
     if (userSlug !== dmUserSlug) setDmUserSlug(userSlug);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+  }, [location.pathname, normalizeView]);
 
   useEffect(() => {
     if (
@@ -371,8 +395,10 @@ const WelcomeScreen: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeView) {
+      case PROJECTS_OVERVIEW_VIEW:
       case "welcome":
         return renderWelcomeView();
+      case PROJECTS_LIST_VIEW:
       case "projects":
         return <AllProjects />;
       case "notifications":
@@ -416,7 +442,8 @@ const WelcomeScreen: React.FC = () => {
             <div className="dashboard-content">
               <div
                 className={`main-content${
-                  activeView === "welcome" && isDesktop
+                  (activeView === PROJECTS_OVERVIEW_VIEW || activeView === "welcome") &&
+                  isDesktop
                     ? " main-content--welcome"
                     : ""
                 }`}

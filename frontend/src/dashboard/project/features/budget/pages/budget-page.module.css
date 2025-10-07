@@ -736,15 +736,3 @@
 
 
 
-.cardList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 12px;
-  align-content: flex-start;
-}
-
-.cardListMobile {
-  display: contents;
-}
-
-.card {

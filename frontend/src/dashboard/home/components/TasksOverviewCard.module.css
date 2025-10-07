@@ -101,50 +101,111 @@
 }
 
 .statChip {
+  --accent-rgb: 120, 190, 255;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-tint: transparent;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --chip-linear: linear-gradient(135deg, rgba(30, 40, 54, 0.36), rgba(16, 22, 30, 0.18));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(var(--accent-rgb), 0.18), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(var(--accent-rgb), 0.12), transparent 50%);
   position: relative;
   overflow: hidden;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.45);
+  border-radius: 1.25rem;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   padding: 16px;
   display: flex;
   align-items: center;
   gap: 16px;
   min-height: 88px;
-  --chip-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  outline: 1px solid rgba(255, 255, 255, 0.06);
+  outline-offset: -1px;
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    backdrop-filter 180ms ease;
+}
+
+.statChip::before,
+.statChip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.statChip::before {
+  background:
+    var(--glass-tint),
+    var(--chip-radial-b),
+    var(--chip-radial-a),
+    var(--chip-linear);
+}
+
+.statChip::after {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 22%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+.statChip:hover,
+.statChip:focus-visible,
+.statChip:focus-within {
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 0 0 6px rgba(var(--accent-rgb), 0.1),
+    0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+.statChip:active {
+  backdrop-filter: blur(10px);
+  transform: scale(0.995);
 }
 
 .statChipToneOk {
-  --chip-gradient: linear-gradient(140deg, rgba(16, 185, 129, 0.25), transparent);
+  --accent-rgb: 28, 213, 172;
+  --chip-linear: linear-gradient(135deg, rgba(26, 62, 52, 0.35), rgba(25, 81, 67, 0.2));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(28, 213, 172, 0.18), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(123, 255, 220, 0.12), transparent 50%);
 }
 
 .statChipToneWarn {
-  --chip-gradient: linear-gradient(140deg, rgba(239, 68, 68, 0.28), transparent);
+  --accent-rgb: 250, 51, 86;
+  --chip-linear: linear-gradient(135deg, rgba(80, 23, 30, 0.38), rgba(60, 16, 22, 0.24));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(250, 51, 86, 0.2), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(255, 140, 160, 0.12), transparent 50%);
 }
 
 .statChipToneSoon {
-  --chip-gradient: linear-gradient(140deg, rgba(245, 158, 11, 0.28), transparent);
+  --accent-rgb: 255, 186, 64;
+  --chip-linear: linear-gradient(135deg, rgba(85, 58, 18, 0.36), rgba(72, 45, 10, 0.22));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(255, 186, 64, 0.2), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(255, 226, 170, 0.12), transparent 50%);
 }
 
 .statChipAccent {
-  position: absolute;
-  inset: 0;
-  background: var(--chip-gradient);
-  pointer-events: none;
-  opacity: 1;
+  display: none;
 }
+
 
 .statChipIcon {
   position: relative;
   z-index: 1;
   width: 44px;
   height: 44px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
   display: grid;
   place-items: center;
   color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .statChipIcon svg {
@@ -164,13 +225,16 @@
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
 }
 
 .statChipValue {
   font-size: 1.55rem;
   font-weight: 600;
   letter-spacing: -0.01em;
+  color: #f4f7f9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .notice {

@@ -144,25 +144,106 @@
 }
 
 .statCard {
+  --accent-rgb: 120, 190, 255;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-tint: transparent;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --chip-linear: linear-gradient(135deg, rgba(30, 40, 54, 0.34), rgba(16, 22, 30, 0.18));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(var(--accent-rgb), 0.18), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(var(--accent-rgb), 0.12), transparent 50%);
+  position: relative;
   padding: 20px;
-  border-radius: 20px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(6, 6, 6, 0.3));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 28px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(14px);
+  outline: 1px solid rgba(255, 255, 255, 0.06);
+  outline-offset: -1px;
+  overflow: hidden;
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    backdrop-filter 180ms ease;
+}
+
+.statsGrid .statCard:nth-child(1) {
+  --accent-rgb: 28, 213, 172;
+  --chip-linear: linear-gradient(135deg, rgba(26, 62, 52, 0.35), rgba(25, 81, 67, 0.2));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(28, 213, 172, 0.18), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(123, 255, 220, 0.12), transparent 50%);
+}
+
+.statsGrid .statCard:nth-child(2) {
+  --accent-rgb: 255, 186, 64;
+  --chip-linear: linear-gradient(135deg, rgba(85, 58, 18, 0.36), rgba(72, 45, 10, 0.22));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(255, 186, 64, 0.2), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(255, 226, 170, 0.12), transparent 50%);
+}
+
+.statsGrid .statCard:nth-child(3) {
+  --accent-rgb: 250, 51, 86;
+  --chip-linear: linear-gradient(135deg, rgba(80, 23, 30, 0.38), rgba(60, 16, 22, 0.24));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(250, 51, 86, 0.2), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(255, 140, 160, 0.12), transparent 50%);
+}
+
+.statCard::before,
+.statCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.statCard::before {
+  background:
+    var(--glass-tint),
+    var(--chip-radial-b),
+    var(--chip-radial-a),
+    var(--chip-linear);
+}
+
+.statCard::after {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 22%);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+.statCard:hover,
+.statCard:focus-visible,
+.statCard:focus-within {
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 0 0 6px rgba(var(--accent-rgb), 0.1),
+    0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.statCard:active {
+  backdrop-filter: blur(10px);
+  transform: scale(0.995);
 }
 
 .statLabel {
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-tertiary, rgba(246, 247, 251, 0.55));
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
 }
 
 .statValue {
   font-size: clamp(1.8rem, 1.4rem + 1vw, 2.4rem);
   font-weight: 700;
+  color: #f4f7f9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .sections {

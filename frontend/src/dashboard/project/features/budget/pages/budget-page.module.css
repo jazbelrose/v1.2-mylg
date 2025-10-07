@@ -187,7 +187,19 @@
 
 
 .mobileCardList {
-  display: none;
+  display: grid;
+  width: 100%;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: stretch;
+}
+
+.mobileCardList .emptyPlaceholder {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
 }
 
 .mobileCard {
@@ -200,6 +212,7 @@
   gap: 10px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
   transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  height: 100%;
 }
 
 .mobileCard:hover {
@@ -370,8 +383,11 @@
 }
 
 .mobilePagination {
-  align-self: center;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   margin-top: 12px;
+  grid-column: 1 / -1;
 }
 
 .mobilePagination :global(.ant-select-selector) {
@@ -421,6 +437,11 @@
 
   .mobileCardMetrics {
     grid-template-columns: repeat(7, minmax(88px, 1fr));
+  }
+
+  .mobilePagination {
+    align-self: center;
+    justify-content: center;
   }
 }
 

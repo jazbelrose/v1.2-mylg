@@ -1,14 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Pagination, Table } from "antd";
+import React, { useCallback, useMemo } from "react";
+import { Pagination } from "antd";
 import type { ColumnsType, TableProps } from "antd/es/table";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClone, faClock, faTrash } from "@fortawesome/free-solid-svg-icons";
 import styles from "@/dashboard/project/features/budget/pages/budget-page.module.css";
 import { formatUSD } from "@/shared/utils/budgetUtils";
-
-const TABLE_HEADER_FOOTER = 110;
-const MOBILE_BREAKPOINT = 768;
-
 type BudgetItem = Record<string, unknown> & {
   budgetItemId: string;
   key: string;
@@ -37,11 +33,11 @@ interface BudgetItemsTableProps {
 const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
   ({
     dataSource,
-    columns,
+    columns: _columns,
     selectedRowKeys,
     setSelectedRowKeys,
     lockedLines,
-    handleTableChange,
+    handleTableChange: _handleTableChange,
     openEditModal,
     openDuplicateModal,
     openDeleteModal,
@@ -54,27 +50,8 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
     setCurrentPage,
     setPageSize,
   }) => {
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-      if (typeof window === "undefined") return;
-      const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-      const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
-        setIsMobile(event.matches);
-      };
-
-      handleChange(mediaQuery);
-
-      const listener = (event: MediaQueryListEvent) => handleChange(event);
-
-      if (typeof mediaQuery.addEventListener === "function") {
-        mediaQuery.addEventListener("change", listener);
-        return () => mediaQuery.removeEventListener("change", listener);
-      }
-
-      mediaQuery.addListener(listener);
-      return () => mediaQuery.removeListener(listener);
-    }, []);
+    void _columns;
+    void _handleTableChange;
 
     const costKeys = useMemo(
       () => [
@@ -149,11 +126,10 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       [setSelectedRowKeys]
     );
 
-    const paginatedMobileData = useMemo(() => {
-      if (!isMobile) return [];
+    const paginatedData = useMemo(() => {
       const startIndex = Math.max(0, (currentPage - 1) * pageSize);
       return dataSource.slice(startIndex, startIndex + pageSize);
-    }, [isMobile, dataSource, currentPage, pageSize]);
+    }, [dataSource, currentPage, pageSize]);
 
     const formatMetricValue = useCallback(
       (record: BudgetItem, metricKey: string) => {
@@ -226,69 +202,15 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
 
     return (
       <div ref={tableRef} className={styles.tableContainer}>
-        <div className={styles.desktopTable}>
-          <Table<BudgetItem>
-            dataSource={dataSource}
-            columns={columns.map((col) => ({
-              ...col,
-              ellipsis: col.key !== "actions" && col.key !== "events",
-            }))}
-            locale={{
-              emptyText: (
-                <div className={styles.emptyPlaceholder}>No budget items to display</div>
-              ),
-            }}
-            onChange={handleTableChange}
-            rowClassName={(record) =>
-              `${styles.clickableRow}${
-                selectedRowKeys.includes(record.budgetItemId)
-                  ? ` ${styles.selectedRow}`
-                  : ""
-              }${
-                lockedLines.includes(record.budgetItemId)
-                  ? ` ${styles.lockedRow}`
-                  : ""
-              }`
-            }
-            onRow={(record) => ({
-              onClick: () => openEditModal(record),
-              tabIndex: lockedLines.includes(record.budgetItemId) ? -1 : 0,
-              onKeyDown: (e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  openEditModal(record);
-                } else if (e.key === " ") {
-                  e.preventDefault();
-                  openDeleteModal([record.budgetItemId]);
-                }
-              },
-            })}
-            pagination={{
-              pageSize,
-              current: currentPage,
-              showSizeChanger: true,
-              pageSizeOptions: ["10", "20", "50", "100"],
-              position: ["bottomRight"],
-              showTotal: (total, range) => `Showing ${range[0]}–${range[1]} of ${total} items`,
-              size: "small",
-              onChange: (page, size) => {
-                setCurrentPage(page);
-                if (size !== pageSize) setPageSize(size);
-              },
-            }}
-            scroll={{ y: Math.max(0, tableHeight - TABLE_HEADER_FOOTER) }}
-            className={styles.tableMinHeight}
-            style={{ height: tableHeight }}
-          />
-        </div>
-
-        {isMobile && (
-          <div className={styles.mobileCardList}>
-            {paginatedMobileData.length === 0 ? (
-              <div className={styles.emptyPlaceholder}>No budget items to display</div>
-            ) : (
-              <>
-                {paginatedMobileData.map((record) => {
+        <div
+          className={styles.mobileCardList}
+          style={{ minHeight: tableHeight || undefined }}
+        >
+          {dataSource.length === 0 ? (
+            <div className={styles.emptyPlaceholder}>No budget items to display</div>
+          ) : (
+            <>
+              {paginatedData.map((record) => {
                   const isSelected = selectedRowKeys.includes(record.budgetItemId);
                   const isLocked = lockedLines.includes(record.budgetItemId);
                   const events = eventsByLineItem[record.budgetItemId] || [];
@@ -406,23 +328,22 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                       )}
                     </article>
                   );
-                })}
+              })}
 
-                <Pagination
-                  className={styles.mobilePagination}
-                  current={currentPage}
-                  pageSize={pageSize}
-                  total={dataSource.length}
-                  showSizeChanger
-                  pageSizeOptions={["10", "20", "50", "100"]}
-                  size="small"
-                  onChange={handlePaginationChange}
-                  onShowSizeChange={handlePaginationChange}
-                />
-              </>
-            )}
-          </div>
-        )}
+              <Pagination
+                className={styles.mobilePagination}
+                current={currentPage}
+                pageSize={pageSize}
+                total={dataSource.length}
+                showSizeChanger
+                pageSizeOptions={["10", "20", "50", "100"]}
+                size="small"
+                onChange={handlePaginationChange}
+                onShowSizeChange={handlePaginationChange}
+              />
+            </>
+          )}
+        </div>
       </div>
     );
   }

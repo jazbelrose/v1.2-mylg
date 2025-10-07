@@ -376,7 +376,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
         <div className={styles.headerRow}>
           <div className={styles.titleGroup}>
             <h3 className={styles.title}>Tasks</h3>
-            <p className={styles.subtitle}>Keep the project moving forward.</p>
+            
           </div>
           <div className={styles.headerActions}>
             <Button
@@ -428,21 +428,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
           <div className={styles.empty}>We couldn’t load tasks right now. Please try again later.</div>
         ) : taskCount ? (
           <section className={styles.listSection} aria-label="Open tasks">
-            <div className={styles.listHeader}>
-              <h4 className={styles.listTitle}>Task list</h4>
-              <span className={styles.listCount}>{taskCount} {taskCount === 1 ? "task" : "tasks"}</span>
-            </div>
-            <ul className={styles.taskList}>
-              {derivedTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onOpen={handleTaskOpen}
-                  onMarkDone={handleMarkDone}
-                  onOpenMap={handleOpenMap}
-                />
-              ))}
-            </ul>
+            
           </section>
         ) : (
           <div className={styles.empty}>
@@ -450,10 +436,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
           </div>
         )}
 
-        <div className={styles.footerNote}>
-          Tip: keep everything on a single surface. Use flat cards for items; avoid wrapping the list in another heavy
-          panel.
-        </div>
+      
       </section>
       <QuickCreateTaskModal
         open={isCreateModalOpen}

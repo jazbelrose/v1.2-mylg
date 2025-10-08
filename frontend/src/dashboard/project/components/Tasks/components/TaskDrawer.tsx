@@ -199,6 +199,14 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({
         {isDesktop ? (
           <>
             <header className={styles.desktopDrawerHeader}>
+              <button
+                type="button"
+                className={styles.desktopDrawerCloseButton}
+                onClick={onClose}
+                aria-label="Close map"
+              >
+                <X size={14} strokeWidth={2.25} aria-hidden="true" />
+              </button>
               <div className={styles.sheetTitleGroup}>
                 <span className={styles.sheetTitle}>Project tasks</span>
                 <span className={styles.sheetSubtitle}>
@@ -206,13 +214,6 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({
                 </span>
               </div>
               <div className={styles.desktopDrawerActions}>
-                <button
-                  type="button"
-                  className={`${styles.desktopDrawerButton} ${styles.desktopDrawerGhostButton}`}
-                  onClick={onClose}
-                >
-                  <X size={16} strokeWidth={2.25} aria-hidden="true" /> Close map
-                </button>
                 <button
                   type="button"
                   className={`${styles.desktopDrawerButton} ${styles.desktopDrawerPrimaryButton}`}

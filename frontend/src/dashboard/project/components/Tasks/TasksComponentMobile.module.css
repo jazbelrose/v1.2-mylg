@@ -1167,12 +1167,46 @@
   }
 
   .desktopDrawerHeader {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1.25rem;
-    padding: 1.5rem 1.75rem 1.25rem;
+    padding: 1.5rem 2.75rem 1.25rem 1.75rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .desktopDrawerCloseButton {
+    position: absolute;
+    top: 1.35rem;
+    right: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(7, 8, 10, 0.72);
+    color: rgba(255, 255, 255, 0.95);
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+
+  .desktopDrawerCloseButton svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .desktopDrawerCloseButton:focus-visible {
+    outline: 2px solid var(--brand, #fa3356);
+    outline-offset: 2px;
+  }
+
+  .desktopDrawerCloseButton:not(:disabled):hover,
+  .desktopDrawerCloseButton:not(:disabled):focus-visible {
+    background: rgba(7, 8, 10, 0.92);
+    transform: translateY(-1px);
   }
 
   .desktopDrawerActions {

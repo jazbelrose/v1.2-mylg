@@ -1,5 +1,7 @@
 import React from "react";
-import { Calendar, MapPin, User } from "lucide-react";
+import { ArrowUpRight, Calendar, Check, MapPin, Pencil, User } from "lucide-react";
+
+import { Button } from "@/components/ui";
 
 import styles from "../TasksComponentMobile.module.css";
 import { buildDirectionsLinks, formatAssigneeDisplay } from "../utils";
@@ -15,6 +17,8 @@ type TaskListProps = {
   tasks: QuickTask[];
   activeTaskId: string | null;
   onTaskSelect: (taskId: string) => void;
+  onTaskEdit: (taskId: string) => void;
+  onTaskMarkDone: (taskId: string) => void;
   formatDueLabel: (task: QuickTask) => string;
   taskListRef: React.RefObject<HTMLUListElement>;
 };
@@ -30,6 +34,8 @@ const TaskList: React.FC<TaskListProps> = ({
   tasks,
   activeTaskId,
   onTaskSelect,
+  onTaskEdit,
+  onTaskMarkDone,
   formatDueLabel,
   taskListRef,
 }) => {
@@ -43,6 +49,9 @@ const TaskList: React.FC<TaskListProps> = ({
         const listItemClassName = `${styles.taskItem}${isActive ? ` ${styles.taskItemActive}` : ""}`;
 
         const directionsLinks = buildDirectionsLinks(task.address);
+        const primaryMapUrl = directionsLinks
+          ? directionsLinks.googleMaps || directionsLinks.appleMaps
+          : null;
         const { category, label } = getTaskStatusBadge(task.status, task.dueDate, statusContext);
         const tone = getTaskStatusTone(category);
         const badgeClassKey = BADGE_CLASS_BY_TONE[tone];
@@ -76,31 +85,6 @@ const TaskList: React.FC<TaskListProps> = ({
                     <MapPin size={14} aria-hidden="true" />
                     <span className={styles.addressDetails}>
                       <span className={styles.addressText}>{task.address}</span>
-                      {directionsLinks ? (
-                        <span className={styles.addressActions}>
-                          <a
-                            href={directionsLinks.appleMaps}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={styles.addressLink}
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            Open in Maps
-                          </a>
-                          <span className={styles.addressLinkSeparator} aria-hidden="true">
-                            •
-                          </span>
-                          <a
-                            href={directionsLinks.googleMaps}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={styles.addressLink}
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            Open in Google Maps
-                          </a>
-                        </span>
-                      ) : null}
                     </span>
                   </span>
                 ) : (
@@ -118,6 +102,45 @@ const TaskList: React.FC<TaskListProps> = ({
                   </span>
                 )}
               </div>
+            </div>
+            <div className={styles.taskActions}>
+              {primaryMapUrl ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`${styles.taskActionButton} ${styles.taskMapButton}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (typeof window !== "undefined") {
+                      window.open(primaryMapUrl, "_blank", "noopener,noreferrer");
+                    }
+                  }}
+                >
+                  Open in Maps
+                  <ArrowUpRight aria-hidden="true" size={16} />
+                </Button>
+              ) : null}
+              <Button
+                size="sm"
+                className={`${styles.taskActionButton} ${styles.taskMarkDoneButton}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onTaskMarkDone(task.id);
+                }}
+              >
+                <Check aria-hidden="true" size={16} /> Mark done
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`${styles.taskActionButton} ${styles.taskEditButton}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onTaskEdit(task.id);
+                }}
+              >
+                <Pencil aria-hidden="true" size={16} /> Edit task
+              </Button>
             </div>
           </li>
         );

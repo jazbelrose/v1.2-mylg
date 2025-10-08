@@ -277,22 +277,46 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
   );
   const selectedAssigneeName = formatAssigneeDisplay(selectedTask?.assignedTo);
 
+  const openTaskEditor = useCallback(
+    (taskId: string, overrides?: Partial<QuickCreateTaskModalTask>) => {
+      const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
+      if (!match) return;
+
+      const modalTask = toModalTask(match);
+      setTaskToEdit(overrides ? { ...modalTask, ...overrides } : modalTask);
+      setQuickCreateOpen(true);
+    },
+    [drawerTasks, tasks, toModalTask],
+  );
+
   const handleTaskSelect = useCallback(
     (taskId: string) => {
       if (activeTaskId === taskId) {
         // Second tap on already selected task - open edit modal
-        const match = drawerTasks.find((task) => task.id === taskId) ?? tasks.find((task) => task.id === taskId);
-        if (match) {
-          setTaskToEdit(toModalTask(match));
-          setQuickCreateOpen(true);
-        }
+        openTaskEditor(taskId);
       } else {
         // First tap - select task and show on map
         setActiveTaskId(taskId);
         setSnapIndex((current) => (current === 0 ? 1 : current));
       }
     },
-    [activeTaskId, drawerTasks, tasks, toModalTask],
+    [activeTaskId, openTaskEditor],
+  );
+
+  const handleEditTask = useCallback(
+    (taskId: string) => {
+      setActiveTaskId(taskId);
+      openTaskEditor(taskId);
+    },
+    [openTaskEditor],
+  );
+
+  const handleMarkTaskDone = useCallback(
+    (taskId: string) => {
+      setActiveTaskId(taskId);
+      openTaskEditor(taskId, { status: "done" });
+    },
+    [openTaskEditor],
   );
 
   const handleMarkerClick = useCallback(
@@ -426,6 +450,7 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
 
       <TaskDrawer
         open={drawerOpen}
+        isDesktop={false}
         viewportHeight={viewportHeight}
         targetY={targetY}
         projectName={projectName}
@@ -443,6 +468,8 @@ const TasksComponentMobile: React.FC<TasksComponentMobileProps> = ({
         tasks={drawerTasks}
         activeTaskId={activeTaskId}
         onTaskSelect={handleTaskSelect}
+        onTaskEdit={handleEditTask}
+        onTaskMarkDone={handleMarkTaskDone}
         formatDueLabel={formatDueLabel}
         selectedTask={selectedTask}
         selectedAssigneeName={selectedAssigneeName}

@@ -883,6 +883,52 @@
   cursor: pointer;
 }
 
+.taskActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.05rem 1rem;
+}
+
+.taskActionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.taskActionButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.taskMapButton {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.taskMarkDoneButton {
+  --accent: var(--brand, #fa3356);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 75%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 40%, transparent) 100%) !important;
+  border-color: color-mix(in srgb, var(--accent) 30%, rgba(255, 255, 255, 0.28) 70%) !important;
+  color: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    0 12px 26px rgba(250, 51, 86, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.taskEditButton {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
 .editButton:focus-visible {
   outline: 2px solid var(--brand, #fa3356);
   outline-offset: 2px;

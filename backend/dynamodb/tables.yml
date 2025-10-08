@@ -33,8 +33,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   Connections:
     Type: AWS::DynamoDB::Table
@@ -63,8 +61,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   Events:
     Type: AWS::DynamoDB::Table
@@ -105,8 +101,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   Galleries:
     Type: AWS::DynamoDB::Table
@@ -131,8 +125,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   Inbox:
     Type: AWS::DynamoDB::Table
@@ -161,8 +153,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   Messages:
     Type: AWS::DynamoDB::Table
@@ -195,8 +185,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   Notifications:
     Type: AWS::DynamoDB::Table
@@ -227,8 +215,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   ProjectDirectory:
     Type: AWS::DynamoDB::Table
@@ -245,8 +231,6 @@ Resources:
       TableClass: STANDARD
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   ProjectInvitations:
     Type: AWS::DynamoDB::Table
@@ -279,8 +263,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   ProjectMessages:
     Type: AWS::DynamoDB::Table
@@ -300,8 +282,6 @@ Resources:
           AttributeType: S
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   Projects:
     Type: AWS::DynamoDB::Table
@@ -317,8 +297,6 @@ Resources:
           AttributeType: S
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   Tasks:
     Type: AWS::DynamoDB::Table
@@ -361,8 +339,6 @@ Resources:
             ProjectionType: ALL
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true
   UserProfiles:
     Type: AWS::DynamoDB::Table
@@ -381,6 +357,4 @@ Resources:
           AttributeType: S
       SSESpecification:
         SSEEnabled: true
-        SSEType: KMS
-        KMSMasterKeyId: arn:aws:kms:us-west-2:221025630675:key/bf5aeab1-8f27-43b0-9b46-1a53c9d3a9f7
       DeletionProtectionEnabled: true

@@ -18,9 +18,9 @@
 .pageHeader {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 18px;
+  padding-bottom: 16px;
 }
 
 .pageHeading {
@@ -54,10 +54,13 @@
 
 .actionsRow {
   display: flex;
+  flex: 1 1 100%;
   flex-wrap: wrap;
   gap: 12px;
-  margin-left: auto;
+  align-self: flex-start;
+  justify-content: flex-end;
 }
+
 
 .contentArea {
   display: flex;

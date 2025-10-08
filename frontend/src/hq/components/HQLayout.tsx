@@ -211,8 +211,8 @@ const HQLayout: React.FC<HQLayoutProps> = ({
             <p className={styles.pageSubtitle}>{description}</p>
           ) : null}
         </div>
+        {actions ? <div className={styles.actionsRow}>{actions}</div> : null}
       </div>
-      {actions ? <div className={styles.actionsRow}>{actions}</div> : null}
     </header>
   );
 

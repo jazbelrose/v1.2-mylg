@@ -64,35 +64,41 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
 
   const hasRows = totalCount > 0;
 
+  const renderGroupControls = () => (
+    <div className={styles.groupControlsInner}>
+      <span id="budget-group-label" className={styles.srOnly}>
+        Group budget items
+      </span>
+      <div
+        className={styles.groupTabs}
+        role="group"
+        aria-labelledby="budget-group-label"
+      >
+        {GROUP_OPTIONS.map((option) => {
+          const isActive = option.value === groupBy;
+          const className = isActive
+            ? `${styles.groupTabButton} ${styles.activeGroupTab}`
+            : styles.groupTabButton;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={isActive}
+              className={className}
+              onClick={() => onGroupChange(option.value)}
+            >
+              <span>{option.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <div className={styles.toolbar}>
       <div className={styles.groupControls}>
-        <span id="budget-desktop-group-label" className={styles.srOnly}>
-          Group budget items
-        </span>
-        <div
-          className={styles.groupTabs}
-          role="group"
-          aria-labelledby="budget-desktop-group-label"
-        >
-          {GROUP_OPTIONS.map((option) => {
-            const isActive = option.value === groupBy;
-            const className = isActive
-              ? `${styles.groupTabButton} ${styles.activeGroupTab}`
-              : styles.groupTabButton;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={isActive}
-                className={className}
-                onClick={() => onGroupChange(option.value)}
-              >
-                <span>{option.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {renderGroupControls()}
       </div>
       <div className={styles.rightControls}>
         {hasRows && (
@@ -150,28 +156,35 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
             </div>
           </div>
         )}
-        <div className={styles.mobileFilterWrap}>
-          <BudgetMobileFilter
-            filterQuery={filterQuery}
-            onFilterQueryChange={onFilterQueryChange}
-            sortField={sortField}
-            sortOrder={sortOrder}
-            onSortChange={onSortChange}
-          />
+        <div className={styles.mobileActionsContainer}>
+          <div className={styles.mobileGroupControls}>
+            {renderGroupControls()}
+          </div>
+          <div className={styles.mobileFilterRow}>
+            <div className={styles.mobileFilterWrap}>
+              <BudgetMobileFilter
+                filterQuery={filterQuery}
+                onFilterQueryChange={onFilterQueryChange}
+                sortField={sortField}
+                sortOrder={sortOrder}
+                onSortChange={onSortChange}
+              />
+            </div>
+            {openCreateModal && (
+              <button
+                type="button"
+                className={styles.addButton}
+                onClick={openCreateModal}
+                aria-label="Add item"
+              >
+                <span className={styles.addIcon} aria-hidden="true">
+                  +
+                </span>
+                <span className={styles.addLabel}>Add Item</span>
+              </button>
+            )}
+          </div>
         </div>
-        {openCreateModal && (
-          <button
-            type="button"
-            className={styles.addButton}
-            onClick={openCreateModal}
-            aria-label="Add item"
-          >
-            <span className={styles.addIcon} aria-hidden="true">
-              +
-            </span>
-            <span className={styles.addLabel}>Add Item</span>
-          </button>
-        )}
       </div>
     </div>
   );

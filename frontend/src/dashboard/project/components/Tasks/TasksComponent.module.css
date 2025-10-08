@@ -1,15 +1,29 @@
 .panel {
+  --panel-glass-bg: rgba(12, 14, 20, 0.68);
+  --panel-glass-border: rgba(255, 255, 255, 0.12);
+  --panel-glass-highlight: rgba(255, 255, 255, 0.16);
+  --panel-glass-shadow: 0 18px 46px rgba(4, 6, 12, 0.42);
   width: 100%;
   box-sizing: border-box;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #101010;
+  border: 1px solid var(--panel-glass-border);
+  background:
+    radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 70%),
+    var(--panel-glass-bg);
   color: rgba(255, 255, 255, 0.94);
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 22px 48px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    var(--panel-glass-shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   flex: 1 1 auto;
   min-height: 0;
 }
@@ -61,32 +75,95 @@
 }
 
 .statChip {
+  --chip-accent-rgb: 120, 190, 255;
+  --chip-glass-bg: rgba(12, 16, 24, 0.68);
+  --chip-glass-border: rgba(255, 255, 255, 0.1);
+  --chip-glass-highlight: rgba(255, 255, 255, 0.16);
+  --chip-linear: linear-gradient(135deg, rgba(30, 40, 54, 0.36), rgba(16, 22, 30, 0.2));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(var(--chip-accent-rgb), 0.18), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(var(--chip-accent-rgb), 0.12), transparent 50%);
   position: relative;
   overflow: hidden;
   border-radius: 20px;
-  background: #111111;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--chip-glass-border);
+  background: var(--chip-glass-bg);
   padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 88px;
+  box-shadow:
+    inset 0 1px 0 var(--chip-glass-highlight),
+    0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  outline: 1px solid rgba(255, 255, 255, 0.05);
+  outline-offset: -1px;
+  transition:
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    backdrop-filter 180ms ease;
 }
 
-.statChip::before {
+.statChip::before,
+.statChip::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+.statChip::before {
+  background:
+    color-mix(in srgb, rgba(var(--chip-accent-rgb), 0.28) 18%, transparent 82%),
+    var(--chip-radial-b),
+    var(--chip-radial-a),
+    var(--chip-linear);
   opacity: 0.9;
 }
 
-.statToneOk::before {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0));
+.statChip::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 35%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
 }
 
-.statToneWarn::before {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.18), rgba(244, 63, 94, 0));
+.statChip:hover,
+.statChip:focus-visible,
+.statChip:focus-within {
+  border-color: color-mix(in srgb, rgba(var(--chip-accent-rgb), 0.55) 30%, rgba(255, 255, 255, 0.12) 70%);
+  box-shadow:
+    inset 0 1px 0 var(--chip-glass-highlight),
+    0 0 0 6px rgba(var(--chip-accent-rgb), 0.12),
+    0 14px 36px rgba(0, 0, 0, 0.45);
 }
 
-.statToneSoon::before {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(251, 191, 36, 0));
+.statChip:active {
+  transform: scale(0.995);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.statToneOk {
+  --chip-accent-rgb: 28, 213, 172;
+  --chip-linear: linear-gradient(135deg, rgba(26, 62, 52, 0.35), rgba(25, 81, 67, 0.22));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(28, 213, 172, 0.2), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(123, 255, 220, 0.12), transparent 50%);
+}
+
+.statToneWarn {
+  --chip-accent-rgb: 250, 51, 86;
+  --chip-linear: linear-gradient(135deg, rgba(80, 23, 30, 0.38), rgba(60, 16, 22, 0.24));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(250, 51, 86, 0.22), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(255, 140, 160, 0.12), transparent 50%);
+}
+
+.statToneSoon {
+  --chip-accent-rgb: 255, 186, 64;
+  --chip-linear: linear-gradient(135deg, rgba(85, 58, 18, 0.36), rgba(72, 45, 10, 0.24));
+  --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(255, 186, 64, 0.22), transparent 55%);
+  --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(255, 226, 170, 0.12), transparent 50%);
 }
 
 .statChipContent {
@@ -94,6 +171,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  z-index: 1;
 }
 
 .statIcon {
@@ -102,27 +180,31 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
 .statCopy {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
+  z-index: 1;
 }
 
 .statLabel {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.64);
 }
 
 .statValue {
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.1;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .notice {
@@ -272,10 +354,45 @@
 }
 
 .accentButton {
-  background: #fa3356;
-  border-color: transparent;
-  color: #0c0c0c;
+  --accent: var(--brand, #fa3356);
+  position: relative;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 68%, transparent) 0%, color-mix(in srgb, var(--accent) 32%, transparent) 100%) !important;
+  border-color: color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.28) 72%) !important;
+  color: rgba(255, 255, 255, 0.96) !important;
   font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 10px 28px color-mix(in srgb, var(--accent) 32%, rgba(0, 0, 0, 0.48) 68%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.accentButton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 45%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.accentButton:hover,
+.accentButton:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 42%, rgba(255, 255, 255, 0.35) 58%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    0 0 0 4px color-mix(in srgb, var(--accent) 20%, rgba(255, 255, 255, 0.08) 80%),
+    0 14px 36px color-mix(in srgb, var(--accent) 36%, rgba(0, 0, 0, 0.52) 64%);
+}
+
+.accentButton:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 18px color-mix(in srgb, var(--accent) 26%, rgba(0, 0, 0, 0.6) 74%);
 }
 
 .buttonWithIcon {

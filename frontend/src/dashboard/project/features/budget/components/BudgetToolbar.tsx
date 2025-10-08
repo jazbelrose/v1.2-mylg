@@ -66,7 +66,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
 
   return (
     <div className={styles.toolbar}>
-      <div className={styles.groupControls}>
+      <div className={`${styles.groupControls} ${styles.mobileSection}`}>
         <span id="budget-desktop-group-label" className={styles.srOnly}>
           Group budget items
         </span>
@@ -150,28 +150,30 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
             </div>
           </div>
         )}
-        <div className={styles.mobileFilterWrap}>
-          <BudgetMobileFilter
-            filterQuery={filterQuery}
-            onFilterQueryChange={onFilterQueryChange}
-            sortField={sortField}
-            sortOrder={sortOrder}
-            onSortChange={onSortChange}
-          />
+        <div className={`${styles.mobileActionsContainer} ${styles.mobileSection}`}>
+          <div className={styles.mobileFilterWrap}>
+            <BudgetMobileFilter
+              filterQuery={filterQuery}
+              onFilterQueryChange={onFilterQueryChange}
+              sortField={sortField}
+              sortOrder={sortOrder}
+              onSortChange={onSortChange}
+            />
+          </div>
+          {openCreateModal && (
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={openCreateModal}
+              aria-label="Add item"
+            >
+              <span className={styles.addIcon} aria-hidden="true">
+                +
+              </span>
+              <span className={styles.addLabel}>Add Item</span>
+            </button>
+          )}
         </div>
-        {openCreateModal && (
-          <button
-            type="button"
-            className={styles.addButton}
-            onClick={openCreateModal}
-            aria-label="Add item"
-          >
-            <span className={styles.addIcon} aria-hidden="true">
-              +
-            </span>
-            <span className={styles.addLabel}>Add Item</span>
-          </button>
-        )}
       </div>
     </div>
   );

@@ -202,6 +202,14 @@
   flex: 0 0 auto;
 }
 
+.mobileActionsContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobileSection {}
+
 .mobileFilterRoot {
   position: relative;
   width: auto;
@@ -331,9 +339,40 @@
     align-items: stretch;
   }
 
+  .groupControls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .groupTabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mobileSection {
+    width: 100%;
+    padding: 12px 14px;
+    background: linear-gradient(160deg, rgba(17, 17, 17, 0.94), rgba(10, 10, 10, 0.82));
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 26px rgba(5, 10, 28, 0.32);
+  }
+
   .rightControls {
     width: 100%;
     justify-content: flex-start;
+    align-items: stretch;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .mobileActionsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
   }
 
@@ -355,11 +394,33 @@
   }
 
   .mobileFilterWrap {
-    flex: 1 1 auto;
+    flex: 1 1 200px;
     min-width: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .mobileFilterButton {
+    width: 100%;
   }
 
   .addButton {
-    margin-left: auto;
+    margin-left: 0;
+  }
+
+  .mobileActionsContainer .addButton {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobileActionsContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mobileActionsContainer .addButton {
+    width: 100%;
+    justify-content: center;
   }
 }

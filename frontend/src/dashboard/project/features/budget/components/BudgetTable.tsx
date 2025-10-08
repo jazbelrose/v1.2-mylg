@@ -342,7 +342,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
 
     return (
       <div ref={tableRef} className={styles.tableContainer}>
-        {dataSource.length > 0 && (
+        {dataSource.length > 0 && isMobile && (
           <div className={styles.cardListHeader}>
             <label className={styles.selectAllControl}>
               <input

@@ -550,9 +550,12 @@ const BudgetPageContent = () => {
                               budgetHeader={budgetHeader as { budgetItemId: string; revision: number; [key: string]: unknown } | null}
                               budgetItems={budgetItems as { [key: string]: unknown }[]}
                               groupBy={stateManager.groupBy as "none" | "areaGroup" | "invoiceGroup" | "category"}
-                              setGroupBy={(g) => stateManager.setGroupBy(g as "none" | "areaGroup" | "invoiceGroup" | "category")}
+                              setGroupBy={(g) =>
+                                stateManager.setGroupBy(
+                                  g as "none" | "areaGroup" | "invoiceGroup" | "category"
+                                )
+                              }
                               onOpenRevisionModal={() => stateManager.setRevisionModalOpen(true)}
-                              onOpenCreateModal={eventHandlers.openCreateModal}
                               onBallparkChange={handleBallparkChange}
                             />
                             <BudgetFileModal
@@ -635,44 +638,97 @@ const BudgetPageContent = () => {
                                     alignItems: "flex-start",
                                   }}
                                 >
-                                  <BudgetToolbar
-                                    selectedRowKeys={stateManager.selectedRowKeys}
-                                    handleDuplicateSelected={eventHandlers.handleDuplicateSelected}
-                                    openDeleteModal={eventHandlers.openDeleteModal}
-                                    openCreateModal={eventHandlers.openCreateModal}
-                                    filterQuery={stateManager.filterQuery as string}
-                                    onFilterQueryChange={stateManager.setFilterQuery as (query: string) => void}
-                                    sortField={stateManager.sortField as string | null}
-                                    sortOrder={stateManager.sortOrder as "ascend" | "descend" | null}
-                                    onSortChange={(field, order) => {
-                                      stateManager.setSortField(field);
-                                      stateManager.setSortOrder(order);
-                                    }}
-                                  />
-                                  <BudgetItemsTable
-                                    dataSource={
+                                  {(() => {
+                                    const groupedData =
                                       budgetItems.length > 0
                                         ? (tableConfig.groupedTableData as (Record<string, unknown> & {
                                             budgetItemId: string;
                                             key: string;
                                           })[])
-                                        : []
-                                    }
-                                    selectedRowKeys={stateManager.selectedRowKeys}
-                                    setSelectedRowKeys={stateManager.setSelectedRowKeys}
-                                    lockedLines={stateManager.lockedLines}
-                                    openEditModal={eventHandlers.openEditModal}
-                                    openDuplicateModal={eventHandlers.openDuplicateModal}
-                                    openDeleteModal={eventHandlers.openDeleteModal}
-                                    openEventModal={eventHandlers.openEventModal}
-                                    eventsByLineItem={eventsByLineItem}
-                                    tableRef={tableRef}
-                                    tableHeight={tableHeight}
-                                    pageSize={stateManager.pageSize}
-                                    currentPage={stateManager.currentPage}
-                                    setCurrentPage={stateManager.setCurrentPage}
-                                    setPageSize={stateManager.setPageSize}
-                                  />
+                                        : [];
+                                    const availableRowIds = groupedData.map((item) =>
+                                      String(item.budgetItemId)
+                                    );
+                                    const availableRowIdSet = new Set(availableRowIds);
+                                    const selectedInScope = stateManager.selectedRowKeys.filter((id) =>
+                                      availableRowIdSet.has(id)
+                                    );
+                                    const isSelectAllChecked =
+                                      availableRowIds.length > 0 &&
+                                      selectedInScope.length === availableRowIds.length;
+                                    const isSelectAllIndeterminate =
+                                      selectedInScope.length > 0 &&
+                                      selectedInScope.length < availableRowIds.length;
+                                    const handleSelectAllChange = (checked: boolean) => {
+                                      stateManager.setSelectedRowKeys((prevKeys) => {
+                                        if (checked) {
+                                          const next = new Set(prevKeys);
+                                          availableRowIds.forEach((id) => next.add(id));
+                                          return Array.from(next);
+                                        }
+                                        return prevKeys.filter((id) => !availableRowIdSet.has(id));
+                                      });
+                                    };
+                                    const handleClearSelection = () => {
+                                      stateManager.setSelectedRowKeys((prevKeys) =>
+                                        prevKeys.filter((id) => !availableRowIdSet.has(id))
+                                      );
+                                    };
+
+                                    return (
+                                      <>
+                                        <BudgetToolbar
+                                          selectedRowKeys={stateManager.selectedRowKeys}
+                                          handleDuplicateSelected={eventHandlers.handleDuplicateSelected}
+                                          openDeleteModal={eventHandlers.openDeleteModal}
+                                          openCreateModal={eventHandlers.openCreateModal}
+                                          filterQuery={stateManager.filterQuery as string}
+                                          onFilterQueryChange={
+                                            stateManager.setFilterQuery as (query: string) => void
+                                          }
+                                          sortField={stateManager.sortField as string | null}
+                                          sortOrder={
+                                            stateManager.sortOrder as "ascend" | "descend" | null
+                                          }
+                                          onSortChange={(field, order) => {
+                                            stateManager.setSortField(field);
+                                            stateManager.setSortOrder(order);
+                                          }}
+                                          groupBy={
+                                            stateManager.groupBy as
+                                              | "none"
+                                              | "areaGroup"
+                                              | "invoiceGroup"
+                                              | "category"
+                                          }
+                                          onGroupChange={(group) => stateManager.setGroupBy(group)}
+                                          isSelectAllChecked={isSelectAllChecked}
+                                          isSelectAllIndeterminate={isSelectAllIndeterminate}
+                                          onSelectAllChange={handleSelectAllChange}
+                                          selectionCount={selectedInScope.length}
+                                          totalCount={availableRowIds.length}
+                                          onClearSelection={handleClearSelection}
+                                        />
+                                        <BudgetItemsTable
+                                          dataSource={groupedData}
+                                          selectedRowKeys={stateManager.selectedRowKeys}
+                                          setSelectedRowKeys={stateManager.setSelectedRowKeys}
+                                          lockedLines={stateManager.lockedLines}
+                                          openEditModal={eventHandlers.openEditModal}
+                                          openDuplicateModal={eventHandlers.openDuplicateModal}
+                                          openDeleteModal={eventHandlers.openDeleteModal}
+                                          openEventModal={eventHandlers.openEventModal}
+                                          eventsByLineItem={eventsByLineItem}
+                                          tableRef={tableRef}
+                                          tableHeight={tableHeight}
+                                          pageSize={stateManager.pageSize}
+                                          currentPage={stateManager.currentPage}
+                                          setCurrentPage={stateManager.setCurrentPage}
+                                          setPageSize={stateManager.setPageSize}
+                                        />
+                                      </>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                             </div>

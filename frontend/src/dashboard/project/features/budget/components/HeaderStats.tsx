@@ -122,7 +122,6 @@ interface BudgetHeaderProps {
   budgetItems?: BudgetItem[];
   onBallparkChange?: (val: number) => void;
   onOpenRevisionModal: () => void;
-  onOpenCreateModal?: () => void;
   initialMetric?: MetricTitle;
 }
 
@@ -265,7 +264,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
   budgetItems = [],
   onBallparkChange,
   onOpenRevisionModal,
-  onOpenCreateModal,
   initialMetric,
 }) => {
   const [selectedMetric, setSelectedMetric] = useState<MetricTitle>(
@@ -875,19 +873,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
           >
             {`Rev.${budgetHeader?.revision ?? 1}`}
           </button>
-          {onOpenCreateModal && (
-            <button
-              type="button"
-              className={summaryStyles.addButton}
-              onClick={onOpenCreateModal}
-              aria-label="Add item"
-            >
-              <span className={summaryStyles.addIcon} aria-hidden="true">
-                +
-              </span>
-              <span className={summaryStyles.addLabel}>Add Item</span>
-            </button>
-          )}
         </div>
       </div>
       <div className={summaryStyles.bodyRow}>
@@ -975,36 +960,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
               })}
             </ul>
           </div>
-        </div>
-      </div>
-
-      {/* Group controls for desktop */}
-      <div className={summaryStyles.groupControls}>
-        <span id="budget-desktop-group-label" className={summaryStyles.srOnly}>
-          Group budget items
-        </span>
-        <div
-          className={summaryStyles.groupTabs}
-          role="group"
-          aria-labelledby="budget-desktop-group-label"
-        >
-          {groupOptions.map((option) => {
-            const isActive = option.value === groupBy;
-            const className = isActive
-              ? `${summaryStyles.groupTabButton} ${summaryStyles.activeGroupTab}`
-              : summaryStyles.groupTabButton;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={isActive}
-                className={className}
-                onClick={() => setGroupBy(option.value)}
-              >
-                <span>{option.label}</span>
-              </button>
-            );
-          })}
         </div>
       </div>
     </div>

@@ -74,7 +74,7 @@
 
 .statChip {
   --chip-accent-rgb: 120, 190, 255;
-  --chip-glass-bg: rgba(12, 16, 24, 0.68);
+  --chip-glass-bg: rgba(17, 17, 17, 0.68);
   --chip-glass-border: rgba(255, 255, 255, 0.1);
   --chip-glass-highlight: rgba(255, 255, 255, 0.16);
   --chip-linear: linear-gradient(135deg, rgba(30, 40, 54, 0.36), rgba(16, 22, 30, 0.2));

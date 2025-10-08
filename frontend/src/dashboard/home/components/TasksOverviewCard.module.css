@@ -102,10 +102,10 @@
 
 .statChip {
   --accent-rgb: 120, 190, 255;
-  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg: rgba(17, 17, 17, 0.06);
   --glass-tint: transparent;
   --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
   --chip-linear: linear-gradient(135deg, rgba(30, 40, 54, 0.36), rgba(16, 22, 30, 0.18));
   --chip-radial-a: radial-gradient(120% 80% at 0% 0%, rgba(var(--accent-rgb), 0.18), transparent 55%);
   --chip-radial-b: radial-gradient(140% 100% at 100% 100%, rgba(var(--accent-rgb), 0.12), transparent 50%);

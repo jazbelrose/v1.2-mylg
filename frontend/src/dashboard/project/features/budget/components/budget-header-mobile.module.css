@@ -475,10 +475,18 @@
 }
 
 .groupTabButtonActive {
-  background: rgba(255, 255, 255, 0.98);
+  background: #ffffff;
   border-color: transparent;
   color: #111213;
   box-shadow: 0 8px 20px rgba(5, 10, 28, 0.32);
+}
+
+.groupTabButtonActive:hover,
+.groupTabButtonActive:focus-visible {
+  background: #ffffff;
+  border-color: transparent;
+  color: #111213;
+  transform: none;
 }
 
 .srOnly {

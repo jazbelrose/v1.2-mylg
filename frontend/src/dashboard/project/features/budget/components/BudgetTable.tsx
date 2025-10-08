@@ -171,6 +171,23 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       setSelectedRowKeys((prevKeys) => prevKeys.filter((id) => !availableIdSet.has(id)));
     }, [availableIdSet, isSelectMode, setSelectedRowKeys]);
 
+    const toggleSelection = useCallback(
+      (record: BudgetItem, checked: boolean) => {
+        if (!isSelectMode) return;
+        const id = String(record.budgetItemId);
+        setSelectedRowKeys((prevKeys) => {
+          const nextKeys = new Set(prevKeys);
+          if (checked) {
+            nextKeys.add(id);
+          } else {
+            nextKeys.delete(id);
+          }
+          return Array.from(nextKeys);
+        });
+      },
+      [isSelectMode, setSelectedRowKeys]
+    );
+
     const handleCardKeyDown = useCallback(
       (
         event: React.KeyboardEvent<HTMLElement>,
@@ -199,23 +216,6 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
         }
       },
       [openDeleteModal, openEditModal, setOpenMenuId, toggleSelection]
-    );
-
-    const toggleSelection = useCallback(
-      (record: BudgetItem, checked: boolean) => {
-        if (!isSelectMode) return;
-        const id = String(record.budgetItemId);
-        setSelectedRowKeys((prevKeys) => {
-          const nextKeys = new Set(prevKeys);
-          if (checked) {
-            nextKeys.add(id);
-          } else {
-            nextKeys.delete(id);
-          }
-          return Array.from(nextKeys);
-        });
-      },
-      [isSelectMode, setSelectedRowKeys]
     );
 
     useEffect(() => {

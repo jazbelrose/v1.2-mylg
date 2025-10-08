@@ -98,6 +98,7 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
   const displayStatusLabel = statusLabel === baseStatusLabel ? statusLabel : `${statusLabel} · ${baseStatusLabel}`;
   const assigneeLabel = formatAssigneeDisplay(task.assignedTo);
   const directionsLinks = buildDirectionsLinks(task.address);
+  const isCompleted = typeof task.status === "string" && task.status.toLowerCase() === "done";
 
   const metaEntries: Array<{ icon: React.ReactNode; label: string }> = [];
   const dueLabel = formatDue(task);
@@ -164,16 +165,18 @@ const TaskListItem: React.FC<TaskListItemProps> = ({
               <ArrowUpRight aria-hidden="true" size={16} />
             </Button>
           ) : null}
-          <Button
-            size="sm"
-            className={styles.accentButton}
-            onClick={(event) => {
-              event.stopPropagation();
-              onMarkDone(task.id);
-            }}
-          >
-            Mark done
-          </Button>
+          {!isCompleted ? (
+            <Button
+              size="sm"
+              className={styles.accentButton}
+              onClick={(event) => {
+                event.stopPropagation();
+                onMarkDone(task.id);
+              }}
+            >
+              Mark done
+            </Button>
+          ) : null}
           <Button
             variant="outline"
             size="sm"

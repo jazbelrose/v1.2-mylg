@@ -343,8 +343,22 @@
 
 .taskActions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   gap: 0.5rem;
+  align-items: center;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.taskActions::-webkit-scrollbar {
+  display: none;
+}
+
+.taskActions > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .mapButton {

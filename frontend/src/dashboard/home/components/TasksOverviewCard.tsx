@@ -37,6 +37,7 @@ type DerivedTask = {
   mapUrl: string | null;
   overdue: boolean;
   dueDate: Date | null;
+  status?: string;
 };
 
 const dueDateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -162,10 +163,11 @@ type TaskItemProps = {
 };
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, onOpen, onMarkDone, onOpenMap }) => {
-  const { id, title, dayLabel, time, address, assignee, mapUrl, overdue, dueDate } = task;
+  const { id, title, dayLabel, time, address, assignee, mapUrl, overdue, dueDate, status } = task;
   const metaEntries: Array<{ icon: React.ReactNode; label: string }> = [];
   const dateLabel = dueDate ? dueDateFormatter.format(dueDate) : dayLabel;
   const timeLabel = time ?? (dueDate ? timeFormatter.format(dueDate) : undefined);
+  const isCompleted = typeof status === "string" && status.toLowerCase() === "done";
 
   if (dateLabel) {
     metaEntries.push({ icon: <CalendarDays aria-hidden="true" />, label: timeLabel ? `${dateLabel} · ${timeLabel}` : dateLabel });
@@ -208,13 +210,15 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onOpen, onMarkDone, onOpenMap
             <ArrowUpRight aria-hidden="true" />
           </button>
         )}
-        <Button
-          size="sm"
-          className={cn(styles.accentButton, styles.actionButton)}
-          onClick={() => onMarkDone(id)}
-        >
-          Mark done
-        </Button>
+        {!isCompleted ? (
+          <Button
+            size="sm"
+            className={cn(styles.accentButton, styles.actionButton)}
+            onClick={() => onMarkDone(id)}
+          >
+            Mark done
+          </Button>
+        ) : null}
       </div>
     </li>
   );
@@ -265,6 +269,7 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
         mapUrl,
         overdue,
         dueDate,
+        status: source?.status,
       } satisfies DerivedTask;
     });
   }, [flatTasks, getTaskById]);

@@ -52,6 +52,8 @@ const TaskList: React.FC<TaskListProps> = ({
         const primaryMapUrl = directionsLinks
           ? directionsLinks.googleMaps || directionsLinks.appleMaps
           : null;
+        const isCompleted =
+          typeof task.status === "string" && task.status.toLowerCase() === "done";
         const { category, label } = getTaskStatusBadge(task.status, task.dueDate, statusContext);
         const tone = getTaskStatusTone(category);
         const badgeClassKey = BADGE_CLASS_BY_TONE[tone];
@@ -120,16 +122,18 @@ const TaskList: React.FC<TaskListProps> = ({
                   <ArrowUpRight aria-hidden="true" size={16} />
                 </Button>
               ) : null}
-              <Button
-                size="sm"
-                className={`${styles.taskActionButton} ${styles.taskMarkDoneButton}`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onTaskMarkDone(task.id);
-                }}
-              >
-                <Check aria-hidden="true" size={16} /> Mark done
-              </Button>
+              {!isCompleted ? (
+                <Button
+                  size="sm"
+                  className={`${styles.taskActionButton} ${styles.taskMarkDoneButton}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onTaskMarkDone(task.id);
+                  }}
+                >
+                  <Check aria-hidden="true" size={16} /> Mark done
+                </Button>
+              ) : null}
               <Button
                 variant="outline"
                 size="sm"

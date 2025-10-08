@@ -1,5 +1,5 @@
 .panel {
-  --panel-glass-bg: rgba(12, 14, 20, 0.68);
+  --panel-glass-bg: rgba(17, 17, 17, 0.68);
   --panel-glass-border: rgba(255, 255, 255, 0.12);
   --panel-glass-highlight: rgba(255, 255, 255, 0.16);
   --panel-glass-shadow: 0 18px 46px rgba(4, 6, 12, 0.42);
@@ -9,7 +9,7 @@
   border: 1px solid var(--panel-glass-border);
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--brand, #fa3356) 12%, transparent) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 70%),
+  
     var(--panel-glass-bg);
   color: rgba(255, 255, 255, 0.94);
   padding: 24px;

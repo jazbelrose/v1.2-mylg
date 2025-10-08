@@ -48,6 +48,8 @@ interface BudgetStateManagerState extends Record<string, unknown> {
   setFilterQuery: (query: string) => void;
   selectedRowKeys: string[];
   setSelectedRowKeys: React.Dispatch<React.SetStateAction<string[]>>;
+  isSelectMode: boolean;
+  setIsSelectMode: React.Dispatch<React.SetStateAction<boolean>>;
   
   // Edit/Create state
   editItem: BudgetItem | null;
@@ -108,6 +110,7 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
   const [sortOrder, setSortOrder] = useState<string | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
   
   // Edit/Create state
   const [editItem, setEditItem] = useState<BudgetItem | null>(null);
@@ -128,6 +131,12 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
   useEffect(() => {
     setCurrentPage(1);
   }, [filterQuery]);
+
+  useEffect(() => {
+    if (!isSelectMode && selectedRowKeys.length > 0) {
+      setSelectedRowKeys([]);
+    }
+  }, [isSelectMode, selectedRowKeys.length]);
 
   // Line locking
   const [lockedLines, setLockedLines] = useState<string[]>([]);
@@ -351,6 +360,8 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
     setFilterQuery,
     selectedRowKeys,
     setSelectedRowKeys,
+    isSelectMode,
+    setIsSelectMode,
     
     // Edit/Create state
     editItem,
@@ -389,7 +400,7 @@ const BudgetStateManager: React.FC<BudgetStateManagerProps> = ({
   }), [
     undoStack, redoStack, pushHistory, handleUndo, handleRedo,
     isBudgetModalOpen, isRevisionModalOpen, isCreateModalOpen, isEventModalOpen, isConfirmingDelete,
-    groupBy, sortField, sortOrder, filterQuery, selectedRowKeys,
+    groupBy, sortField, sortOrder, filterQuery, selectedRowKeys, isSelectMode,
     editItem, prefillItem, nextElementKey,
     deleteTargets,
     eventItem, eventList,

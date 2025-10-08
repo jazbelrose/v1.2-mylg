@@ -22,7 +22,6 @@
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   position: relative;
-  overflow: hidden;
   isolation: isolate;
   flex: 1 1 auto;
   min-height: 0;
@@ -34,7 +33,6 @@
   gap: 1.5rem;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
 }
 
 .header {

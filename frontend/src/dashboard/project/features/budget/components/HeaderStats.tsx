@@ -1010,8 +1010,18 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     </div>
   );
 
-  const topMetrics = metrics.slice(0, 3);
-  const bottomMetrics = metrics.slice(3);
+  const metricColumns = useMemo(() => {
+    const [ballpark, budgeted, actual, markup, finalMetric] = metrics;
+
+    const leftColumn = [ballpark, budgeted].filter(
+      (metric): metric is MetricConfig => Boolean(metric)
+    );
+    const rightColumn = [actual, markup, finalMetric].filter(
+      (metric): metric is MetricConfig => Boolean(metric)
+    );
+
+    return [leftColumn, rightColumn];
+  }, [metrics]);
 
   const mobileAccentStyle = accentStyle;
 
@@ -1112,12 +1122,11 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
       </div>
 
       <div className={mobileStyles.metricGrid}>
-        <div className={`${mobileStyles.metricRow} ${mobileStyles.metricRowTop}`}>
-          {topMetrics.map((metric) => renderMetricChip(metric))}
-        </div>
-        <div className={`${mobileStyles.metricRow} ${mobileStyles.metricRowBottom}`}>
-          {bottomMetrics.map((metric) => renderMetricChip(metric))}
-        </div>
+        {metricColumns.filter((column) => column.length > 0).map((column, index) => (
+          <div key={`metric-column-${index}`} className={mobileStyles.metricColumn}>
+            {column.map((metric) => renderMetricChip(metric))}
+          </div>
+        ))}
       </div>
 
       <div className={mobileStyles.groupControls}>

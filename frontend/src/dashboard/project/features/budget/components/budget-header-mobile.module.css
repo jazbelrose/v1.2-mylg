@@ -278,16 +278,17 @@
 }
 
 .metricGrid {
-  display: flex;
+  display: grid;
   width: 100%;
-  flex-direction: column;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
-.metricRow {
-  display: grid;
-  min-width: 0;
+.metricColumn {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .metricChipWrapper {
@@ -325,14 +326,6 @@
 
 .metricChipSwitch :global(.ant-switch-checked .ant-switch-handle::before) {
   background: #0f172a;
-}
-
-.metricRowTop {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.metricRowBottom {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .metricChip {
@@ -432,6 +425,10 @@
 }
 
 @media (max-width: 480px) {
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+
   .summaryLayout {
     gap: 6px;
   }

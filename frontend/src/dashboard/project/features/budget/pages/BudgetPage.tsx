@@ -654,12 +654,11 @@ const BudgetPageContent = () => {
                                       availableRowIdSet.has(id)
                                     );
                                     const isSelectAllChecked =
+                                      stateManager.isSelectMode &&
                                       availableRowIds.length > 0 &&
                                       selectedInScope.length === availableRowIds.length;
-                                    const isSelectAllIndeterminate =
-                                      selectedInScope.length > 0 &&
-                                      selectedInScope.length < availableRowIds.length;
                                     const handleSelectAllChange = (checked: boolean) => {
+                                      if (!stateManager.isSelectMode) return;
                                       stateManager.setSelectedRowKeys((prevKeys) => {
                                         if (checked) {
                                           const next = new Set(prevKeys);
@@ -703,11 +702,16 @@ const BudgetPageContent = () => {
                                           }
                                           onGroupChange={(group) => stateManager.setGroupBy(group)}
                                           isSelectAllChecked={isSelectAllChecked}
-                                          isSelectAllIndeterminate={isSelectAllIndeterminate}
                                           onSelectAllChange={handleSelectAllChange}
-                                          selectionCount={selectedInScope.length}
+                                          selectionCount={
+                                            stateManager.isSelectMode ? selectedInScope.length : 0
+                                          }
                                           totalCount={availableRowIds.length}
                                           onClearSelection={handleClearSelection}
+                                          isSelectMode={stateManager.isSelectMode}
+                                          onToggleSelectMode={(next) =>
+                                            stateManager.setIsSelectMode(next)
+                                          }
                                         />
                                         <BudgetItemsTable
                                           dataSource={groupedData}
@@ -725,6 +729,7 @@ const BudgetPageContent = () => {
                                           currentPage={stateManager.currentPage}
                                           setCurrentPage={stateManager.setCurrentPage}
                                           setPageSize={stateManager.setPageSize}
+                                          isSelectMode={stateManager.isSelectMode}
                                         />
                                       </>
                                     );

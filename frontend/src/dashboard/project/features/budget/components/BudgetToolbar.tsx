@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useMemo } from "react";
 import { Tooltip as AntTooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClone, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -29,11 +29,12 @@ interface BudgetToolbarProps {
   groupBy: GroupByOption;
   onGroupChange: (group: GroupByOption) => void;
   isSelectAllChecked: boolean;
-  isSelectAllIndeterminate: boolean;
   onSelectAllChange: (checked: boolean) => void;
   selectionCount: number;
   totalCount: number;
   onClearSelection: () => void;
+  isSelectMode: boolean;
+  onToggleSelectMode: (next: boolean) => void;
 }
 
 const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
@@ -49,20 +50,35 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   groupBy,
   onGroupChange,
   isSelectAllChecked,
-  isSelectAllIndeterminate,
   onSelectAllChange,
   selectionCount,
   totalCount,
   onClearSelection,
+  isSelectMode,
+  onToggleSelectMode,
 }) => {
-  const selectAllRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (!selectAllRef.current) return;
-    selectAllRef.current.indeterminate = isSelectAllIndeterminate;
-  }, [isSelectAllIndeterminate]);
-
   const hasRows = totalCount > 0;
+  const selectionLabel = useMemo(
+    () => `${selectionCount}/${totalCount}`,
+    [selectionCount, totalCount]
+  );
+  const allSelected = useMemo(
+    () => hasRows && isSelectAllChecked && selectionCount === totalCount,
+    [hasRows, isSelectAllChecked, selectionCount, totalCount]
+  );
+
+  const handleToggleSelectMode = () => {
+    const next = !isSelectMode;
+    onToggleSelectMode(next);
+    if (!next && selectionCount > 0) {
+      onClearSelection();
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (!hasRows) return;
+    onSelectAllChange(true);
+  };
 
   return (
     <div className={styles.toolbar}>
@@ -96,58 +112,69 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
       </div>
       <div className={styles.rightControls}>
         {hasRows && (
-          <div className={styles.selectAllBlock}>
-            <label className={styles.selectAllControl}>
-              <input
-                ref={selectAllRef}
-                type="checkbox"
-                checked={isSelectAllChecked}
-                disabled={!hasRows}
-                onChange={(event) => onSelectAllChange(event.target.checked)}
-                aria-label="Select all budget items"
-              />
-              <span>Select all</span>
-              <span className={styles.selectionCount}>
-                {selectionCount}/{totalCount}
-              </span>
-            </label>
-            {selectionCount > 0 && (
-              <button
-                type="button"
-                className={styles.clearSelectionButton}
-                onClick={onClearSelection}
-              >
-                Clear selection
-              </button>
+          <div
+            className={`${styles.selectModePill}${
+              isSelectMode ? ` ${styles.selectModePillActive}` : ""
+            }`}
+          >
+            <button
+              type="button"
+              className={styles.selectModeToggle}
+              onClick={handleToggleSelectMode}
+              aria-pressed={isSelectMode}
+              disabled={!hasRows}
+            >
+              Select
+            </button>
+            {isSelectMode && (
+              <div className={styles.selectModeExpanded}>
+                <button
+                  type="button"
+                  className={styles.selectModeAction}
+                  onClick={handleSelectAll}
+                  disabled={allSelected}
+                >
+                  {allSelected ? "All selected" : "Select all"}
+                  <span className={styles.selectionCount}>{selectionLabel}</span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.selectModeAction}
+                  onClick={onClearSelection}
+                  disabled={selectionCount === 0}
+                >
+                  Clear selection
+                </button>
+                <div className={styles.selectionActions}>
+                  <div className={styles.iconSlot}>
+                    <AntTooltip title="Duplicate Selected">
+                      <button
+                        type="button"
+                        className={styles.iconActionButton}
+                        onClick={handleDuplicateSelected}
+                        aria-label="Duplicate selected"
+                        disabled={selectionCount === 0}
+                      >
+                        <FontAwesomeIcon icon={faClone} />
+                      </button>
+                    </AntTooltip>
+                  </div>
+                  <div className={styles.iconSlot}>
+                    <AntTooltip title="Delete Selected">
+                      <button
+                        type="button"
+                        className={styles.iconActionButton}
+                        onClick={() => openDeleteModal(selectedRowKeys)}
+                        aria-label="Delete selected"
+                        disabled={selectionCount === 0}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </AntTooltip>
+                  </div>
+                </div>
+              </div>
             )}
-          </div>
-        )}
-        {selectedRowKeys.length > 0 && (
-          <div className={styles.selectionActions}>
-            <div className={styles.iconSlot}>
-              <AntTooltip title="Duplicate Selected">
-                <button
-                  type="button"
-                  className={styles.iconActionButton}
-                  onClick={handleDuplicateSelected}
-                  aria-label="Duplicate selected"
-                >
-                  <FontAwesomeIcon icon={faClone} />
-                </button>
-              </AntTooltip>
-            </div>
-            <div className={styles.iconSlot}>
-              <AntTooltip title="Delete Selected">
-                <button
-                  type="button"
-                  className={styles.iconActionButton}
-                  onClick={() => openDeleteModal(selectedRowKeys)}
-                  aria-label="Delete selected"
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </button>
-              </AntTooltip>
-            </div>
           </div>
         )}
         <div className={styles.mobileFilterWrap}>

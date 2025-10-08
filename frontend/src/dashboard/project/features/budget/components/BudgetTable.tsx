@@ -41,6 +41,7 @@ interface BudgetItemsTableProps {
   currentPage: number;
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
+  isSelectMode: boolean;
 }
 
 const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
@@ -60,10 +61,10 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
     currentPage,
     setCurrentPage,
     setPageSize,
+    isSelectMode,
   }) => {
     const [isMobile, setIsMobile] = useState(false);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-    const selectAllRef = useRef<HTMLInputElement | null>(null);
     const menuContainersRef = useRef<Map<string, HTMLDivElement>>(new Map());
 
     useEffect(() => {
@@ -148,18 +149,11 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
     );
 
     const isSelectAllChecked =
-      availableIds.length > 0 && selectedInScope.length === availableIds.length;
-
-    const isSelectAllIndeterminate =
-      selectedInScope.length > 0 && selectedInScope.length < availableIds.length;
-
-    useEffect(() => {
-      if (!selectAllRef.current) return;
-      selectAllRef.current.indeterminate = isSelectAllIndeterminate;
-    }, [isSelectAllIndeterminate]);
+      isSelectMode && availableIds.length > 0 && selectedInScope.length === availableIds.length;
 
     const handleSelectAllChange = useCallback(
       (checked: boolean) => {
+        if (!isSelectMode) return;
         setSelectedRowKeys((prevKeys) => {
           if (checked) {
             const next = new Set(prevKeys);
@@ -169,16 +163,31 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
           return prevKeys.filter((id) => !availableIdSet.has(id));
         });
       },
-      [availableIds, availableIdSet, setSelectedRowKeys]
+      [availableIds, availableIdSet, isSelectMode, setSelectedRowKeys]
     );
 
     const handleClearSelection = useCallback(() => {
+      if (!isSelectMode) return;
       setSelectedRowKeys((prevKeys) => prevKeys.filter((id) => !availableIdSet.has(id)));
-    }, [availableIdSet, setSelectedRowKeys]);
+    }, [availableIdSet, isSelectMode, setSelectedRowKeys]);
 
     const handleCardKeyDown = useCallback(
-      (event: React.KeyboardEvent<HTMLElement>, record: BudgetItem, isLocked: boolean) => {
+      (
+        event: React.KeyboardEvent<HTMLElement>,
+        record: BudgetItem,
+        isLocked: boolean,
+        isInSelectMode: boolean,
+        isSelected: boolean
+      ) => {
         if (isLocked) return;
+        if (isInSelectMode) {
+          if (event.key === " " || event.key === "Enter") {
+            event.preventDefault();
+            setOpenMenuId(null);
+            toggleSelection(record, !isSelected);
+          }
+          return;
+        }
         if (event.key === "Enter") {
           event.preventDefault();
           setOpenMenuId(null);
@@ -189,11 +198,12 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
           openDeleteModal([record.budgetItemId]);
         }
       },
-      [openDeleteModal, openEditModal, setOpenMenuId]
+      [openDeleteModal, openEditModal, setOpenMenuId, toggleSelection]
     );
 
     const toggleSelection = useCallback(
       (record: BudgetItem, checked: boolean) => {
+        if (!isSelectMode) return;
         const id = String(record.budgetItemId);
         setSelectedRowKeys((prevKeys) => {
           const nextKeys = new Set(prevKeys);
@@ -205,7 +215,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
           return Array.from(nextKeys);
         });
       },
-      [setSelectedRowKeys]
+      [isSelectMode, setSelectedRowKeys]
     );
 
     useEffect(() => {
@@ -342,30 +352,27 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
 
     return (
       <div ref={tableRef} className={styles.tableContainer}>
-        {dataSource.length > 0 && isMobile && (
+        {isSelectMode && dataSource.length > 0 && isMobile && (
           <div className={styles.cardListHeader}>
-            <label className={styles.selectAllControl}>
-              <input
-                ref={selectAllRef}
-                type="checkbox"
-                checked={isSelectAllChecked}
-                onChange={(event) => handleSelectAllChange(event.target.checked)}
-                aria-label="Select all budget items"
-              />
-              <span>Select all</span>
+            <button
+              type="button"
+              className={styles.cardHeaderButton}
+              onClick={() => handleSelectAllChange(true)}
+              disabled={isSelectAllChecked}
+            >
+              {isSelectAllChecked ? "All selected" : "Select all"}
               <span className={styles.selectionCount}>
                 {selectedInScope.length}/{availableIds.length}
               </span>
-            </label>
-            {selectedInScope.length > 0 && (
-              <button
-                type="button"
-                className={styles.clearSelectionButton}
-                onClick={handleClearSelection}
-              >
-                Clear selection
-              </button>
-            )}
+            </button>
+            <button
+              type="button"
+              className={styles.clearSelectionButton}
+              onClick={handleClearSelection}
+              disabled={selectedInScope.length === 0}
+            >
+              Clear selection
+            </button>
           </div>
         )}
 
@@ -384,37 +391,44 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                   <article
                     key={record.key}
                     className={`${styles.card}${
-                      isSelected ? ` ${styles.cardSelected}` : ""
+                      isSelectMode && isSelected ? ` ${styles.cardSelected}` : ""
                     }${isLocked ? ` ${styles.cardLocked}` : ""}${
                       openMenuId === record.budgetItemId ? ` ${styles.cardMenuOpen}` : ""
                     }`}
-                    role="button"
+                    role={isSelectMode ? "checkbox" : "button"}
                     tabIndex={isLocked ? -1 : 0}
-                    aria-pressed={isSelected}
+                    aria-checked={isSelectMode ? isSelected : undefined}
                     aria-disabled={isLocked}
                     onClick={() => {
-                      if (!isLocked) {
-                        setOpenMenuId(null);
+                      if (isLocked) return;
+                      setOpenMenuId(null);
+                      if (isSelectMode) {
+                        toggleSelection(record, !isSelected);
+                      } else {
                         openEditModal(record);
                       }
                     }}
-                    onKeyDown={(event) => handleCardKeyDown(event, record, isLocked)}
+                    onKeyDown={(event) =>
+                      handleCardKeyDown(event, record, isLocked, isSelectMode, isSelected)
+                    }
                   >
                     <div className={styles.cardRow}>
                       <div className={styles.cardPrimary}>
-                        <label className={styles.cardCheckbox}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            disabled={isLocked}
-                            onChange={(event) => {
-                              event.stopPropagation();
-                              toggleSelection(record, event.target.checked);
-                            }}
-                            onClick={(event) => event.stopPropagation()}
-                            aria-label="Select budget line item"
-                          />
-                        </label>
+                        {isSelectMode && (
+                          <label className={styles.cardCheckbox}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={isLocked}
+                              onChange={(event) => {
+                                event.stopPropagation();
+                                toggleSelection(record, event.target.checked);
+                              }}
+                              onClick={(event) => event.stopPropagation()}
+                              aria-label="Select budget line item"
+                            />
+                          </label>
+                        )}
                         <div className={styles.cardSummary}>
                           <div className={styles.cardIdentifiers}>
                             <span className={styles.cardKey}>

@@ -887,8 +887,8 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0 1.05rem 1rem;
+  gap: 0.4rem;
+  padding: 0 0.95rem 0.95rem;
   flex-wrap: nowrap;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -907,18 +907,20 @@
 .taskActionButton {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   border-radius: 999px;
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: none;
   white-space: nowrap;
   flex: 0 0 auto;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.72rem;
 }
 
 .taskActionButton svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .taskMapButton {
@@ -1145,7 +1147,7 @@
 
 @media (min-width: 1024px) {
   .desktopOverlay {
-    --drawer-width: clamp(360px, 32vw, 440px);
+    --drawer-width: clamp(380px, 34vw, 480px);
     background: #050607;
   }
 

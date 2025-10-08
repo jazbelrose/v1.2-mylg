@@ -27,7 +27,6 @@ import {
 
 import summaryStyles from "./budget-header-summary.module.css";
 import mobileStyles from "./budget-header-mobile.module.css";
-import toolbarStyles from "./BudgetToolbar.module.css";
 
 /* =========================
    Types
@@ -1087,8 +1086,8 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
           {groupOptions.map((option) => {
             const isActive = option.value === groupBy;
             const className = isActive
-              ? `${toolbarStyles.tabButton} ${toolbarStyles.activeTab}`
-              : toolbarStyles.tabButton;
+              ? `${mobileStyles.groupTabButton} ${mobileStyles.groupTabButtonActive}`
+              : mobileStyles.groupTabButton;
             return (
               <button
                 key={option.value}

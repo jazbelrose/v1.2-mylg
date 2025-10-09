@@ -88,6 +88,23 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
 
   const isActive = filterQuery.trim().length > 0 || currentSortValue !== "default";
 
+  const currentSortOption = useMemo<SortOption>(() => {
+    const option = SORT_OPTIONS.find((opt) => opt.value === currentSortValue);
+    return option ?? SORT_OPTIONS[0];
+  }, [currentSortValue]);
+
+  const buttonLabel = useMemo(() => {
+    if (filterQuery.trim().length > 0) {
+      return filterQuery.trim();
+    }
+
+    if (currentSortOption.value !== "default") {
+      return currentSortOption.label;
+    }
+
+    return "Filter & Sort";
+  }, [currentSortOption.label, currentSortOption.value, filterQuery]);
+
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const nextValue = event.target.value as SortOptionValue;
     const option = SORT_OPTIONS.find((opt) => opt.value === nextValue) ?? SORT_OPTIONS[0];
@@ -116,7 +133,7 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
         onClick={() => setOpen((prev) => !prev)}
         onKeyDown={handleKeyDown}
       >
-        <span>Filter &amp; Sort</span>
+        <span>{buttonLabel}</span>
         <ChevronDown size={14} aria-hidden />
       </button>
       {open && (

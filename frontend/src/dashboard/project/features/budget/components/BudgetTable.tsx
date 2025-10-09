@@ -282,8 +282,8 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
             : "UNPAID";
         return (
           <span className={styles.paymentStatus}>
-            {display}
-            <span className={`${styles.statusDot} ${colorClass}`} />
+            <span className={`${styles.statusDot} ${colorClass}`} aria-hidden="true" />
+            <span className={styles.paymentStatusLabel}>{display}</span>
           </span>
         );
       },

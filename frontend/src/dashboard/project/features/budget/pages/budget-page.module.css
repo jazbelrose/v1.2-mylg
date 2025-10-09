@@ -103,14 +103,30 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-right: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.paymentStatusLabel {
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .statusDot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
+  flex-shrink: 0;
   display: inline-block;
+  box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.6);
 }
 
 .elementKeyCell {
@@ -128,14 +144,17 @@
 
 .paid {
   background-color: #00b050;
+  box-shadow: 0 0 0 1px rgba(0, 176, 80, 0.45);
 }
 
 .partial {
   background-color: #ffd700;
+  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.45);
 }
 
 .unpaid {
   background-color: #ff4d4f;
+  box-shadow: 0 0 0 1px rgba(255, 77, 79, 0.45);
 }
 
 /* Add a vertical rule to grouping columns */
@@ -597,10 +616,10 @@
 
 .cardPayment {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 10px;
   flex: 0 0 auto;
-  min-width: 100px;
+  min-width: 0;
 }
 
 .cardFooterLabel {
@@ -611,7 +630,7 @@
 }
 
 .cardFooterValue {
-  display: inline-flex;
+  display: flex;
   align-items: center;
 }
 
@@ -757,8 +776,6 @@
   }
 
   .cardPayment {
-    flex-direction: row;
-    align-items: center;
     gap: 8px;
   }
 }

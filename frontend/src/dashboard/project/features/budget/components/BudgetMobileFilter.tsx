@@ -25,6 +25,20 @@ type SortOption = {
   order: SortOrder;
 };
 
+type GroupByOption = "none" | "areaGroup" | "invoiceGroup" | "category";
+
+interface GroupOption {
+  value: GroupByOption;
+  label: string;
+}
+
+const GROUP_OPTIONS: GroupOption[] = [
+  { label: "None", value: "none" },
+  { label: "Area Group", value: "areaGroup" },
+  { label: "Invoice Group", value: "invoiceGroup" },
+  { label: "Category", value: "category" },
+];
+
 const SORT_OPTIONS: SortOption[] = [
   { value: "default", label: "Default order", field: null, order: null },
   { value: "elementKey-asc", label: "Element Key (A→Z)", field: "elementKey", order: "ascend" },
@@ -43,6 +57,8 @@ interface BudgetMobileFilterProps {
   sortField: string | null;
   sortOrder: SortOrder;
   onSortChange: (field: string | null, order: SortOrder) => void;
+  groupBy: GroupByOption;
+  onGroupChange: (group: GroupByOption) => void;
 }
 
 const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
@@ -51,6 +67,8 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
   sortField,
   sortOrder,
   onSortChange,
+  groupBy,
+  onGroupChange,
 }) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -86,7 +104,15 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
     return match ? match.value : "default";
   }, [sortField, sortOrder]);
 
-  const isActive = filterQuery.trim().length > 0 || currentSortValue !== "default";
+  const currentGroupOption = useMemo<GroupOption>(() => {
+    const option = GROUP_OPTIONS.find((opt) => opt.value === groupBy);
+    return option ?? GROUP_OPTIONS[0];
+  }, [groupBy]);
+
+  const isGroupActive = groupBy !== "none";
+
+  const isActive =
+    filterQuery.trim().length > 0 || currentSortValue !== "default" || isGroupActive;
 
   const currentSortOption = useMemo<SortOption>(() => {
     const option = SORT_OPTIONS.find((opt) => opt.value === currentSortValue);
@@ -102,13 +128,28 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
       return currentSortOption.label;
     }
 
+    if (isGroupActive) {
+      return currentGroupOption.label;
+    }
+
     return "Filter & Sort";
-  }, [currentSortOption.label, currentSortOption.value, filterQuery]);
+  }, [
+    currentGroupOption.label,
+    currentSortOption.label,
+    currentSortOption.value,
+    filterQuery,
+    isGroupActive,
+  ]);
 
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const nextValue = event.target.value as SortOptionValue;
     const option = SORT_OPTIONS.find((opt) => opt.value === nextValue) ?? SORT_OPTIONS[0];
     onSortChange(option.field, option.order);
+  };
+
+  const handleGroupChange = (value: GroupByOption) => {
+    onGroupChange(value);
+    setOpen(false);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -168,6 +209,33 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
                 ))}
               </select>
               <ChevronDown size={14} aria-hidden className={desktopStyles.filterSelectChevron} />
+            </div>
+          </div>
+          <div className={styles.mobileFilterDivider} />
+          <div className={styles.mobileFilterSection}>
+            <span className={styles.mobileFilterLabel}>Group by</span>
+            <div
+              className={styles.mobileFilterGroup}
+              role="group"
+              aria-label="Group budget items"
+            >
+              {GROUP_OPTIONS.map((option) => {
+                const isActiveOption = option.value === groupBy;
+                const className = isActiveOption
+                  ? `${styles.mobileFilterGroupButton} ${styles.mobileFilterGroupButtonActive}`
+                  : styles.mobileFilterGroupButton;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={className}
+                    onClick={() => handleGroupChange(option.value)}
+                    aria-pressed={isActiveOption}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

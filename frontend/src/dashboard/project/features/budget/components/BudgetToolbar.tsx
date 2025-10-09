@@ -125,6 +125,8 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
             sortField={sortField}
             sortOrder={sortOrder}
             onSortChange={onSortChange}
+            groupBy={groupBy}
+            onGroupChange={onGroupChange}
           />
         </div>
         {hasRows && (

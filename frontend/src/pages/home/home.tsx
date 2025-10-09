@@ -345,7 +345,7 @@ export const Home: React.FC = () => {
           </div>
           <div className="sign-up-image" style={{ alignItems: "flex-end" }}>
             <img
-              src="https://d2qb21tb4meex0.cloudfront.net/Iphone+14+mockup+sign+up.png"
+              src="https://d2qb21tb4meex0.cloudfront.net/Iphone14-mockup-signup-01.png"
               alt="Get Started"
               className="responsive-image2"
             />

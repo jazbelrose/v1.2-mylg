@@ -174,45 +174,38 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        <div className="home-info-container discover">
-          <div className="home-info-column" style={{ padding: "0 25px" }}>
-            <p>
-              <span className="drop-cap">D</span>iscover the all-in-one solution, designed to
-              enhance creative. Upload ideas, sketches and initiate your projects effortlessly. Our
-              intuitive dashboard lets you control your files, communicate with our team, track
-              milestones, and access design files easily and conveniently.
-            </p>
-          </div>
-          <div className="home-info-column" style={{ padding: "0 25px" }}>
-            <p
-              style={{
-                wordBreak: "break-word",
-                overflowWrap: "break-word",
-                whiteSpace: "normal",
-                hyphens: "manual",
-              }}
-            >
-              Our dashboard system streamlines project communication. Set guidelines, budgets, upload
-              assets, and collaborate with your team seamlessly all in one place. Save time, simplify
-              the process, and accelerate your creative process.
-            </p>
-          </div>
-          <div className="home-info-column" style={{ padding: "0 25px" }}>
-            <p
-              style={{
-                wordBreak: "normal",
-                overflowWrap: "anywhere",
-                whiteSpace: "normal",
-                hyphens: "manual",
-              }}
-            >
-              The core belief of *MYLG!* is that the management of a project is as crucial as its
-              design. The app offers a suite of tools to execute your projects with precision,
-              including timeline coordination, resource allocation, stakeholder communication,
-              drawings, and detailed execution plans.
-            </p>
-          </div>
-        </div>
+<div className="home-info-container discover">
+  <div className="home-info-column" style={{ padding: "0 25px" }}>
+    <p>
+      <span className="drop-cap">D</span>iscover the all-in-one studio for creative ops. Upload sketches and briefs, spin up projects in seconds. A focused dashboard lets you organize files, message the team, track milestones, and ship faster.
+    </p>
+  </div>
+  <div className="home-info-column" style={{ padding: "0 25px" }}>
+    <p
+      style={{
+        wordBreak: "break-word",
+        overflowWrap: "break-word",
+        whiteSpace: "normal",
+        hyphens: "manual",
+      }}
+    >
+      Work happens in one place: set guidelines, budgets, and approvals; upload assets; comment inline. Real-time collaboration keeps everyone aligned no lost emails, no version drift.
+    </p>
+  </div>
+  <div className="home-info-column" style={{ padding: "0 25px" }}>
+    <p
+      style={{
+        wordBreak: "normal",
+        overflowWrap: "anywhere",
+        whiteSpace: "normal",
+        hyphens: "manual",
+      }}
+    >
+      At <em>*MYLG!*</em> execution is design. Plan timelines, allocate resources, manage budgets, and coordinate stakeholders with precision. WebSocket messaging, live budgeting, and shareable drawings turn ideas into production-ready plans.
+    </p>
+  </div>
+</div>
+
 
         <div className="home-info-container materializing">
           <div className="home-info-column">
@@ -275,10 +268,7 @@ export const Home: React.FC = () => {
                 hyphens: "manual",
               }}
             >
-              *MYLG!* is an all-in-one platform with a built-in request for proposal dashboard
-              system, speeding-up the process of design and visualizations. Provide us with your
-              ideas we provide you with high quality, creative 2D &amp; 3D design presentations with
-              a fast turn-around.
+               *MYLG!* is an all-in-one platform with a built-in RFP dashboard that accelerates design and visualization workflows. Share your ideas, and we’ll deliver high-quality, creative 2D &amp; 3D presentation decks with reliable real-time collaboration, WebSocket updates, budgeting tools — fast.
             </p>
             <div className="button-container platform" style={{ padding: "0" }}>
               <ScrambleButton text="View Showcase →" to="/works" />

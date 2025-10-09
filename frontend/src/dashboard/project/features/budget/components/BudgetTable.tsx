@@ -5,7 +5,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Pagination } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronDown,
@@ -40,7 +39,6 @@ interface BudgetItemsTableProps {
   pageSize: number;
   currentPage: number;
   setCurrentPage: (page: number) => void;
-  setPageSize: (size: number) => void;
   isSelectMode: boolean;
 }
 
@@ -60,7 +58,6 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
     pageSize,
     currentPage,
     setCurrentPage,
-    setPageSize,
     isSelectMode,
   }) => {
     const [isMobile, setIsMobile] = useState(false);
@@ -288,16 +285,6 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
         );
       },
       []
-    );
-
-    const handlePaginationChange = useCallback(
-      (page: number, size: number) => {
-        setCurrentPage(page);
-        if (size !== pageSize) {
-          setPageSize(size);
-        }
-      },
-      [pageSize, setCurrentPage, setPageSize]
     );
 
     const listStyle = useMemo(() => {
@@ -582,19 +569,6 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
           )}
         </div>
 
-        {dataSource.length > 0 && (
-          <Pagination
-            className={styles.cardPagination}
-            current={currentPage}
-            pageSize={pageSize}
-            total={dataSource.length}
-            showSizeChanger
-            pageSizeOptions={["10", "20", "50", "100"]}
-            size="small"
-            onChange={handlePaginationChange}
-            onShowSizeChange={handlePaginationChange}
-          />
-        )}
       </div>
     );
   }

@@ -375,10 +375,7 @@ const AcademyOfPop = () => {
                             </div>
                             {/* <span className="arrow-down works-arrow">↓</span> */}
                         </div>
-                        <div className="rendering-subheader">
-                            <h3><br />
-                            </h3>
-                        </div>
+                
                     </div>
 
 

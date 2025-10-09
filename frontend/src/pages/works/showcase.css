@@ -26,7 +26,7 @@
 .works-heading {
     
     
-    padding-top: 20px;
+    padding-top: 0px;
 
 }
 
@@ -102,10 +102,14 @@
         padding-top: 0px;
     }
 
+    .works-header {
+        padding-top: 0;
+    }
+
 
     .works-header h2 {
         
-        padding: min(100px, 5vw) 0px 0px 0px;
+        padding: 0px 0px 0px 0px;
     }
 }
 

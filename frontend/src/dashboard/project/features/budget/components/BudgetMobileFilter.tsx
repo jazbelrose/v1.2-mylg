@@ -102,7 +102,7 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
       return currentSortOption.label;
     }
 
-    return "Filter & Sort";
+    return "Filter";
   }, [currentSortOption.label, currentSortOption.value, filterQuery]);
 
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {

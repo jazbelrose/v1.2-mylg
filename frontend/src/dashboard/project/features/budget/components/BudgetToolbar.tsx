@@ -89,35 +89,35 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
 
   return (
     <div className={styles.toolbar}>
-      <div className={styles.groupControls}>
-        <span id="budget-desktop-group-label" className={styles.srOnly}>
-          Group budget items
-        </span>
-        <div
-          className={styles.groupTabs}
-          role="group"
-          aria-labelledby="budget-desktop-group-label"
-        >
-          {GROUP_OPTIONS.map((option) => {
-            const isActive = option.value === groupBy;
-            const className = isActive
-              ? `${styles.groupTabButton} ${styles.activeGroupTab}`
-              : styles.groupTabButton;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={isActive}
-                className={className}
-                onClick={() => onGroupChange(option.value)}
-              >
-                <span>{option.label}</span>
-              </button>
-            );
-          })}
+      <div className={styles.primaryRow}>
+        <div className={styles.groupControls}>
+          <span id="budget-desktop-group-label" className={styles.srOnly}>
+            Group budget items
+          </span>
+          <div
+            className={styles.groupTabs}
+            role="group"
+            aria-labelledby="budget-desktop-group-label"
+          >
+            {GROUP_OPTIONS.map((option) => {
+              const isActive = option.value === groupBy;
+              const className = isActive
+                ? `${styles.groupTabButton} ${styles.activeGroupTab}`
+                : styles.groupTabButton;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={isActive}
+                  className={className}
+                  onClick={() => onGroupChange(option.value)}
+                >
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      <div className={styles.filterControls}>
         <div className={styles.mobileFilterWrap}>
           <BudgetMobileFilter
             filterQuery={filterQuery}
@@ -127,6 +127,8 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
             onSortChange={onSortChange}
           />
         </div>
+      </div>
+      <div className={styles.filterControls}>
         {hasRows && (
           <Pagination
             className={styles.toolbarPagination}

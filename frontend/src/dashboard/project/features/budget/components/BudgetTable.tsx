@@ -273,13 +273,9 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
             : normalizedStatus === "PARTIAL"
             ? styles.partial
             : styles.unpaid;
-        const display =
-          normalizedStatus === "PAID" || normalizedStatus === "PARTIAL"
-            ? cleaned
-            : "UNPAID";
         return (
           <span className={styles.paymentStatus}>
-            {display}
+            Paid
             <span className={`${styles.statusDot} ${colorClass}`} />
           </span>
         );
@@ -465,10 +461,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
 
                       {record.paymentStatus && (
                         <div className={styles.cardPayment}>
-                          <span className={styles.cardFooterLabel}>Payment</span>
-                          <span className={styles.cardFooterValue}>
-                            {renderPaymentStatus(String(record.paymentStatus))}
-                          </span>
+                          {renderPaymentStatus(String(record.paymentStatus))}
                         </div>
                       )}
                       <div

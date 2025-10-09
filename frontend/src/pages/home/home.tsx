@@ -167,7 +167,7 @@ export const Home: React.FC = () => {
         <div className="home-info-container">
           <div className="image-container" style={{ position: "relative" }}>
             <img
-              src="https://d1cazymewvlm0k.cloudfront.net/1-iPhone+14+Pro+MockupFINAL.jpg"
+              src="https://d2qb21tb4meex0.cloudfront.net/Iphone-mockup.png"
               alt="Our Platform"
               className="responsive-image"
             />

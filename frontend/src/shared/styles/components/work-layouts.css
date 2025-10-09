@@ -63,11 +63,11 @@ body.no-scroll {
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  padding: min(25px, 1.5vw) 5px 0;
+  
 }
 
 .rendering-header h2 {
-  padding: min(50px, 3vw) 0px 0;
+  
   line-height: 0.8;
   font-size: min(8rem, 14vw);
   white-space: nowrap;
@@ -81,13 +81,13 @@ body.no-scroll {
 }
 
 .rendering-subheader {
-  padding: min(25px, 1.5vw) 10px 0;
+  
   color: #8D8787;
 }
 
 .rendering-subheader h3 {
   font-weight: 900;
-  padding: 20px 0;
+  
   font-size: min(4rem, 6vw);
 }
 

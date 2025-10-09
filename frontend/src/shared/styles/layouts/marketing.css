@@ -38,7 +38,7 @@ body.no-scroll {
 .rendering-header {
   color: var(--text-color);
   font-weight: var(--font-weight-black);
-  padding: var(--space-5) 0;
+  
   font-size: min(var(--font-size-6xl), 10vw);
   text-align: center;
 }
@@ -46,7 +46,7 @@ body.no-scroll {
 .rendering-header h2 {
   color: var(--text-color);
   font-weight: var(--font-weight-black);
-  padding: var(--space-5) 0;
+  
   font-size: min(var(--font-size-6xl), 10vw);
   text-align: center;
 }
@@ -64,7 +64,7 @@ body.no-scroll {
 
 .rendering-subheader h3 {
   font-weight: var(--font-weight-black);
-  padding: var(--space-5) 0;
+  
   font-size: min(var(--font-size-4xl), 6vw);
 }
 

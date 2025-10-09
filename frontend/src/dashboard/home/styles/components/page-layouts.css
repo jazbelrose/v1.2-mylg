@@ -103,9 +103,10 @@
   .column-3 {
     padding-bottom: 5px;
   }
-   .budget-layout {
+  .budget-layout {
     padding: 0 !important;
     border: none;
+    border-radius: 0;
   }
 }
 

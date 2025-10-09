@@ -175,7 +175,7 @@
 
 .chart-legend-container {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
   align-self: stretch;
   min-height: 100%;
@@ -189,15 +189,18 @@
 }
 
 .budget-chart {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   width: 100%;
   height: 100%;
   max-width: none;
   aspect-ratio: 1 / 1;
   position: relative;
-  margin-inline: auto;
+  margin: auto;
   min-height: 0;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .budget-legend {
@@ -261,10 +264,12 @@
   .chart-legend-container {
     width: 100%;
     margin-left: 0;
+    padding: 0 18px;
+    min-height: auto;
   }
 
   .budget-chart {
-    margin-inline: auto;
+    margin: auto;
     max-width: 220px;
   }
 }
@@ -311,7 +316,7 @@
     align-items: stretch;
     gap: 12px;
     min-height: 80px;
-    max-height: 160px;
+    max-height: 240px;
   }
   .budget-overview-card {
     gap: 10px;
@@ -349,11 +354,19 @@
     align-items: stretch;
     gap: 14px;
   }
+  .budget-overview-summary {
+    flex: 0 0 auto;
+    padding: 18px 18px 8px 18px;
+  }
   .chart-legend-container {
     flex-direction: column;
     align-items: center;
     margin-left: 0;
     gap: 8px;
+    justify-content: center;
+    padding: 0 18px 18px 18px;
+    min-height: auto;
+    flex: 1 1 auto;
   }
   .budget-legend {
     flex-direction: row;
@@ -388,6 +401,8 @@
   .budget-chart {
     width: 160px;
     height: 160px;
+    margin: 0 auto;
+    flex-shrink: 0;
   }
   .budget-legend {
     gap: 4px;
@@ -406,6 +421,7 @@
   .budget-chart {
     width: 140px !important;
     height: 140px !important;
+    margin: auto;
   }
 }
 
@@ -426,6 +442,7 @@
   .budget-chart {
     width: 130px !important;
     height: 130px !important;
+    margin: auto;
   }
   .budget-overview-header {
     gap: 4px;

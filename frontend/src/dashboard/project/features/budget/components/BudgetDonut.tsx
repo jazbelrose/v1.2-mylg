@@ -82,7 +82,7 @@ const centerButtonStyles: React.CSSProperties = {
   background: "transparent",
   borderRadius: "50%",
   padding: "12px",
-  width: "min(50%, 120px)",
+  width: "min(45%, 120px)",
   aspectRatio: "1 / 1",
   boxSizing: "border-box",
   textAlign: "center",
@@ -90,6 +90,8 @@ const centerButtonStyles: React.CSSProperties = {
   cursor: "pointer",
   pointerEvents: "auto",
   transition: "background 150ms ease, box-shadow 150ms ease",
+  maxWidth: "calc(100% - 16px)",
+  maxHeight: "calc(100% - 16px)",
 };
 
 const centerValueStyles: React.CSSProperties = {
@@ -347,7 +349,12 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
 
       if (!diameter) return;
 
-      const desiredSize = Math.max(72, Math.min(diameter * 0.46, 240));
+      const availableDiameter = Math.max(diameter - 24, 0);
+      const minimumSize = Math.min(60, availableDiameter);
+      const desiredSize = Math.min(
+        Math.max(diameter * 0.42, minimumSize),
+        Math.min(availableDiameter, 240)
+      );
 
       setCenterButtonSize((previous) => {
         if (previous !== null && Math.abs(previous - desiredSize) < 0.5) {

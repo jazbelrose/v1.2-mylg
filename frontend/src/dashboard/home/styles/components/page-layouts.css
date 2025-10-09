@@ -36,6 +36,23 @@
       background: var(--project-header-bg, var(--bg2, #111213));
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 32px;
+  overflow: hidden;
+}
+
+.budget-layout-motion {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.budget-layout__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+  padding-bottom: 24px;
 }
 
 

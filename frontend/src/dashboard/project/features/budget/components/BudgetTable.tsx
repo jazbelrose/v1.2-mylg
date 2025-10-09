@@ -269,21 +269,32 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
         if (typeof status !== "string") return null;
         const cleaned = status.replace(/[·.]+$/, "").trim();
         if (!cleaned) return null;
-        const normalizedStatus = cleaned.toUpperCase();
-        const colorClass =
-          normalizedStatus === "PAID"
-            ? styles.paid
-            : normalizedStatus === "PARTIAL"
-            ? styles.partial
-            : styles.unpaid;
-        const display =
-          normalizedStatus === "PAID" || normalizedStatus === "PARTIAL"
-            ? cleaned
-            : "UNPAID";
+
+        const normalizedStatus = cleaned.toLowerCase();
+        let label = cleaned;
+        let colorClass = styles.unpaid;
+
+        if (normalizedStatus === "paid") {
+          label = "Paid";
+          colorClass = styles.paid;
+        } else if (normalizedStatus === "partial") {
+          label = "Partial";
+          colorClass = styles.partial;
+        } else if (normalizedStatus === "unpaid") {
+          label = "Unpaid";
+        } else {
+          label = `${cleaned.charAt(0).toUpperCase()}${cleaned
+            .slice(1)
+            .toLowerCase()}`;
+        }
+
         return (
           <span className={styles.paymentStatus}>
-            {display}
-            <span className={`${styles.statusDot} ${colorClass}`} />
+            {label}
+            <span
+              className={`${styles.statusDot} ${colorClass}`}
+              aria-hidden="true"
+            />
           </span>
         );
       },
@@ -478,10 +489,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
 
                       {record.paymentStatus && (
                         <div className={styles.cardPayment}>
-                          <span className={styles.cardFooterLabel}>Payment</span>
-                          <span className={styles.cardFooterValue}>
-                            {renderPaymentStatus(String(record.paymentStatus))}
-                          </span>
+                          {renderPaymentStatus(String(record.paymentStatus))}
                         </div>
                       )}
                       <div

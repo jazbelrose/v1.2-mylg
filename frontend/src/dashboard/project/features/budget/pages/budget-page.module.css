@@ -102,13 +102,16 @@
 .paymentStatus {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-right: 10px;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
 }
 
 .statusDot {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   display: inline-block;
 }
@@ -597,22 +600,11 @@
 
 .cardPayment {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 0 0 auto;
-  min-width: 100px;
-}
-
-.cardFooterLabel {
-  font-size: 0.75rem;
-  color: #888888;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.cardFooterValue {
-  display: inline-flex;
+  justify-content: flex-end;
   align-items: center;
+  width: 100%;
+  margin-top: auto;
+  order: 10;
 }
 
 .cardPagination {
@@ -670,7 +662,7 @@
   }
 
   .cardPayment {
-    min-width: 0;
+    width: 100%;
   }
 }
 
@@ -757,9 +749,8 @@
   }
 
   .cardPayment {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
+    justify-content: flex-end;
+    width: 100%;
   }
 }
 
@@ -787,10 +778,6 @@
 
   .cardControls {
     gap: 4px;
-  }
-
-  .cardFooterLabel {
-    font-size: 0.7rem;
   }
 
   .cardMetricValue {
@@ -821,7 +808,10 @@
   }
 
   .cardPayment {
-    align-items: flex-end;
+    align-self: flex-end;
+    width: auto;
+    margin-left: auto;
+    padding-right: 4px;
   }
 
   .cardControls {

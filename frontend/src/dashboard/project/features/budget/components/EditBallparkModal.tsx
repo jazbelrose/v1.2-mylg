@@ -1,9 +1,13 @@
 import React, { useEffect, useId, useMemo, useState } from "react";
-import type { Styles as ReactModalStyles } from "react-modal";
 import Modal from "@/shared/ui/ModalWithStack";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import styles from "./edit-ball-park-modal.module.css";
+
+type ModalStyles = {
+  content?: React.CSSProperties;
+  overlay?: React.CSSProperties;
+};
 
 const normalizeHexColor = (value: string): string | null => {
   const trimmed = value.trim();
@@ -58,7 +62,7 @@ const EditBallparkModal: React.FC<EditBallparkModalProps> = ({
   );
   const inputId = useId();
 
-  const accentStyles = useMemo<ReactModalStyles | undefined>(() => {
+  const accentStyles = useMemo<ModalStyles | undefined>(() => {
     if (typeof accentColor !== "string" || accentColor.trim() === "") {
       return undefined;
     }

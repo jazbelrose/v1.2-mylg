@@ -60,10 +60,10 @@ describe("BudgetStateManager header totals", () => {
 
     mockedUpdateBudgetItem.mockResolvedValue(undefined);
 
-    let capturedState: any;
+    let capturedState: unknown;
 
     render(
-      <BudgetStateManager activeProject={{ projectId: "proj-1" } as any }>
+      <BudgetStateManager activeProject={{ projectId: "proj-1" } as { projectId: string }}>
         {(state) => {
           capturedState = state;
           return null;
@@ -94,7 +94,7 @@ describe("BudgetStateManager header totals", () => {
       },
     ];
 
-    const totals = capturedState.calculateHeaderTotals(items);
+    const totals = (capturedState as any).calculateHeaderTotals(items);
     expect(totals.budgeted).toBeCloseTo(280);
     expect(totals.actual).toBeCloseTo(242.5);
     expect(totals.final).toBeCloseTo(479.5);

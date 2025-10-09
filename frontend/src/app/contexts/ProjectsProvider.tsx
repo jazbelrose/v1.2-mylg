@@ -319,7 +319,7 @@ const RegularProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
       detailInFlightRef.current.set(projectId, run);
       return run;
     },
-    [fetchEvents, fetchProjectById]
+    []
   );
 
   const hydrateProject = useCallback(

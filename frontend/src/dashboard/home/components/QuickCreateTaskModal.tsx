@@ -474,7 +474,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose, submitting]);
+  }, [open, onClose, isBusy]);
 
   useEffect(() => {
     if (!open) return;
@@ -559,7 +559,7 @@ const QuickCreateTaskModal: React.FC<QuickCreateTaskModalProps> = ({
 
     window.addEventListener("keydown", handleMetaEnter);
     return () => window.removeEventListener("keydown", handleMetaEnter);
-  }, [canSubmit, open, submitting]);
+  }, [canSubmit, open, isBusy]);
 
   useEffect(() => {
     if (!open) return;

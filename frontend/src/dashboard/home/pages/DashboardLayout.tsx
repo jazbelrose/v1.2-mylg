@@ -44,7 +44,7 @@ const mapLegacyDashboardPath = (fullPath: string): string => {
 
 const Dashboard: React.FC = () => {
   // If your DataProvider has types, replace `any` below with the real shape.
-  const { userName, opacity } = useData() as { userName?: string; opacity?: number };
+  const { opacity } = useData() as { opacity?: number };
 
   const location = useLocation();
   const navigate = useNavigate();

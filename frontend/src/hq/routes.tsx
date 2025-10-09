@@ -11,7 +11,7 @@ const HQMessagesPage = React.lazy(() => import("./pages/HQMessagesPage"));
 
 export type HQRouteConfig =
   | { index: true; element: React.ReactElement }
-  | { index?: false; path: string; element: React.ReactElement };
+  | { index: false; path: string; element: React.ReactElement };
 
 export const HQ_ROUTE_SEGMENTS = [
   "",
@@ -26,13 +26,13 @@ export const HQ_ROUTE_SEGMENTS = [
 
 export const hqRoutes: HQRouteConfig[] = [
   { index: true, element: <HQOverview /> },
-  { path: "hq/accounts", element: <AccountsPage /> },
-  { path: "hq/transactions", element: <TransactionsPage /> },
-  { path: "hq/reports", element: <ReportsPage /> },
-  { path: "hq/invoices", element: <InvoicesPage /> },
-  { path: "hq/tasks", element: <HQTasksPage /> },
-  { path: "hq/events", element: <HQEventsPage /> },
-  { path: "hq/messages", element: <HQMessagesPage /> },
+  { index: false, path: "hq/accounts", element: <AccountsPage /> },
+  { index: false, path: "hq/transactions", element: <TransactionsPage /> },
+  { index: false, path: "hq/reports", element: <ReportsPage /> },
+  { index: false, path: "hq/invoices", element: <InvoicesPage /> },
+  { index: false, path: "hq/tasks", element: <HQTasksPage /> },
+  { index: false, path: "hq/events", element: <HQEventsPage /> },
+  { index: false, path: "hq/messages", element: <HQMessagesPage /> },
 ];
 
 export default hqRoutes;

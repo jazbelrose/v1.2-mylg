@@ -78,7 +78,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
     }
   }, [userId, previewMode]);
 
-  const refreshUsers = async () => {
+  const refreshUsers = useCallback(async () => {
     if (previewMode) {
       const preview = getDevPreviewData();
       setAllUsers(preview.allUsers);
@@ -93,7 +93,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
     } catch (error) {
       console.error("Error fetching users:", error);
     }
-  };
+  }, [previewMode]);
 
   // Load user profile
   const fetchUserProfile = useCallback(async () => {
@@ -200,6 +200,7 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
       userName,
       userData,
       setUserData,
+      refreshUsers,
       refreshUser,
       fetchUserProfile,
       isAdmin,

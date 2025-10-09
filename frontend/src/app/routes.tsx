@@ -196,11 +196,10 @@ const ActualRoutes: React.FC<ActualRoutesProps> = ({ location }) => {
           }
         >
           {hqRoutes.map((route) => {
-            const key = route.index ? "dashboard-hq-index" : `dashboard-${route.path}`;
-            if ("index" in route && route.index) {
-              return <Route key={key} index element={route.element} />;
+            if (route.index) {
+              return <Route key="dashboard-hq-index" index element={route.element} />;
             }
-            return <Route key={key} path={route.path} element={route.element} />;
+            return <Route key={`dashboard-${(route as {path: string}).path}`} path={(route as {path: string}).path} element={route.element} />;
           })}
           <Route path="projects/allprojects" element={<DashboardWelcome />} />
           <Route

@@ -32,9 +32,6 @@ const PreviewMessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
     msgId: string,
     emoji: string,
     reactorId: string,
-    _conversationId: string,
-    _conversationType: "dm" | "project",
-    _ws?: WebSocket,
   ) => {
     if (!msgId || !emoji || !reactorId) return;
 
@@ -72,21 +69,8 @@ const PreviewMessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
   return <MessagesContext.Provider value={value}>{children}</MessagesContext.Provider>;
 };
 
-export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
+const NormalMessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { userId } = useAuth();
-
-  const [previewMode, setPreviewMode] = useState<boolean>(() => isPreviewModeEnabled());
-
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    return subscribeToPreviewMode(() => {
-      setPreviewMode(isPreviewModeEnabled());
-    });
-  }, []);
-
-  if (previewMode) {
-    return <PreviewMessagesProvider>{children}</PreviewMessagesProvider>;
-  }
 
   const [projectMessages, setProjectMessages] = useState<ProjectMessagesMap>({});
   const [inbox, setInbox] = useState<Thread[]>(() => {
@@ -195,6 +179,23 @@ export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
       {children}
     </MessagesContext.Provider>
   );
+};
+
+export const MessagesProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const [previewMode, setPreviewMode] = useState<boolean>(() => isPreviewModeEnabled());
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    return subscribeToPreviewMode(() => {
+      setPreviewMode(isPreviewModeEnabled());
+    });
+  }, []);
+
+  if (previewMode) {
+    return <PreviewMessagesProvider>{children}</PreviewMessagesProvider>;
+  }
+
+  return <NormalMessagesProvider>{children}</NormalMessagesProvider>;
 };
 
 

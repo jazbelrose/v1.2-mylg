@@ -539,7 +539,6 @@ const BudgetHeader: React.FC<BudgetHeaderProps> = ({
     handleSelectFinal,
     hasReconciled,
     reconciledTotal,
-    selectedMetric,
     showReconciled,
   ]);
 

@@ -2,13 +2,9 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   AlertTriangle,
-  ArrowUpRight,
-  CalendarDays,
   CheckCircle2,
   Clock,
-  MapPin,
   Plus,
-  User2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -44,11 +40,6 @@ const dueDateFormatter = new Intl.DateTimeFormat(undefined, {
   weekday: "short",
   month: "short",
   day: "numeric",
-});
-
-const timeFormatter = new Intl.DateTimeFormat(undefined, {
-  hour: "numeric",
-  minute: "2-digit",
 });
 
 function parseCoordinate(value: unknown): number | null {
@@ -155,75 +146,6 @@ const StatChip: React.FC<StatChipProps> = ({ icon, label, value, tone }) => (
   </div>
 );
 
-type TaskItemProps = {
-  task: DerivedTask;
-  onOpen: (taskId: string) => void;
-  onMarkDone: (taskId: string) => void;
-  onOpenMap: (url: string) => void;
-};
-
-const TaskItem: React.FC<TaskItemProps> = ({ task, onOpen, onMarkDone, onOpenMap }) => {
-  const { id, title, dayLabel, time, address, assignee, mapUrl, overdue, dueDate, status } = task;
-  const metaEntries: Array<{ icon: React.ReactNode; label: string }> = [];
-  const dateLabel = dueDate ? dueDateFormatter.format(dueDate) : dayLabel;
-  const timeLabel = time ?? (dueDate ? timeFormatter.format(dueDate) : undefined);
-  const isCompleted = typeof status === "string" && status.toLowerCase() === "done";
-
-  if (dateLabel) {
-    metaEntries.push({ icon: <CalendarDays aria-hidden="true" />, label: timeLabel ? `${dateLabel} · ${timeLabel}` : dateLabel });
-  }
-
-  if (address) {
-    metaEntries.push({ icon: <MapPin aria-hidden="true" />, label: address });
-  }
-
-  if (assignee) {
-    metaEntries.push({ icon: <User2 aria-hidden="true" />, label: `Assigned to: ${assignee}` });
-  }
-
-  return (
-    <li className={styles.taskItem}>
-      <button type="button" className={styles.taskMain} onClick={() => onOpen(id)}>
-        <div className={styles.taskText}>
-          <h4 className={styles.taskTitle}>{title}</h4>
-          {metaEntries.length > 0 && (
-            <div className={styles.taskMeta}>
-              {metaEntries.map((entry, index) => (
-                <span key={`${id}-meta-${index}`} className={styles.taskMetaEntry}>
-                  <span className={styles.taskMetaIcon}>{entry.icon}</span>
-                  <span className={styles.taskMetaLabel}>{entry.label}</span>
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-        {overdue && <span className={styles.taskBadge}>Overdue</span>}
-      </button>
-      <div className={styles.taskActions}>
-        {mapUrl && (
-          <button
-            type="button"
-            className={cn("ui-button", "ui-button--outline", "ui-button--sm", styles.mapButton)}
-            onClick={() => onOpenMap(mapUrl)}
-          >
-            Open in Maps
-            <ArrowUpRight aria-hidden="true" />
-          </button>
-        )}
-        {!isCompleted ? (
-          <Button
-            size="sm"
-            className={cn(styles.accentButton, styles.actionButton)}
-            onClick={() => onMarkDone(id)}
-          >
-            Mark done
-          </Button>
-        ) : null}
-      </div>
-    </li>
-  );
-};
-
 const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
   const { loading, error, stats, groups, refreshTasks, projectOptions, getTaskById } =
     useTasksOverview();
@@ -317,53 +239,6 @@ const TasksOverviewCard: React.FC<TasksOverviewCardProps> = ({ className }) => {
   const closeCreateModal = useCallback(() => {
     setTaskToEdit(null);
     setIsCreateModalOpen(false);
-  }, []);
-
-  const toModalTask = useCallback(
-    (itemId: string) => {
-      const source = getTaskById(itemId);
-      if (!source) return null;
-      const dueDate = source.dueDateInput ?? (source.dueDate ? source.dueDate.toISOString() : null);
-      return {
-        id: source.id,
-        taskId: source.taskId ?? source.id,
-        projectId: source.projectId,
-        projectName: source.projectName,
-        title: source.title,
-        description: source.description ?? undefined,
-        dueDate,
-        status: source.status,
-        assigneeId: source.assigneeId ?? undefined,
-        address: source.address ?? undefined,
-        location: source.location as QuickCreateTaskModalTask["location"],
-      } satisfies QuickCreateTaskModalTask;
-    },
-    [getTaskById],
-  );
-
-  const handleTaskOpen = useCallback(
-    (taskId: string) => {
-      const modalTask = toModalTask(taskId);
-      if (!modalTask) return;
-      setTaskToEdit(modalTask);
-      setIsCreateModalOpen(true);
-    },
-    [toModalTask],
-  );
-
-  const handleMarkDone = useCallback(
-    (taskId: string) => {
-      const modalTask = toModalTask(taskId);
-      if (!modalTask) return;
-      setTaskToEdit({ ...modalTask, status: "done" });
-      setIsCreateModalOpen(true);
-    },
-    [toModalTask],
-  );
-
-  const handleOpenMap = useCallback((url: string) => {
-    if (typeof window === "undefined") return;
-    window.open(url, "_blank", "noopener,noreferrer");
   }, []);
 
   const formatStatValue = (value: number): string | number => {

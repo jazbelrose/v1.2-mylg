@@ -25,7 +25,6 @@ import {
   type QuickTask,
   type RawTask,
   type TaskMapMarker,
-  type TaskStats,
   type SnapIndex,
 } from "./components/quickTaskUtils";
 import { formatAssigneeDisplay } from "./utils";

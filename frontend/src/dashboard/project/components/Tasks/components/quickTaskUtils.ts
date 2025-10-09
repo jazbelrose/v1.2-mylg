@@ -2,7 +2,7 @@ import type { Status } from "../types";
 import { parseDueDate, parseLocation } from "../utils";
 import type { QuickTask, RawTask, TaskMapMarker, TaskStats } from "./taskTypes";
 
-export type { QuickTask, RawTask, TaskStats };
+export type { QuickTask, RawTask, TaskMapMarker, TaskStats };
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 

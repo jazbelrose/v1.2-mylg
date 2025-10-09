@@ -200,9 +200,6 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
       >
         <span className={styles.mobileFilterButtonText}>
           {hideGrouping && buttonLabel ? buttonLabel : "Filter"}
-          {!hideGrouping && buttonLabel && (
-            <span className={styles.mobileFilterSummary}>{buttonLabel}</span>
-          )}
         </span>
       </button>
       {open && (

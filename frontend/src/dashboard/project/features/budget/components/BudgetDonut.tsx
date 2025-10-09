@@ -617,7 +617,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       style={{ width: "100%", height: "100%", position: "relative", overflow: "visible" }}
       onPointerLeave={handleContainerPointerLeave}
     >
-      <ResponsiveContainer>
+      <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={stableData}

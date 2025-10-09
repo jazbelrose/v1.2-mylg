@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Pagination } from "antd";
 import { Tooltip as AntTooltip } from "antd";
+import { SelectOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClone, faTrash } from "@fortawesome/free-solid-svg-icons";
 import BudgetMobileFilter from "./BudgetMobileFilter";
@@ -130,17 +131,28 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
           />
         </div>
         {hasRows && (
-          <Pagination
-            className={styles.toolbarPagination}
-            current={currentPage}
-            pageSize={pageSize}
-            total={totalCount}
-            showSizeChanger
-            pageSizeOptions={["10", "20", "50", "100"]}
-            size="small"
-            onChange={onPaginationChange}
-            onShowSizeChange={onPaginationChange}
-          />
+          <>
+            <Pagination
+              className={`${styles.toolbarPagination} ${styles.desktopPagination}`}
+              current={currentPage}
+              pageSize={pageSize}
+              total={totalCount}
+              showSizeChanger
+              pageSizeOptions={["10", "20", "50", "100"]}
+              size="small"
+              onChange={onPaginationChange}
+              onShowSizeChange={onPaginationChange}
+            />
+            <Pagination
+              className={`${styles.toolbarPagination} ${styles.mobilePagination}`}
+              current={currentPage}
+              pageSize={pageSize}
+              total={totalCount}
+              size="small"
+              simple
+              onChange={onPaginationChange}
+            />
+          </>
         )}
       </div>
       <div className={styles.rightControls}>
@@ -157,7 +169,8 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
               aria-pressed={isSelectMode}
               disabled={!hasRows}
             >
-              Select
+              <SelectOutlined aria-hidden className={styles.selectIcon} />
+              <span className={styles.selectLabel}>Select</span>
             </button>
             {isSelectMode && (
               <div className={styles.selectModeExpanded}>

@@ -276,6 +276,14 @@
   align-self: center;
 }
 
+.desktopPagination {
+  display: inline-flex;
+}
+
+.mobilePagination {
+  display: none;
+}
+
 .toolbarPagination :global(.ant-select-selector) {
   background: transparent !important;
   border-color: #FA3356 !important;
@@ -319,6 +327,26 @@
   letter-spacing: 0.01em;
   transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.mobileFilterButtonContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.mobileFilterIcon {
+  font-size: 16px;
+}
+
+.mobileFilterButtonText {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.mobileFilterChevron {
+  margin-left: 8px;
 }
 
 .mobileFilterActive {
@@ -458,6 +486,16 @@
   white-space: nowrap;
 }
 
+.selectIcon {
+  font-size: 16px;
+}
+
+.selectLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .addButton:active {
   transform: scale(0.98);
 }
@@ -491,21 +529,113 @@
 
 @media (max-width: 768px) {
   .toolbar {
-    flex-direction: column;
-    align-items: stretch;
+    padding: 12px 14px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    align-items: center;
   }
 
   .filterControls {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    flex: 1 1 auto;
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobileFilterWrap {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  .mobileFilterRoot {
+    width: auto;
+  }
+
+  .mobileFilterButton {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+  }
+
+  .mobileFilterButtonContent {
+    justify-content: center;
+    width: auto;
+  }
+
+  .mobileFilterButtonText {
+    display: none;
+  }
+
+  .mobileFilterChevron {
+    display: none;
+  }
+
+  .mobileFilterIcon {
+    font-size: 18px;
+  }
+
+  .desktopPagination {
+    display: none !important;
+  }
+
+  .mobilePagination {
+    display: inline-flex;
+  }
+
+  .mobilePagination :global(.ant-pagination-simple-pager) {
+    background: transparent;
+    color: #ffffff;
+  }
+
+  .mobilePagination :global(.ant-pagination-prev),
+  .mobilePagination :global(.ant-pagination-next) {
+    color: #ffffff;
+  }
+
+  .mobilePagination :global(.ant-pagination-simple-pager input) {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #ffffff;
   }
 
   .rightControls {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 12px;
+    margin-left: 0;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .selectModePill {
+    padding: 0;
+    background: transparent;
+    border: none;
+    gap: 8px;
+  }
+
+  .selectModeToggle {
+    padding: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+
+  .selectLabel {
+    display: none;
+  }
+
+  .selectIcon {
+    font-size: 18px;
+  }
+
+  .selectModeExpanded {
+    gap: 6px;
+    flex-wrap: wrap;
   }
 
   .selectionActions {
@@ -519,52 +649,15 @@
     font-size: 0.82rem;
   }
 
-  .mobileActionsContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
- 
-  }
-
-  .mobileGroupControls {
-    display: flex;
-    width: 100%;
-    order: -1;
-  }
-
-  .mobileGroupControls .groupControlsInner {
-    width: 100%;
-  }
-
-  .mobileGroupControls .groupTabs {
-    width: 100%;
-    justify-content: center;
-    
-  }
-
-  .mobileGroupControls .groupTabButton {
-    padding: 8px 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 24px;
-  }
-
-  .mobileFilterRow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .mobileFilterWrap {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
   .addButton {
-    flex-shrink: 0;
-    padding: 8px 14px;
-    border-radius: 12px;
+    padding: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    justify-content: center;
+  }
+
+  .addLabel {
+    display: none;
   }
 }

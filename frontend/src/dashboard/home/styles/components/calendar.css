@@ -93,16 +93,6 @@
   }
 }
 
-@media (max-width: 480px) {
-  .budget-calendar-layout--stacked .budget-column .budget-overview-card {
-    max-height: 140px;
-  }
-  
-  .budget-calendar-layout--stacked .budget-column .view-gallery {
-    min-height: 130px;
-  }
-}
-
 @media (max-width: 330px) {
   .budget-calendar-layout--stacked .budget-column .view-gallery {
     min-height: 120px;

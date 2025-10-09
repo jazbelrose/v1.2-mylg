@@ -689,7 +689,15 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       className={className}
       role="img"
       aria-label={ariaLabel}
-      style={{ width: "100%", height: "100%", position: "relative", overflow: "visible" }}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        overflow: "visible",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
       onPointerLeave={handleContainerPointerLeave}
     >
       <ResponsiveContainer width="100%" height="100%">

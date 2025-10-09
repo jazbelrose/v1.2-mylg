@@ -203,6 +203,18 @@
   justify-content: center;
 }
 
+.budget-chart > .recharts-responsive-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.budget-chart .recharts-surface {
+  display: block;
+}
+
 .budget-legend {
   display: flex;
   flex-direction: column;

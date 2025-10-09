@@ -149,7 +149,6 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
 
   const handleGroupChange = (value: GroupByOption) => {
     onGroupChange(value);
-    setOpen(false);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -182,36 +181,6 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
           className={`${mobileStyles.filterPop} ${mobileStyles.filterPopStart} ${styles.mobileFilterPopover}`}
           role="menu"
         >
-          <div className={mobileStyles.filterSection}>
-            <div className={desktopStyles.filterField}>
-              <Search size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
-              <input
-                type="search"
-                className={desktopStyles.filterInput}
-                placeholder="Search budget items..."
-                value={filterQuery}
-                onChange={(event) => onFilterQueryChange(event.target.value)}
-                aria-label="Filter budget items"
-              />
-            </div>
-            <div className={`${desktopStyles.filterField} ${desktopStyles.filterSelect}`}>
-              <ArrowUpDown size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
-              <select
-                className={desktopStyles.filterSelectControl}
-                value={currentSortValue}
-                onChange={handleSortChange}
-                aria-label="Sort budget items"
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={14} aria-hidden className={desktopStyles.filterSelectChevron} />
-            </div>
-          </div>
-          <div className={styles.mobileFilterDivider} />
           <div className={styles.mobileFilterSection}>
             <span className={styles.mobileFilterLabel}>Group by</span>
             <div
@@ -236,6 +205,41 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
                   </button>
                 );
               })}
+            </div>
+          </div>
+          <div className={styles.mobileFilterDivider} />
+          <div className={styles.mobileFilterSection}>
+            <span className={styles.mobileFilterLabel}>Search</span>
+            <div className={desktopStyles.filterField}>
+              <Search size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
+              <input
+                type="search"
+                className={desktopStyles.filterInput}
+                placeholder="Search budget items..."
+                value={filterQuery}
+                onChange={(event) => onFilterQueryChange(event.target.value)}
+                aria-label="Filter budget items"
+              />
+            </div>
+          </div>
+          <div className={styles.mobileFilterDivider} />
+          <div className={styles.mobileFilterSection}>
+            <span className={styles.mobileFilterLabel}>Sort</span>
+            <div className={`${desktopStyles.filterField} ${desktopStyles.filterSelect}`}>
+              <ArrowUpDown size={16} aria-hidden className={desktopStyles.filterFieldIcon} />
+              <select
+                className={desktopStyles.filterSelectControl}
+                value={currentSortValue}
+                onChange={handleSortChange}
+                aria-label="Sort budget items"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} aria-hidden className={desktopStyles.filterSelectChevron} />
             </div>
           </div>
         </div>

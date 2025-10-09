@@ -487,11 +487,6 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                         </div>
                       </div>
 
-                      {record.paymentStatus && (
-                        <div className={styles.cardPayment}>
-                          {renderPaymentStatus(String(record.paymentStatus))}
-                        </div>
-                      )}
                       <div
                         className={styles.cardControls}
                         ref={(node) => registerMenuContainer(record.budgetItemId, node)}
@@ -583,6 +578,13 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                         )}
                       </div>
                     </div>
+                    {record.paymentStatus && (
+                      <div className={styles.cardFooter}>
+                        <div className={styles.cardPayment}>
+                          {renderPaymentStatus(String(record.paymentStatus))}
+                        </div>
+                      </div>
+                    )}
                   </article>
                 );
               })}

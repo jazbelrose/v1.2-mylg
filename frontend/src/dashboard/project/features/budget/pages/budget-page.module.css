@@ -598,13 +598,16 @@
   color: inherit;
 }
 
-.cardPayment {
+.cardFooter {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
   width: 100%;
   margin-top: auto;
-  order: 10;
+}
+
+.cardPayment {
+  display: inline-flex;
+  align-items: center;
 }
 
 .cardPagination {
@@ -661,7 +664,7 @@
     min-width: 88px;
   }
 
-  .cardPayment {
+  .cardFooter {
     width: 100%;
   }
 }
@@ -748,7 +751,7 @@
     text-align: left;
   }
 
-  .cardPayment {
+  .cardFooter {
     justify-content: flex-end;
     width: 100%;
   }
@@ -807,11 +810,9 @@
     justify-content: flex-start;
   }
 
-  .cardPayment {
-    align-self: flex-end;
-    width: auto;
-    margin-left: auto;
-    padding-right: 4px;
+  .cardFooter {
+    padding-right: 12px;
+    margin-right: -60px;
   }
 
   .cardControls {

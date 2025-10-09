@@ -350,9 +350,10 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       if (!diameter) return;
 
       const availableDiameter = Math.max(diameter - 24, 0);
-      const minimumSize = Math.min(60, availableDiameter);
+      const minimumSize = Math.min(54, availableDiameter);
+      const compactScale = diameter <= 340 ? 0.34 : diameter <= 420 ? 0.38 : 0.42;
       const desiredSize = Math.min(
-        Math.max(diameter * 0.42, minimumSize),
+        Math.max(diameter * compactScale, minimumSize),
         Math.min(availableDiameter, 240)
       );
 
@@ -383,13 +384,28 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     };
   }, []);
 
+  const isCompactLayout = useMemo(
+    () => centerButtonSize !== null && centerButtonSize <= 110,
+    [centerButtonSize]
+  );
+
   const centerButtonResponsiveStyles = useMemo(() => {
     if (centerButtonSize === null) {
       return centerButtonStyles;
     }
 
-    const padding = Math.round(Math.min(Math.max(centerButtonSize * 0.18, 12), 28));
-    const gap = Math.round(Math.min(Math.max(centerButtonSize * 0.06, 6), 20));
+    const padding = Math.round(
+      Math.min(
+        Math.max(centerButtonSize * (isCompactLayout ? 0.16 : 0.18), 12),
+        isCompactLayout ? 24 : 28
+      )
+    );
+    const gap = Math.round(
+      Math.min(
+        Math.max(centerButtonSize * (isCompactLayout ? 0.05 : 0.06), 6),
+        isCompactLayout ? 16 : 20
+      )
+    );
 
     return {
       ...centerButtonStyles,
@@ -397,19 +413,25 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
       padding: `${padding}px`,
       gap: `${gap}px`,
     } as React.CSSProperties;
-  }, [centerButtonSize]);
+  }, [centerButtonSize, isCompactLayout]);
 
   const centerValueResponsiveStyles = useMemo(() => {
     if (centerButtonSize === null) {
       return centerValueStyles;
     }
 
-    const fontSize = Math.min(Math.max(centerButtonSize * 0.22, 18), 34);
+    const minFont = isCompactLayout ? 14 : 18;
+    const maxFont = isCompactLayout ? 28 : 34;
+    const multiplier = isCompactLayout ? 0.19 : 0.22;
+    const fontSize = Math.min(Math.max(centerButtonSize * multiplier, minFont), maxFont);
     return {
       ...centerValueStyles,
       fontSize: `${fontSize}px`,
     } as React.CSSProperties;
-  }, [centerButtonSize]);
+  }, [centerButtonSize, isCompactLayout]);
+
+  const pieInnerRadius = isCompactLayout ? "48%" : "52%";
+  const pieOuterRadius = isCompactLayout ? "98%" : "90%";
 
   const percentageFormatter = useMemo(
     () =>
@@ -706,8 +728,8 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
             data={stableData}
             dataKey="value"
             nameKey="label"
-            innerRadius="52%"
-            outerRadius="90%"
+            innerRadius={pieInnerRadius}
+            outerRadius={pieOuterRadius}
             paddingAngle={1}
             cornerRadius={2}
             isAnimationActive

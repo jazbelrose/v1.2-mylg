@@ -704,9 +704,10 @@
   }
 
   .cardMetricRowSummary .cardMetric {
-    align-items: flex-end;
-    text-align: right;
-    justify-self: end;
+    align-items: flex-start;
+    text-align: left;
+    justify-self: stretch;
+    width: 100%;
   }
 
   .cardMetricRowSummary .cardMetric:nth-of-type(1) {

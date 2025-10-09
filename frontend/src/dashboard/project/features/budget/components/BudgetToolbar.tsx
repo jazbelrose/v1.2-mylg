@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { Pagination } from "antd";
 import { Tooltip as AntTooltip } from "antd";
-import { SelectOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClone, faTrash } from "@fortawesome/free-solid-svg-icons";
 import BudgetMobileFilter from "./BudgetMobileFilter";
@@ -169,7 +168,6 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
               aria-pressed={isSelectMode}
               disabled={!hasRows}
             >
-              <SelectOutlined aria-hidden className={styles.selectIcon} />
               <span className={styles.selectLabel}>Select</span>
             </button>
             {isSelectMode && (

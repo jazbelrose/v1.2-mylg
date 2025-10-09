@@ -276,6 +276,18 @@
   align-self: center;
 }
 
+.toolbarPagination :global(.ant-pagination) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(12, 12, 12, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f6f7f9;
+  box-shadow: 0 8px 20px rgba(5, 10, 28, 0.35);
+}
+
 .desktopPagination {
   display: inline-flex;
 }
@@ -284,10 +296,15 @@
   display: none;
 }
 
+.toolbarPagination :global(.ant-pagination-prev),
+.toolbarPagination :global(.ant-pagination-next) {
+  color: #f6f7f9 !important;
+}
+
 .toolbarPagination :global(.ant-select-selector) {
-  background: transparent !important;
-  border-color: #FA3356 !important;
-  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  color: #f6f7f9 !important;
 }
 
 .toolbarPagination :global(.ant-select-arrow) {
@@ -295,15 +312,30 @@
 }
 
 .toolbarPagination :global(.ant-pagination-item a) {
-  color: #ffffff !important;
+  color: #f6f7f9 !important;
+}
+
+.toolbarPagination :global(.ant-pagination-item) {
+  min-width: 28px;
+  height: 28px;
+  line-height: 26px;
+  border-radius: 999px;
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.toolbarPagination :global(.ant-pagination-item a),
+.toolbarPagination :global(.ant-pagination-item-ellipsis) {
+  font-size: 0.75rem;
 }
 
 .toolbarPagination :global(.ant-pagination-item-active) {
-  border-color: #FA3356 !important;
+  border-color: #fa3356 !important;
+  background: rgba(250, 51, 86, 0.16) !important;
 }
 
 .toolbarPagination :global(.ant-pagination-item-active a) {
-  color: #FA3356 !important;
+  color: #ffffff !important;
 }
 
 .mobileFilterRoot {
@@ -314,39 +346,34 @@
 .mobileFilterButton {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
-  padding: 8px 16px;
+  padding: 10px 18px;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
+  border-radius: 999px;
   background-color: transparent;
   color: #ffffff;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.01em;
+  text-align: center;
   transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-.mobileFilterButtonContent {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.mobileFilterIcon {
-  font-size: 16px;
-}
-
 .mobileFilterButtonText {
-  flex: 1 1 auto;
-  text-align: left;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
 }
 
-.mobileFilterChevron {
-  margin-left: 8px;
+.mobileFilterSummary {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
 }
 
 .mobileFilterActive {
@@ -429,6 +456,7 @@
   box-shadow: 0 8px 20px rgba(5, 10, 28, 0.28);
 }
 
+
 .mobileFilterButton:hover {
   background-color: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.25);
@@ -475,19 +503,15 @@
 .addIcon {
   display: grid;
   place-items: center;
-  width: 16px;
-  height: 16px;
-  font-size: 1rem;
+  width: 20px;
+  height: 20px;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1;
 }
 
 .addLabel {
   white-space: nowrap;
-}
-
-.selectIcon {
-  font-size: 16px;
 }
 
 .selectLabel {
@@ -544,37 +568,24 @@
   }
 
   .mobileFilterWrap {
-    flex: 0 0 auto;
+    flex: 1 1 100%;
     min-width: 0;
   }
 
   .mobileFilterRoot {
-    width: auto;
+    width: 100%;
   }
 
   .mobileFilterButton {
-    width: 38px;
-    height: 38px;
-    padding: 0;
-    border-radius: 50%;
-    justify-content: center;
-  }
-
-  .mobileFilterButtonContent {
-    justify-content: center;
-    width: auto;
+    width: 100%;
+    height: auto;
+    padding: 10px 16px;
   }
 
   .mobileFilterButtonText {
-    display: none;
-  }
-
-  .mobileFilterChevron {
-    display: none;
-  }
-
-  .mobileFilterIcon {
-    font-size: 18px;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .desktopPagination {
@@ -585,9 +596,23 @@
     display: inline-flex;
   }
 
+  .mobilePagination :global(.ant-pagination) {
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(12, 12, 12, 0.88);
+    color: #f6f7f9;
+    box-shadow: 0 6px 16px rgba(5, 10, 28, 0.3);
+  }
+
   .mobilePagination :global(.ant-pagination-simple-pager) {
     background: transparent;
-    color: #ffffff;
+    color: #f6f7f9;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
   }
 
   .mobilePagination :global(.ant-pagination-prev),
@@ -595,11 +620,30 @@
     color: #ffffff;
   }
 
+  .mobilePagination :global(.ant-pagination-prev .ant-pagination-item-link),
+  .mobilePagination :global(.ant-pagination-next .ant-pagination-item-link) {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+  }
+
+  .mobilePagination :global(.ant-pagination-simple .ant-pagination-slash),
+  .mobilePagination :global(.ant-pagination-simple-pager span) {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
   .mobilePagination :global(.ant-pagination-simple-pager input) {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    width: 42px;
+    height: 28px;
+    padding: 0 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
     color: #ffffff;
+    font-size: 0.78rem;
+    text-align: center;
   }
 
   .rightControls {
@@ -610,27 +654,23 @@
   }
 
   .selectModePill {
-    padding: 0;
-    background: transparent;
-    border: none;
-    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 6px;
   }
 
   .selectModeToggle {
     padding: 0;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
+    width: auto;
+    height: auto;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
   }
 
   .selectLabel {
-    display: none;
-  }
-
-  .selectIcon {
-    font-size: 18px;
+    display: inline-flex;
   }
 
   .selectModeExpanded {

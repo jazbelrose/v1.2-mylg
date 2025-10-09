@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, ChevronDown, Search } from "lucide-react";
-import { FilterOutlined } from "@ant-design/icons";
 
 import mobileStyles from "@/dashboard/home/components/projects-panel.module.css";
 import desktopStyles from "@/dashboard/home/components/ProjectsPanelDesktop.module.css";
@@ -120,7 +119,7 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
     return option ?? SORT_OPTIONS[0];
   }, [currentSortValue]);
 
-  const buttonLabel = useMemo(() => {
+  const buttonLabel = useMemo<string | null>(() => {
     if (filterQuery.trim().length > 0) {
       return filterQuery.trim();
     }
@@ -133,7 +132,7 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
       return currentGroupOption.label;
     }
 
-    return "Filter & Sort";
+    return null;
   }, [
     currentGroupOption.label,
     currentSortOption.label,
@@ -197,11 +196,12 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
         onClick={() => setOpen((prev) => !prev)}
         onKeyDown={handleKeyDown}
       >
-        <span className={styles.mobileFilterButtonContent}>
-          <FilterOutlined aria-hidden className={styles.mobileFilterIcon} />
-          <span className={styles.mobileFilterButtonText}>{buttonLabel}</span>
+        <span className={styles.mobileFilterButtonText}>
+          Filter
+          {buttonLabel && (
+            <span className={styles.mobileFilterSummary}>{buttonLabel}</span>
+          )}
         </span>
-        <ChevronDown size={14} aria-hidden className={styles.mobileFilterChevron} />
       </button>
       {open && (
         <div

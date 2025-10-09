@@ -321,10 +321,17 @@ const GhostCircusApparel = () => {
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
         <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
         <meta name="twitter:image" content={ogImage} />
+        <meta name="twitter:image:alt" content="Ghost Circus Apparel X by Eli James Collection" />
+        <link rel="preconnect" href="https://d1cazymewvlm0k.cloudfront.net" />
+        <link rel="dns-prefetch" href="https://d1cazymewvlm0k.cloudfront.net" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

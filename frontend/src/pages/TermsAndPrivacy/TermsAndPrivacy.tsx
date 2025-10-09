@@ -1,13 +1,37 @@
 import React from "react";
+import { Helmet } from "react-helmet-async";
 import "./terms-and-privacy.css";
 
 const TermsAndPrivacy: React.FC = () => {
   return (
-    <div className="terms-privacy-wrapper" aria-label="Terms and Privacy Page">
-      <div className="terms-privacy">
-        <h1>
-          Terms &amp; Conditions <br /> Privacy Policy
-        </h1>
+    <>
+      <Helmet>
+        <title>Terms & Conditions | Privacy Policy - *MYLG!*</title>
+        <meta
+          name="description"
+          content="Read the Terms & Conditions and Privacy Policy for *MYLG!*. Learn about our user agreements, data protection practices, and commitment to your privacy."
+        />
+        <link rel="canonical" href="https://mylg.studio/terms-and-privacy" />
+        <meta property="og:title" content="Terms & Conditions | Privacy Policy - *MYLG!*" />
+        <meta
+          property="og:description"
+          content="Read the Terms & Conditions and Privacy Policy for *MYLG!*. Learn about our user agreements, data protection practices, and commitment to your privacy."
+        />
+        <meta property="og:url" content="https://mylg.studio/terms-and-privacy" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Terms & Conditions | Privacy Policy - *MYLG!*" />
+        <meta
+          name="twitter:description"
+          content="Read the Terms & Conditions and Privacy Policy for *MYLG!*. Learn about our user agreements, data protection practices, and commitment to your privacy."
+        />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
+      <div className="terms-privacy-wrapper" aria-label="Terms and Privacy Page">
+        <div className="terms-privacy">
+          <h1>
+            Terms &amp; Conditions <br /> Privacy Policy
+          </h1>
 
         <section aria-labelledby="general-info">
           <h2 id="general-info">General Information</h2>
@@ -138,6 +162,7 @@ const TermsAndPrivacy: React.FC = () => {
         </section>
       </div>
     </div>
+    </>
   );
 };
 

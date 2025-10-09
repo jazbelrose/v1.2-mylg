@@ -270,6 +270,13 @@ const TheGoldPrincess = () => {
                     property="og:image"
                     content="https://d2qb21tb4meex0.cloudfront.net/35-The+Gold+PrIncess/01+The+Gold+Prncess.jpg"
                 />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={pageTitle} />
+                <meta name="twitter:description" content={pageDescription} />
+                <meta name="twitter:image" content="https://d2qb21tb4meex0.cloudfront.net/35-The+Gold+PrIncess/01+The+Gold+Prncess.jpg" />
+                <meta name="twitter:image:alt" content="The Gold Princess Photography" />
             </Helmet>
       <div className={`${opacityClass} ${isModalOpen ? 'no-scroll' : ''}`}>
         <div className="svg-overlay">

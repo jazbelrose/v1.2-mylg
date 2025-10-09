@@ -59,7 +59,6 @@ interface BudgetMobileFilterProps {
   onSortChange: (field: string | null, order: SortOrder) => void;
   groupBy: GroupByOption;
   onGroupChange: (group: GroupByOption) => void;
-  hideGrouping?: boolean; // Add prop to hide grouping on desktop
 }
 
 const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
@@ -70,7 +69,6 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
   onSortChange,
   groupBy,
   onGroupChange,
-  hideGrouping = false,
 }) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -106,10 +104,23 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
     return match ? match.value : "default";
   }, [sortField, sortOrder]);
 
-  const isGroupActive = !hideGrouping && groupBy !== "none";
+  const activeGroupOption = useMemo(
+    () => GROUP_OPTIONS.find((option) => option.value === groupBy),
+    [groupBy]
+  );
+
+  const isGroupActive = groupBy !== "none";
 
   const isActive =
     filterQuery.trim().length > 0 || currentSortValue !== "default" || isGroupActive;
+
+  const filterButtonLabel = isGroupActive
+    ? activeGroupOption?.label ?? "Filter"
+    : "Filter";
+
+  const filterButtonAriaLabel = isGroupActive
+    ? `Group budget items by ${activeGroupOption?.label ?? "selection"}`
+    : "Filter budget items";
 
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const nextValue = event.target.value as SortOptionValue;
@@ -140,12 +151,12 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
         }`}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Filter budget items"
+        aria-label={filterButtonAriaLabel}
         onClick={() => setOpen((prev) => !prev)}
         onKeyDown={handleKeyDown}
       >
         <span className={styles.mobileFilterButtonText}>
-          Filter
+          {filterButtonLabel}
         </span>
       </button>
       {open && (
@@ -153,37 +164,33 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
           className={`${mobileStyles.filterPop} ${mobileStyles.filterPopStart} ${styles.mobileFilterPopover}`}
           role="menu"
         >
-          {!hideGrouping && (
-            <>
-              <div className={styles.mobileFilterSection}>
-                <span className={styles.mobileFilterLabel}>Group by</span>
-                <div
-                  className={styles.mobileFilterGroup}
-                  role="group"
-                  aria-label="Group budget items"
-                >
-                  {GROUP_OPTIONS.map((option) => {
-                    const isActiveOption = option.value === groupBy;
-                    const className = isActiveOption
-                      ? `${styles.mobileFilterGroupButton} ${styles.mobileFilterGroupButtonActive}`
-                      : styles.mobileFilterGroupButton;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        className={className}
-                        onClick={() => handleGroupChange(option.value)}
-                        aria-pressed={isActiveOption}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className={styles.mobileFilterDivider} />
-            </>
-          )}
+          <div className={styles.mobileFilterSection}>
+            <span className={styles.mobileFilterLabel}>Group by</span>
+            <div
+              className={styles.mobileFilterGroup}
+              role="group"
+              aria-label="Group budget items"
+            >
+              {GROUP_OPTIONS.map((option) => {
+                const isActiveOption = option.value === groupBy;
+                const className = isActiveOption
+                  ? `${styles.mobileFilterGroupButton} ${styles.mobileFilterGroupButtonActive}`
+                  : styles.mobileFilterGroupButton;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={className}
+                    onClick={() => handleGroupChange(option.value)}
+                    aria-pressed={isActiveOption}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className={styles.mobileFilterDivider} />
           <div className={styles.mobileFilterSection}>
             <span className={styles.mobileFilterLabel}>Search</span>
             <div className={desktopStyles.filterField}>

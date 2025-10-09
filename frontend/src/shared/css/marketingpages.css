@@ -686,6 +686,9 @@ a:active .works-discipline-4.blog-item {
   .rendering-header {
     justify-content: flex-start;
   }
+  .rendering-header.ll-studios {
+    padding-top: 50px;
+  }
   .rendering-header h2 {
     text-align: left;
     padding: 0;
@@ -693,6 +696,10 @@ a:active .works-discipline-4.blog-item {
   }
   .rendering-subheader {
     text-align: left;
+    margin-top: 20px;
+  }
+  .rendering-top-row {
+    max-height: none;
   }
 }
 

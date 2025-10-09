@@ -349,9 +349,11 @@
 @media (max-width: 575.9px) {
 
   .menu .menu-item>a {
-    line-height: 0.5;
+    line-height: 0.75;
+    
   }
 
+ 
   .menu-container {
     padding-top: 25px;
     margin-left: 5%;

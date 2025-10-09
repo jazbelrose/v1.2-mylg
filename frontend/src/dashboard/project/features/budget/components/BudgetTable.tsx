@@ -576,15 +576,16 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                             </button>
                           </div>
                         )}
+                        {record.paymentStatus && (
+                          <div
+                            className={styles.cardPayment}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {renderPaymentStatus(String(record.paymentStatus))}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {record.paymentStatus && (
-                      <div className={styles.cardFooter}>
-                        <div className={styles.cardPayment}>
-                          {renderPaymentStatus(String(record.paymentStatus))}
-                        </div>
-                      </div>
-                    )}
                   </article>
                 );
               })}

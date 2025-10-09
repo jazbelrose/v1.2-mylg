@@ -79,6 +79,7 @@ export const Home: React.FC = () => {
           name="keywords"
           content="creative tools, design presentation, project collaboration, 3D renders, MYLG, project management, creative support, design assistance, creative platform, rendering services"
         />
+        <link rel="canonical" href="https://mylg.studio" />
         <meta property="og:title" content="*MYLG!* - Creative to enhance your vision" />
         <meta
           property="og:description"
@@ -88,7 +89,21 @@ export const Home: React.FC = () => {
           property="og:image"
           content="https://d2qb21tb4meex0.cloudfront.net/Iphone+14+mockup+sign+up.png"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content="https://mylg.studio" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="*MYLG!* - Creative to enhance your vision" />
+        <meta
+          name="twitter:description"
+          content="Elevate your design projects with MYLG's all-in-one platform for professional rendering, presentation, and project execution."
+        />
+        <meta
+          name="twitter:image"
+          content="https://d2qb21tb4meex0.cloudfront.net/Iphone+14+mockup+sign+up.png"
+        />
+        <meta name="twitter:image:alt" content="MYLG Platform Mockup" />
       </Helmet>
 
       <div className={opacityClass}>

@@ -246,6 +246,7 @@ export const Works: React.FC<WorksProps> = ({ maxPosts = 45 }) => {
           content="Explore our portfolio of purposeful branding and immersive digital designs. See how we bring visions to life with precision and creativity."
         />
         <meta name="keywords" content="branding, digital design, portfolio, creative agency, MYLG" />
+        <link rel="canonical" href="https://mylg.studio/works" />
         <meta property="og:title" content="Our Work - *MYLG!*" />
         <meta
           property="og:description"
@@ -255,6 +256,8 @@ export const Works: React.FC<WorksProps> = ({ maxPosts = 45 }) => {
           property="og:image"
           content="https://d2qb21tb4meex0.cloudfront.net/Iphone+14+mockup+sign+up.png"
         />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content="https://mylg.studio/works" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -267,7 +270,7 @@ export const Works: React.FC<WorksProps> = ({ maxPosts = 45 }) => {
           name="twitter:image"
           content="https://d2qb21tb4meex0.cloudfront.net/Iphone+14+mockup+sign+up.png"
         />
-        <link rel="icon" href="/path-to-favicon.png" type="image/png" />
+        <meta name="twitter:image:alt" content="MYLG Work Portfolio" />
       </Helmet>
 
       <div className={`works-container ${opacityClass}`}>

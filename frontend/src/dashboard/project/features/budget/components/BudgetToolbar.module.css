@@ -276,12 +276,27 @@
   align-self: center;
 }
 
+.toolbarPagination :global(.ant-pagination) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .desktopPagination {
   display: inline-flex;
 }
 
 .mobilePagination {
   display: none;
+}
+
+.toolbarPagination :global(.ant-pagination-prev),
+.toolbarPagination :global(.ant-pagination-next) {
+  color: #ffffff !important;
 }
 
 .toolbarPagination :global(.ant-select-selector) {
@@ -296,6 +311,18 @@
 
 .toolbarPagination :global(.ant-pagination-item a) {
   color: #ffffff !important;
+}
+
+.toolbarPagination :global(.ant-pagination-item) {
+  min-width: 28px;
+  height: 28px;
+  line-height: 26px;
+  border-radius: 999px;
+}
+
+.toolbarPagination :global(.ant-pagination-item a),
+.toolbarPagination :global(.ant-pagination-item-ellipsis) {
+  font-size: 0.75rem;
 }
 
 .toolbarPagination :global(.ant-pagination-item-active) {
@@ -475,9 +502,9 @@
 .addIcon {
   display: grid;
   place-items: center;
-  width: 16px;
-  height: 16px;
-  font-size: 1rem;
+  width: 20px;
+  height: 20px;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1;
 }
@@ -585,9 +612,21 @@
     display: inline-flex;
   }
 
+  .mobilePagination :global(.ant-pagination) {
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
   .mobilePagination :global(.ant-pagination-simple-pager) {
     background: transparent;
     color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
   }
 
   .mobilePagination :global(.ant-pagination-prev),
@@ -595,11 +634,30 @@
     color: #ffffff;
   }
 
+  .mobilePagination :global(.ant-pagination-prev .ant-pagination-item-link),
+  .mobilePagination :global(.ant-pagination-next .ant-pagination-item-link) {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+  }
+
+  .mobilePagination :global(.ant-pagination-simple .ant-pagination-slash),
+  .mobilePagination :global(.ant-pagination-simple-pager span) {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
   .mobilePagination :global(.ant-pagination-simple-pager input) {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    width: 42px;
+    height: 28px;
+    padding: 0 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
     color: #ffffff;
+    font-size: 0.78rem;
+    text-align: center;
   }
 
   .rightControls {

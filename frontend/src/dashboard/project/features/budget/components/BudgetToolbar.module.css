@@ -258,9 +258,45 @@
 .mobileFilterWrap {
   display: inline-flex;
   align-items: center;
-  
+
   min-width: 220px;
   flex: 0 0 auto;
+}
+
+.filterControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 32px;
+}
+
+.toolbarPagination {
+  margin: 0 !important;
+  padding: 4px 0;
+  align-self: center;
+}
+
+.toolbarPagination :global(.ant-select-selector) {
+  background: transparent !important;
+  border-color: #FA3356 !important;
+  color: #ffffff !important;
+}
+
+.toolbarPagination :global(.ant-select-arrow) {
+  color: #ffffff !important;
+}
+
+.toolbarPagination :global(.ant-pagination-item a) {
+  color: #ffffff !important;
+}
+
+.toolbarPagination :global(.ant-pagination-item-active) {
+  border-color: #FA3356 !important;
+}
+
+.toolbarPagination :global(.ant-pagination-item-active a) {
+  color: #FA3356 !important;
 }
 
 .mobileFilterRoot {
@@ -390,6 +426,13 @@
   .toolbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .filterControls {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   .rightControls {

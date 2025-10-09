@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Pagination } from "antd";
 import { Tooltip as AntTooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClone, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -35,6 +36,9 @@ interface BudgetToolbarProps {
   onClearSelection: () => void;
   isSelectMode: boolean;
   onToggleSelectMode: (next: boolean) => void;
+  currentPage: number;
+  pageSize: number;
+  onPaginationChange: (page: number, pageSize: number) => void;
 }
 
 const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
@@ -56,6 +60,9 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   onClearSelection,
   isSelectMode,
   onToggleSelectMode,
+  currentPage,
+  pageSize,
+  onPaginationChange,
 }) => {
   const hasRows = totalCount > 0;
   const selectionLabel = useMemo(
@@ -110,14 +117,29 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
           })}
         </div>
       </div>
-      <div className={styles.mobileFilterWrap}>
-        <BudgetMobileFilter
-          filterQuery={filterQuery}
-          onFilterQueryChange={onFilterQueryChange}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          onSortChange={onSortChange}
-        />
+      <div className={styles.filterControls}>
+        <div className={styles.mobileFilterWrap}>
+          <BudgetMobileFilter
+            filterQuery={filterQuery}
+            onFilterQueryChange={onFilterQueryChange}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            onSortChange={onSortChange}
+          />
+        </div>
+        {hasRows && (
+          <Pagination
+            className={styles.toolbarPagination}
+            current={currentPage}
+            pageSize={pageSize}
+            total={totalCount}
+            showSizeChanger
+            pageSizeOptions={["10", "20", "50", "100"]}
+            size="small"
+            onChange={onPaginationChange}
+            onShowSizeChange={onPaginationChange}
+          />
+        )}
       </div>
       <div className={styles.rightControls}>
         {hasRows && (

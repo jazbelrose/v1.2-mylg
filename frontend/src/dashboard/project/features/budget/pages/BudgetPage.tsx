@@ -712,6 +712,14 @@ const BudgetPageContent = () => {
                                           onToggleSelectMode={(next) =>
                                             stateManager.setIsSelectMode(next)
                                           }
+                                          currentPage={stateManager.currentPage}
+                                          pageSize={stateManager.pageSize}
+                                          onPaginationChange={(page, size) => {
+                                            stateManager.setCurrentPage(page);
+                                            if (size !== stateManager.pageSize) {
+                                              stateManager.setPageSize(size);
+                                            }
+                                          }}
                                         />
                                         <BudgetItemsTable
                                           dataSource={groupedData}
@@ -728,7 +736,6 @@ const BudgetPageContent = () => {
                                           pageSize={stateManager.pageSize}
                                           currentPage={stateManager.currentPage}
                                           setCurrentPage={stateManager.setCurrentPage}
-                                          setPageSize={stateManager.setPageSize}
                                           isSelectMode={stateManager.isSelectMode}
                                         />
                                       </>

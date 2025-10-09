@@ -615,33 +615,6 @@
   align-items: center;
 }
 
-.cardPagination {
-  align-self: center;
-  margin-top: 12px;
-}
-
-.cardPagination :global(.ant-select-selector) {
-  background: transparent !important;
-  border-color: #FA3356 !important;
-  color: #ffffff !important;
-}
-
-.cardPagination :global(.ant-select-arrow) {
-  color: #ffffff !important;
-}
-
-.cardPagination :global(.ant-pagination-item a) {
-  color: #ffffff !important;
-}
-
-.cardPagination :global(.ant-pagination-item-active) {
-  border-color: #FA3356 !important;
-}
-
-.cardPagination :global(.ant-pagination-item-active a) {
-  color: #FA3356 !important;
-}
-
 @media (max-width: 1200px) {
   .cardList {
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));

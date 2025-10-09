@@ -251,6 +251,10 @@
   display: contents;
 }
 
+.mobilePaginationWrap {
+  display: contents;
+}
+
 .mobileGroupControls {
   display: none;
 }
@@ -260,7 +264,7 @@
   align-items: center;
   width: auto;
   min-width: 120px;
-  max-width: 0px;
+  max-width: clamp(160px, 24vw, 240px);
   flex: 0 0 auto;
 }
 
@@ -281,13 +285,13 @@
 .toolbarPagination :global(.ant-pagination) {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(12, 12, 12, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  background: rgba(17, 17, 19, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: #f6f7f9;
-  box-shadow: 0 8px 20px rgba(5, 10, 28, 0.35);
+  box-shadow: 0 6px 18px rgba(5, 10, 28, 0.26);
 }
 
 .desktopPagination {
@@ -318,12 +322,12 @@
 }
 
 .toolbarPagination :global(.ant-pagination-item) {
-  min-width: 28px;
-  height: 28px;
-  line-height: 26px;
-  border-radius: 999px;
+  min-width: 26px;
+  height: 26px;
+  line-height: 24px;
+  border-radius: 12px;
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .toolbarPagination :global(.ant-pagination-item a),
@@ -569,14 +573,14 @@
 @media (max-width: 768px) {
   .toolbar {
     padding: 12px 14px;
-    gap: 8px;
-    flex-wrap: nowrap;
-    align-items: center;
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .filterControls {
     flex: 1 1 auto;
-    width: auto;
+    width: 100%;
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
@@ -608,32 +612,22 @@
   }
 
   .mobilePagination {
-    display: none;
+    display: flex;
   }
 
-  .rightControls {
-    margin-left: 0;
-    flex: 0 0 auto;
-    justify-content: flex-end;
-    gap: 8px;
-    align-items: center;
+  .mobilePaginationWrap {
+    display: flex;
+    width: 100%;
+    justify-content: center;
   }
 
-  .rightControls .mobilePagination {
-    display: inline-flex;
+  .mobilePaginationWrap :global(.ant-pagination) {
+    width: 100%;
+    justify-content: center;
+    padding: 4px 10px;
   }
 
-  .rightControls .mobilePagination :global(.ant-pagination) {
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(12, 12, 12, 0.88);
-    color: #f6f7f9;
-    box-shadow: 0 6px 16px rgba(5, 10, 28, 0.3);
-  }
-
-  .rightControls .mobilePagination :global(.ant-pagination-simple-pager) {
+  .mobilePaginationWrap :global(.ant-pagination-simple-pager) {
     background: transparent;
     color: #f6f7f9;
     display: inline-flex;
@@ -642,13 +636,13 @@
     font-size: 0.78rem;
   }
 
-  .rightControls .mobilePagination :global(.ant-pagination-prev),
-  .rightControls .mobilePagination :global(.ant-pagination-next) {
+  .mobilePaginationWrap :global(.ant-pagination-prev),
+  .mobilePaginationWrap :global(.ant-pagination-next) {
     color: #ffffff;
   }
 
-  .rightControls .mobilePagination :global(.ant-pagination-prev .ant-pagination-item-link),
-  .rightControls .mobilePagination :global(.ant-pagination-next .ant-pagination-item-link) {
+  .mobilePaginationWrap :global(.ant-pagination-prev .ant-pagination-item-link),
+  .mobilePaginationWrap :global(.ant-pagination-next .ant-pagination-item-link) {
     width: 28px;
     height: 28px;
     border-radius: 999px;
@@ -656,16 +650,16 @@
     place-items: center;
   }
 
-  .rightControls .mobilePagination :global(.ant-pagination-simple .ant-pagination-slash),
-  .rightControls .mobilePagination :global(.ant-pagination-simple-pager span) {
-    color: rgba(255, 255, 255, 0.85);
+  .mobilePaginationWrap :global(.ant-pagination-simple .ant-pagination-slash),
+  .mobilePaginationWrap :global(.ant-pagination-simple-pager span) {
+    color: rgba(255, 255, 255, 0.82);
   }
 
-  .rightControls .mobilePagination :global(.ant-pagination-simple-pager input) {
-    width: 42px;
+  .mobilePaginationWrap :global(.ant-pagination-simple-pager input) {
+    width: 44px;
     height: 28px;
     padding: 0 6px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.24);
     color: #ffffff;
@@ -675,16 +669,19 @@
 
   .rightControls {
     margin-left: 0;
-    flex: 0 0 auto;
-    justify-content: flex-end;
-    gap: 8px;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
   }
 
   .selectModePill {
     padding: 6px 12px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    gap: 6px;
+    gap: 8px;
+    justify-content: space-between;
+    width: 100%;
   }
 
   .selectModeToggle {
@@ -703,6 +700,7 @@
   .selectModeExpanded {
     gap: 6px;
     flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .selectionActions {
@@ -722,6 +720,7 @@
     height: 38px;
     border-radius: 50%;
     justify-content: center;
+    align-self: flex-end;
   }
 
   .addLabel {

@@ -165,15 +165,17 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
       <div className={styles.rightControls}>
         {hasRows && (
           <>
-            <Pagination
-              className={`${styles.toolbarPagination} ${styles.mobilePagination}`}
-              current={currentPage}
-              pageSize={pageSize}
-              total={totalCount}
-              size="small"
-              simple
-              onChange={onPaginationChange}
-            />
+            <div className={styles.mobilePaginationWrap}>
+              <Pagination
+                className={`${styles.toolbarPagination} ${styles.mobilePagination}`}
+                current={currentPage}
+                pageSize={pageSize}
+                total={totalCount}
+                size="small"
+                simple
+                onChange={onPaginationChange}
+              />
+            </div>
             <div
               className={`${styles.selectModePill}${
                 isSelectMode ? ` ${styles.selectModePillActive}` : ""

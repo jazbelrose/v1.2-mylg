@@ -185,11 +185,12 @@
   margin-right: 0;
   gap: 12px;
   min-width: 0;
+  padding: 18px;
 }
 
 .budget-chart {
   width: 100%;
-  max-width: 280px;
+  max-width: 240px;
   aspect-ratio: 1 / 1;
   position: relative;
   margin-inline: auto;
@@ -262,7 +263,7 @@
 
   .budget-chart {
     margin-inline: auto;
-    max-width: 240px;
+    max-width: 220px;
   }
 }
 

@@ -98,6 +98,9 @@
         /* Reduce the bottom padding */
     }
 
+    .works-container {
+        padding-top: 0px;
+    }
 
 
     .works-header h2 {

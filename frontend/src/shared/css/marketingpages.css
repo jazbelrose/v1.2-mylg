@@ -689,6 +689,7 @@ a:active .works-discipline-4.blog-item {
   .rendering-header h2 {
     text-align: left;
     padding: 0;
+    margin: 0;
   }
   .rendering-subheader {
     text-align: left;

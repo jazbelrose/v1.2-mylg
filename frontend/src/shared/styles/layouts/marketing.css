@@ -25,14 +25,14 @@ body.no-scroll {
 }
 
 .rendering-heading {
-  padding-top: var(--space-5);
+  padding-top: 0;
 }
 
 .rendering-top-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: var(--space-5) 0;
+  
 }
 
 .rendering-header {
@@ -59,7 +59,7 @@ body.no-scroll {
 
 .rendering-subheader {
   text-align: center;
-  margin: var(--space-8) 0;
+  
 }
 
 .rendering-subheader h3 {
@@ -89,6 +89,21 @@ body.no-scroll {
 
 .rendering-row-svg {
   margin: 3px 0;
+}
+
+@media (max-width: 768px) {
+  .rendering-header,
+  .rendering-subheader {
+    text-align: left;
+  }
+  .rendering-header h2 {
+    text-align: left;
+    padding: 0;
+  }
+  .rendering-heading {
+    padding-top: 0;
+    padding-bottom: 10px;
+  }
 }
 
 

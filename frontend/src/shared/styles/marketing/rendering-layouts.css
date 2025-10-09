@@ -18,7 +18,7 @@
 }
 
 .rendering-header h2 {
- 
+  margin: 0;
   line-height: 0.8;
   font-size: min(8rem, 14vw);
   white-space: nowrap;

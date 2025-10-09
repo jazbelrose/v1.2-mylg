@@ -641,7 +641,7 @@ const AcademyOfPop = () => {
 
 
                     <div className="rendering-top-row">
-                        <div className="rendering-header ll-studios">
+                        <div className="rendering-header ll-studios" style={{ paddingTop: '20px' }}>
                             <h2>Interior  <br />
                                 Design</h2>
                         </div>

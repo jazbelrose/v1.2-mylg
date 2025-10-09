@@ -577,7 +577,7 @@
     flex-direction: row; /* Keep horizontal layout */
     align-items: center;
     flex-wrap: nowrap; /* Prevent wrapping */
-    overflow: hidden; /* Prevent overflow */
+    overflow: visible; /* Allow filter popover to escape the toolbar */
   }
 
   .filterControls {

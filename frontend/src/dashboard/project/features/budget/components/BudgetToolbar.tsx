@@ -120,15 +120,6 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
         />
       </div>
       <div className={styles.rightControls}>
-        <div className={styles.mobileFilterWrap}>
-          <BudgetMobileFilter
-            filterQuery={filterQuery}
-            onFilterQueryChange={onFilterQueryChange}
-            sortField={sortField}
-            sortOrder={sortOrder}
-            onSortChange={onSortChange}
-          />
-        </div>
         {hasRows && (
           <div
             className={`${styles.selectModePill}${

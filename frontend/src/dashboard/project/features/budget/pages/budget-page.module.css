@@ -114,6 +114,16 @@
   display: inline-block;
 }
 
+.costWithStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.costWithStatus .statusDot {
+  flex-shrink: 0;
+}
+
 .elementKeyCell {
   display: inline-flex;
   align-items: center;

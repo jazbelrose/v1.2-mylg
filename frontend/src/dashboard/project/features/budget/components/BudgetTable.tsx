@@ -19,6 +19,19 @@ const MOBILE_BREAKPOINT = 768;
 
 const PAGINATION_ESTIMATE = 96;
 
+const EMPTY_PLACEHOLDER = "\u2014";
+
+type NormalizedPaymentStatus = "PAID" | "PARTIAL" | "UNPAID";
+
+const normalizePaymentStatus = (status: unknown): NormalizedPaymentStatus => {
+  if (typeof status !== "string") return "UNPAID";
+  const cleaned = status.replace(/[^A-Z]+$/, "").trim().toUpperCase();
+  if (!cleaned) return "UNPAID";
+  if (cleaned.includes("UNPAID")) return "UNPAID";
+  if (cleaned.includes("PART")) return "PARTIAL";
+  if (cleaned.includes("PAID")) return "PAID";
+  return "UNPAID";
+};
 type BudgetItem = Record<string, unknown> & {
   budgetItemId: string;
   key: string;
@@ -235,14 +248,35 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
           if (typeof value === "number") {
             return `${Math.round(value * 100)}%`;
           }
-          return value ? String(value) : "—";
+          return value ? String(value) : EMPTY_PLACEHOLDER;
         }
 
         if (costKeys.includes(metricKey)) {
-          if (!isDefined(value)) return "—";
           if (metricKey === "itemFinalCost") {
-            return formatUSD(Number(value));
+            const amount = isDefined(value) ? formatUSD(Number(value)) : EMPTY_PLACEHOLDER;
+            const status = normalizePaymentStatus(record.paymentStatus);
+            const statusLabel =
+              status === "PAID" ? "Paid" : status === "PARTIAL" ? "Partially paid" : "Unpaid";
+            const statusClass =
+              status === "PAID"
+                ? styles.paid
+                : status === "PARTIAL"
+                ? styles.partial
+                : styles.unpaid;
+
+            return (
+              <span className={styles.costWithStatus}>
+                {amount}
+                <span
+                  className={`${styles.statusDot} ${statusClass}`}
+                  role="img"
+                  aria-label={`${statusLabel} status`}
+                />
+              </span>
+            );
           }
+
+          if (!isDefined(value)) return EMPTY_PLACEHOLDER;
           const activeKey = getActiveCostKey(record);
           const formatted = formatUSD(Number(value));
           return activeKey === metricKey
@@ -253,7 +287,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
         }
 
         if (value === undefined || value === null || value === "") {
-          return "—";
+          return EMPTY_PLACEHOLDER;
         }
 
         return String(value);
@@ -261,29 +295,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       [costKeys, getActiveCostKey, isDefined]
     );
 
-    const renderPaymentStatus = useCallback(
-      (status: unknown) => {
-        if (typeof status !== "string") return null;
-        const cleaned = status.replace(/[·.]+$/, "").trim();
-        if (!cleaned) return null;
-        const normalizedStatus = cleaned.toUpperCase();
-        const colorClass =
-          normalizedStatus === "PAID"
-            ? styles.paid
-            : normalizedStatus === "PARTIAL"
-            ? styles.partial
-            : styles.unpaid;
-        return (
-          <span className={styles.paymentStatus}>
-            Paid
-            <span className={`${styles.statusDot} ${colorClass}`} />
-          </span>
-        );
-      },
-      []
-    );
-
-    const listStyle = useMemo(() => {
+        const listStyle = useMemo(() => {
       if (!tableHeight) return undefined;
       const minHeight = Math.max(0, tableHeight - PAGINATION_ESTIMATE);
       return { minHeight };
@@ -458,12 +470,6 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
                           ))}
                         </div>
                       </div>
-
-                      {record.paymentStatus && (
-                        <div className={styles.cardPayment}>
-                          {renderPaymentStatus(String(record.paymentStatus))}
-                        </div>
-                      )}
                       <div
                         className={styles.cardControls}
                         ref={(node) => registerMenuContainer(record.budgetItemId, node)}

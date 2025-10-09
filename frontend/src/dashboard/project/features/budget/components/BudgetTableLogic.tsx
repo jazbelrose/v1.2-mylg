@@ -31,6 +31,20 @@ interface BudgetTableConfig {
   mainColumnsOrder: string[];
 }
 
+const EMPTY_PLACEHOLDER = "\u2014";
+
+type NormalizedPaymentStatus = "PAID" | "PARTIAL" | "UNPAID";
+
+const normalizePaymentStatus = (status: unknown): NormalizedPaymentStatus => {
+  if (typeof status !== "string") return "UNPAID";
+  const cleaned = status.replace(/[�.]+$/, "").trim().toUpperCase();
+  if (!cleaned) return "UNPAID";
+  if (cleaned.includes("UNPAID")) return "UNPAID";
+  if (cleaned.includes("PART")) return "PARTIAL";
+  if (cleaned.includes("PAID")) return "PAID";
+  return "UNPAID";
+};
+
 const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
   groupBy,
   sortField,
@@ -106,7 +120,6 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
     "itemReconciledCost",
     "itemMarkUp",
     "itemFinalCost",
-    "paymentStatus",
   ], []);
 
   const mainColumnsOrder = useMemo(
@@ -130,33 +143,9 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
     itemReconciledCost: "Reconciled Cost",
     itemMarkUp: "Markup",
     itemFinalCost: "Final Cost",
-    paymentStatus: "Payment Status",
   }), []);
 
-  const renderPaymentStatus = useCallback((status: string) => {
-    const cleaned = (status || "")
-      .replace(/[·.]+$/, "")
-      .trim();
-    const normalizedStatus = cleaned.toUpperCase();
-    const colorClass =
-      normalizedStatus === "PAID"
-        ? styles.paid
-        : normalizedStatus === "PARTIAL"
-        ? styles.partial
-        : styles.unpaid;
-    const display =
-      normalizedStatus === "PAID" || normalizedStatus === "PARTIAL"
-        ? cleaned
-        : "UNPAID";
-    return (
-      <span className={styles.paymentStatus}>
-        {display}
-        <span className={`${styles.statusDot} ${colorClass}`} />
-      </span>
-    );
-  }, []);
-
-  const tableColumns = useMemo(() => {
+    const tableColumns = useMemo(() => {
     const hidden = [
       "projectId",
       "budgetItemId",
@@ -165,6 +154,7 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
       "startDate",
       "endDate",
       "itemCost",
+      "paymentStatus",
     ];
     const safeBudgetItems = filteredItems.filter(Boolean);
     const available = safeBudgetItems.length
@@ -241,18 +231,37 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
               </span>
             );
           }
-          if (key === "paymentStatus") {
-            base.align = "right";
-            base.render = renderPaymentStatus;
-          } else if (key === "itemMarkUp") {
+          if (key === "itemMarkUp") {
             base.render = (value: unknown) =>
               typeof value === "number" ? `${Math.round(value * 100)}%` : String(value);
           } else if (costKeys.includes(key)) {
             base.render = (value: unknown, record: TableData) => {
-              if (!isDefined(value)) return "";
               if (key === "itemFinalCost") {
-                return <span>{formatUSD(Number(value))}</span>;
+                const hasValue = isDefined(value);
+                const amount = hasValue ? formatUSD(Number(value)) : EMPTY_PLACEHOLDER;
+                const status = normalizePaymentStatus(record.paymentStatus);
+                const statusLabel =
+                  status === "PAID" ? "Paid" : status === "PARTIAL" ? "Partially paid" : "Unpaid";
+                const statusClass =
+                  status === "PAID"
+                    ? styles.paid
+                    : status === "PARTIAL"
+                    ? styles.partial
+                    : styles.unpaid;
+
+                return (
+                  <span className={styles.costWithStatus}>
+                    {amount}
+                    <span
+                      className={`${styles.statusDot} ${statusClass}`}
+                      role="img"
+                      aria-label={`${statusLabel} status`}
+                    />
+                  </span>
+                );
               }
+
+              if (!isDefined(value)) return "";
               const activeKey = getActiveCostKey(record);
               const className = activeKey === key ? undefined : styles.dimmed;
               return <span className={className}>{formatUSD(Number(value))}</span>;
@@ -352,7 +361,6 @@ const BudgetTableLogic: React.FC<BudgetTableLogicProps> = ({
     selectedRowKeys,
     eventsByLineItem,
     setSelectedRowKeys,
-    renderPaymentStatus,
     isDefined,
     getActiveCostKey,
     openEventModal,

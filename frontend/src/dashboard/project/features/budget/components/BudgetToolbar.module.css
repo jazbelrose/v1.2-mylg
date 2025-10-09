@@ -258,7 +258,7 @@
 .mobileFilterWrap {
   display: inline-flex;
   align-items: center;
-  min-width: 360px;
+  min-width: 200px;
   flex: 0 0 auto;
 }
 
@@ -348,7 +348,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 10px 18px;
+  padding: 8px 16px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 999px;
   background-color: transparent;
@@ -541,7 +541,7 @@
   }
 
   .mobileFilterWrap {
-    min-width: 320px;
+    min-width: 250px;
   }
 }
 

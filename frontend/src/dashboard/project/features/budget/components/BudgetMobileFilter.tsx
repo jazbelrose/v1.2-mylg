@@ -59,6 +59,7 @@ interface BudgetMobileFilterProps {
   onSortChange: (field: string | null, order: SortOrder) => void;
   groupBy: GroupByOption;
   onGroupChange: (group: GroupByOption) => void;
+  hideGrouping?: boolean; // Add prop to hide grouping on desktop
 }
 
 const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
@@ -69,6 +70,7 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
   onSortChange,
   groupBy,
   onGroupChange,
+  hideGrouping = false,
 }) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -109,7 +111,7 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
     return option ?? GROUP_OPTIONS[0];
   }, [groupBy]);
 
-  const isGroupActive = groupBy !== "none";
+  const isGroupActive = !hideGrouping && groupBy !== "none";
 
   const isActive =
     filterQuery.trim().length > 0 || currentSortValue !== "default" || isGroupActive;
@@ -197,8 +199,8 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
         onKeyDown={handleKeyDown}
       >
         <span className={styles.mobileFilterButtonText}>
-          Filter
-          {buttonLabel && (
+          {hideGrouping && buttonLabel ? buttonLabel : "Filter"}
+          {!hideGrouping && buttonLabel && (
             <span className={styles.mobileFilterSummary}>{buttonLabel}</span>
           )}
         </span>
@@ -208,33 +210,37 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
           className={`${mobileStyles.filterPop} ${mobileStyles.filterPopStart} ${styles.mobileFilterPopover}`}
           role="menu"
         >
-          <div className={styles.mobileFilterSection}>
-            <span className={styles.mobileFilterLabel}>Group by</span>
-            <div
-              className={styles.mobileFilterGroup}
-              role="group"
-              aria-label="Group budget items"
-            >
-              {GROUP_OPTIONS.map((option) => {
-                const isActiveOption = option.value === groupBy;
-                const className = isActiveOption
-                  ? `${styles.mobileFilterGroupButton} ${styles.mobileFilterGroupButtonActive}`
-                  : styles.mobileFilterGroupButton;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={className}
-                    onClick={() => handleGroupChange(option.value)}
-                    aria-pressed={isActiveOption}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div className={styles.mobileFilterDivider} />
+          {!hideGrouping && (
+            <>
+              <div className={styles.mobileFilterSection}>
+                <span className={styles.mobileFilterLabel}>Group by</span>
+                <div
+                  className={styles.mobileFilterGroup}
+                  role="group"
+                  aria-label="Group budget items"
+                >
+                  {GROUP_OPTIONS.map((option) => {
+                    const isActiveOption = option.value === groupBy;
+                    const className = isActiveOption
+                      ? `${styles.mobileFilterGroupButton} ${styles.mobileFilterGroupButtonActive}`
+                      : styles.mobileFilterGroupButton;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={className}
+                        onClick={() => handleGroupChange(option.value)}
+                        aria-pressed={isActiveOption}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className={styles.mobileFilterDivider} />
+            </>
+          )}
           <div className={styles.mobileFilterSection}>
             <span className={styles.mobileFilterLabel}>Search</span>
             <div className={desktopStyles.filterField}>

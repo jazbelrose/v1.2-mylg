@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Pagination } from "antd";
 import { Tooltip as AntTooltip } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -16,6 +16,23 @@ const GROUP_OPTIONS: { label: string; value: GroupByOption }[] = [
   { label: "Invoice Group", value: "invoiceGroup" },
   { label: "Category", value: "category" },
 ];
+
+// Hook to detect if we're on mobile/desktop
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth <= 900); // Same breakpoint as CSS
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  return isMobile;
+};
 
 interface BudgetToolbarProps {
   selectedRowKeys: string[];
@@ -64,6 +81,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
   pageSize,
   onPaginationChange,
 }) => {
+  const isMobile = useIsMobile();
   const hasRows = totalCount > 0;
   const selectionLabel = useMemo(
     () => `${selectionCount}/${totalCount}`,
@@ -127,6 +145,7 @@ const BudgetToolbar: React.FC<BudgetToolbarProps> = ({
             onSortChange={onSortChange}
             groupBy={groupBy}
             onGroupChange={onGroupChange}
+            hideGrouping={!isMobile}
           />
         </div>
         {hasRows && (

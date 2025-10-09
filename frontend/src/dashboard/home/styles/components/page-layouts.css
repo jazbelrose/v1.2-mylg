@@ -33,10 +33,21 @@
   flex: 1;
   min-height: 0;
   padding: 12px 12px 0;
-      background: var(--project-header-bg, var(--bg2, #111213));
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 32px;
+  background: var(--project-header-bg, var(--bg2, #111213));
+  border-radius: 32px;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+.budget-layout::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .budget-layout-motion {
@@ -105,8 +116,10 @@
   }
   .budget-layout {
     padding: 0 !important;
-    border: none;
     border-radius: 0;
+  }
+  .budget-layout::after {
+    border-width: 0;
   }
 }
 

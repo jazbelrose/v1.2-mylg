@@ -562,8 +562,8 @@
   .filterControls {
     flex: 1 1 auto;
     width: auto;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
   }
 
@@ -579,7 +579,7 @@
   .mobileFilterButton {
     width: 100%;
     height: auto;
-    padding: 10px 16px;
+    padding: 8px 14px;
   }
 
   .mobileFilterButtonText {
@@ -593,10 +593,22 @@
   }
 
   .mobilePagination {
+    display: none;
+  }
+
+  .rightControls {
+    margin-left: 0;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .rightControls .mobilePagination {
     display: inline-flex;
   }
 
-  .mobilePagination :global(.ant-pagination) {
+  .rightControls .mobilePagination :global(.ant-pagination) {
     gap: 6px;
     padding: 6px 12px;
     border-radius: 999px;
@@ -606,7 +618,7 @@
     box-shadow: 0 6px 16px rgba(5, 10, 28, 0.3);
   }
 
-  .mobilePagination :global(.ant-pagination-simple-pager) {
+  .rightControls .mobilePagination :global(.ant-pagination-simple-pager) {
     background: transparent;
     color: #f6f7f9;
     display: inline-flex;
@@ -615,13 +627,13 @@
     font-size: 0.78rem;
   }
 
-  .mobilePagination :global(.ant-pagination-prev),
-  .mobilePagination :global(.ant-pagination-next) {
+  .rightControls .mobilePagination :global(.ant-pagination-prev),
+  .rightControls .mobilePagination :global(.ant-pagination-next) {
     color: #ffffff;
   }
 
-  .mobilePagination :global(.ant-pagination-prev .ant-pagination-item-link),
-  .mobilePagination :global(.ant-pagination-next .ant-pagination-item-link) {
+  .rightControls .mobilePagination :global(.ant-pagination-prev .ant-pagination-item-link),
+  .rightControls .mobilePagination :global(.ant-pagination-next .ant-pagination-item-link) {
     width: 28px;
     height: 28px;
     border-radius: 999px;
@@ -629,12 +641,12 @@
     place-items: center;
   }
 
-  .mobilePagination :global(.ant-pagination-simple .ant-pagination-slash),
-  .mobilePagination :global(.ant-pagination-simple-pager span) {
+  .rightControls .mobilePagination :global(.ant-pagination-simple .ant-pagination-slash),
+  .rightControls .mobilePagination :global(.ant-pagination-simple-pager span) {
     color: rgba(255, 255, 255, 0.85);
   }
 
-  .mobilePagination :global(.ant-pagination-simple-pager input) {
+  .rightControls .mobilePagination :global(.ant-pagination-simple-pager input) {
     width: 42px;
     height: 28px;
     padding: 0 6px;

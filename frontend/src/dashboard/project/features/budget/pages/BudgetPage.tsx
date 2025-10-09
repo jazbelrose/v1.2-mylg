@@ -44,7 +44,7 @@ import {
 import { v4 as uuid } from "uuid";
 
 
-const TABLE_BOTTOM_MARGIN = 20;
+const TABLE_BOTTOM_MARGIN = 0;
 
 // Inner component that uses the budget context
 const BudgetPageContent = () => {
@@ -95,7 +95,8 @@ const BudgetPageContent = () => {
     const updateTableHeight = () => {
       if (tableRef.current) {
         const top = tableRef.current.getBoundingClientRect().top;
-        setTableHeight(window.innerHeight - top - TABLE_BOTTOM_MARGIN);
+        const available = window.innerHeight - top - TABLE_BOTTOM_MARGIN;
+        setTableHeight(Math.max(0, available));
       }
     };
 
@@ -621,8 +622,17 @@ const BudgetPageContent = () => {
                                 beforeClose: styles.modalOverlayBeforeClose,
                               }}
                             />
-                            <div style={{ padding: "0" }}>
-                              <div>
+                            <div
+                              style={{
+                                padding: "0",
+                                display: "flex",
+                                flexDirection: "column",
+                                flex: 1,
+                                minHeight: 0,
+                                width: "100%",
+                              }}
+                            >
+                              <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                                 {error && (
                                   <div style={{ marginTop: "10px", color: "#ff6b6b" }}>
                                     Error: {error}
@@ -635,7 +645,9 @@ const BudgetPageContent = () => {
                                     marginTop: "10px",
                                     display: "flex",
                                     flexDirection: "column",
-                                    alignItems: "flex-start",
+                                    alignItems: "stretch",
+                                    flex: 1,
+                                    minHeight: 0,
                                   }}
                                 >
                                   {(() => {

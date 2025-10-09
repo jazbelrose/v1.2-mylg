@@ -300,10 +300,23 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
       [pageSize, setCurrentPage, setPageSize]
     );
 
-    const listStyle = useMemo(() => {
+    const containerStyle = useMemo<React.CSSProperties | undefined>(() => {
       if (!tableHeight) return undefined;
-      const minHeight = Math.max(0, tableHeight - PAGINATION_ESTIMATE);
-      return { minHeight };
+      return {
+        minHeight: tableHeight,
+        maxHeight: tableHeight,
+      };
+    }, [tableHeight]);
+
+    const listStyle = useMemo<React.CSSProperties | undefined>(() => {
+      if (!tableHeight) return undefined;
+      const available = Math.max(0, tableHeight - PAGINATION_ESTIMATE);
+      return {
+        minHeight: available,
+        maxHeight: available,
+        overflowY: "auto",
+        overflowX: "hidden",
+      };
     }, [tableHeight]);
 
     const registerMenuContainer = useCallback(
@@ -351,7 +364,7 @@ const BudgetItemsTable: React.FC<BudgetItemsTableProps> = React.memo(
     }, [setOpenMenuId]);
 
     return (
-      <div ref={tableRef} className={styles.tableContainer}>
+      <div ref={tableRef} className={styles.tableContainer} style={containerStyle}>
         {isSelectMode && dataSource.length > 0 && isMobile && (
           <div className={styles.cardListHeader}>
             <button

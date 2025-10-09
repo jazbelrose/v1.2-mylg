@@ -106,64 +106,10 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
     return match ? match.value : "default";
   }, [sortField, sortOrder]);
 
-  const currentGroupOption = useMemo<GroupOption>(() => {
-    const option = GROUP_OPTIONS.find((opt) => opt.value === groupBy);
-    return option ?? GROUP_OPTIONS[0];
-  }, [groupBy]);
-
   const isGroupActive = !hideGrouping && groupBy !== "none";
 
   const isActive =
     filterQuery.trim().length > 0 || currentSortValue !== "default" || isGroupActive;
-
-  const currentSortOption = useMemo<SortOption>(() => {
-    const option = SORT_OPTIONS.find((opt) => opt.value === currentSortValue);
-    return option ?? SORT_OPTIONS[0];
-  }, [currentSortValue]);
-
-  const buttonLabel = useMemo<string | null>(() => {
-    if (filterQuery.trim().length > 0) {
-      return filterQuery.trim();
-    }
-
-    if (currentSortOption.value !== "default") {
-      return currentSortOption.label;
-    }
-
-    if (isGroupActive) {
-      return currentGroupOption.label;
-    }
-
-    return null;
-  }, [
-    currentGroupOption.label,
-    currentSortOption.label,
-    currentSortOption.value,
-    filterQuery,
-    isGroupActive,
-  ]);
-
-  const buttonAriaLabel = useMemo(() => {
-    if (filterQuery.trim().length > 0) {
-      return `Filter budget items by ${filterQuery.trim()}`;
-    }
-
-    if (currentSortOption.value !== "default") {
-      return `Sort budget items by ${currentSortOption.label}`;
-    }
-
-    if (isGroupActive) {
-      return `Group budget items by ${currentGroupOption.label}`;
-    }
-
-    return "Filter and sort budget items";
-  }, [
-    currentGroupOption.label,
-    currentSortOption.label,
-    currentSortOption.value,
-    filterQuery,
-    isGroupActive,
-  ]);
 
   const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const nextValue = event.target.value as SortOptionValue;
@@ -194,12 +140,12 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
         }`}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={buttonAriaLabel}
+        aria-label="Filter budget items"
         onClick={() => setOpen((prev) => !prev)}
         onKeyDown={handleKeyDown}
       >
         <span className={styles.mobileFilterButtonText}>
-          {hideGrouping && buttonLabel ? buttonLabel : "Filter"}
+          Filter
         </span>
       </button>
       {open && (

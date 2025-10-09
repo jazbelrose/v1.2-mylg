@@ -13,6 +13,16 @@ vi.mock("@/shared/utils/api", () => ({
   updateBudgetItem: vi.fn(),
 }));
 
+type TestBudgetState = {
+  calculateHeaderTotals: (items: Record<string, unknown>[]) => {
+    budgeted: number;
+    final: number;
+    actual: number;
+    effectiveMarkup: number;
+  };
+  syncHeaderTotals: (items: Record<string, unknown>[]) => Promise<void>;
+};
+
 describe("BudgetStateManager header totals", () => {
   const mockedUseBudget = vi.mocked(useBudget);
   const mockedUpdateBudgetItem = vi.mocked(updateBudgetItem);
@@ -94,14 +104,14 @@ describe("BudgetStateManager header totals", () => {
       },
     ];
 
-    const totals = (capturedState as any).calculateHeaderTotals(items);
+    const totals = (capturedState as TestBudgetState).calculateHeaderTotals(items);
     expect(totals.budgeted).toBeCloseTo(280);
     expect(totals.actual).toBeCloseTo(242.5);
     expect(totals.final).toBeCloseTo(479.5);
     expect(totals.effectiveMarkup).toBeCloseTo(0.7125, 5);
 
     await act(async () => {
-      await capturedState.syncHeaderTotals(items);
+      await (capturedState as TestBudgetState).syncHeaderTotals(items);
     });
 
     expect(mockedUpdateBudgetItem).toHaveBeenCalledTimes(1);

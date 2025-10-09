@@ -28,7 +28,6 @@ import { getDevPreviewData, isPreviewModeEnabled, subscribeToPreviewMode } from 
 const PreviewProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const preview = getDevPreviewData();
   const [projects, setProjects] = useState<Project[]>(preview.projects);
-  const [userProjects, setUserProjects] = useState<Project[]>(preview.projects);
   const [activeProject, setActiveProject] = useState<Project | null>(preview.projects[0] ?? null);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [opacity, setOpacity] = useState(1);
@@ -45,7 +44,6 @@ const PreviewProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
   const fetchProjects = async () => {
     setProjects(preview.projects);
-    setUserProjects(preview.projects);
   };
 
   const fetchUserProfile = async () => undefined;
@@ -58,20 +56,10 @@ const PreviewProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
         project.projectId === projectId ? { ...project, timelineEvents: events } : project
       )
     );
-    setUserProjects((prevState) =>
-      prevState.map((project) =>
-        project.projectId === projectId ? { ...project, timelineEvents: events } : project
-      )
-    );
   };
 
   const updateProjectFields = async (projectId: string, fields: Partial<Project>): Promise<void> => {
     setProjects((prevState) =>
-      prevState.map((project) =>
-        project.projectId === projectId ? { ...project, ...fields } : project
-      )
-    );
-    setUserProjects((prevState) =>
       prevState.map((project) =>
         project.projectId === projectId ? { ...project, ...fields } : project
       )
@@ -81,7 +69,7 @@ const PreviewProjectsProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const value: ProjectsValue = {
     projects,
     setProjects,
-    setUserProjects,
+    setUserProjects: setProjects,
     isLoading: false,
     setIsLoading: () => undefined,
     loadingProfile: false,

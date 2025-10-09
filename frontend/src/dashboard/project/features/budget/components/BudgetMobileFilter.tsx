@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, ChevronDown, Search } from "lucide-react";
-import { FilterOutlined } from "@ant-design/icons";
+import { SlidersOutlined } from "@ant-design/icons";
 
 import mobileStyles from "@/dashboard/home/components/projects-panel.module.css";
 import desktopStyles from "@/dashboard/home/components/ProjectsPanelDesktop.module.css";
@@ -198,7 +198,7 @@ const BudgetMobileFilter: React.FC<BudgetMobileFilterProps> = ({
         onKeyDown={handleKeyDown}
       >
         <span className={styles.mobileFilterButtonContent}>
-          <FilterOutlined aria-hidden className={styles.mobileFilterIcon} />
+          <SlidersOutlined aria-hidden className={styles.mobileFilterIcon} />
           <span className={styles.mobileFilterButtonText}>{buttonLabel}</span>
         </span>
         <ChevronDown size={14} aria-hidden className={styles.mobileFilterChevron} />

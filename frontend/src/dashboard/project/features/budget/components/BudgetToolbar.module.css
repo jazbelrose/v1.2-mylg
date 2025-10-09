@@ -586,20 +586,74 @@
   }
 
   .mobilePagination :global(.ant-pagination-simple-pager) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     background: transparent;
     color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
   }
 
   .mobilePagination :global(.ant-pagination-prev),
   .mobilePagination :global(.ant-pagination-next) {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mobilePagination :global(.ant-pagination-prev .ant-pagination-item-link),
+  .mobilePagination :global(.ant-pagination-next .ant-pagination-item-link) {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #ffffff;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .mobilePagination
+    :global(.ant-pagination-prev:hover .ant-pagination-item-link),
+  .mobilePagination
+    :global(.ant-pagination-next:hover .ant-pagination-item-link) {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+
+  .mobilePagination
+    :global(.ant-pagination-prev .ant-pagination-item-link:focus-visible),
+  .mobilePagination
+    :global(.ant-pagination-next .ant-pagination-item-link:focus-visible) {
+    outline: 2px solid rgba(255, 255, 255, 0.55);
+    outline-offset: 2px;
+  }
+
+  .mobilePagination
+    :global(.ant-pagination-prev.ant-pagination-disabled .ant-pagination-item-link),
+  .mobilePagination
+    :global(.ant-pagination-next.ant-pagination-disabled .ant-pagination-item-link) {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.4);
   }
 
   .mobilePagination :global(.ant-pagination-simple-pager input) {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    width: 52px;
+    height: 32px;
+    padding: 0 8px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
     color: #ffffff;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .mobilePagination :global(.ant-pagination-simple-pager input:focus-visible) {
+    outline: 2px solid rgba(255, 255, 255, 0.55);
+    outline-offset: 2px;
   }
 
   .rightControls {

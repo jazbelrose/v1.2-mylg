@@ -258,8 +258,7 @@
 .mobileFilterWrap {
   display: inline-flex;
   align-items: center;
-
-  min-width: 220px;
+  min-width: 360px;
   flex: 0 0 auto;
 }
 
@@ -301,7 +300,7 @@
 
 .mobileFilterRoot {
   position: relative;
-  width: auto;
+  width: min(360px, 92vw);
 }
 
 .mobileFilterButton {
@@ -309,6 +308,7 @@
   align-items: center;
   gap: 0.5rem;
   justify-content: space-between;
+  width: 100%;
   padding: 8px 16px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
@@ -327,6 +327,7 @@
 }
 
 .mobileFilterPopover {
+  width: min(360px, 92vw);
   margin-top: 4px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
@@ -478,7 +479,7 @@
   }
 
   .mobileFilterWrap {
-    min-width: 200px;
+    min-width: 320px;
   }
 }
 

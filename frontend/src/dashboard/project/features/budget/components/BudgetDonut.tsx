@@ -90,8 +90,6 @@ const centerButtonStyles: React.CSSProperties = {
   cursor: "pointer",
   pointerEvents: "auto",
   transition: "background 150ms ease, box-shadow 150ms ease",
-
-
 };
 
 const centerValueStyles: React.CSSProperties = {
@@ -211,6 +209,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
 
   const centerButtonRef = useRef<HTMLButtonElement | null>(null);
   const centerPopoverRef = useRef<HTMLDivElement | null>(null);
+  const [centerButtonSize, setCenterButtonSize] = useState<number | null>(null);
 
   const shapedData = useMemo(() => {
     if (!Array.isArray(data)) return [] as InternalSlice[];
@@ -335,6 +334,75 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
     }, [formatTooltip]);
 
   const formattedTotal = useMemo(() => totalFormatter(total), [total, totalFormatter]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    const updateCenterButtonSize = () => {
+      const rect = container.getBoundingClientRect();
+      const diameter = Math.min(rect.width, rect.height);
+
+      if (!diameter) return;
+
+      const desiredSize = Math.max(72, Math.min(diameter * 0.46, 240));
+
+      setCenterButtonSize((previous) => {
+        if (previous !== null && Math.abs(previous - desiredSize) < 0.5) {
+          return previous;
+        }
+        return desiredSize;
+      });
+    };
+
+    const handleResize = () => updateCenterButtonSize();
+
+    updateCenterButtonSize();
+    window.addEventListener("resize", handleResize);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if ("ResizeObserver" in window) {
+      resizeObserver = new window.ResizeObserver(() => {
+        updateCenterButtonSize();
+      });
+      resizeObserver.observe(container);
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      resizeObserver?.disconnect();
+    };
+  }, []);
+
+  const centerButtonResponsiveStyles = useMemo(() => {
+    if (centerButtonSize === null) {
+      return centerButtonStyles;
+    }
+
+    const padding = Math.round(Math.min(Math.max(centerButtonSize * 0.18, 12), 28));
+    const gap = Math.round(Math.min(Math.max(centerButtonSize * 0.06, 6), 20));
+
+    return {
+      ...centerButtonStyles,
+      width: `${centerButtonSize}px`,
+      padding: `${padding}px`,
+      gap: `${gap}px`,
+    } as React.CSSProperties;
+  }, [centerButtonSize]);
+
+  const centerValueResponsiveStyles = useMemo(() => {
+    if (centerButtonSize === null) {
+      return centerValueStyles;
+    }
+
+    const fontSize = Math.min(Math.max(centerButtonSize * 0.22, 18), 34);
+    return {
+      ...centerValueStyles,
+      fontSize: `${fontSize}px`,
+    } as React.CSSProperties;
+  }, [centerButtonSize]);
 
   const percentageFormatter = useMemo(
     () =>
@@ -657,7 +725,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         ref={centerButtonRef}
         type="button"
         style={{
-          ...centerButtonStyles,
+          ...centerButtonResponsiveStyles,
           background: isCenterOpen ? "#111" : centerButtonBaseBackground,
           boxShadow: isCenterOpen
             ? "0 12px 32px #111"
@@ -672,7 +740,7 @@ const BudgetDonut: React.FC<BudgetDonutProps> = ({
         aria-haspopup="dialog"
         aria-expanded={isCenterOpen}
       >
-        <span style={centerValueStyles}>{formattedTotal}</span>
+        <span style={centerValueResponsiveStyles}>{formattedTotal}</span>
       </button>
 
       {popoverContent}

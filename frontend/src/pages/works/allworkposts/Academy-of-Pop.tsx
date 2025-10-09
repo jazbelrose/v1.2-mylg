@@ -371,7 +371,7 @@ const AcademyOfPop = () => {
                     <div className="rendering-heading">
                         <div className="rendering-top-row">
                             <div className="rendering-header" style={{ paddingTop: '10px' }}>
-                                <h2>Branding</h2>
+                                <h2 style={{ paddingBottom: '50px' }}>Branding</h2>
                             </div>
                             {/* <span className="arrow-down works-arrow">↓</span> */}
                         </div>

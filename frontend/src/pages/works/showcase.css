@@ -54,7 +54,7 @@
     line-height: 0.8;
     font-size: min(10rem, 16vw);
     white-space: nowrap;
-    margin-bottom: 0;
+
 }
 
 
@@ -110,10 +110,6 @@
     .works-header h2 {
         
         padding: 0px 0px 0px 0px;
-    }
-
-    .works-top-row {
-        padding-top: 20px;
     }
 }
 

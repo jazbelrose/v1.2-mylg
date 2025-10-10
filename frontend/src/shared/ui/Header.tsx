@@ -312,6 +312,14 @@ const Headermain: React.FC = () => {
                 </div>
                 {isPortalReady && createPortal(
                     <div className="nav-bar-menu" role="dialog" aria-modal="true">
+                        <button
+                            type="button"
+                            className="toggle-button overlay-close-button"
+                            onClick={handleToggle}
+                            aria-label="Close menu"
+                        >
+                            <Menuopened />
+                        </button>
                         <div className="svg-wrapper">
                             <svg viewBox="0 0 1000 1000" preserveAspectRatio="none">
                                 <path className="span-open" d="M0 2S175 1 500 1s500 1 500 1V0H0Z" fill="#0c0c0c" />

@@ -18,7 +18,6 @@ import { InfoSection } from "../../../shared/ui";
 import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import InlineSVG from "../../../shared/ui/InlineSVG";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 
 
@@ -399,7 +398,11 @@ const ElfMakeup = () => {
             <div className={`${opacityClass} ${isModalOpen ? 'no-scroll' : ''}`}>
 
 
-                <SvgOverlayPortal />
+                <div className="svg-overlay">
+                    <svg viewBox="0 0 1000 1000" preserveAspectRatio="none">
+                        <path id="revealPath" d="M0,1005S175,995,500,995s500,5,500,5V0H0Z"></path>
+                    </svg>
+                </div>
 
 
                 <div className="workpage-heading">
@@ -671,6 +674,7 @@ const ElfMakeup = () => {
 
 
 export default ElfMakeup;
+
 
 
 

@@ -885,9 +885,6 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
         <div
           ref={modalRef}
           className={`${styles.sheetModal} ${isDragging ? styles.sheetModalDragging : ""}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label={title}
           style={modalStyle}
         >
           <div

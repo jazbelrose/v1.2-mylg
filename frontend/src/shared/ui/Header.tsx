@@ -17,10 +17,15 @@ import ScrambleText from "scramble-text";
 const Headermain: React.FC = () => {
     // portal root for overlay (escapes transforms/backdrop-filters)
     const overlayRoot = useMemo(() => {
+        const existing = document.getElementById("overlay-root");
+        if (existing) {
+            return existing as HTMLDivElement;
+        }
         const el = document.createElement("div");
         el.id = "overlay-root";
         return el;
     }, []);
+    const [isPortalReady, setIsPortalReady] = useState(false);
     useInactivityLogout();
     const location = useLocation();
     const navigate = useNavigate();
@@ -87,6 +92,8 @@ const Headermain: React.FC = () => {
     });
 
     useEffect(() => {
+        if (!isPortalReady) return;
+
         gsap.set(".span-open", {
             attr: { d: "M0 2S175 1 500 1s500 1 500 1V0H0Z" }
         });
@@ -96,14 +103,14 @@ const Headermain: React.FC = () => {
                 attr: { d: "M0 502S175 272 500 272s500 230 500 230V0H0Z" },
                 ease: "Power2.easeIn",
                 onStart: () => {
-                    const navMenu = document.querySelector(".nav-bar-menu") as HTMLElement;
+                    const navMenu = overlayRoot.querySelector(".nav-bar-menu") as HTMLElement | null;
                     if (navMenu) {
                         navMenu.classList.add("opened");
-                        gsap.set(".nav-bar-menu", { visibility: "visible" });
+                        gsap.set(navMenu, { visibility: "visible" });
                     }
                 },
                 onReverseComplete: () => {
-                    const navMenu = document.querySelector(".nav-bar-menu") as HTMLElement;
+                    const navMenu = overlayRoot.querySelector(".nav-bar-menu") as HTMLElement | null;
                     if (navMenu) {
                         navMenu.classList.remove("opened");
                     }
@@ -124,7 +131,12 @@ const Headermain: React.FC = () => {
             .eventCallback("onComplete", () => {
                 setActive(true);
             });
-    }, []);
+
+        return () => {
+            menuAnimation.current?.kill();
+            menuAnimation.current = null;
+        };
+    }, [isPortalReady, overlayRoot]);
 
     const handleToggle = (): void => {
         if (isActive) {
@@ -150,13 +162,17 @@ const Headermain: React.FC = () => {
 
     // mount portal root once
     useEffect(() => {
-        document.body.appendChild(overlayRoot);
+        if (!overlayRoot.parentElement) {
+            document.body.appendChild(overlayRoot);
+        }
+        setIsPortalReady(true);
         return () => {
             if (overlayRoot.parentElement) {
                 overlayRoot.parentElement.removeChild(overlayRoot);
             }
             document.body.classList.remove("menu-open");
             document.body.classList.remove("ovhidden");
+            setIsPortalReady(false);
         };
     }, [overlayRoot]);
 
@@ -211,7 +227,9 @@ const Headermain: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const root = document.querySelector(".nav-bar-menu") as HTMLElement | null;
+        if (!isPortalReady) return;
+
+        const root = overlayRoot.querySelector(".nav-bar-menu") as HTMLElement | null;
         if (!root) return;
 
         const fitOverlayToViewport = () => {
@@ -240,7 +258,7 @@ const Headermain: React.FC = () => {
             vv.removeEventListener("resize", handleViewportChange);
             vv.removeEventListener("scroll", handleViewportChange);
         };
-    }, []);
+    }, [isPortalReady, overlayRoot]);
 
     return (
         <>
@@ -292,7 +310,7 @@ const Headermain: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                {createPortal(
+                {isPortalReady && createPortal(
                     <div className="nav-bar-menu" role="dialog" aria-modal="true">
                         <div className="svg-wrapper">
                             <svg viewBox="0 0 1000 1000" preserveAspectRatio="none">

@@ -19,6 +19,11 @@
 }
 
 .sheetModal {
+  --line-item-accent: #6e7bff;
+  --line-item-accent-rgb: 110, 123, 255;
+  --line-item-accent-gradient-start: #6e7bff;
+  --line-item-accent-gradient-end: #4662ff;
+  --line-item-accent-shadow-rgb: 31, 45, 124;
   width: min(640px, 100%);
   max-height: calc(100vh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
   background: rgba(20, 22, 28, 0.96);
@@ -230,9 +235,9 @@
 }
 
 .field:focus-within {
-  border-color: rgba(99, 123, 255, 0.6);
-  background: rgba(99, 123, 255, 0.08);
-  box-shadow: 0 14px 32px rgba(33, 45, 122, 0.25);
+  border-color: rgba(var(--line-item-accent-rgb), 0.6);
+  background: rgba(var(--line-item-accent-rgb), 0.08);
+  box-shadow: 0 14px 32px rgba(var(--line-item-accent-shadow-rgb), 0.25);
 }
 
 .fieldFullWidth {
@@ -268,7 +273,8 @@
 .field select:focus {
   outline: none;
   background: rgba(18, 20, 26, 0.96);
-  box-shadow: 0 0 0 1px rgba(99, 123, 255, 0.8), 0 16px 28px rgba(31, 45, 124, 0.25);
+  box-shadow: 0 0 0 1px rgba(var(--line-item-accent-rgb), 0.8),
+    0 16px 28px rgba(var(--line-item-accent-shadow-rgb), 0.25);
 }
 
 .field input:disabled,
@@ -371,14 +377,18 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #6e7bff, #4662ff);
+  background: linear-gradient(
+    135deg,
+    var(--line-item-accent-gradient-start),
+    var(--line-item-accent-gradient-end)
+  );
   color: #0b0c10;
-  box-shadow: 0 14px 28px rgba(70, 98, 255, 0.35);
+  box-shadow: 0 14px 28px rgba(var(--line-item-accent-shadow-rgb), 0.35);
 }
 
 .primaryButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 16px 34px rgba(70, 98, 255, 0.45);
+  box-shadow: 0 16px 34px rgba(var(--line-item-accent-shadow-rgb), 0.45);
 }
 
 .primaryButton:active {

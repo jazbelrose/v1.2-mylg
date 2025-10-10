@@ -5,8 +5,14 @@ import { vi, it, expect, beforeAll } from "vitest";
 
 // Mock ModalWithStack
 vi.mock("../../../../../../shared/ui/ModalWithStack", () => ({
-  default: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => 
+  default: ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
     React.createElement('div', { 'data-testid': 'modal', ...props }, children),
+}));
+
+vi.mock("@/app/contexts/useData", () => ({
+  useData: () => ({
+    activeProject: { color: "#6E7BFF" },
+  }),
 }));
 
 // Import the component under test

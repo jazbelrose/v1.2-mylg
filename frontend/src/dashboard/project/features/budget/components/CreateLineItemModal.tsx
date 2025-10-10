@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import Modal from "@/shared/ui/ModalWithStack";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import ConfirmModal from "@/shared/ui/ConfirmModal";
@@ -186,11 +186,65 @@ const initialState: ItemForm = fields.reduce<ItemForm>(
   {} as ItemForm
 );
 
-/* ------------------------------ Component ------------------------------ */
+const FULL_WIDTH_FIELDS = new Set<keyof ItemForm>(["description", "notes"]);
 
-if (typeof document !== "undefined") {
-  Modal.setAppElement("#root");
-}
+const SECTION_DEFINITIONS: Array<{
+  id: string;
+  title: string;
+  description?: string;
+  fields: readonly (keyof ItemForm)[];
+}> = [
+  {
+    id: "details",
+    title: "Details",
+    description: "Define the core information about this line item.",
+    fields: ["category", "elementKey", "elementId", "areaGroup", "invoiceGroup", "description"],
+  },
+  {
+    id: "quantities",
+    title: "Quantities",
+    fields: ["quantity", "unit"],
+  },
+  {
+    id: "financials",
+    title: "Financials",
+    description: "Track estimated and actual costs with markup adjustments.",
+    fields: [
+      "itemBudgetedCost",
+      "itemActualCost",
+      "itemReconciledCost",
+      "itemMarkUp",
+      "itemFinalCost",
+    ],
+  },
+  {
+    id: "payment",
+    title: "Payment",
+    fields: ["paymentType", "paymentTerms", "paymentStatus"],
+  },
+  {
+    id: "schedule",
+    title: "Schedule",
+    fields: ["startDate", "endDate"],
+  },
+  {
+    id: "vendor",
+    title: "Vendor & Client",
+    fields: ["poNumber", "vendor", "vendorInvoiceNumber", "client"],
+  },
+  {
+    id: "accounting",
+    title: "Accounting",
+    fields: ["amountPaid", "balanceDue"],
+  },
+  {
+    id: "notes",
+    title: "Notes",
+    fields: ["notes"],
+  },
+];
+
+/* ------------------------------ Component ------------------------------ */
 
 const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
   isOpen,
@@ -215,6 +269,20 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
 
   const [initialItemString, setInitialItemString] = useState<string>("");
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState<boolean>(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+  const isDraggingRef = useRef(false);
+  const lastOffsetRef = useRef(0);
+
+  const fieldMap = useMemo(() => {
+    const map = new Map<keyof ItemForm, FieldDef>();
+    fields.forEach((field) => {
+      map.set(field.name, field);
+    });
+    return map;
+  }, []);
 
   /* --------------------------- Lifecycle & Setup --------------------------- */
 
@@ -247,6 +315,40 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
       setInitialItemString(JSON.stringify(defaultItem));
     }
   }, [isOpen, initialData, defaultElementKey, defaultStartDate, defaultEndDate]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (typeof window === "undefined") return;
+
+    requestAnimationFrame(() => {
+      const element = modalRef.current?.querySelector<HTMLElement>(
+        "input:not([type=hidden]), select, textarea",
+      );
+      element?.focus({ preventScroll: true });
+    });
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || typeof document === "undefined") return;
+
+    const { style } = document.body;
+    const previousOverflow = style.overflow;
+    style.overflow = "hidden";
+
+    return () => {
+      style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) return;
+
+    setSwipeOffset(0);
+    setIsDragging(false);
+    isDraggingRef.current = false;
+    touchStartYRef.current = null;
+    lastOffsetRef.current = 0;
+  }, [isOpen]);
 
   /* ------------------------------- Helpers -------------------------------- */
 
@@ -403,6 +505,68 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
     }
   };
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 1) return;
+
+    touchStartYRef.current = event.touches[0].clientY;
+    isDraggingRef.current = true;
+    lastOffsetRef.current = 0;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || touchStartYRef.current === null) return;
+
+    const currentY = event.touches[0].clientY;
+    const delta = currentY - touchStartYRef.current;
+    const offset = delta > 0 ? delta : 0;
+    lastOffsetRef.current = offset;
+    setSwipeOffset(offset);
+
+    if (offset > 0) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDraggingRef.current) return;
+
+    const threshold = 140;
+    const shouldClose = lastOffsetRef.current > threshold;
+
+    if (shouldClose) {
+      setSwipeOffset(0);
+      setIsDragging(false);
+      isDraggingRef.current = false;
+      touchStartYRef.current = null;
+      lastOffsetRef.current = 0;
+      handleClose();
+      return;
+    }
+
+    setSwipeOffset(0);
+    setIsDragging(false);
+    isDraggingRef.current = false;
+    touchStartYRef.current = null;
+    lastOffsetRef.current = 0;
+  };
+
+  const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      handleClose();
+    }
+  };
+
+  const handleFormBodyClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (typeof document === "undefined") return;
+    const target = event.target as HTMLElement;
+    if (!target.closest("input, textarea, select, button")) {
+      const activeElement = document.activeElement as HTMLElement | null;
+      activeElement?.blur?.();
+    }
+  };
+
   const submitItem = async (isAutoSave = false) => {
     const data: ItemForm = { ...item };
 
@@ -456,6 +620,11 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
   };
 
   const handleClose = () => {
+    setSwipeOffset(0);
+    setIsDragging(false);
+    isDraggingRef.current = false;
+    touchStartYRef.current = null;
+    lastOffsetRef.current = 0;
     const currentItemString = JSON.stringify(item);
     const hasChanges = currentItemString !== initialItemString;
 
@@ -487,230 +656,252 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setSwipeOffset(0);
+        setIsDragging(false);
+        isDraggingRef.current = false;
+        touchStartYRef.current = null;
+        lastOffsetRef.current = 0;
+
+        const currentItemString = JSON.stringify(item);
+        const hasChanges = currentItemString !== initialItemString;
+        if (hasChanges) {
+          setShowUnsavedConfirm(true);
+        } else {
+          onRequestClose();
+        }
+        return;
+      }
+
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
         void persistItem(false); // keyboard shortcut save, not autosave
       }
     };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, item]);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, item, initialItemString, onRequestClose, persistItem]);
 
   /* --------------------------------- Render -------------------------------- */
 
+  const renderField = (fieldName: keyof ItemForm) => {
+    const fieldDef = fieldMap.get(fieldName);
+    if (!fieldDef) return null;
+
+    const tooltip = TOOLTIP_TEXT[fieldName];
+    const disabled =
+      fieldName === "elementKey" ||
+      fieldName === "elementId" ||
+      (fieldName === "itemBudgetedCost" && (item.itemActualCost || item.itemReconciledCost)) ||
+      (fieldName === "itemActualCost" && !!item.itemReconciledCost);
+
+    const baseProps = {
+      name: fieldName as string,
+      value: item[fieldName] as string | number,
+      onChange: handleChange,
+      disabled,
+    } as const;
+
+    const labelClasses = [styles.field];
+    if (tooltip) labelClasses.push(styles.tooltipLabel);
+    if (FULL_WIDTH_FIELDS.has(fieldName)) labelClasses.push(styles.fieldFullWidth);
+
+    const datalistId =
+      fieldName === "areaGroup"
+        ? "area-group-options"
+        : fieldName === "invoiceGroup"
+        ? "invoice-group-options"
+        : fieldName === "client"
+        ? "client-options"
+        : undefined;
+
+    let control: React.ReactNode;
+
+    if (fieldDef.type === "select") {
+      const selectElement = (
+        <select {...baseProps}>
+          <option hidden value="" />
+          {(fieldDef.options ?? []).map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      );
+
+      if (fieldName === "paymentStatus") {
+        const statusValue = String(item[fieldName] ?? "").trim().toUpperCase();
+        const statusClass =
+          statusValue === "PAID"
+            ? styles.paid
+            : statusValue === "PARTIAL"
+            ? styles.partial
+            : statusValue === "UNPAID"
+            ? styles.unpaid
+            : undefined;
+
+        control = (
+          <div className={styles.paymentStatusContainer}>
+            {selectElement}
+            {statusClass ? <span className={`${styles.statusDot} ${statusClass}`} aria-hidden="true" /> : null}
+          </div>
+        );
+      } else {
+        control = selectElement;
+      }
+    } else if (fieldDef.type === "number" || fieldDef.type === "date") {
+      control = (
+        <input
+          type={fieldDef.type}
+          {...baseProps}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+            }
+          }}
+        />
+      );
+    } else if (fieldDef.type === "textarea") {
+      control = (
+        <textarea
+          {...baseProps}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+            }
+          }}
+        />
+      );
+    } else {
+      const placeholder =
+        fieldDef.type === "currency"
+          ? "$0.00"
+          : fieldDef.type === "percent"
+          ? "0%"
+          : "";
+
+      const blurHandler =
+        fieldDef.type && ["currency", "percent"].includes(fieldDef.type)
+          ? handleBlur
+          : undefined;
+
+      control = (
+        <input
+          type="text"
+          {...baseProps}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+            }
+          }}
+          onBlur={blurHandler}
+          placeholder={placeholder}
+          list={datalistId}
+        />
+      );
+    }
+
+    return (
+      <label key={fieldName} className={labelClasses.join(" ")} title={tooltip || undefined}>
+        <span className={styles.fieldLabel}>{fieldDef.label}</span>
+        {control}
+      </label>
+    );
+  };
+
+  const portalContent =
+    isOpen && typeof document !== "undefined"
+      ? createPortal(
+          <div className={styles.sheetOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
+            <div
+              ref={modalRef}
+              className={`${styles.sheetModal} ${isDragging ? styles.sheetModalDragging : ""}`}
+              role="dialog"
+              aria-modal="true"
+              aria-label={title}
+              style={swipeOffset ? { transform: `translateY(${swipeOffset}px)` } : undefined}
+            >
+              <div
+                className={styles.grabZone}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
+              >
+                <div className={styles.grabHandle} />
+              </div>
+              <form className={styles.sheetForm} onSubmit={handleSubmit}>
+                <header className={styles.modalHeader}>
+                  <div className={styles.headerText}>
+                    <h2 className={styles.modalTitle}>{title}</h2>
+                    <p className={styles.modalSubtitle}>
+                      Capture every detail about your budget line item with structured sections and live totals.
+                    </p>
+                  </div>
+                  <div className={styles.headerActions}>
+                    <span className={styles.revisionPill}>Rev. {revision}</span>
+                    <button type="button" className={styles.closeButton} onClick={handleClose} aria-label="Close">
+                      <FontAwesomeIcon icon={faXmark} />
+                    </button>
+                  </div>
+                </header>
+                <div className={styles.modalBody} onClick={handleFormBodyClick}>
+                  {SECTION_DEFINITIONS.map((section) => (
+                    <section key={section.id} className={styles.section}>
+                      <div className={styles.sectionHeader}>
+                        <h3 className={styles.sectionTitle}>{section.title}</h3>
+                        {section.description ? (
+                          <p className={styles.sectionDescription}>{section.description}</p>
+                        ) : null}
+                      </div>
+                      <div className={styles.fieldGrid}>
+                        {section.fields.map((fieldName) => renderField(fieldName))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+
+                <datalist id="area-group-options">
+                  {areaGroupOptions.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
+                <datalist id="invoice-group-options">
+                  {invoiceGroupOptions.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
+                <datalist id="client-options">
+                  {clientOptions.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
+
+                <footer className={styles.modalFooter}>
+                  <div className={styles.shortcutHint}>Press ⌘+Enter / Ctrl+Enter to save.</div>
+                  <div className={styles.footerActions}>
+                    <button type="button" className={styles.secondaryButton} onClick={handleClose}>
+                      Cancel
+                    </button>
+                    <button type="submit" className={styles.primaryButton}>
+                      {submitLabel || (title === "Edit Item" ? "Save" : "Create")}
+                    </button>
+                  </div>
+                </footer>
+              </form>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <>
-      <style>
-        {`
-        .${styles.modalContent} {
-          font-size: 12px !important;
-          padding: 16px !important;
-        }
-        .${styles.form} label {
-          margin-bottom: 4px !important;
-        }
-        .${styles.form} input,
-        .${styles.form} textarea,
-        .${styles.form} select {
-          font-size: 11px !important;
-          padding: 2px 6px !important;
-        }
-        .${styles.fieldDivider} {
-          margin: 6px 0 !important;
-        }
-        .${styles.modalFooter} {
-          margin-top: 10px !important;
-        }
-        .${styles.shortcutHint} {
-          font-size: 10px !important;
-        }
-      `}
-      </style>
-
-      <Modal
-        isOpen={isOpen}
-        onRequestClose={handleClose}
-        contentLabel={title}
-        closeTimeoutMS={300}
-        shouldCloseOnOverlayClick={true}
-        shouldCloseOnEsc={true}
-        className={{
-          base: styles.modalContent,
-          afterOpen: styles.modalContentAfterOpen,
-          beforeClose: styles.modalContentBeforeClose,
-        }}
-        overlayClassName={{
-          base: styles.modalOverlay,
-          afterOpen: styles.modalOverlayAfterOpen,
-          beforeClose: styles.modalOverlayBeforeClose,
-        }}
-      >
-        <div className={styles.modalHeader}>
-          <div className={styles.modalTitle}>{title}</div>
-          <span className={styles.revisionLabel}>Rev.{revision}</span>
-          <button
-            className={styles.iconButton}
-            onClick={handleClose}
-            aria-label="Close"
-          >
-            <FontAwesomeIcon icon={faXmark} />
-          </button>
-        </div>
-
-        <form className={styles.form} onSubmit={handleSubmit}>
-          {fields.map((f) => {
-            const tooltip = TOOLTIP_TEXT[f.name];
-            const disabled =
-              f.name === "elementKey" ||
-              f.name === "elementId" ||
-              (f.name === "itemBudgetedCost" &&
-                (item.itemActualCost || item.itemReconciledCost)) ||
-              (f.name === "itemActualCost" && !!item.itemReconciledCost);
-
-            const commonProps = {
-              name: f.name as string,
-              value: item[f.name] as string | number,
-              onChange: handleChange,
-              disabled: !!disabled,
-            };
-
-            return (
-              <React.Fragment key={f.name}>
-                <label
-                  className={`${styles.field} ${tooltip ? styles.tooltipLabel : ""}`}
-                  title={tooltip || undefined}
-                >
-                  <span>{f.label}</span>
-
-                  {f.type === "select" ? (
-                    f.name === "paymentStatus" ? (
-                      <span className={styles.paymentStatusContainer}>
-                        <select {...commonProps}>
-                          <option hidden value="" />
-                          {(f.options ?? []).map((o) => (
-                            <option key={o} value={o}>
-                              {o}
-                            </option>
-                          ))}
-                        </select>
-                        {(item[f.name] as string) && (
-                          <span
-                            className={`${styles.statusDot} ${
-                              String(item[f.name]).trim().toUpperCase() === "PAID"
-                                ? styles.paid
-                                : String(item[f.name]).trim().toUpperCase() === "PARTIAL"
-                                ? styles.partial
-                                : styles.unpaid
-                            }`}
-                          />
-                        )}
-                      </span>
-                    ) : (
-                      <select {...commonProps}>
-                        <option hidden value="" />
-                        {(f.options ?? []).map((o) => (
-                          <option key={o} value={o}>
-                            {o}
-                          </option>
-                        ))}
-                      </select>
-                    )
-                  ) : f.type === "number" || f.type === "date" ? (
-                    <input 
-                      type={f.type} 
-                      {...commonProps}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  ) : f.type === "textarea" ? (
-                    <textarea
-                      {...commonProps}
-                      className={f.name === "description" ? styles.descriptionInput : undefined}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                        }
-                      }}
-                    />
-                  ) : (
-                    // text / currency / percent
-                    <input
-                      type="text"
-                      {...commonProps}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                        }
-                      }}
-                      onBlur={
-                        f.type && ["currency", "percent"].includes(f.type)
-                          ? handleBlur
-                          : undefined
-                      }
-                      placeholder={
-                        f.type === "currency" ? "$0.00" : f.type === "percent" ? "0%" : ""
-                      }
-                      list={
-                        f.name === "areaGroup"
-                          ? "area-group-options"
-                          : f.name === "invoiceGroup"
-                          ? "invoice-group-options"
-                          : f.name === "client"
-                          ? "client-options"
-                          : undefined
-                      }
-                    />
-                  )}
-                </label>
-
-                {[
-                  "invoiceGroup",
-                  "itemFinalCost",
-                  "paymentStatus",
-                  "endDate",
-                  "vendorInvoiceNumber",
-                ].includes(f.name as string) && <hr className={styles.fieldDivider} />}
-              </React.Fragment>
-            );
-          })}
-
-          <datalist id="area-group-options">
-            {areaGroupOptions.map((o) => (
-              <option key={o} value={o} />
-            ))}
-          </datalist>
-          <datalist id="invoice-group-options">
-            {invoiceGroupOptions.map((o) => (
-              <option key={o} value={o} />
-            ))}
-          </datalist>
-          <datalist id="client-options">
-            {clientOptions.map((o) => (
-              <option key={o} value={o} />
-            ))}
-          </datalist>
-
-          <div className={styles.modalFooter}>
-            <button type="submit" className="modal-button primary" style={{ borderRadius: 5 }}>
-              {submitLabel || (title === "Edit Item" ? "Save" : "Create")}
-            </button>
-            <button
-              type="button"
-              className="modal-button secondary"
-              style={{ borderRadius: 5 }}
-              onClick={handleClose}
-            >
-              Cancel
-            </button>
-          </div>
-
-          <div className={styles.shortcutHint}>Press ⌘+Enter / Ctrl+Enter to save.</div>
-        </form>
-      </Modal>
+      {portalContent}
 
       <ConfirmModal
         isOpen={showUnsavedConfirm}

@@ -215,7 +215,7 @@ const FrankZummoSum41 = () => {
           ease: "Power1.easeIn"
         })
         .to("#revealPath", {
-          attr: { d: "M0,2S175,1,500,1s500,1,500,1V0H0Z" }, // Final state
+          attr: { d: "M0,0S175,0,500,0s500,0,500,0V0H0Z" }, // Final state
           duration: 0.5,
           ease: "power1.easeOut"
         });

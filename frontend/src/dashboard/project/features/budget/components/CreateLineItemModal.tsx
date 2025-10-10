@@ -5,6 +5,7 @@ import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import ConfirmModal from "@/shared/ui/ConfirmModal";
 import styles from "./create-line-item-modal.module.css";
 import { parseBudget, formatUSD } from "@/shared/utils/budgetUtils";
+import { computeLineItemAccent } from "./line-item-accent";
 
 /* eslint-disable */
 
@@ -77,6 +78,7 @@ export interface CreateLineItemModalProps {
   title?: string;
   submitLabel?: string;
   revision?: number;
+  activeProject?: { projectId?: string | number | null; color?: string | null } | null;
 }
 
 const CATEGORY_OPTIONS = [
@@ -261,6 +263,7 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
   title = "Create Line Item",
   submitLabel,
   revision = 1,
+  activeProject = null,
 }) => {
   const [item, setItem] = useState<ItemForm>({
     ...initialState,
@@ -275,6 +278,23 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
   const touchStartYRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
   const lastOffsetRef = useRef(0);
+
+  const accentStyle = useMemo(
+    () =>
+      computeLineItemAccent({
+        projectId: activeProject?.projectId ?? null,
+        color: activeProject?.color ?? null,
+      }).style,
+    [activeProject?.projectId, activeProject?.color]
+  );
+
+  const modalStyle = useMemo(
+    () =>
+      swipeOffset
+        ? ({ ...accentStyle, transform: `translateY(${swipeOffset}px)` } as React.CSSProperties)
+        : accentStyle,
+    [accentStyle, swipeOffset]
+  );
 
   const fieldMap = useMemo(() => {
     const map = new Map<keyof ItemForm, FieldDef>();
@@ -816,14 +836,19 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
   const portalContent =
     isOpen && typeof document !== "undefined"
       ? createPortal(
-          <div className={styles.sheetOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
+          <div
+            className={styles.sheetOverlay}
+            role="presentation"
+            onMouseDown={handleOverlayMouseDown}
+            style={accentStyle}
+          >
             <div
               ref={modalRef}
               className={`${styles.sheetModal} ${isDragging ? styles.sheetModalDragging : ""}`}
               role="dialog"
               aria-modal="true"
               aria-label={title}
-              style={swipeOffset ? { transform: `translateY(${swipeOffset}px)` } : undefined}
+              style={modalStyle}
             >
               <div
                 className={styles.grabZone}

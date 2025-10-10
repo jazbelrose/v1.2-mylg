@@ -720,6 +720,7 @@ const BudgetPageContent = () => {
                               initialData={stateManager.prefillItem || stateManager.editItem}
                               title={stateManager.editItem ? 'Edit Item' : 'Create Line Item'}
                               revision={Number((budgetHeader as Record<string, unknown>)?.revision ?? 1)}
+                              activeProject={activeProject}
                             />
                             <EventEditModal
                               isOpen={stateManager.isEventModalOpen}
@@ -730,6 +731,7 @@ const BudgetPageContent = () => {
                               defaultDate={String((budgetHeader as Record<string, unknown>)?.startDate || '')}
                               defaultDescription={String((stateManager.eventItem as Record<string, unknown>)?.description || '')}
                               descOptions={eventDescOptions}
+                              activeProject={activeProject}
                             />
                             <ConfirmModal
                               isOpen={stateManager.isConfirmingDelete}

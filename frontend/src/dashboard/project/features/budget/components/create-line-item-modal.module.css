@@ -1,3 +1,18 @@
+.sheetOverlay,
+.modalOverlay,
+.sheetModal,
+.modalContent {
+  --line-item-accent: #38bdf8;
+  --line-item-accent-soft: rgba(56, 189, 248, 0.16);
+  --line-item-accent-softer: rgba(56, 189, 248, 0.24);
+  --line-item-accent-border: rgba(56, 189, 248, 0.28);
+  --line-item-accent-glow: rgba(56, 189, 248, 0.22);
+  --line-item-accent-faint: rgba(56, 189, 248, 0.12);
+  --line-item-accent-muted: rgba(222, 235, 248, 0.78);
+  --line-item-accent-text: rgba(247, 248, 252, 0.95);
+  --line-item-button-text: #05090f;
+}
+
 .sheetOverlay {
   position: fixed;
   inset: 0;
@@ -21,15 +36,17 @@
 .sheetModal {
   width: min(640px, 100%);
   max-height: calc(100vh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
-  background: rgba(20, 22, 28, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(160deg, rgba(18, 20, 26, 0.98), rgba(18, 20, 26, 0.92) 60%, rgba(18, 20, 26, 0.9)),
+    radial-gradient(circle at top right, var(--line-item-accent-faint), transparent 55%);
+  border: 1px solid var(--line-item-accent-border);
   border-radius: 22px 22px 0 0;
   display: flex;
   flex-direction: column;
-  color: #f7f8fc;
-  box-shadow: 0 32px 60px rgba(0, 0, 0, 0.5);
+  color: var(--line-item-accent-text);
+  box-shadow: 0 32px 60px rgba(0, 0, 0, 0.52), 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 48px var(--line-item-accent-faint);
   overflow: hidden;
-  transition: transform 0.3s ease, opacity 0.25s ease;
+  transition: transform 0.3s ease, opacity 0.25s ease, box-shadow 0.3s ease;
 }
 
 .sheetModalDragging {
@@ -81,12 +98,12 @@
   width: 68px;
   height: 5px;
   border-radius: 999px;
-  background: rgba(246, 247, 251, 0.45);
+  background: var(--line-item-accent-soft);
   transition: background 0.2s ease;
 }
 
 .grabZone:hover .grabHandle {
-  background: rgba(246, 247, 251, 0.7);
+  background: var(--line-item-accent-softer);
 }
 
 .sheetForm {
@@ -116,11 +133,12 @@
   font-size: clamp(1.35rem, 3vw, 1.75rem);
   font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--line-item-accent-text);
 }
 
 .modalSubtitle {
   margin: 0;
-  color: rgba(247, 248, 252, 0.7);
+  color: var(--line-item-accent-muted);
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -137,8 +155,10 @@
   justify-content: center;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(247, 248, 252, 0.85);
+  background: var(--line-item-accent-faint);
+  color: var(--line-item-accent-text);
+  border: 1px solid var(--line-item-accent-border);
+  box-shadow: 0 10px 18px var(--line-item-accent-faint);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -147,8 +167,9 @@
 
 .closeButton {
   border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f7f8fc;
+  background: var(--line-item-accent-faint);
+  color: var(--line-item-accent-text);
+  border: 1px solid transparent;
   width: 38px;
   height: 38px;
   border-radius: 12px;
@@ -156,13 +177,14 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--line-item-accent-soft);
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+  border-color: var(--line-item-accent-border);
+  box-shadow: 0 12px 24px var(--line-item-accent-faint);
 }
 
 .closeButton:active {
@@ -202,12 +224,12 @@
   font-size: 1.08rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: #f7f8fc;
+  color: var(--line-item-accent-text);
 }
 
 .sectionDescription {
   margin: 0;
-  color: rgba(247, 248, 252, 0.65);
+  color: var(--line-item-accent-muted);
   font-size: 0.92rem;
   line-height: 1.45;
 }
@@ -225,14 +247,14 @@
   padding: 14px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(8, 10, 14, 0.42);
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .field:focus-within {
-  border-color: rgba(99, 123, 255, 0.6);
-  background: rgba(99, 123, 255, 0.08);
-  box-shadow: 0 14px 32px rgba(33, 45, 122, 0.25);
+  border-color: var(--line-item-accent);
+  background: var(--line-item-accent-faint);
+  box-shadow: 0 14px 32px var(--line-item-accent-faint);
 }
 
 .fieldFullWidth {
@@ -244,7 +266,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(247, 248, 252, 0.72);
+  color: var(--line-item-accent-muted);
 }
 
 .field input,
@@ -259,7 +281,7 @@
   font-size: 0.95rem;
   font-family: inherit;
   transition: background 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   appearance: none;
 }
 
@@ -268,7 +290,7 @@
 .field select:focus {
   outline: none;
   background: rgba(18, 20, 26, 0.96);
-  box-shadow: 0 0 0 1px rgba(99, 123, 255, 0.8), 0 16px 28px rgba(31, 45, 124, 0.25);
+  box-shadow: 0 0 0 1px var(--line-item-accent), 0 16px 28px var(--line-item-accent-faint);
 }
 
 .field input:disabled,
@@ -338,17 +360,18 @@
   margin-top: auto;
   padding: 20px clamp(22px, 5vw, 36px) max(28px, env(safe-area-inset-bottom) + 24px);
   background: linear-gradient(
-    180deg,
-    rgba(20, 22, 28, 0) 0%,
-    rgba(20, 22, 28, 0.92) 28%,
-    rgba(20, 22, 28, 0.98) 100%
-  );
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+      180deg,
+      rgba(20, 22, 28, 0) 0%,
+      rgba(20, 22, 28, 0.9) 32%,
+      rgba(20, 22, 28, 0.98) 100%
+    ),
+    linear-gradient(120deg, transparent 55%, var(--line-item-accent-faint));
+  border-top: 1px solid var(--line-item-accent-border);
 }
 
 .shortcutHint {
   font-size: 0.85rem;
-  color: rgba(247, 248, 252, 0.6);
+  color: var(--line-item-accent-muted);
 }
 
 .footerActions {
@@ -371,14 +394,15 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #6e7bff, #4662ff);
-  color: #0b0c10;
-  box-shadow: 0 14px 28px rgba(70, 98, 255, 0.35);
+  background: linear-gradient(135deg, var(--line-item-accent), rgba(12, 14, 18, 0.8));
+  color: var(--line-item-accent-text);
+  border: 1px solid var(--line-item-accent-border);
+  box-shadow: 0 16px 32px var(--line-item-accent-faint);
 }
 
 .primaryButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 16px 34px rgba(70, 98, 255, 0.45);
+  box-shadow: 0 18px 36px var(--line-item-accent-glow);
 }
 
 .primaryButton:active {
@@ -386,13 +410,13 @@
 }
 
 .secondaryButton {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f7f8fc;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--line-item-accent-faint);
+  color: var(--line-item-accent-text);
+  border: 1px solid var(--line-item-accent-border);
 }
 
 .secondaryButton:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--line-item-accent-soft);
   transform: translateY(-1px);
 }
 
@@ -422,14 +446,15 @@
 }
 
 .modalContent {
-  background: rgba(18, 20, 26, 0.96);
-  color: #f7f8fc;
+  background: linear-gradient(150deg, rgba(18, 20, 26, 0.98), rgba(18, 20, 26, 0.9)),
+    radial-gradient(circle at top right, var(--line-item-accent-faint), transparent 60%);
+  color: var(--line-item-accent-text);
   border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--line-item-accent-border);
   padding: 30px clamp(26px, 4vw, 38px);
   max-width: 420px;
   width: calc(100% - 56px);
-  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.45), 0 0 38px var(--line-item-accent-faint);
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 0.25s ease, transform 0.25s ease;

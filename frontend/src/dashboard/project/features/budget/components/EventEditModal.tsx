@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { v4 as uuid } from "uuid";
 import Modal from "@/shared/ui/ModalWithStack";
 import styles from "./create-line-item-modal.module.css";
@@ -6,6 +6,7 @@ import type { TimelineEvent } from "@/shared/utils/api";
 import { createEvent, updateEvent, deleteEvent } from "@/shared/utils/api";
 import { useBudget } from "@/dashboard/project/features/budget/context/BudgetContext";
 import { useData } from "@/app/contexts/useData";
+import { computeLineItemAccent } from "./line-item-accent";
 
 interface EventEditModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface EventEditModalProps {
   defaultDescription?: string;
   descOptions?: string[];
   onEventsUpdated?: (events: TimelineEvent[]) => void;
+  activeProject?: { projectId?: string | number | null; color?: string | null } | null;
 }
 
 const EventEditModal: React.FC<EventEditModalProps> = ({
@@ -29,6 +31,7 @@ const EventEditModal: React.FC<EventEditModalProps> = ({
   defaultDescription = "",
   descOptions = [],
   onEventsUpdated,
+  activeProject = null,
 }) => {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [eventInputs, setEventInputs] = useState<{
@@ -45,6 +48,15 @@ const EventEditModal: React.FC<EventEditModalProps> = ({
   const originalEventsRef = useRef<TimelineEvent[]>([]);
   const { wsOps } = useBudget();
   const { userId } = useData();
+
+  const accent = useMemo(
+    () =>
+      computeLineItemAccent({
+        projectId: activeProject?.projectId ?? null,
+        color: activeProject?.color ?? null,
+      }),
+    [activeProject?.projectId, activeProject?.color]
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -181,6 +193,7 @@ const EventEditModal: React.FC<EventEditModalProps> = ({
       isOpen={isOpen}
       onRequestClose={onRequestClose}
       contentLabel="Edit Events"
+      style={{ content: accent.style, overlay: accent.style }}
       className={{
         base: styles.modalContent,
         afterOpen: styles.modalContentAfterOpen,

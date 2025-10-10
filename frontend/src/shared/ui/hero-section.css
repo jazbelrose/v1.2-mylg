@@ -66,7 +66,7 @@
 
 @media (max-width: 991px) {
   .header-section {
-    padding: 50px 25px 10px;
+    padding: 70px 25px 10px;
   }
   .button-container {
     margin-top: 50px;
@@ -95,7 +95,7 @@
 
 @media (max-width: 576px) {
   .header-section {
-    padding: 20px 15px 5px;
+    padding: 40px 15px 5px;
   }
 }
 

@@ -63,6 +63,18 @@ function hostAllowed(hostname) {
   );
 }
 
+function isPrivateLan(host) {
+  return (
+    /^10\.\d+\.\d+\.\d+$/.test(host) ||
+    /^192\.168\.\d+\.\d+$/.test(host) ||
+    /^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(host)
+  );
+}
+
+function isLoopback(host) {
+  return host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1";
+}
+
 function pickAllowOrigin(reqOrigin) {
   if (!reqOrigin) return DEFAULT_ORIGIN;
   const normalized = String(reqOrigin).replace(/\/$/, "");
@@ -70,7 +82,7 @@ function pickAllowOrigin(reqOrigin) {
 
   try {
     const u = new URL(normalized);
-    if (hostAllowed(u.hostname)) {
+    if (hostAllowed(u.hostname) || isLoopback(u.hostname) || isPrivateLan(u.hostname)) {
       // Keep scheme + host (preserves non-standard ports if any)
       return `${u.protocol}//${u.host}`;
     }

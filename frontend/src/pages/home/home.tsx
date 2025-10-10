@@ -1,6 +1,5 @@
 // Home.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Helmet } from "react-helmet-async";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 import { gsap } from "gsap";
@@ -13,6 +12,7 @@ import PortfolioCard from "../../shared/ui/PortfolioCard";
 import Ticker from "../../shared/ui/Ticker";
 import SingleTicker from "../../shared/ui/SingleTicker";
 import ScrollToTopButton from "../../shared/ui/ScrollToTopButton";
+import { SvgOverlayPortal } from "@/shared/ui/SvgOverlayPortal";
 import { useData } from "@/app/contexts/useData";
 import "@/shared/css/marketingpages.css";
 import "./home.css";
@@ -67,14 +67,6 @@ export const Home: React.FC = () => {
 
   const isDesktop = typeof window !== "undefined" && window.innerWidth > 768;
 
-  const overlay = (
-    <div className="svg-overlay" aria-hidden="true">
-      <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none">
-        <path id="revealPath" d="M0,100S17.5,100,50,100s50,0,100,0V0H0Z" />
-      </svg>
-    </div>
-  );
-
   return (
     <>
       <Helmet>
@@ -115,7 +107,12 @@ export const Home: React.FC = () => {
         <meta name="twitter:image:alt" content="MYLG Platform Mockup" />
       </Helmet>
 
-      {typeof document !== "undefined" ? createPortal(overlay, document.body) : overlay}
+      <SvgOverlayPortal
+        viewBox="0 0 100 100"
+        pathId="revealPath"
+        pathD="M0,100S17.5,100,50,100s50,0,100,0V0H0Z"
+        navRevealDelayMs={1250}
+      />
 
       <div className={opacityClass}>
 

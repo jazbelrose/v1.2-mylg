@@ -445,6 +445,11 @@
   }
 }
 
+body.marketing-nav-hidden header.header {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 
 
 

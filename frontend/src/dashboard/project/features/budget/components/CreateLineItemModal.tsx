@@ -1,12 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import Modal from "@/shared/ui/ModalWithStack";
 import ConfirmModal from "@/shared/ui/ConfirmModal";
 import styles from "./create-line-item-modal.module.css";
 import { parseBudget, formatUSD } from "@/shared/utils/budgetUtils";
 import { useData } from "@/app/contexts/useData";
 import { generateSequentialPalette } from "@/shared/utils/colorUtils";
+
+if (typeof document !== "undefined") {
+  Modal.setAppElement("#root");
+}
 
 /* eslint-disable */
 
@@ -860,95 +864,102 @@ const CreateLineItemModal: React.FC<CreateLineItemModalProps> = ({
     ? { ...accentStyles, transform: `translateY(${swipeOffset}px)` }
     : accentStyles;
 
-  const portalContent =
-    isOpen && typeof document !== "undefined"
-      ? createPortal(
-          <div className={styles.sheetOverlay} role="presentation" onMouseDown={handleOverlayMouseDown}>
-            <div
-              ref={modalRef}
-              className={`${styles.sheetModal} ${isDragging ? styles.sheetModalDragging : ""}`}
-              role="dialog"
-              aria-modal="true"
-              aria-label={title}
-              style={modalStyle}
-            >
-              <div
-                className={styles.grabZone}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onTouchCancel={handleTouchEnd}
-              >
-                <div className={styles.grabHandle} />
-              </div>
-              <form className={styles.sheetForm} onSubmit={handleSubmit}>
-                <header className={styles.modalHeader}>
-                  <div className={styles.headerText}>
-                    <h2 className={styles.modalTitle}>{title}</h2>
-                    <p className={styles.modalSubtitle}>
-                      Capture every detail about your budget line item with structured sections and live totals.
-                    </p>
-                  </div>
-                  <div className={styles.headerActions}>
-                    <span className={styles.revisionPill}>Rev. {revision}</span>
-                    <button type="button" className={styles.closeButton} onClick={handleClose} aria-label="Close">
-                      <FontAwesomeIcon icon={faXmark} />
-                    </button>
-                  </div>
-                </header>
-                <div className={styles.modalBody} onClick={handleFormBodyClick}>
-                  {SECTION_DEFINITIONS.map((section) => (
-                    <section key={section.id} className={styles.section}>
-                      <div className={styles.sectionHeader}>
-                        <h3 className={styles.sectionTitle}>{section.title}</h3>
-                        {section.description ? (
-                          <p className={styles.sectionDescription}>{section.description}</p>
-                        ) : null}
-                      </div>
-                      <div className={styles.fieldGrid}>
-                        {section.fields.map((fieldName) => renderField(fieldName))}
-                      </div>
-                    </section>
-                  ))}
-                </div>
-
-                <datalist id="area-group-options">
-                  {areaGroupOptions.map((option) => (
-                    <option key={option} value={option} />
-                  ))}
-                </datalist>
-                <datalist id="invoice-group-options">
-                  {invoiceGroupOptions.map((option) => (
-                    <option key={option} value={option} />
-                  ))}
-                </datalist>
-                <datalist id="client-options">
-                  {clientOptions.map((option) => (
-                    <option key={option} value={option} />
-                  ))}
-                </datalist>
-
-                <footer className={styles.modalFooter}>
-                  <div className={styles.shortcutHint}>Press ⌘+Enter / Ctrl+Enter to save.</div>
-                  <div className={styles.footerActions}>
-                    <button type="button" className={styles.secondaryButton} onClick={handleClose}>
-                      Cancel
-                    </button>
-                    <button type="submit" className={styles.primaryButton}>
-                      {submitLabel || (title === "Edit Item" ? "Save" : "Create")}
-                    </button>
-                  </div>
-                </footer>
-              </form>
-            </div>
-          </div>,
-          document.body,
-        )
-      : null;
-
   return (
     <>
-      {portalContent}
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={handleClose}
+        contentLabel={title}
+        closeTimeoutMS={300}
+        className={{
+          base: "",
+          afterOpen: "",
+          beforeClose: "",
+        }}
+        overlayClassName={{
+          base: styles.sheetOverlay,
+          afterOpen: styles.sheetOverlay,
+          beforeClose: styles.sheetOverlay,
+        }}
+      >
+        <div
+          ref={modalRef}
+          className={`${styles.sheetModal} ${isDragging ? styles.sheetModalDragging : ""}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          style={modalStyle}
+        >
+          <div
+            className={styles.grabZone}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+          >
+            <div className={styles.grabHandle} />
+          </div>
+          <form className={styles.sheetForm} onSubmit={handleSubmit}>
+            <header className={styles.modalHeader}>
+              <div className={styles.headerText}>
+                <h2 className={styles.modalTitle}>{title}</h2>
+                <p className={styles.modalSubtitle}>
+                  Capture every detail about your budget line item with structured sections and live totals.
+                </p>
+              </div>
+              <div className={styles.headerActions}>
+                <span className={styles.revisionPill}>Rev. {revision}</span>
+                <button type="button" className={styles.closeButton} onClick={handleClose} aria-label="Close">
+                  <FontAwesomeIcon icon={faXmark} />
+                </button>
+              </div>
+            </header>
+            <div className={styles.modalBody} onClick={handleFormBodyClick}>
+              {SECTION_DEFINITIONS.map((section) => (
+                <section key={section.id} className={styles.section}>
+                  <div className={styles.sectionHeader}>
+                    <h3 className={styles.sectionTitle}>{section.title}</h3>
+                    {section.description ? (
+                      <p className={styles.sectionDescription}>{section.description}</p>
+                    ) : null}
+                  </div>
+                  <div className={styles.fieldGrid}>
+                    {section.fields.map((fieldName) => renderField(fieldName))}
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <datalist id="area-group-options">
+              {areaGroupOptions.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
+            <datalist id="invoice-group-options">
+              {invoiceGroupOptions.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
+            <datalist id="client-options">
+              {clientOptions.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
+
+            <footer className={styles.modalFooter}>
+              <div className={styles.shortcutHint}>Press ⌘+Enter / Ctrl+Enter to save.</div>
+              <div className={styles.footerActions}>
+                <button type="button" className={styles.secondaryButton} onClick={handleClose}>
+                  Cancel
+                </button>
+                <button type="submit" className={styles.primaryButton}>
+                  {submitLabel || (title === "Edit Item" ? "Save" : "Create")}
+                </button>
+              </div>
+            </footer>
+          </form>
+        </div>
+      </Modal>
 
       <ConfirmModal
         isOpen={showUnsavedConfirm}

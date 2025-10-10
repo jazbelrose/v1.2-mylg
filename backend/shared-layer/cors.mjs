@@ -1,5 +1,5 @@
 // /opt/nodejs/utils/cors.mjs
-// Force redeploy for CORS updates - updated 2025-09-10
+// Force redeploy for CORS updates - updated 2025-10-10
 
 // =============================================================================
 // CORS CONFIGURATION - CENTRALIZED SETTINGS
@@ -63,6 +63,16 @@ function hostAllowed(hostname) {
   );
 }
 
+function isPrivateLan(host) {
+  return /^10\.\d+\.\d+\.\d+$/.test(host)
+      || /^192\.168\.\d+\.\d+$/.test(host)
+      || /^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(host);
+}
+
+function isLoopback(host) {
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1';
+}
+
 function pickAllowOrigin(reqOrigin) {
   if (!reqOrigin) return DEFAULT_ORIGIN;
   const normalized = String(reqOrigin).replace(/\/$/, "");
@@ -70,13 +80,10 @@ function pickAllowOrigin(reqOrigin) {
 
   try {
     const u = new URL(normalized);
-    if (hostAllowed(u.hostname)) {
-      // Keep scheme + host (preserves non-standard ports if any)
-      return `${u.protocol}//${u.host}`;
+    if (hostAllowed(u.hostname) || isLoopback(u.hostname) || isPrivateLan(u.hostname)) {
+      return `${u.protocol}//${u.host}`; // keep scheme+host+port
     }
-  } catch {
-    // fall through on invalid URL
-  }
+  } catch {}
   return DEFAULT_ORIGIN;
 }
 

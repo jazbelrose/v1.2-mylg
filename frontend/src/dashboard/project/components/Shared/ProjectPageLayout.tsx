@@ -186,7 +186,17 @@ const ProjectPageLayout: React.FC<ProjectPageLayoutProps> = ({
   const handleShowChat = React.useCallback(() => {
     setIsChatHidden(false);
     setChatOpenSignal((prev) => prev + 1);
-  }, []);
+
+    if (isMobile) {
+      setFloatingThread((prev) => {
+        if (prev) {
+          return prev;
+        }
+
+        return true;
+      });
+    }
+  }, [isMobile, setFloatingThread, setIsChatHidden, setChatOpenSignal]);
 
   const viewportUnit = React.useMemo(() => {
     if (typeof window === "undefined") {

@@ -33,15 +33,10 @@ resources:
             AccessControlAllowMethods:
               Items: ["GET", "HEAD", "OPTIONS"]
             AccessControlAllowOrigins:
-              Items:
-                - "http://localhost:5173"
-                - "http://localhost:3000"
-                - "https://beta.mylg.studio"
-                - "https://mylg.studio"
-                - "http://192.168.1.172:5173"
-                - "http://192.168.1.200:5173"
-                - "http://192.168.1.172:3000"
-                - "http://192.168.1.200:3000"
+              # Allow any HTTP(S) origin so developers can test from private LAN IPs
+              # (172.x, 192.168.x, etc.) without having to redeploy CloudFront each time.
+              # Credentials are disabled, so using "*" is safe here.
+              Items: ["*"]
             OriginOverride: true
 
     # ---- CloudFront Distribution ----

@@ -47,7 +47,7 @@ const Preloader: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="preloader-container flex justify-center items-center h-screen"
+      className="preloader-container flex justify-center items-center"
       onClick={() => setOpen((state) => !state)}
     >
       <svg

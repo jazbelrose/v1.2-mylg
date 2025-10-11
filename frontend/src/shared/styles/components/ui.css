@@ -44,34 +44,55 @@
 }
 
 /* SVG overlay */
-/* SVG overlay */
 .svg-overlay {
   position: fixed;
-  inset: 0;
-  width: 100vw;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   height: 100vh;
+  height: 100dvh;
+  height: 100svh;
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
   z-index: 10000;
   pointer-events: none;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  transform: translateZ(0);
 }
 
-@supports (height: 100dvh) {
-  .svg-overlay {
-    height: 100dvh;
-  }
-}
-
-@supports (height: 100lvh) {
-  .svg-overlay {
-    height: 100lvh;
-    min-height: 100lvh;
-  }
+.svg-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: inherit;
+  z-index: -1;
 }
 
 .svg-overlay svg {
   display: block;
   width: 100%;
   height: 100%;
+  flex: 1 1 auto;
+}
+
+@supports (backdrop-filter: blur(10px)) {
+  @media (prefers-reduced-transparency: reduce) {
+    .svg-overlay {
+      backdrop-filter: none !important;
+      background: rgba(255, 255, 255, 0.95) !important;
+    }
+  }
 }
 
 /* Cursor styles */

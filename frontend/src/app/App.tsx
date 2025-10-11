@@ -22,6 +22,7 @@ import AppRoutes from "./routes";
 import Headermain from "../shared/ui/Header";
 import Preloader from "../shared/ui/Preloader";
 import { NotificationContainer } from "../shared/ui/ToastNotifications";
+import { useLiquidGlassViewportFix } from "@/shared/hooks/useLiquidGlassViewportFix";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -35,6 +36,8 @@ interface MainContentProps {
 
 export default function App(): React.ReactElement {
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useLiquidGlassViewportFix();
 
   useEffect(() => {
     if (isLoading) {

@@ -23,6 +23,10 @@ section {
 html {
   height: 100vh; /* fallback for older browsers */
   height: 100dvh;
+  height: 100svh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
   overscroll-behavior: none;
   scrollbar-width: none;
 }
@@ -33,6 +37,7 @@ body {
   width: 100%;
   min-height: 100vh; /* fallback */
   min-height: 100dvh;
+  min-height: 100svh;
   color: var(--text-color);
   font-family: var(--font-family-primary);
   font-weight: 700;

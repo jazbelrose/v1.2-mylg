@@ -1,11 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import './preloader.css';
+import { syncViewportHeight } from '../hooks/useViewportHeightSync';
 
 const Preloader: React.FC = () => {
   const [open, setOpen] = useState(true);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    syncViewportHeight();
+  }, [open]);
 
   useEffect(() => {
     if (!open) return; // skip when already closed
@@ -47,7 +52,7 @@ const Preloader: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="preloader-container flex justify-center items-center h-screen"
+      className="preloader-container flex justify-center items-center"
       onClick={() => setOpen((state) => !state)}
     >
       <svg

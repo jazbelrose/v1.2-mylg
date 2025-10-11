@@ -4,6 +4,9 @@
   left: 0;
   right: 0;
   bottom: 0;
+  min-height: 100vh;
+  min-height: var(--viewport-dvh, 100dvh);
+  min-height: var(--notifications-vh, var(--viewport-dvh, 100dvh));
   background: rgba(0, 0, 0, 0.5);
   z-index: 900;
 }
@@ -12,7 +15,11 @@
   position: fixed;
   right: 0;
   height: 100vh;
+  height: var(--viewport-dvh, 100dvh);
+  height: var(--notifications-vh, var(--viewport-dvh, 100dvh));
   max-height: 100vh;
+  max-height: var(--viewport-dvh, 100dvh);
+  max-height: var(--notifications-vh, var(--viewport-dvh, 100dvh));
   width: 360px;
   max-width: 100%;
   background: var(--bg-color);

@@ -6,7 +6,7 @@ const PendingApprovalScreen: React.FC = () => (
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      height: '100vh',
+      height: 'var(--viewport-dvh, 100dvh)',
       overflow: 'hidden',
       padding: '20px',
       textAlign: 'center',

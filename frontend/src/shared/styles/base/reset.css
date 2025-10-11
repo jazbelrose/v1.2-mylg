@@ -8,6 +8,7 @@
 /* Root font size */
 :root {
   font-size: 16px;
+  --viewport-dvh: 100dvh;
 }
 
 /* Remove default margins that cause layout issues */
@@ -23,6 +24,7 @@ section {
 html {
   height: 100vh; /* fallback for older browsers */
   height: 100dvh;
+  height: var(--viewport-dvh, 100dvh);
   overscroll-behavior: none;
   scrollbar-width: none;
 }
@@ -33,6 +35,7 @@ body {
   width: 100%;
   min-height: 100vh; /* fallback */
   min-height: 100dvh;
+  min-height: var(--viewport-dvh, 100dvh);
   color: var(--text-color);
   font-family: var(--font-family-primary);
   font-weight: 700;

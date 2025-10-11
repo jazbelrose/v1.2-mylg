@@ -224,6 +224,7 @@
   position: absolute;
   width: 100vw;
   height: 100vh;
+  height: var(--viewport-dvh, 100dvh);
   top: 0;
   left: 0;
   z-index: 0;
@@ -258,6 +259,7 @@
   top: 0px;
   width: 100vw;
   height: 100vh;
+  height: var(--viewport-dvh, 100dvh);
   background-color: var(--bg-color);
 }
 
@@ -265,6 +267,7 @@
   position: relative;
   width: 100%;
   height: 100vh;
+  height: var(--viewport-dvh, 100dvh);
   overflow: hidden auto;
   z-index: 5;
 }

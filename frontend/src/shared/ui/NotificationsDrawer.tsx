@@ -15,6 +15,7 @@ import { MESSAGES_THREADS_URL, apiFetch } from '../utils/api';
 import type { Thread } from '@/app/contexts/DataProvider';
 import './notifications-drawer.css';
 import { MICRO_WOBBLE_SCALE, SPRING_FAST } from '@/shared/ui/motionTokens';
+import { syncViewportHeight } from '../hooks/useViewportHeightSync';
 
 interface NotificationsDrawerProps {
   open: boolean;
@@ -208,15 +209,24 @@ const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
 
   useEffect(() => {
     const updateVh = () => {
-      document.documentElement.style.setProperty(
-        '--notifications-vh',
-        `${window.innerHeight}px`
-      );
+      syncViewportHeight();
+      const viewportHeight = Math.max(window.outerHeight || 0, window.innerHeight || 0);
+      document.documentElement.style.setProperty('--notifications-vh', `${viewportHeight}px`);
     };
     updateVh();
     window.addEventListener('resize', updateVh);
-    return () => window.removeEventListener('resize', updateVh);
+    window.addEventListener('orientationchange', updateVh);
+    return () => {
+      window.removeEventListener('resize', updateVh);
+      window.removeEventListener('orientationchange', updateVh);
+    };
   }, []);
+
+  useEffect(() => {
+    if (open) {
+      syncViewportHeight();
+    }
+  }, [open]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

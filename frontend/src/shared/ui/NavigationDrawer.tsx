@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import DashboardNavPanel from "./DashboardNavPanel";
 import "./navigation-drawer.css";
+import { syncViewportHeight } from "../hooks/useViewportHeightSync";
 
 interface NavigationDrawerProps {
   open: boolean;
@@ -32,6 +33,7 @@ const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
     documentElement.style.overflow = "hidden";
     body.style.touchAction = "none";
     documentElement.style.touchAction = "none";
+    syncViewportHeight();
 
     return () => {
       body.style.overflow = originalBodyOverflow;
@@ -46,7 +48,7 @@ const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
       {open && (
         <>
           <motion.div
-            className="navigation-drawer-backdrop"
+            className="navigation-drawer-backdrop glass-effect"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

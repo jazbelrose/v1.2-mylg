@@ -249,7 +249,7 @@ const Headermain: React.FC = () => {
                             />
                         </svg>
                     </div>
-                    <div className="menu-wrapper">
+                    <div className="menu-wrapper glass-effect">
                         <div className="menu-container">
                             <ul className="menu">
                                 <li className="menu-item">

@@ -6,6 +6,7 @@
   width: 100vw;
   height: 100vh;
   height: 100svh;
+  height: var(--viewport-dvh, 100dvh);
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(6px);
   z-index: 999;
@@ -15,6 +16,7 @@
   position: sticky;
   top: var(--topbar-h, 64px);
   height: calc(100svh - var(--topbar-h, 64px));
+  height: calc(var(--viewport-dvh, 100dvh) - var(--topbar-h, 64px));
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 60%),
     var(--bg2, #111213);
   border: 1px solid var(--line, rgba(255, 255, 255, 0.06));

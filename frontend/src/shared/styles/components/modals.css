@@ -5,6 +5,18 @@
   z-index: 2000 !important;
 }
 
+.ReactModal__Overlay {
+  height: 100vh;
+  height: var(--viewport-dvh, 100dvh);
+}
+
+.modal,
+.modal--after-open,
+.modal--before-close {
+  height: 100vh;
+  height: var(--viewport-dvh, 100dvh);
+}
+
 body.ReactModal__Body--open .dashboard-wrapper {
   filter: blur(4px);
   transition: filter 0.3s ease-in-out;

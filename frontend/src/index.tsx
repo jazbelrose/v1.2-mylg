@@ -10,8 +10,11 @@ import App from './app/App';
 import 'antd/dist/reset.css';
 import './index.css';
 import './components/preloader/style.css';
+import { initializeViewportUnits } from './shared/utils/viewportUnits';
 
 Amplify.configure(awsConfig);
+
+initializeViewportUnits();
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,

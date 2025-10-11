@@ -8,6 +8,10 @@
 /* Root font size */
 :root {
   font-size: 16px;
+  --viewport-height: 100vh;
+  --viewport-width: 100vw;
+  --viewport-offset-top: 0px;
+  --viewport-offset-left: 0px;
 }
 
 /* Remove default margins that cause layout issues */
@@ -21,8 +25,7 @@ section {
 
 /* HTML and body base styles */
 html {
-  height: 100vh; /* fallback for older browsers */
-  height: 100dvh;
+  min-height: var(--viewport-height, 100vh);
   overscroll-behavior: none;
   scrollbar-width: none;
 }
@@ -31,8 +34,7 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100vh; /* fallback */
-  min-height: 100dvh;
+  min-height: var(--viewport-height, 100vh);
   color: var(--text-color);
   font-family: var(--font-family-primary);
   font-weight: 700;

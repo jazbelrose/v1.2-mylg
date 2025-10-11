@@ -9,6 +9,7 @@ import awsConfig from './aws-exports'; // Ensure aws-exports.js exists and is ty
 import App from './app/App';
 
 import 'antd/dist/reset.css';
+import { initializeViewportUnits } from './shared/utils/viewportUnits';
 
 
 if (import.meta.env.DEV) {
@@ -17,6 +18,8 @@ if (import.meta.env.DEV) {
 
 // ✅ Amplify config
 Amplify.configure(awsConfig);
+
+initializeViewportUnits();
 
 // ✅ Root element typing with non-null assertion (!)
 const rootElement = document.getElementById('root')!;

@@ -120,21 +120,36 @@ const Headermain: React.FC = () => {
     }, []);
 
     const handleToggle = (): void => {
+        const htmlElement = document.documentElement;
+
         if (isActive) {
-            document.body.classList.remove("ovhidden");
             if (menuAnimation.current) {
                 menuAnimation.current.reverse();
-                menuAnimation.current.eventCallback("onReverseComplete", () => setActive(false));
+                menuAnimation.current.eventCallback("onReverseComplete", () => {
+                    setActive(false);
+                    document.body.classList.remove("ovhidden");
+                    htmlElement.classList.remove("globalnav--noscroll");
+                    const navMenu = document.querySelector(".nav-bar-menu") as HTMLElement | null;
+                    if (navMenu) {
+                        navMenu.classList.remove("opened");
+                    }
+                });
             } else {
-                setActive(!isActive);
+                setActive(false);
+                document.body.classList.remove("ovhidden");
+                htmlElement.classList.remove("globalnav--noscroll");
             }
         } else {
+            htmlElement.classList.add("globalnav--noscroll");
             document.body.classList.add("ovhidden");
             if (menuAnimation.current) {
                 menuAnimation.current.play();
-                menuAnimation.current.eventCallback("onComplete", () => setActive(true));
+                menuAnimation.current.eventCallback("onComplete", () => {
+                    setActive(true);
+                    htmlElement.classList.add("globalnav--noscroll");
+                });
             } else {
-                setActive(!isActive);
+                setActive(true);
             }
         }
     };

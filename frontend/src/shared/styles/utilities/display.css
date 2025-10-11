@@ -92,6 +92,10 @@
   overflow: hidden;
 }
 
+html.globalnav--noscroll {
+  overflow: hidden;
+}
+
 /* Opacity utilities */
 .opacity-high,
 .opacity-low {

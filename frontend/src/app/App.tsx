@@ -37,6 +37,49 @@ export default function App(): React.ReactElement {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return;
+    }
+
+    const updateViewportVars = () => {
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const outerHeight = window.outerHeight || viewportHeight;
+      const safeOuterHeight = Math.max(outerHeight, viewportHeight);
+      const root = document.documentElement;
+      const body = document.body;
+
+      const viewportHeightValue = `${viewportHeight}px`;
+      const outerHeightValue = `${safeOuterHeight}px`;
+
+      root.style.setProperty("--app-viewport-height", viewportHeightValue);
+      root.style.setProperty("--app-outer-height", outerHeightValue);
+      body.style.setProperty("--app-viewport-height", viewportHeightValue);
+      body.style.setProperty("--app-outer-height", outerHeightValue);
+    };
+
+    updateViewportVars();
+
+    window.addEventListener("resize", updateViewportVars);
+    window.addEventListener("orientationchange", updateViewportVars);
+
+    const { visualViewport } = window;
+    if (visualViewport) {
+      visualViewport.addEventListener("resize", updateViewportVars);
+      visualViewport.addEventListener("scroll", updateViewportVars);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateViewportVars);
+      window.removeEventListener("orientationchange", updateViewportVars);
+
+      if (visualViewport) {
+        visualViewport.removeEventListener("resize", updateViewportVars);
+        visualViewport.removeEventListener("scroll", updateViewportVars);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (isLoading) {
       const timer = setTimeout(() => {
         setIsLoading(false);

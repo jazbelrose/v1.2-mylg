@@ -8,6 +8,22 @@
 /* Root font size */
 :root {
   font-size: 16px;
+  --app-viewport-height: 100vh;
+  --app-outer-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-viewport-height: 100dvh;
+    --app-outer-height: 100dvh;
+  }
+}
+
+@supports (height: 100lvh) {
+  :root {
+    --app-viewport-height: 100lvh;
+    --app-outer-height: 100lvh;
+  }
 }
 
 /* Remove default margins that cause layout issues */
@@ -21,18 +37,19 @@ section {
 
 /* HTML and body base styles */
 html {
-  height: 100vh; /* fallback for older browsers */
-  height: 100dvh;
+  height: var(--app-viewport-height);
+  min-height: var(--app-outer-height);
   overscroll-behavior: none;
   scrollbar-width: none;
+  background-color: var(--bg-color);
 }
 
 body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100vh; /* fallback */
-  min-height: 100dvh;
+  min-height: var(--app-outer-height);
+  background-color: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-family-primary);
   font-weight: 700;
@@ -42,6 +59,14 @@ body {
   overflow: -moz-scrollbars-none;
   -ms-overflow-style: none;
   letter-spacing: var(--letter-spacing-tight);
+}
+
+#root {
+  min-height: var(--app-outer-height);
+}
+
+main {
+  min-height: var(--app-viewport-height);
 }
 
 /* List styles */

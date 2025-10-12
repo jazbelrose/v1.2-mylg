@@ -19,6 +19,8 @@ import { SocketProvider } from "./contexts/SocketProvider";
 import NotificationSocketBridge from "./NotificationSocketBridge";
 import { OnlineStatusProvider } from "./contexts/OnlineStatusContext";
 import AppRoutes from "./routes";
+import { Home } from "../pages/home/home";
+import RootPortal from "@/shared/ui/RootPortal";
 import Headermain from "../shared/ui/Header";
 import Preloader from "../shared/ui/Preloader";
 import { NotificationContainer } from "../shared/ui/ToastNotifications";
@@ -102,18 +104,28 @@ export default function App(): React.ReactElement {
 }
 
 function MainContent({ isLoading }: MainContentProps): React.ReactElement {
-    const location = useLocation();
-    const hideHeader = location.pathname.startsWith("/dashboard");
-    
-    return isLoading ? (
-        <Preloader />
-    ) : (
-        <>
-            {!hideHeader && <Headermain />}
-            <AppRoutes />
-            <ScrollToTopButton />
-        </>
+  const location = useLocation();
+  const hideHeader = location.pathname.startsWith("/dashboard");
+  const isHome = location.pathname === "/";
+  if (isLoading) return <Preloader />;
+  if (isHome) {
+    return (
+      <>
+        {!hideHeader && <Headermain />}
+        <RootPortal>
+          <Home />
+        </RootPortal>
+        <ScrollToTopButton />
+      </>
     );
+  }
+  return (
+    <>
+      {!hideHeader && <Headermain />}
+      <AppRoutes />
+      <ScrollToTopButton />
+    </>
+  );
 }
 
 

@@ -21,28 +21,41 @@ section {
 
 /* HTML and body base styles */
 html {
-  height: 100vh; /* fallback for older browsers */
-  height: 100dvh;
-  overscroll-behavior: none;
+  height: auto;
+  min-height: 100%;
   scrollbar-width: none;
+  -webkit-text-size-adjust: 100%;
 }
-
 body {
   margin: 0;
   padding: 0;
   width: 100%;
-  min-height: 100vh; /* fallback */
-  min-height: 100dvh;
+  min-height: 100%;
   color: var(--text-color);
   font-family: var(--font-family-primary);
   font-weight: 700;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   overflow: -moz-scrollbars-none;
   -ms-overflow-style: none;
   letter-spacing: var(--letter-spacing-tight);
 }
+/* Invisible fixed backdrop painter for iOS Safari scroll-behind */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--bg-color, #0c0c0c);
+  pointer-events: none;
+  z-index: -1;
+}
+
 
 /* List styles */
 ul {

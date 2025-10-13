@@ -20,8 +20,12 @@ import "./home.css";
 gsap.registerPlugin(ScrollTrigger);
 
 export const Home: React.FC = () => {
-  const { opacity } = useData() as { opacity: number };
+  const { opacity, setOpacity } = useData() as { opacity: number; setOpacity: (value: number) => void };
   const opacityClass = opacity === 1 ? "opacity-high" : "opacity-low";
+
+  useEffect(() => {
+    setOpacity(1);
+  }, [setOpacity]);
 
   const scrollableDivRef = useRef<HTMLDivElement | null>(null);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -386,7 +390,6 @@ export const Home: React.FC = () => {
 };
 
 export default Home;
-
 
 
 

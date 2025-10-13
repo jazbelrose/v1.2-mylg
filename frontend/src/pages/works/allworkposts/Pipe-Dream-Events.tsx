@@ -9,7 +9,6 @@ import { InfoSection } from "../../../shared/ui";
 import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import InlineSVG from "../../../shared/ui/InlineSVG";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 gsap.registerPlugin(ScrollTrigger); // Register ScrollTrigger plugin
 
@@ -280,7 +279,6 @@ const PipedDreamEvents = () => {
       </Helmet>
 
       <div className={`${opacityClass} ${isModalOpen ? "no-scroll" : ""}`}>
-        <SvgOverlayPortal />
 
         <div className="workpage-heading">
           <InlineSVG src="https://d2qb21tb4meex0.cloudfront.net/svg/pipedreamevents/pipedreameventsheader.svg" onReady={() => setSvgReady(true)} />

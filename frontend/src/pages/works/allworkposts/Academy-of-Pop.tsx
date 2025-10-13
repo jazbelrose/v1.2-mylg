@@ -13,7 +13,6 @@ import { useData } from "@/app/contexts/useData";
 
 
 import InlineSVG from "../../../shared/ui/InlineSVG";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 
 const AcademyOfPop = () => {
@@ -352,8 +351,6 @@ const AcademyOfPop = () => {
 
             <div className={`${opacityClass} ${isModalOpen ? 'no-scroll' : ''}`}>
 
-
-                <SvgOverlayPortal />
 
 
                 <div className="workpage-heading">

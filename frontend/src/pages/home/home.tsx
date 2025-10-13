@@ -1,6 +1,5 @@
 // Home.tsx
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Helmet } from "react-helmet-async";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 import { gsap } from "gsap";
@@ -115,7 +114,7 @@ export const Home: React.FC = () => {
         <meta name="twitter:image:alt" content="MYLG Platform Mockup" />
       </Helmet>
 
-      {typeof document !== "undefined" ? createPortal(overlay, document.body) : overlay}
+      {overlay}
 
       <div className={opacityClass}>
 

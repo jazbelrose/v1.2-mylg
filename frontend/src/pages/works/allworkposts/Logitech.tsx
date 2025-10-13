@@ -9,7 +9,6 @@ import BlogPostButton from "../../../shared/ui/BlogPostButton";
 import { InfoSection } from "../../../shared/ui";
 import SingleTicker from "../../../shared/ui/SingleTicker";
 import InlineSVG from "../../../shared/ui/InlineSVG";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 interface WorkItem {
     id: number | string;
@@ -147,7 +146,6 @@ const Logitech = () => {
             <link rel="dns-prefetch" href="https://d1cazymewvlm0k.cloudfront.net" />
             <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
         </Helmet>
-            <SvgOverlayPortal />
 
             <div className="works">
                 <div className="workpage-heading">

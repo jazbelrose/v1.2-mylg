@@ -10,7 +10,6 @@ import InlineSVG from "../../../shared/ui/InlineSVG";
 import { InfoSection } from "../../../shared/ui";
 import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 
 const StrikeFit = () => {
@@ -305,7 +304,7 @@ const StrikeFit = () => {
             </Helmet>
 
         <div className={`${opacityClass} ${isModalOpen ? 'no-scroll' : ''}`}>
-            <SvgOverlayPortal />
+
 
 
             <div className="workpage-heading">

@@ -17,7 +17,6 @@ import BlogPostButton from "../../../shared/ui/BlogPostButton";
 import { InfoSection } from "../../../shared/ui";
 import SingleTicker from "../../../shared/ui/SingleTicker";
 import InlineSVG from "../../../shared/ui/InlineSVG";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 
 
@@ -353,7 +352,7 @@ type WorkItem = {
     </Helmet>
 
         <div className={`${opacityClass} ${isModalOpen ? 'no-scroll' : ''}`}>
-            <SvgOverlayPortal />
+
 
 
             <div className="workpage-heading">

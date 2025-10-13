@@ -13,7 +13,6 @@ import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal"; // Import ReactModal
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 import InlineSVG from "../../../shared/ui/InlineSVG";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 
 const JewelieStark = () => {
@@ -261,7 +260,7 @@ const JewelieStark = () => {
       </Helmet>
 
       <div className={`${opacityClass} ${isModalOpen ? 'no-scroll' : ''}`}>
-        <SvgOverlayPortal />
+
 
 
         <div className="workpage-heading">

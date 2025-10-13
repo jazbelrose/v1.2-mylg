@@ -9,7 +9,6 @@ import SingleTicker from "../../../shared/ui/SingleTicker";
 import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal";
 import { useScrollContext } from "@/app/contexts/useScrollContext";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 /** Inline remote SVG so GSAP can target its inner nodes */
 function InlineSVG({ src, className, onReady }) {
@@ -257,7 +256,7 @@ const AFLowerBath = () => {
         className={`${opacityClass} ${isModalOpen ? "no-scroll" : ""}`}
       >
         {/* Overlay reveal mask */}
-        <SvgOverlayPortal />
+
 
         {/* Remote SVG header (animated) */}
         <div className="workpage-heading">

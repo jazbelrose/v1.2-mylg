@@ -12,7 +12,6 @@ import { useData } from "@/app/contexts/useData";
 import ReactModal from "react-modal"; // Import ReactModal
 import { useScrollContext } from "@/app/contexts/useScrollContext";
 import InlineSVG from "../../../shared/ui/InlineSVG";
-import { SvgOverlayPortal } from "../../../shared/ui/SvgOverlayPortal";
 
 
 const TheGoldPrincess = () => {
@@ -280,7 +279,7 @@ const TheGoldPrincess = () => {
                 <meta name="twitter:image:alt" content="The Gold Princess Photography" />
             </Helmet>
       <div className={`${opacityClass} ${isModalOpen ? 'no-scroll' : ''}`}>
-        <SvgOverlayPortal />
+
 
 
         <div className="workpage-heading">

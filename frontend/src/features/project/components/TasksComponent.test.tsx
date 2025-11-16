@@ -16,7 +16,12 @@ vi.mock('../../../shared/utils/api', () => ({
   createTask: vi.fn((t) => Promise.resolve(t)),
   updateTask: vi.fn((t) => Promise.resolve(t)),
   deleteTask: vi.fn(() => Promise.resolve({})),
-  fetchUserProfilesBatch: vi.fn(() => Promise.resolve([]))
+  fetchUserProfilesBatch: vi.fn(() => Promise.resolve([])),
+  requestTaskReview: vi.fn((_, __, payload) => Promise.resolve({ status: 'in_review', ...payload })),
+  approveTask: vi.fn(() => Promise.resolve({ status: 'done' })),
+  requestTaskChanges: vi.fn(() => Promise.resolve({ status: 'needs_changes' })),
+  archiveTask: vi.fn(() => Promise.resolve({ status: 'archived' })),
+  unarchiveTask: vi.fn(() => Promise.resolve({ status: 'done' })),
 }));
 vi.mock('antd', () => ({
   Form: Object.assign(

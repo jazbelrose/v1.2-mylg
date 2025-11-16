@@ -63,13 +63,15 @@ export interface Project {
   [key: string]: unknown;
 }
 
+export type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'needs_changes' | 'done' | 'archived';
+
 export interface Task extends JsonRecord {
   taskId?: string;
   projectId: string;
   title: string;
   description?: string;
   budgetItemId?: string | null;
-  status?: 'todo' | 'in_progress' | 'done';
+  status?: TaskStatus;
   assigneeId?: string;
   dueDate?: string; // ISO
 }
@@ -617,7 +619,11 @@ export async function createTask(task: Task): Promise<Task> {
   });
 }
 
-export async function updateTask(task: Task): Promise<Task> {
+export type UpdateTaskPayload = Pick<Task, 'projectId'> & { taskId: string } & Partial<Task>;
+
+export async function updateTask(task: UpdateTaskPayload): Promise<Task> {
+  // ⚠️ Status transitions to in_review, needs_changes, done, or archived must use the
+  // dedicated review/archive endpoints. See TASK_STATUS_TRANSITIONS.md for details.
   const { projectId, taskId, ...payload } = task;
   if (!projectId || !taskId) throw new Error('projectId and taskId are required for updateTask');
   if (payload.budgetItemId === '' || payload.budgetItemId == null) delete payload.budgetItemId;
@@ -634,6 +640,53 @@ export async function deleteTask({ projectId, taskId }: { projectId: string; tas
   const url = `${TASKS_API_URL}/${encodeURIComponent(taskId)}?projectId=${encodeURIComponent(projectId)}`;
   await apiFetch<JsonRecord>(url, { method: 'DELETE' });
   return { ok: true };
+}
+
+export interface ReviewNotePayload {
+  note?: string;
+  reviewerId?: string;
+}
+
+function buildTaskWorkflowUrl(projectId: string, taskId: string, path: string): string {
+  if (!projectId || !taskId) throw new Error('projectId and taskId are required');
+  return `${TASKS_API_URL}${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}${path}`;
+}
+
+export async function requestTaskReview(projectId: string, taskId: string, payload: ReviewNotePayload = {}): Promise<Task> {
+  const url = buildTaskWorkflowUrl(projectId, taskId, '/review/request');
+  return apiFetch<Task>(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function approveTask(projectId: string, taskId: string, payload: Omit<ReviewNotePayload, 'reviewerId'> = {}): Promise<Task> {
+  const url = buildTaskWorkflowUrl(projectId, taskId, '/review/approve');
+  return apiFetch<Task>(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function requestTaskChanges(projectId: string, taskId: string, payload: ReviewNotePayload = {}): Promise<Task> {
+  const url = buildTaskWorkflowUrl(projectId, taskId, '/review/request_changes');
+  return apiFetch<Task>(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function archiveTask(projectId: string, taskId: string): Promise<Task> {
+  const url = buildTaskWorkflowUrl(projectId, taskId, '/archive');
+  return apiFetch<Task>(url, { method: 'POST' });
+}
+
+export async function unarchiveTask(projectId: string, taskId: string): Promise<Task> {
+  const url = buildTaskWorkflowUrl(projectId, taskId, '/unarchive');
+  return apiFetch<Task>(url, { method: 'POST' });
 }
 
 // ───────────────────────────────────────────────────────────────────────────────

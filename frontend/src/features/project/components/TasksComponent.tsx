@@ -33,6 +33,11 @@ import {
   updateTask,
   deleteTask,
   fetchUserProfilesBatch,
+  requestTaskReview,
+  approveTask,
+  requestTaskChanges,
+  archiveTask,
+  unarchiveTask,
 } from "../../../shared/utils/api";
 import { useBudget } from "@/features/budget/context/BudgetContext";
 import "./task-table.css";
@@ -40,7 +45,7 @@ import "./task-table.css";
 /* =========================
    Types
    ========================= */
-type Status = "todo" | "in_progress" | "done";
+type Status = "todo" | "in_progress" | "in_review" | "needs_changes" | "done" | "archived";
 
 interface TeamMember {
   userId: string;
@@ -65,7 +70,7 @@ interface ApiTask {
   description?: string;
   comments?: string;
   budgetItemId?: string | null;
-  status?: 'todo' | 'in_progress' | 'done';
+  status?: Status;
   assigneeId?: string;
   assignedTo?: string;
   dueDate?: string;
@@ -103,11 +108,49 @@ interface TasksComponentProps {
 /* =========================
    Constants
    ========================= */
-const statusOptions = [
+const statusOptions: { value: Status; label: string }[] = [
   { value: "todo", label: "To Do" },
   { value: "in_progress", label: "In Progress" },
+  { value: "in_review", label: "In Review" },
+  { value: "needs_changes", label: "Needs Changes" },
   { value: "done", label: "Done" },
+  { value: "archived", label: "Archived" },
 ];
+
+const allowedStatusTransitions: Record<Status, Status[]> = {
+  todo: ["in_progress", "in_review"],
+  in_progress: ["in_review"],
+  in_review: ["done", "needs_changes"],
+  needs_changes: ["in_progress", "in_review"],
+  done: ["archived", "needs_changes"],
+  archived: ["done"],
+};
+
+const normalizeStatus = (status?: string): Status => {
+  if (!status) return "todo";
+  const normalized = status.toLowerCase().replace(/\s+/g, "_");
+  return (
+    [
+      "todo",
+      "in_progress",
+      "in_review",
+      "needs_changes",
+      "done",
+      "archived",
+    ] as Status[]
+  ).includes(normalized as Status)
+    ? (normalized as Status)
+    : "todo";
+};
+
+const statusSuccessMessages: Partial<Record<Status, string>> = {
+  todo: "Task reset to To Do",
+  in_progress: "Task moved to In Progress",
+  in_review: "Task submitted for review",
+  done: "Task marked as done",
+  needs_changes: "Changes requested",
+  archived: "Task archived",
+};
 
 /* =========================
    Component
@@ -276,7 +319,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
           id: t.taskId || t.id,
           projectId: t.projectId,
           name: (t.title || t.name || "").toUpperCase(),
-          status: t.status || "todo",
+          status: normalizeStatus(t.status),
           assigneeId: t.assigneeId || t.assignedTo,
           description: t.description || t.comments,
         }));
@@ -364,7 +407,7 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
         id: saved.taskId || id,
         projectId: saved.projectId,
         name: saved.title || '',
-        status: saved.status || "todo",
+        status: normalizeStatus(saved.status),
       };
       setTasks((prev) => [...prev, mapped]);
 
@@ -422,18 +465,19 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
             : (due as string) || editingTask?.dueDate || "",
         title: normalizedName,
         priority: values.priority || editingTask?.priority || "",
-        status: (editingTask?.status || "todo") as Status,
         location: values.location || taskLocation,
         address: values.address || taskAddress,
       };
 
-      const saved = editingTask ? await updateTask(payload) : await createTask(payload);
-      const mapped: Task = { 
-        ...saved, 
-        id: saved.taskId || id, 
+      const saved = editingTask
+        ? await updateTask(payload)
+        : await createTask({ ...payload, status: "todo" as Status } as Task);
+      const mapped: Task = {
+        ...saved,
+        id: saved.taskId || id,
         projectId: saved.projectId,
         name: saved.title || '',
-        status: saved.status || "todo",
+        status: normalizeStatus(saved.status),
       };
 
       setTasks((prev) => {
@@ -456,9 +500,52 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
     }
   };
 
-  const handleStatusChange = (id: string, status: string) => {
-    const normalized = (status || "todo").toLowerCase().replace(/\s+/g, "_") as Status;
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: normalized } : t)));
+  const handleStatusChange = async (task: Task, nextStatus: Status) => {
+    const current = task.status || "todo";
+    if (current === nextStatus) return;
+
+    if (!allowedStatusTransitions[current]?.includes(nextStatus)) {
+      message.error("Unsupported status transition");
+      return;
+    }
+
+    const projectTaskId = task.taskId || task.id;
+    if (!projectTaskId) {
+      message.error("Missing task identifier");
+      return;
+    }
+
+    try {
+      let updated: Task | null = null;
+      if (nextStatus === "in_review") {
+        updated = await requestTaskReview(task.projectId, projectTaskId);
+      } else if (nextStatus === "needs_changes") {
+        updated = await requestTaskChanges(task.projectId, projectTaskId);
+      } else if (nextStatus === "done") {
+        updated =
+          current === "archived"
+            ? await unarchiveTask(task.projectId, projectTaskId)
+            : await approveTask(task.projectId, projectTaskId);
+      } else if (nextStatus === "archived") {
+        updated = await archiveTask(task.projectId, projectTaskId);
+      } else {
+        updated = await updateTask({
+          projectId: task.projectId,
+          taskId: projectTaskId,
+          status: nextStatus,
+        });
+      }
+
+      if (updated) {
+        const normalized = normalizeStatus(updated.status);
+        setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: normalized } : t)));
+        const successMessage = statusSuccessMessages[normalized];
+        if (successMessage) message.success(successMessage);
+      }
+    } catch (err) {
+      console.error("Failed to change task status", err);
+      message.error("Failed to change task status. Please try again.");
+    }
   };
 
   const openCommentModal = (task: Task) => {
@@ -544,16 +631,26 @@ const TasksComponent: React.FC<TasksComponentProps> = ({
       width: 150,
       className: "status-column",
       onHeaderCell: () => ({ colSpan: 3 }),
-      render: (text: Status, record) => (
-        <Select
-          aria-label="status-select"
-          value={text}
-          size="small"
-          style={{ width: "100%", minWidth: 120 }}
-          onChange={(value) => handleStatusChange(record.id, value)}
-          options={statusOptions}
-        />
-      ),
+      render: (text: Status, record) => {
+        const current = record.status || "todo";
+        const options = statusOptions.map((option) => ({
+          ...option,
+          disabled:
+            option.value !== current &&
+            !allowedStatusTransitions[current]?.includes(option.value as Status),
+        }));
+
+        return (
+          <Select
+            aria-label="status-select"
+            value={text}
+            size="small"
+            style={{ width: "100%", minWidth: 120 }}
+            onChange={(value) => handleStatusChange(record, value as Status)}
+            options={options}
+          />
+        );
+      },
     },
     {
       title: "",
